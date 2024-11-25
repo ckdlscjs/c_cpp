@@ -1,7 +1,7 @@
 #pragma once
-#include "std.h"
+#include "c_12_1.h"
 int main()
 {
-	std::cout << "HelloWorld!";
+	func12_1_1();
 	return 0;
 }
