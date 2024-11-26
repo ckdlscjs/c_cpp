@@ -135,6 +135,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="c_12_1.h" />
+    <ClInclude Include="c_12_2.h" />
     <ClInclude Include="std.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
