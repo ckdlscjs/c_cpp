@@ -4,9 +4,9 @@
 #include "c_12_3.h"
 #include "c++_2.h"
 #include "c++_3.h"
+#include "c++_4.h"
 int main()
 {
-	func3();
-	funcAnimal();
+	func4();
 	return 0;
 }
