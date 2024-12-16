@@ -21,21 +21,26 @@ public:
 		std::cout << "Func4생성자" << '\n';
 	}
 };
-namespace funcPointGeo
+namespace PointGeo
 {
+	double GetDistance(int x1, int y1, int x2, int y2)
+	{
+		return std::sqrt(std::pow(x1 - y1, 2) + std::pow(x2 - y2, 2));
+	}
 	class Point {
+		friend class Geometry;
 		int x, y;
 
 	public:
 		Point(int pos_x, int pos_y);
 		Point(const Point& point);
 	};
-	funcPointGeo::Point::Point(int pos_x, int pos_y)
+	PointGeo::Point::Point(int pos_x, int pos_y)
 	{
 		x = pos_x;
 		y = pos_y;
 	}
-	funcPointGeo::Point::Point(const Point& point)
+	PointGeo::Point::Point(const Point& point)
 	{
 		x = point.x;
 		y = point.y;
@@ -43,28 +48,88 @@ namespace funcPointGeo
 
 
 	class Geometry {
+	private:
+		// 점 100 개를 보관하는 배열.
+		Point* pa[100];
+		int num_points = 0;
 	public:
 		Geometry() {
+			std::memset(pa, NULL, sizeof(pa));
 			num_points = 0;
 		}
-
+		~Geometry()
+		{
+			for (int i = 0; i < num_points; i++)
+				delete pa[i];
+		}
 		void AddPoint(const Point& point) {
-			point_array[num_points++] = new Point(point);
+			pa[num_points++] = new Point(point.x, point.y);
 		}
 
 		// 모든 점들 간의 거리를 출력하는 함수 입니다.
-		void PrintDistance();
+		/*
+		std::cout << arr[0]->x << std::endl;            // 가장 간단한 표현
+		std::cout << (*arr[0]).x << std::endl;          // ->를 사용하지 않음
+		std::cout << (*(*(arr + 0))).x << std::endl;    // 완전히 풀어 쓴 형태
+		*/
+		void PrintDistance()
+		{
+			std::cout << "-----printDist-----\n";
+			for (int i = 0; i < num_points; i++)
+			{
+				for (int j = i + 1; j < num_points; j++)
+				{
+					std::cout << pa[i]->x << ", " << (*(*(pa + i))).y << " to " << pa[j]->x << ", " << pa[j]->y << " : " << GetDistance(pa[i]->x, pa[i]->y, pa[j]->x, pa[j]->y) << '\n';
+				}
+			}
+			std::cout << "-------------------\n";
+		}
 
 		// 모든 점들을 잇는 직선들 간의 교점의 수를 출력해주는 함수 입니다.
 		// 참고적으로 임의의 두 점을 잇는 직선의 방정식을 f(x,y) = ax+by+c = 0
 		// 이라고 할 때 임의의 다른 두 점 (x1, y1) 과 (x2, y2) 가 f(x,y)=0 을 기준으로
 		// 서로 다른 부분에 있을 조건은 f(x1, y1) * f(x2, y2) <= 0 이면 됩니다.
-		void PrintNumMeets();
+		
+		/*
+		* 직선의방정식1,직선의방정식2 두가지 직선을 기준으로 두 직선이 접점이 있으면 갯수를1증가한다
+		*/
+		void PrintNumMeets() {
+			int meet_count = 0; // 교점의 개수
+			std::set<std::pair<int, int>> unique_intersections;
 
-	private:
-		// 점 100 개를 보관하는 배열.
-		Point* point_array[100];
-		int num_points;
+			for (int i = 0; i < num_points; ++i) {
+				for (int j = i + 1; j < num_points; ++j) {
+					// 첫 번째 직선 정의 (점 i, 점 j)
+					int a1 = pa[j]->y - pa[i]->y;
+					int b1 = pa[i]->x - pa[j]->x;
+					int c1 = pa[i]->y * (pa[j]->x - pa[i]->x) - pa[i]->x * (pa[j]->y - pa[i]->y);
+
+					for (int k = 0; k < num_points; ++k) {
+						for (int l = k + 1; l < num_points; ++l) {
+							if (i == k && j == l) continue; // 같은 직선은 건너뜀
+
+							// 두 번째 직선 정의 (점 k, 점 l)
+							int a2 = pa[l]->y - pa[k]->y;
+							int b2 = pa[k]->x - pa[l]->x;
+							int c2 = pa[k]->y * (pa[l]->x - pa[k]->x) - pa[k]->x * (pa[l]->y - pa[k]->y);
+
+							// 두 직선의 determinant로 교차 여부 확인
+							int determinant = a1 * b2 - a2 * b1; // ad - bc 행렬식
+							if (determinant != 0) { // 교점 존재
+								// 교차점 계산
+								int x_intersection = (b1 * c2 - b2 * c1) / determinant;
+								int y_intersection = (a2 * c1 - a1 * c2) / determinant;
+
+								// 교차점을 set에 추가하여 중복 제거
+								unique_intersections.insert({ x_intersection, y_intersection });
+							}
+						}
+					}
+				}
+			}
+
+			std::cout << "Number of unique intersection points: " << unique_intersections.size() << std::endl;
+		}
 	};
 }
 
@@ -99,5 +164,14 @@ void func4()
 
 	Func4Check func; //생성자호출, ()->함수호출이되버림, 모호한구문을 함수선언으로 우석 해석하는 좌측우선파싱(left-to-right parsing)때문, 함수선언(정의)가되어버림
 	Func4Check func2 = Func4Check();
+
+
+	PointGeo::Geometry geometry;
+	geometry.AddPoint(PointGeo::Point(0, 0));
+	geometry.AddPoint(PointGeo::Point(0, 1));
+	geometry.AddPoint(PointGeo::Point(0, 2));
+	geometry.AddPoint(PointGeo::Point(1, 2));
+	geometry.PrintDistance();
+	geometry.PrintNumMeets();
 }
 
