@@ -149,6 +149,7 @@ namespace Starcraft
 		int damage;
 		bool is_dead;
 	public:
+		//초기화리스트를 사용해야 상수(const)나 레퍼런스변수(&)를 초기화 가능하다, 생성과동시에초기화되는것
 		Marine() : hp(50), y(0), x(0), damage(5), is_dead(false) { idx = midx++; }
 		Marine(int _y, int _x) : hp(50), y(_y), x(_x), damage(5), is_dead(false) { idx = midx++; }
 		Marine(const char* _name, int _y, int _x) : hp(50), y(_y), x(_x), damage(5), is_dead(false)
@@ -216,6 +217,45 @@ namespace Starcraft
 	int Marine::midx = 1; //static 정적변수는 밖에서 초기화해줘야한다.
 }
 
+namespace CopyConstructExam
+{
+	class A {
+		int x;
+
+	public:
+		A(int c) : x(c) { std::cout << "construct A\n"; }
+		A(const A& a) {
+			x = a.x;
+			std::cout << "복사 생성" << std::endl;
+		}
+		A& operator=(const A& a)
+		{
+			std::cout << "복사대입\n";
+			return *this;
+		}
+	};
+
+
+	class B {
+		A a; 
+
+	public:
+		B(int c) : a(c) { std::cout << "construct B\n"; } 
+		B(const B& b) : a(b.a) {}
+		A get_A() {
+			A temp(a);
+			return temp; 
+		}
+	};
+
+	void funcExam()
+	{
+		B b(10); //construc1
+
+		std::cout << "---------" << std::endl;
+		A a1 = b.get_A(); //RVO, 복사생성자가한번만호출됨
+	}
+}
 void func4()
 {
 	int a = 1;
@@ -274,5 +314,7 @@ void func4()
 	marine3.Show();
 	//marine3 = marine1; //복사, marine3이 marine1을 가리키게끔한다.
 	marine3.Show();
+
+	CopyConstructExam::funcExam();
 }
 
