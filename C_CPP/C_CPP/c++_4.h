@@ -1,3 +1,4 @@
+
 #pragma once
 #include "std.h"
 void func4Print(int x)
@@ -133,6 +134,88 @@ namespace PointGeo
 	};
 }
 
+namespace Starcraft
+{
+
+	class Marine
+	{
+	private:
+		static int midx;
+		char* name;
+		int idx;
+		int hp;
+		int y;
+		int x;
+		int damage;
+		bool is_dead;
+	public:
+		Marine() : hp(50), y(0), x(0), damage(5), is_dead(false) { idx = midx++; }
+		Marine(int _y, int _x) : hp(50), y(_y), x(_x), damage(5), is_dead(false) { idx = midx++; }
+		Marine(const char* _name, int _y, int _x) : hp(50), y(_y), x(_x), damage(5), is_dead(false)
+		{
+			name = new char[std::strlen(_name) + 1]; //마지막\0의 길이는 빼기때문에 추가해줘야함
+			strcpy(name, _name);
+			idx = midx++;
+		}
+		//const로 받았으므로 원본객체를 건들 수 없다
+		Marine(const Marine& _marine)
+		{
+			std::cout << "CopyConstructor\n";
+			if (_marine.name)
+			{
+				name = new char[std::strlen(_marine.name)+1]; //deepcopy
+				strcpy(name, _marine.name);
+			}
+			hp = _marine.hp;
+			y = _marine.y;
+			x = _marine.x;
+			damage = _marine.damage;
+			idx = midx++;
+		}
+		~Marine()
+		{
+			std::cout << "Destruct " << idx << '\n';
+			if (name)
+			{
+				std::cout << idx << " have name\n";
+				delete[] name; //소멸자에서 동적할당한 name이 있다면 삭제시킨다.
+			}
+				
+		}
+		void Move(int _y, int _x)
+		{
+			y = _y;
+			x = _x;
+		}
+		void Dead()
+		{
+			is_dead = true;
+			std::cout << "Marine " << idx << " is dead! \n";
+		}
+		void Damaged(int _damage)
+		{
+			hp -= _damage;
+			if (hp <= 0)
+				Dead();
+		}
+		void Attack(Marine& target)
+		{
+			target.Damaged(damage);
+		}
+		void Show()
+		{
+			if(name != nullptr)
+				std::cout << "Marine " << idx << ", " << name << '\n';
+			else
+				std::cout << "Marine " << idx << '\n';
+			std::cout << y << ", " << x << '\n';
+			std::cout << hp << '\n';
+			std::cout << "-----------------\n";
+		}
+	};
+	int Marine::midx = 1;
+}
+
 void func4()
 {
 	int a = 1;
@@ -173,5 +256,23 @@ void func4()
 	geometry.AddPoint(PointGeo::Point(1, 2));
 	geometry.PrintDistance();
 	geometry.PrintNumMeets();
+
+	std::cout << "\n4_3----------------------------\n";
+
+	Starcraft::Marine marine1(2, 3);
+	Starcraft::Marine marine2("nameMarine2", 3, 5);
+
+	marine1.Show();
+	marine2.Show();
+	std::cout << "마린1이 마린2를 공격\n";
+	marine1.Attack(marine2);
+	marine1.Show();
+	marine2.Show();
+
+	Starcraft::Marine marine3 = marine2; //복사생성자
+	
+	marine3.Show();
+	//marine3 = marine1; //복사, marine3이 marine1을 가리키게끔한다.
+	marine3.Show();
 }
 
