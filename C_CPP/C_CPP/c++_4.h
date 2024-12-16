@@ -213,7 +213,7 @@ namespace Starcraft
 			std::cout << "-----------------\n";
 		}
 	};
-	int Marine::midx = 1;
+	int Marine::midx = 1; //static 정적변수는 밖에서 초기화해줘야한다.
 }
 
 void func4()
