@@ -256,6 +256,202 @@ namespace CopyConstructExam
 		A a1 = b.get_A(); //RVO, 복사생성자가한번만호출됨
 	}
 }
+
+namespace MyString
+{
+	class MyString
+	{
+	private:
+		char* str;
+		int len;
+	public:
+		//문자하나로부터생성
+		MyString(const char c);
+		//문자열로부터생성
+		MyString(const char* _str);
+		//복사생성자
+		MyString(const MyString& _str);
+		//소멸자
+		~MyString();
+		
+	public:
+		//const로호출
+		int Size() const;
+		void Print() const;
+		MyString& Assign(const char* _str);
+		MyString& Assign(const MyString& _str);
+		char At(int idx) const;
+		MyString& Insert(int loc, const MyString& _str);
+		MyString& Insert(int loc, const char* _str);
+		MyString& Insert(int loc, char c);
+		MyString& Erase(int loc, int num);
+		int Find(const MyString& _str) const;
+		int Find(const char* _str) const;
+		int Find(char _c) const;
+	};
+	MyString::MyString::MyString(const char c)
+	{
+		str = new char[2];
+		str[0] = c;
+		str[1] = '\0';
+		len = 1;
+	}
+	MyString::MyString::MyString(const char* _str)
+	{
+		len = 0;
+		while (*(_str + len) != '\0') len++;
+		str = new char[len + 1];
+		for (int i = 0; i < len; i++)
+			str[i] = _str[i];
+		str[len] = '\0';
+	}
+	MyString::MyString::MyString(const MyString& _str)
+	{
+		len = _str.Size();
+		str = new char[len + 1];
+		for (int i = 0; i < len; i++)
+			str[i] = _str.str[i];
+		str[len] = '\0';
+	}
+	MyString::MyString::~MyString()
+	{
+		std::cout << "소멸자호출\n";
+		delete[] str;
+	}
+	int MyString::MyString::Size() const
+	{
+		return len;
+	}
+	void MyString::MyString::Print() const
+	{
+		std::cout << str << '\n';
+	}
+	MyString& MyString::MyString::Assign(const char* _str)
+	{
+		delete[] str;
+		len = 0;
+		while (_str[len] != '\0') len++;
+		str = new char[len + 1];
+		for (int i = 0; i < len; i++)
+			str[i] = _str[i];
+		str[len] = '\0';
+		return *this;
+	}
+	MyString& MyString::MyString::Assign(const MyString& _str)
+	{
+		delete[] str;
+		len = _str.Size();
+		str = new char[len + 1];
+		for (int i = 0; i < len; i++)
+			str[i] = _str.str[i];
+		str[len] = '\0';
+		return *this;
+	}
+	char MyString::MyString::At(int idx) const
+	{
+		if (idx < 0 || idx >= len) return NULL;
+		return str[idx];
+	}
+	MyString& MyString::MyString::Insert(int loc, const MyString& _str)
+	{
+		if (loc < 0) return *this;
+		if (len < loc) loc = len;
+		int _len = len + _str.Size();
+		char* temp = new char[_len + 1];
+		int idx = 0;
+		for (idx = 0; idx < loc; idx++)
+			temp[idx] = str[idx];
+		for (int i = 0; i < _str.Size(); i++)
+			temp[idx++] = _str.str[i];
+		for (int i = loc; i < len; i++)
+			temp[idx++] = str[i];
+		temp[_len] = '\0';
+		delete[] str;
+		str = temp;
+		len = _len;
+		return *this;
+	}
+	MyString& MyString::MyString::Insert(int loc, const char* _str)
+	{
+		return this->Insert(loc, MyString(_str));
+	}
+	MyString& MyString::MyString::Insert(int loc, char c)
+	{
+		return this->Insert(loc, MyString(c));
+	}
+	MyString& MyString::MyString::Erase(int loc, int num)
+	{
+		if (num < 0 || loc < 0 || loc > len || num > len) return *this;
+		for (int i = loc + num; i < len; i++)
+			str[i - num] = str[i];
+		len -= num;
+		str[len] = '\0';
+		return *this;
+	}
+	int MyString::MyString::Find(const MyString& _str) const
+	{
+		if (_str.Size() <= 0) return -1;
+		if (_str.Size() > len) return -1;
+		for (int i = 0; i <= len - _str.Size(); i++)
+		{
+			int j;
+			for (j = 0; j < _str.Size(); j++)
+				if (str[i + j] != _str.str[j]) break;
+			if (j == _str.Size()) return i;
+		}
+		return -1;
+	}
+	int MyString::MyString::Find(const char* _str) const
+	{
+		return Find(MyString(_str));
+	}
+	int MyString::MyString::Find(char _c) const
+	{
+		return Find(MyString(_c));
+	}
+
+	void funcExam()
+	{
+		/*
+		MyString str1('A');
+		str1.Print();
+
+		MyString str2("Hello World!");
+		str2.Print();
+
+		MyString str3 = str2.Assign("New World!!");;
+		str3.Print();
+		
+		str2.Assign(" Change");
+		str2.Print();
+
+		str3.Insert(3, str2); 
+		str3.Print();
+
+		str3.Insert(0, 'Z'); //임시객체 소멸자가호출
+		str3.Print();
+		
+		MyString str4("abc");
+		str4.Insert(1, 'd');
+		str4.Print();
+		*/
+		MyString str1("very long string");
+		MyString str2("<some string inserted between>");
+		std::cout << str1.Size() << '\n';
+		str1.Print();
+		std::cout << str1.Find("long") << '\n';
+		str1.Insert(5, str2);
+		str1.Print();
+
+		str1.Erase(2, 2);
+		str1.Print();
+
+		str1.Erase(0, 33);
+		str1.Print();
+		std::cout << str1.Find("str") << '\n';
+	}
+}
+
 void func4()
 {
 	int a = 1;
@@ -288,7 +484,7 @@ void func4()
 	Func4Check func; //생성자호출, ()->함수호출이되버림, 모호한구문을 함수선언으로 우석 해석하는 좌측우선파싱(left-to-right parsing)때문, 함수선언(정의)가되어버림
 	Func4Check func2 = Func4Check();
 
-
+	/*
 	PointGeo::Geometry geometry;
 	geometry.AddPoint(PointGeo::Point(0, 0));
 	geometry.AddPoint(PointGeo::Point(0, 1));
@@ -316,5 +512,7 @@ void func4()
 	marine3.Show();
 
 	CopyConstructExam::funcExam();
+	*/
+	MyString::funcExam();
 }
 
