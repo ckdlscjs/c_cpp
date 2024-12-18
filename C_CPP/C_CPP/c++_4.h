@@ -449,6 +449,9 @@ namespace MyString
 		str1.Erase(0, 33);
 		str1.Print();
 		std::cout << str1.Find("str") << '\n';
+
+		/*explict 키워드 -> 묵시적 형변환을 막는다, 복사생성자등 컴파일러가 임의로 해석해 맞는 함수호출하는것을 방지*/
+		/*mutable 키워드 -> 변수앞에 선언되면 const함수내부에서 해당 변수는 변환이가능하다, const로 선언해야하는 함수내부에서 변경해야할 유연함을 제공*/
 	}
 }
 
