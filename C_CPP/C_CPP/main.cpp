@@ -6,8 +6,9 @@
 #include "c++_2.h"
 #include "c++_3.h"
 #include "c++_4.h"
+#include "c++_5.h"
 int main()
 {
-	func4();
+	MyString5::Exam();
 	return 0;
 }
