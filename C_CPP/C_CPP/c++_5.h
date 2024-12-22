@@ -175,6 +175,71 @@ namespace Complex
 	class Complex
 	{
 	private:
-		double real, img;
+		double real, img; //실수부, 허수부
+	public:
+		Complex(double _real, double _img) : real(_real), img(_img) {}
+		Complex(const Complex& c) : real(c.real), img(c.img) {} //복사생성자
+		
+		//내부의 값을 변경할 필요 없이 새로운 피연산자를 생성해 리턴하므로 const로 선언한다
+		Complex operator+(const Complex& c) const
+		{
+			return Complex(real + c.real, img + c.img);
+		}
+		Complex operator-(const Complex& c) const
+		{
+			return Complex(real - c.real, img - c.img);
+		}
+		Complex operator*(const Complex& c) const
+		{
+			return Complex(real*c.real - img*c.img, real * c.img + img * c.real); // (a1a2 - b1b2) + (a1b2 + a2b1)i
+		}
+		Complex operator/(const Complex& c) const // ((a1a2 + b1b2) + (b1a2 - a1b2)i)  / (a2^2 + b2^2)
+		{
+			return Complex((real * c.real + img * c.img)  / (c.real*c.real + c.img * c.img), (img * c.real- real * c.img) / (c.real * c.real + c.img * c.img));
+		}	
+		Complex& operator=(const Complex& c)
+		{
+			real = c.real;
+			img = c.img;
+			return *this;
+		}
+		Complex& operator+=(const Complex& c) 
+		{
+			*this = *this + c;
+			return *this;
+		}
+		Complex& operator-=(const Complex& c) 
+		{
+			*this = *this - c;
+			return *this;
+		}
+		Complex& operator*=(const Complex& c)
+		{
+			*this = *this * c;
+			return *this;
+		}
+		Complex& operator/=(const Complex& c)
+		{
+			*this = *this / c;
+			return *this;
+		}
+		friend ostream& operator<<(std::ostream& out, const Complex& c) //출력연산자 오버로딩
+		{
+			out << '(' << c.real << ", " << c.img << ')';
+			return out;
+		}
 	};
+	
+	void Exam()
+	{
+		Complex a(1.0f, 2.0f);
+		Complex b(3.0f, -2.0f);
+		/*
+		Complex c(0.0f, 0.0f); //c = 시에 복사생성자가 호출됨
+		c = a * b + a / b + a + b; //대입연산자가 호출됨
+		*/
+		a += b;
+		std::cout << a << '\n';
+		std::cout << b << '\n';
+	}
 }

@@ -9,6 +9,6 @@
 #include "c++_5.h"
 int main()
 {
-	MyString5::Exam();
+	Complex::Exam();
 	return 0;
 }
