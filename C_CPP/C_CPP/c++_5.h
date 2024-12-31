@@ -32,6 +32,11 @@ namespace MyString5
 		int Find(const char* _str) const;
 		int Find(char _c) const;
 		bool operator==(const MyString& _str);
+		char& operator[](const int idx) const;
+		friend ostream& operator<<(std::ostream& out, const MyString& _str)
+		{
+			return out << _str.str;
+		}
 	};
 	MyString::MyString::MyString(const char c)
 	{
@@ -160,12 +165,19 @@ namespace MyString5
 			if (str[i] != _str.At(i)) return false;
 		return true;
 	}
+	char& MyString::MyString::operator[](const int idx) const
+	{
+		return str[idx];
+	}
 	void Exam()
 	{
 		MyString str1("Check1");
 		MyString str2 = str1;
 		str2.Assign("Check2");
 		std::cout << (str1 == str2 ? 1 : 0) << '\n';
+		MyString str3("abcdef");
+		str3[3] = 'c';
+		std::cout << str3 << '\n';
 	}
 }
 
@@ -245,6 +257,8 @@ namespace Complex
 		}
 		Complex(const Complex& c) : real(c.real), img(c.img) {} //복사생성자
 		//내부의 값을 변경할 필요 없이 새로운 피연산자를 생성해 리턴하므로 const로 선언한다
+		/*
+		* 자기자신을 반환하는 이항대입관련된 연산자들은 멤버함수로, 일반 연산자는 friend를 이용한다.
 		Complex operator+(const Complex& c) const
 		{
 			return Complex(real + c.real, img + c.img);
@@ -260,7 +274,8 @@ namespace Complex
 		Complex operator/(const Complex& c) const // ((a1a2 + b1b2) + (b1a2 - a1b2)i)  / (a2^2 + b2^2)
 		{
 			return Complex((real * c.real + img * c.img)  / (c.real*c.real + c.img * c.img), (img * c.real- real * c.img) / (c.real * c.real + c.img * c.img));
-		}	
+		}
+		*/
 		Complex& operator=(const Complex& c)
 		{
 			real = c.real;
@@ -312,8 +327,66 @@ namespace Complex
 			out << '(' << c.real << ", " << c.img << ')';
 			return out;
 		}
+		friend Complex operator+(const Complex& a, const Complex& b)
+		{
+			return Complex(a.real + b.real, a.img + b.img);
+		}
+		friend Complex operator-(const Complex& a, const Complex& b)
+		{
+			return Complex(a.real - b.real, a.img - b.img);
+		}
+		friend Complex operator*(const Complex& a, const Complex& b)
+		{
+			return Complex(a.real * b.real - a.img * b.img, a.real * b.img + a.img * b.real); // (a1a2 - b1b2) + (a1b2 + a2b1)i
+		}
+		friend Complex operator/(const Complex& a, const Complex& b)
+		{
+			return Complex((a.real * b.real + a.img * b.img) / (b.real * b.real + b.img * b.img), (a.img * b.real - a.real * b.img) / (b.real * b.real + b.img * b.img));
+		}
 	};
-	
+	/*
+	Complex operator+(const Complex& a, const Complex& b)
+	{
+		
+	}
+	Complex operator+(const Complex& a, const Complex& b)
+	{
+		return Complex(a.real + b.real, a.img + b.img);
+	}
+	Complex operator+(const Complex& a, const Complex& b)
+	{
+		return Complex(a.real + b.real, a.img + b.img);
+	}
+	Complex operator+(const Complex& a, const Complex& b)
+	{
+		return Complex(a.real + b.real, a.img + b.img);
+	}
+	*/
+	class A
+	{
+	private:
+		void private_func() {}
+		int private_num;
+
+		friend class B; //B -> A에접근 가능, A -> B 불가능
+		friend void func(); //외부함수 func에서 A클래스의 인자에 접근을 허용한다
+	};
+	class B
+	{
+	public:
+		void b()
+		{
+			A a;
+			a.private_func();
+			a.private_num = 2;
+		}
+	};
+	void func()
+	{
+		A a;
+		a.private_func();
+		a.private_num = 3;
+	}
 	void Exam()
 	{
 		/*
@@ -332,13 +405,55 @@ namespace Complex
 		std::cout << c + "-1.1 + 3.923i";
 		*/
 		Complex a(0, 0);
-		a = a + "-1.1 + 3.923i";
-		std::cout << a << '\n';
-		a = a - "1.2 - 1.823i";
-		std::cout << a << '\n';
-		a = a * "2.3 + 22i";
-		std::cout << a << '\n';
-		a = a / "-12 + 55i";
-		std::cout << a << '\n';
+		a = "-1.1 + 3.923i" + a;
+		a = a + a;
+		std::cout << a;
+	}
+}
+
+namespace Wrapper
+{
+	class Int
+	{
+		int data;
+		// some other data
+
+	public:
+		Int(int data) : data(data) {} //기본생성자
+		Int(const Int& i) : data(i.data) {} //복사생성자
+		operator int() //int형 형변환, 
+		{ 
+			return data; 
+		} 
+	};
+	class Test
+	{
+		int data;
+		// some other data
+
+	public:
+		Test(int data) : data(data) {} //기본생성자
+		Test(const Test& i) : data(i.data) {} //복사생성자
+		Test& operator++() //전위증감연산자는 인자가 없음
+		{
+			data++;
+			std::cout << "전위증감연산자!\n";
+			return *this;
+		}
+		Test& operator++(int) //후위증감연산자는 인자가 있음
+		{
+			data++;
+			std::cout << "후위증감연산자!\n";
+			return *this;
+		}
+	};
+	void Exam()
+	{
+		Int x = 3;
+		Int x2 = x + 4;
+		x2 = x * 2 + x + 4;
+		std::cout << x2;
+		Test tes = 3;
+		++tes;
 	}
 }

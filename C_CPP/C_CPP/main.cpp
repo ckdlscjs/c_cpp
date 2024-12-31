@@ -9,6 +9,8 @@
 #include "c++_5.h"
 int main()
 {
-	Complex::Exam();
+	//Complex::Exam();
+	//MyString5::Exam();
+	Wrapper::Exam();
 	return 0;
 }
