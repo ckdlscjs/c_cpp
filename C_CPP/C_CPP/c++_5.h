@@ -176,10 +176,74 @@ namespace Complex
 	{
 	private:
 		double real, img; //실수부, 허수부
+
+	private:
+		double GetNumber(const char* _str, int begin, int end)
+		{
+			double ret = 0.0f;
+			double decimal_after = 1.0f;
+			int minus = 1;
+			bool is_int = true;
+			for (begin; begin <= end; begin++)
+			{
+				if (_str[begin] == ' ' || _str[begin] == '+')
+					continue;
+				else if (_str[begin] == '-')
+				{
+					minus = -1;
+					continue;
+				}
+				else if (_str[begin] == '.')
+				{
+					is_int = false;
+					continue;
+				}
+				else if (is_int)
+				{
+					ret *= 10.0f;
+					ret += (_str[begin] - '0');
+				}
+				else
+				{
+					decimal_after *= 0.1f;
+					ret += (_str[begin] - '0') * decimal_after;
+				}
+			}
+			return ret * minus;
+		}
 	public:
 		Complex(double _real, double _img) : real(_real), img(_img) {}
+		Complex(const char* _str)
+		{
+			//_str -> 부호, 실수부, 부호, 허수부 i
+			int begin = 0, end = std::strlen(_str), pos_oper = -1;
+			bool is_i = _str[end - 1] == 'i';
+			for (int i = end - 1; i >= begin; i--)
+			{
+				if (_str[i] == '+' || _str[i] == '-')
+				{
+					pos_oper = i;
+					break;
+				}
+			}
+			if (!is_i)
+			{
+				real = GetNumber(_str, begin, end - 1);
+			}
+			else
+			{
+				if (pos_oper > 0)
+				{
+					real = GetNumber(_str, begin, pos_oper - 1);
+					img = GetNumber(_str, pos_oper, end - 2);
+				}
+				else
+				{
+					img = GetNumber(_str, pos_oper, end - 2);
+				}
+			}
+		}
 		Complex(const Complex& c) : real(c.real), img(c.img) {} //복사생성자
-		
 		//내부의 값을 변경할 필요 없이 새로운 피연산자를 생성해 리턴하므로 const로 선언한다
 		Complex operator+(const Complex& c) const
 		{
@@ -223,6 +287,26 @@ namespace Complex
 			*this = *this / c;
 			return *this;
 		}
+		/*
+		* //컴파일러에서 생성자를 이용해서 알아서 형변환해준다 즉
+		* a = a.operator+(Complex("-1.1 + 3.923i")); 로 처리된다
+		Complex operator+(const char* _str)
+		{
+			return *this + Complex(_str);
+		}
+		Complex operator-(const char* _str)
+		{
+			return *this - Complex(_str);
+		}
+		Complex operator*(const char* _str)
+		{
+			return *this * Complex(_str);
+		}
+		Complex operator/(const char* _str)
+		{
+			return *this / Complex(_str);
+		}
+		*/
 		friend ostream& operator<<(std::ostream& out, const Complex& c) //출력연산자 오버로딩
 		{
 			out << '(' << c.real << ", " << c.img << ')';
@@ -232,14 +316,29 @@ namespace Complex
 	
 	void Exam()
 	{
+		/*
 		Complex a(1.0f, 2.0f);
 		Complex b(3.0f, -2.0f);
-		/*
+		
 		Complex c(0.0f, 0.0f); //c = 시에 복사생성자가 호출됨
 		c = a * b + a / b + a + b; //대입연산자가 호출됨
-		*/
+		
 		a += b;
 		std::cout << a << '\n';
 		std::cout << b << '\n';
+		std::cout << b + "-4-3.2i" << '\n';
+		Complex c(0, 0);
+		std::cout << Complex("-0.5-3.7i") << '\n';
+		std::cout << c + "-1.1 + 3.923i";
+		*/
+		Complex a(0, 0);
+		a = a + "-1.1 + 3.923i";
+		std::cout << a << '\n';
+		a = a - "1.2 - 1.823i";
+		std::cout << a << '\n';
+		a = a * "2.3 + 22i";
+		std::cout << a << '\n';
+		a = a / "-12 + 55i";
+		std::cout << a << '\n';
 	}
 }
