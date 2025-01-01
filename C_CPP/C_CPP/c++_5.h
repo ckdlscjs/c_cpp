@@ -457,3 +457,29 @@ namespace Wrapper
 		++tes;
 	}
 }
+
+namespace NDimension
+{
+	class Array
+	{
+		struct Address
+		{
+			//0레벨~n-1레벨, n-1레벨은 실제 데이터배열을 가리킨다
+			int level;
+			//다음레벨의 시작주소를 가리키는 포인터, 맨마지막은 실제 데이터를 가리킨다
+			void* next;
+		};
+		//몇개의 층을 가지는가
+		const int dim;
+		//해당 층에 몇개의 배열이 존재하는가
+		int* size;
+		//top주소를 가리키는 포인터(루트)
+		Address* root;
+	public:
+		Array(int _dim, int* _sizes) : dim(_dim)
+		{
+			size = new int[dim];
+			std::memcpy(size, _sizes, sizeof(size));
+		}
+	};
+}
