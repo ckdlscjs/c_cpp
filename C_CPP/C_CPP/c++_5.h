@@ -460,8 +460,12 @@ namespace Wrapper
 
 namespace NDimension
 {
+	static int cnt = 0;
+	class Array;
+	class Int;
 	class Array
 	{
+		friend Int;
 		struct Address
 		{
 			//0레벨~n-1레벨, n-1레벨은 실제 데이터배열을 가리킨다
@@ -476,10 +480,147 @@ namespace NDimension
 		//top주소를 가리키는 포인터(루트)
 		Address* root;
 	public:
+		//생성자
 		Array(int _dim, int* _sizes) : dim(_dim)
 		{
 			size = new int[dim];
-			std::memcpy(size, _sizes, sizeof(size));
+			std::memcpy(size, _sizes, dim*sizeof(int));
+			root = new Address;
+			root->level = 0;
+			InitializeAddress(root);
+		}
+		//복사생성자
+		Array(const Array& array) : dim(array.dim) 
+		{
+			size = new int[dim];
+			std::memcpy(size, array.size, dim * sizeof(int));
+			root = new Address;
+			root->level = 0;
+			CopyAddress(root, array.root);
+		}
+		~Array()
+		{
+			DeleteAddress(root);
+			delete[] size;
+		}
+		void InitializeAddress(Address* cur)
+		{
+			if (cur == nullptr) return;
+			if (cur->level >= dim - 1)
+			{
+				cur->next = new int[size[cur->level]];
+				return;
+			}
+			cur->next = new Address[size[cur->level]]; //다음층을 가리키는 포인터에 동적할당(사이즈만큼)
+			for (int i = 0; i < size[cur->level]; i++)
+			{
+				(static_cast<Address*>(cur->next)+i)->level = cur->level + 1; //다음층을 가리키는 포인터(배열)의 인덱스에 해당하는 레벨을 현재층+1로 초기화
+				InitializeAddress(static_cast<Address*>(cur->next) + i); //다음시작주소 재귀탐색
+			}
+		}
+		void CopyAddress(Address* cur, Address* src)
+		{
+			if (src == nullptr) return;
+			if (src->level >= dim - 1)
+			{
+				cur->next = new int[size[cur->level]];
+				for (int i = 0; i < size[cur->level]; i++)
+					*(static_cast<int*>(cur->next) + i) = *(static_cast<int*>(src->next) + i);
+				return;
+			}
+			cur->next = new Address[size[src->level]]; //다음층을 가리키는 포인터에 동적할당(사이즈만큼)
+			for (int i = 0; i < size[cur->level]; i++)
+			{
+				(static_cast<Address*>(cur->next) + i)->level = cur->level + 1; //다음층을 가리키는 포인터(배열)의 인덱스에 해당하는 레벨을 현재층+1로 초기화
+				CopyAddress(static_cast<Address*>(cur->next) + i, static_cast<Address*>(src->next) + i); //다음시작주소 재귀탐색
+			}
+		}
+		void DeleteAddress(Address* cur)
+		{
+			if (cur == nullptr) return;
+			for (int i = 0; cur->level < dim - 1 && i < size[cur->level]; i++)
+			{
+				DeleteAddress(static_cast<Address*>(cur->next) + i);
+			}
+			if (cur->level >= dim - 1)
+				delete[] static_cast<int*>(cur->next);
+			else
+				delete[] static_cast<Address*>(cur->next);
+		}
+		Int operator[](const int index);
+	};
+	class Int
+	{
+		void* data;
+		int level;
+		Array* array;
+	public:
+		Int(int _idx, int _level = 0, void* _data = NULL, Array* _array = NULL) : level(_level), data(_data), array(_array)
+		{
+			if (level < 1 || _idx >= array->size[level - 1])
+			{
+				data = NULL;
+				return;
+			}
+			if (level == array->dim)
+			{
+				data = static_cast<void*>(static_cast<int*>(static_cast<Array::Address*>(data)->next) + _idx);
+			}
+			else
+			{
+				data = static_cast<void*>(static_cast<Array::Address*>(static_cast<Array::Address*>(data)->next) + _idx);
+			}
+		}
+		Int(const Int& i) : level(i.level), data(i.data), array(i.array) {}
+		operator int()
+		{
+			std::cout << "wrapper" << cnt++ << '\n';
+			if (data) 
+				return *static_cast<int*>(data);
+			return 0;
+		}
+		Int& operator=(const int& a)
+		{
+			std::cout << "oper=" << cnt++ << '\n';
+			if (data) 
+				*static_cast<int*>(data) = a;
+			return *this;
+		}
+		Int operator[](const int index) 
+		{
+			std::cout <<"overload"<< cnt++ << '\n';
+			if (!data) return 0;
+			return Int(index, level + 1, data, array);
 		}
 	};
+	Int Array::operator[](const int index) 
+	{
+		std::cout << "friend"<<cnt++ << '\n';
+		return Int(index, 1, static_cast<void*>(root), this);
+	}
+	void Exam()
+	{
+		
+		int size[] = { 2, 3, 4 };
+		Array arr(3, size);
+		for (int i = 0; i < 2; i++) 
+		{
+			for (int j = 0; j < 3; j++) 
+			{
+				for (int k = 0; k < 4; k++) 
+				{
+					arr[i][j][k] = (i + 1) * (j + 1) * (k + 1);
+				}
+			}
+		}
+		
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 3; j++) {
+				for (int k = 0; k < 4; k++) {
+					//std::cout << i << " " << j << " " << k << "->" << arr[i][j][k] << '\n';
+				}
+			}
+		}
+		
+	}
 }

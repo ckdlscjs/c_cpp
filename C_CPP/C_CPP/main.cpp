@@ -11,6 +11,7 @@ int main()
 {
 	//Complex::Exam();
 	//MyString5::Exam();
-	Wrapper::Exam();
+	//Wrapper::Exam();
+	NDimension::Exam();
 	return 0;
 }
