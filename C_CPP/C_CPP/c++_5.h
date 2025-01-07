@@ -457,7 +457,165 @@ namespace Wrapper
 		++tes;
 	}
 }
+namespace MyNdim
+{
+	class Arr;
+	class Integer;
+	class Arr
+	{
+		friend Integer;
+		struct Addr
+		{
+			int level;
+			int size;
+			void* next;
+		};
+		const int dim;
+		Addr* root;
+	public:
+		Arr(int _dim, const int* _sizes) : dim(_dim)
+		{
+			root = new Addr;
+			Init(_sizes, root, 0);
+		}
+		~Arr()
+		{
+			Erase(root);
+		}
+		void Init(const int* sizes, Addr* cur, const int level)
+		{
+			cur->level = level;
+			cur->size = sizes[level];
+			if (level >= dim - 1)
+			{
+				cur->next = new int[cur->size];
+				return;
+			}
+			cur->next = new Addr[cur->size];
+			for (int i = 0; i < cur->size; i++)
+				Init(sizes, static_cast<Addr*>(cur->next) + i, cur->level + 1);
+		}
+		void Erase(Addr* cur)
+		{
+			if (cur == nullptr) return;
+			for (int i = 0; cur->level < dim - 1 && i < cur->size; i++)
+			{
+				Erase(static_cast<Addr*>(cur->next) + i);
+			}
+			if (cur->level >= dim - 1)
+				delete[] static_cast<int*>(cur->next);
+			else
+				delete[] static_cast<Addr*>(cur->next);
+		}
+		Integer operator[](const int idx);
+	};
 
+	class Integer
+	{
+		Arr* arr;
+		void* data = NULL;
+	public:
+		Integer(const int _level, const int _idx = 0, void* _data = NULL, Arr* _arr = NULL)
+		{
+			if (!_data) return;
+			if (_level > _arr->dim) return;
+			arr = _arr;
+			if (_level >= _arr->dim-1)
+			{
+				Arr::Addr* addr = static_cast<Arr::Addr*>(_data);
+				int* intptr = static_cast<int*>(addr->next) + _idx;
+				data = static_cast<void*>(intptr);
+			}
+			else
+			{
+				Arr::Addr* addr = static_cast<Arr::Addr*>(_data);
+				Arr::Addr* nextaddr = static_cast<Arr::Addr*>(addr->next) + _idx;
+				data = static_cast<void*>(nextaddr);
+			}
+		}
+		Integer(const Integer& _integer) : arr(_integer.arr), data(_integer.data) {}
+		operator int()
+		{
+			if (!data) return 0;
+			return *static_cast<int*>(data);
+		}
+		Integer operator[](const int idx)
+		{
+			if (!data) return 0;
+			return Integer(static_cast<Arr::Addr*>(data)->level, idx, data, arr);
+		}
+		Integer& operator=(const int& a)
+		{
+			if (data)
+				*static_cast<int*>(data) = a;
+			return *this;
+		}
+	};
+	Integer Arr::operator[](const int idx)
+	{
+		return Integer(0, idx, static_cast<void*>(root), this);
+	}
+	void Exam()
+	{
+		int size[] = {2, 3, 1, 4, 5, 3, 2, 1};
+		Arr arr(8, size);
+		int cnt = 1;
+		for (int i0 = 0; i0 < size[0]; i0++)
+		{
+			for (int i1 = 0; i1 < size[1]; i1++)
+			{
+				for (int i2 = 0; i2 < size[2]; i2++)
+				{
+					for (int i3 = 0; i3 < size[3]; i3++)
+					{
+						for (int i4 = 0; i4 < size[4]; i4++)
+						{
+							for (int i5 = 0; i5 < size[5]; i5++)
+							{
+								for (int i6 = 0; i6 < size[7]; i6++)
+								{
+									for (int i7 = 0; i7 < size[7]; i7++)
+									{
+										arr[i0][i1][i2][i3][i4][i5][i6][i7] = cnt++;
+									}
+								}
+							}
+						}
+
+					}
+				}
+			}
+		}
+		for (int i0 = 0; i0 < size[0]; i0++)
+		{
+			for (int i1 = 0; i1 < size[1]; i1++)
+			{
+				for (int i2 = 0; i2 < size[2]; i2++)
+				{
+					for (int i3 = 0; i3 < size[3]; i3++)
+					{
+						for (int i4 = 0; i4 < size[4]; i4++)
+						{
+							for (int i5 = 0; i5 < size[5]; i5++)
+							{
+								for (int i6 = 0; i6 < size[7]; i6++)
+								{
+									for (int i7 = 0; i7 < size[7]; i7++)
+									{
+										std::cout << arr[i0][i1][i2][i3][i4][i5][i6][i7] << '\n';
+									}
+								}
+							}
+						}
+
+					}
+				}
+			}
+		}
+		std::cout << arr[0][1][0][1][0][1][0][0];
+	}
+	
+}
 namespace NDimension
 {
 	static int cnt = 0;
@@ -574,21 +732,21 @@ namespace NDimension
 		Int(const Int& i) : level(i.level), data(i.data), array(i.array) {}
 		operator int()
 		{
-			std::cout << "wrapper" << cnt++ << '\n';
+			//std::cout << "wrapper" << cnt++ << '\n';
 			if (data) 
 				return *static_cast<int*>(data);
 			return 0;
 		}
 		Int& operator=(const int& a)
 		{
-			std::cout << "oper=" << cnt++ << '\n';
+			//std::cout << "oper=" << cnt++ << '\n';
 			if (data) 
 				*static_cast<int*>(data) = a;
 			return *this;
 		}
 		Int operator[](const int index) 
 		{
-			std::cout <<"overload"<< cnt++ << '\n';
+			//std::cout <<"overload"<< cnt++ << '\n';
 			if (!data) return 0;
 			return Int(index, level + 1, data, array);
 		}
@@ -600,7 +758,6 @@ namespace NDimension
 	}
 	void Exam()
 	{
-		
 		int size[] = { 2, 3, 4 };
 		Array arr(3, size);
 		for (int i = 0; i < 2; i++) 
@@ -609,6 +766,7 @@ namespace NDimension
 			{
 				for (int k = 0; k < 4; k++) 
 				{
+					std::cout << i << ", " << j << ", " << k << '\n';
 					arr[i][j][k] = (i + 1) * (j + 1) * (k + 1);
 				}
 			}
@@ -617,10 +775,9 @@ namespace NDimension
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 3; j++) {
 				for (int k = 0; k < 4; k++) {
-					//std::cout << i << " " << j << " " << k << "->" << arr[i][j][k] << '\n';
+					std::cout << i << " " << j << " " << k << "->" << arr[i][j][k] << '\n';
 				}
 			}
 		}
-		
 	}
 }
