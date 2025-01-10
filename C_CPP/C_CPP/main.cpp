@@ -12,7 +12,7 @@ int main()
 	//Complex::Exam();
 	//MyString5::Exam();
 	//Wrapper::Exam();
-	//NDimension::Exam();
-	MyNdim::Exam();
+	NDimension::Exam();
+	//MyNdim::Exam();
 	return 0;
 }

@@ -457,6 +457,7 @@ namespace Wrapper
 		++tes;
 	}
 }
+/*
 namespace MyNdim
 {
 	class Arr;
@@ -616,6 +617,8 @@ namespace MyNdim
 	}
 	
 }
+*/
+
 namespace NDimension
 {
 	static int cnt = 0;
@@ -637,6 +640,64 @@ namespace NDimension
 		int* size;
 		//top주소를 가리키는 포인터(루트)
 		Address* root;
+	public:
+		class Iterator
+		{
+			Array* arr;
+			int* location;
+			friend Int;
+		public:
+			Iterator(Array* _arr, int* _locs)
+			{
+				arr = _arr;
+				location = new int[_arr->dim];
+				for (int i = 0; i < _arr->dim; i++) location[i] = _locs[i];
+			}
+			Iterator(const Iterator& iter)
+			{
+				std::cout << "복사생성자iter";
+				arr = iter.arr;
+				location = new int[arr->dim];
+				for (int i = 0; i < arr->dim; i++) location[i] = iter.location[i];
+			}
+			~Iterator()
+			{
+				delete[] location;
+			}
+			Iterator& operator++()
+			{
+				if (location[0] >= arr->size[0]) return *this;
+				int idx = arr->dim - 1;
+				bool carry = false;
+				do
+				{
+					location[idx]++;
+					if (location[idx] >= arr->size[idx] && idx >= 1)
+					{
+						location[idx] -= arr->size[idx];
+						carry = true;
+						idx--;
+					}
+					else
+						carry = false;
+				} while (idx >= 0 && carry);
+				return *this;
+			}
+			Iterator& operator++(int)
+			{
+				++(*this);
+				return *this;
+			}
+			Iterator& operator=(const Iterator& iter)
+			{
+				std::cout << "oper=?";
+				arr = iter.arr;
+				location = new int[arr->dim];
+				for (int i = 0; i < arr->dim; i++) location[i] = iter.location[i];
+				return *this;
+			}
+			Int operator*();
+		};
 	public:
 		//생성자
 		Array(int _dim, int* _sizes) : dim(_dim)
@@ -706,6 +767,24 @@ namespace NDimension
 				delete[] static_cast<Address*>(cur->next);
 		}
 		Int operator[](const int index);
+
+		Iterator begin()
+		{
+			int* temps = new int[dim];
+			for (int i = 0; i < dim; i++) temps[i] = 0;
+			Iterator iter(this, temps);
+			delete[] temps;
+			return iter;
+		}
+		Iterator end()
+		{
+			int* temps = new int[dim];
+			temps[0] = size[0];
+			for (int i = 1; i < dim; i++) temps[i] = 0;
+			Iterator iter(this, temps);
+			delete[] temps;
+			return iter;
+		}
 	};
 	class Int
 	{
@@ -753,29 +832,42 @@ namespace NDimension
 	};
 	Int Array::operator[](const int index) 
 	{
-		std::cout << "friend"<<cnt++ << '\n';
+		//std::cout << "friend"<<cnt++ << '\n';
 		return Int(index, 1, static_cast<void*>(root), this);
+	}
+	Int Array::Iterator::operator*()
+	{
+		Int start = arr->operator[](location[0]);
+		for (int i = 1; i <= arr->dim - 1; i++)
+			start = start.operator[](location[i]);
+		return start;
 	}
 	void Exam()
 	{
 		int size[] = { 2, 3, 4 };
 		Array arr(3, size);
-		for (int i = 0; i < 2; i++) 
-		{
-			for (int j = 0; j < 3; j++) 
-			{
-				for (int k = 0; k < 4; k++) 
-				{
-					std::cout << i << ", " << j << ", " << k << '\n';
+		/*
+		* rvo로인해 복사생성자를 호출하려면 임의로 남겨야함, 임시값 rvalue는 rvo로 사라짐
+		Array::Iterator temp = arr.begin();
+		Array::Iterator itr(temp);
+		
+		
+		for (int i = 0; itr != arr.end(); itr++, i++) (*itr) = i;
+		for (itr = arr.begin(); itr != arr.end(); itr++)
+			std::cout << *itr << std::endl;
+		*/
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 3; j++) {
+				for (int k = 0; k < 4; k++) {
 					arr[i][j][k] = (i + 1) * (j + 1) * (k + 1);
 				}
 			}
 		}
-		
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 3; j++) {
 				for (int k = 0; k < 4; k++) {
-					std::cout << i << " " << j << " " << k << "->" << arr[i][j][k] << '\n';
+					std::cout << i << " " << j << " " << k << " " << arr[i][j][k]
+						<< std::endl;
 				}
 			}
 		}
