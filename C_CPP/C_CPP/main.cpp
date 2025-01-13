@@ -7,12 +7,9 @@
 #include "c++_3.h"
 #include "c++_4.h"
 #include "c++_5.h"
+#include "c++_6.h"
 int main()
 {
-	//Complex::Exam();
-	//MyString5::Exam();
-	//Wrapper::Exam();
-	NDimension::Exam();
-	//MyNdim::Exam();
+	Inheritance1::Exam();
 	return 0;
 }
