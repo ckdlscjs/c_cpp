@@ -81,6 +81,12 @@ namespace Inheritance1
 		lists.AddLists(new A);
 		lists.PrintLists();
 	}
+	/*
+	* c++에서 가상함수를 하나라도 가지는 클래스에 대해서 가상함수테이블(Virtual Function Table, VTable)을 만든다.
+	* 가상함수가 아닌 함수를 호출할경우 바로 함수를 호출하나 가상함수를 호출 할 때에는 가상함수테이블을 거쳐서 어떤함수를
+	* 사용할지 고르는 오버헤드가 생길 수 있다.
+	* 
+	*/
 }
 void Exam()
 {

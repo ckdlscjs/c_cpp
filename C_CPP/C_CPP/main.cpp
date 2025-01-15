@@ -8,8 +8,9 @@
 #include "c++_4.h"
 #include "c++_5.h"
 #include "c++_6.h"
+#include "c++_7.h"
 int main()
 {
-	Inheritance1::Exam();
+	stream::Exam();
 	return 0;
 }
