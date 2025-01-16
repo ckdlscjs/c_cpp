@@ -11,6 +11,10 @@
 #include "c++_7.h"
 int main()
 {
-	stream::Exam();
+	//fileio::Exam2();
+	//fileio::Exam3();
+	//fileio::Exam4();
+	//fileio::Exam5();
+	fileio::Exam6();
 	return 0;
 }

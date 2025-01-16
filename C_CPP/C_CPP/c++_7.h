@@ -88,3 +88,129 @@ namespace stream
 		//std::cout << "다시 읽으면 : " << s << std::endl;
 	}
 }
+namespace fileio
+{
+//#define __str__
+	void Exam()
+	{
+		std::ifstream in("test.txt"); //파일명만 있을시 vs에서 실행시 소스파일과같은경로, 이외엔 실행파일과 같은경로, 객체가 새로운 파일을 읽기위해선 close가 필요하다, ifstream객체는 소멸시 자동으로 close를한다
+		std::string s;
+		if (in.is_open())
+		{
+			in >> s;
+			std::cout << s << '\n';
+		}
+		else
+			std::cout << "파일을 못읽어옴\n";
+	}
+	void Exam2()
+	{
+		std::ifstream in("test2.txt", std::ios::binary); //입력을 어떤형태로 받을가에대한 플래그, or연산으로 추가 옵션가능
+		std::string s;
+		int x;
+		if (in.is_open())
+		{
+			in.read((char*)(&x), 4);
+			std::cout << std::hex << x << '\n';
+		}
+		else
+		{
+			std::cout << "파일을 찾을 수 없습니다\n";
+		}
+	}
+	void Exam3()
+	{
+		std::ifstream in("test3.txt");
+		std::string s;
+		if (in.is_open())
+		{
+			//파일의마지막으로 포인터이동
+			in.seekg(0, std::ios::end);
+			//현재위치를 기준으로 크기를 리턴, 한글은 2바이트씩임
+			int size = in.tellg();
+			//문자열의 크기를 사이즈만큼지정
+			s.resize(size);
+			//포인터를처음으로리턴
+			in.seekg(0, std::ios::beg);
+			//파일의 처음부터 사이즈만큼 지정해읽는다
+			in.read(&s[0], size);
+			std::cout << s << '\n';//출력
+		}
+		else
+		{
+			std::cout << "파일을 찾을 수 없습니다\n";
+		}
+	}
+	void Exam4()
+	{
+		std::ifstream in("test3.txt");
+		char buf[105];
+		if (!in.is_open())
+		{
+			std::cout << "파일을 읽을 수 없습니다\n";
+			return;
+		}
+
+#ifdef __str__
+		while (in) //자신을 bool로 캐스팅 하는 operator bool()이 오버로딩 되어있어 bool로 캐스팅 하는 operator bool이 호출되어 조건체크에 쓰인다, 오류플래그를 기준으로 리턴boolean값이정해짐
+		{ 
+			in.getline(buf, 100); //'\n'을 만날때 까지 100개 단위로 읽어온다, 마지막'\n'을 제외한 최대 99글자
+			std::cout << buf << std::endl;
+			/*
+			* getline함수는 개행문자 혹은 지정문자(세번째 패러미터 delim)가 나오기 전에 버퍼의 크기가 다 차면(사이즈를 넘기면) failbit을 켜므로 사이즈조건을 꼭 체크해야한다
+			* 이를 해결하기위해 ifstream의 getline이 아닌 std::getline(ifstream객체, std::string)을 이용하여 받으면 사이즈를 신경쓰지 않아도 된다
+			*/
+		}
+#endif
+#ifndef  __str__
+		std::string str;
+		while (in) //자신을 bool로 캐스팅 하는 operator bool()이 오버로딩 되어있어 bool로 캐스팅 하는 operator bool이 호출되어 조건체크에 쓰인다, 오류플래그를 기준으로 리턴boolean값이정해짐
+		{
+			std::getline(in, str);
+			std::cout << str << std::endl;
+
+		}
+#endif // ! __str__
+	}
+
+	void Exam5()
+	{
+		/*std::ofstream out("testout.txt"); //파일이 존재시 열고 지운후 기록, 없으면 생성후 기록
+		if (out.is_open())
+		{
+			out << "WriteThis!";
+		}
+		*/
+		
+		std::ofstream out("testout.txt", std::ios::app); //std::ios::app을 옵션으로 추가시 append이어붙힌다.
+		if (out.is_open())
+		{
+			out << "appendThis!";
+		}
+		/*
+		* ios::binary, app말고도 여러가지 옵션이 존재한다
+		* ios::ate -> 자동으로 파일 끝에서 부터 읽기, 쓰기를 실시한다(파일을 열고 위치지정자가 파일 끝을 가리키고있다), ate의경우 위치지정자를 앞으로 옮길수도있다, app는 무조건 맨끝
+		* ios::trunc -> 파일 스트림을 열면 기존 내용이 모두지워진다, 기본적인 ofstream객체 생성시의 초기옵션
+		* ios::in, ios::out -> 파일에 입력/ 혹은 출력 여부를 결정한다, ifstream, ofstream시의 기본옵션들
+		*/
+	}
+	class EX6Class
+	{
+	private:
+		std::string name;
+		int age;
+	public:
+		EX6Class(const std::string _name, const int _age) : name(_name), age(_age) {}
+		friend ofstream& operator<<(std::ofstream& out, EX6Class& ex) //전역함수를 오버로딩
+		{
+			out << ex.name + ", " + std::to_string(ex.age) << '\n';
+			return out;
+		}
+	};
+	void Exam6()
+	{
+		std::ofstream out("test6.txt");
+		EX6Class ex("이재범", 60);
+		out << ex;
+	}
+}
