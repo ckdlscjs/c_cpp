@@ -141,6 +141,7 @@
     <ClInclude Include="c++_5.h" />
     <ClInclude Include="c++_6.h" />
     <ClInclude Include="c++_7.h" />
+    <ClInclude Include="c++_8.h" />
     <ClInclude Include="c_12_1.h" />
     <ClInclude Include="c_12_2.h" />
     <ClInclude Include="c_12_3.h" />
