@@ -111,6 +111,65 @@ namespace ExcelProject
 			return topNode ? false : true;
 		}
 	};
+
+	class NumStack
+	{
+		struct Node
+		{
+			double num;
+			Node* prev;
+			Node(double _num, Node* _prev = NULL) : num(_num), prev(_prev) {}
+		};
+		Node* topNode;
+	public:
+		NumStack() : topNode(NULL) {}
+		virtual ~NumStack()
+		{
+			while (topNode)
+			{
+				Node* delNode = topNode;
+				topNode = delNode->prev;
+				delete delNode;
+			}
+		}
+		// 최상단에 새로운 원소를 추가한다.
+		void push(double num)
+		{
+			Node* newNode = new Node(num);
+			if (topNode == NULL)
+			{
+				topNode = newNode;
+			}
+			else
+			{
+				newNode->prev = topNode;
+				topNode = newNode;
+			}
+		}
+		// 최상단의 원소를 반환한다.
+		double top()
+		{
+			return topNode ? topNode->num : NULL;
+		}
+
+		// 최상단의 원소를 제거하고 반환한다.
+		double pop()
+		{
+			Node* delNode = topNode;
+			double ret = delNode->num;
+			topNode = delNode->prev;
+			delete delNode;
+			return ret;
+		}
+
+		// 스택이 비어있는지의 유무를 반환한다.
+		bool is_empty()
+		{
+			return topNode ? false : true;
+		}
+	};
+	/*
+	* 8_1파트에서는 체크위해 cell자체가동작되게끔구현
 	class Cell
 	{
 	public:
@@ -128,15 +187,149 @@ namespace ExcelProject
 			return 0;
 		}
 	};
+	*/
+	//8-2, 추상클래스로 놔두고 자식클래스에서 상속받아 구현, 인터페이스와의 차이점은 다중상속이 필요한 기능구현만 필요할경우 인터페이스로 모듈화, 공통분모는 추상클래스로
+	class Cell
+	{
+	protected:
+		int y, x;
+		Table* table;
+	public:
+		Cell(int _y, int _x, Table* _tableinfo) :y(_y), x(_x), table(_tableinfo) {}
+		virtual std::string numtostr() = 0;
+		virtual int strtonum() = 0;
+		int Y() { return y; }
+		int X() { return x; }
+	};
 
+	class StringCell : public Cell
+	{
+	private:
+		std::string data;
+	public:
+		StringCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_str)
+		{
+
+		}
+		virtual std::string numtostr() override
+		{
+			return data;
+		}
+		virtual int strtonum() override
+		{
+			return 0;
+		}
+	};
+
+	class NumberCell : public Cell
+	{
+	private:
+		int data;
+	public:
+		NumberCell(int _num, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_num)
+		{
+
+		}
+		virtual std::string numtostr() override
+		{
+			return std::to_string(data);
+		}
+		virtual int strtonum() override
+		{
+			return data;
+		}
+	};
+
+	class DateCell : public Cell
+	{
+	private:
+		//1970년 부터 현재 시간까지 몇초가 흘렀는지 보관하는 정수형 변수
+		std::time_t data;
+	public:
+		DateCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo)
+		{
+			//입력받는 날짜형식 문자열은 yyyy-mm-dd로 받는다
+			int year = std::atoi(_str.c_str()); //atoi는 숫자 까지만 변환해주므로 -에서 변환을멈춘다, 0~3까지변환
+			int month = std::atoi(_str.c_str() + 5);//5~6까지변환
+			int day = std::atoi(_str.c_str() + 8);//8~9까지 변환
+			std::tm timeinfo; //std 시간 구조체 tm
+			timeinfo.tm_year = year - 1900;
+			timeinfo.tm_mon = month - 1;
+			timeinfo.tm_mday = day;
+			timeinfo.tm_hour = 0;
+			timeinfo.tm_min = 0;
+			timeinfo.tm_sec = 0;
+			data = std::mktime(&timeinfo); //int64형으로 구조체를 기반으로 리턴하는 함수
+		}
+		virtual std::string numtostr() override
+		{
+			char buf[50];
+			std::tm temp;
+			localtime_s(&temp, &data);
+			strftime(buf, 50, "%F", &temp);
+			return std::string(buf);
+		}
+		virtual int strtonum() override
+		{
+			return static_cast<int>(data);
+		}
+	};
+	class ExpressionCell : public Cell
+	{
+	private:
+		std::string data;
+		//string* parsed_expr; //notuse
+
+		Vector exp_vec;
+
+		//1.피연산자는 그냥 exp_vec에집어넣는다
+		//2.여는괄호를 만날경우 스택에push
+		//3.닫는괄호를 만날경우 기존에 넣었던 여는괄호가 pop될 때 까지 pop되는 연산자들을 exp_vec에 넣는다
+		//4.연산자일 경우 자기보다 우선순위가 낮은 연산자가 스택의 최상단, 혹은 스택이 빌 때 까지 스택을 pop하고 pop된연산자들을 exp_vec에 넣는다, 마지막에 자기자신을 스택에push
+		// 연산자 우선 순위를 반환합니다
+		int precedence(char c)
+		{
+			switch (c)
+			{
+			case '(':
+			case '[':
+			case '{':
+				return 0;
+
+			}
+		}
+
+		// 수식을 분석합니다.
+		void parse_expression()
+		{
+
+		}
+	public:
+		ExpressionCell(int _num, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_num)
+		{
+
+		}
+		virtual std::string numtostr() override
+		{
+			
+		}
+		//후위표기식을 바탕으로 수식을 계산해 반환
+		virtual int strtonum() override
+		{
+			double result = 0;
+			
+		}
+	};
+
+	
+
+	class Table
+	{
 	/*
 	* cell* ptr = new cell->cell을 가리키는 포인터
 	* cell* ptrs = new cell[size] -> size만큼 동적생성한 cell배열의 시작주소를 가리키는 포인터
 	* cell** dptrs = new cell*[size] -> cell*을 가리키는 포인터를 size갯수만큼 동적할당하고 그 배열의 시작주소를 할당 ....
 	*/
-
-	class Table
-	{
 	protected:
 		int size_row, size_col;
 		Cell*** cells;
@@ -170,8 +363,8 @@ namespace ExcelProject
 		void reg_cell(Cell* cell)
 		{
 			if (!cell) return;
-			int r = cell->y;
-			int c = cell->x;
+			int r = cell->Y();
+			int c = cell->X();
 			if (!(0 <= r && r < size_row)) return;
 			if (!(0 <= c && c < size_col)) return;
 			if (cells[r][c]) delete cells[r][c];
@@ -309,10 +502,10 @@ namespace ExcelProject
 		TextTable table(5, 6);
 		std::ofstream out("test.txt");
 
-		table.reg_cell(new Cell("Hello~", 0, 0, &table));
-		table.reg_cell(new Cell("C++", 0, 1, &table));
+		table.reg_cell(new StringCell("Hello~", 0, 0, &table));
+		table.reg_cell(new StringCell("C++", 0, 1, &table));
 
-		table.reg_cell(new Cell("Programming", 1, 1, &table));
+		table.reg_cell(new StringCell("Programming", 1, 1, &table));
 		std::cout << std::endl << table;
 		out << table;
 	}
