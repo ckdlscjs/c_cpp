@@ -202,125 +202,6 @@ namespace ExcelProject
 		int X() { return x; }
 	};
 
-	class StringCell : public Cell
-	{
-	private:
-		std::string data;
-	public:
-		StringCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_str)
-		{
-
-		}
-		virtual std::string numtostr() override
-		{
-			return data;
-		}
-		virtual int strtonum() override
-		{
-			return 0;
-		}
-	};
-
-	class NumberCell : public Cell
-	{
-	private:
-		int data;
-	public:
-		NumberCell(int _num, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_num)
-		{
-
-		}
-		virtual std::string numtostr() override
-		{
-			return std::to_string(data);
-		}
-		virtual int strtonum() override
-		{
-			return data;
-		}
-	};
-
-	class DateCell : public Cell
-	{
-	private:
-		//1970년 부터 현재 시간까지 몇초가 흘렀는지 보관하는 정수형 변수
-		std::time_t data;
-	public:
-		DateCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo)
-		{
-			//입력받는 날짜형식 문자열은 yyyy-mm-dd로 받는다
-			int year = std::atoi(_str.c_str()); //atoi는 숫자 까지만 변환해주므로 -에서 변환을멈춘다, 0~3까지변환
-			int month = std::atoi(_str.c_str() + 5);//5~6까지변환
-			int day = std::atoi(_str.c_str() + 8);//8~9까지 변환
-			std::tm timeinfo; //std 시간 구조체 tm
-			timeinfo.tm_year = year - 1900;
-			timeinfo.tm_mon = month - 1;
-			timeinfo.tm_mday = day;
-			timeinfo.tm_hour = 0;
-			timeinfo.tm_min = 0;
-			timeinfo.tm_sec = 0;
-			data = std::mktime(&timeinfo); //int64형으로 구조체를 기반으로 리턴하는 함수
-		}
-		virtual std::string numtostr() override
-		{
-			char buf[50];
-			std::tm temp;
-			localtime_s(&temp, &data);
-			strftime(buf, 50, "%F", &temp);
-			return std::string(buf);
-		}
-		virtual int strtonum() override
-		{
-			return static_cast<int>(data);
-		}
-	};
-	class ExpressionCell : public Cell
-	{
-	private:
-		std::string data;
-		//string* parsed_expr; //notuse
-
-		Vector exp_vec;
-
-		//1.피연산자는 그냥 exp_vec에집어넣는다
-		//2.여는괄호를 만날경우 스택에push
-		//3.닫는괄호를 만날경우 기존에 넣었던 여는괄호가 pop될 때 까지 pop되는 연산자들을 exp_vec에 넣는다
-		//4.연산자일 경우 자기보다 우선순위가 낮은 연산자가 스택의 최상단, 혹은 스택이 빌 때 까지 스택을 pop하고 pop된연산자들을 exp_vec에 넣는다, 마지막에 자기자신을 스택에push
-		// 연산자 우선 순위를 반환합니다
-		int precedence(char c)
-		{
-			switch (c)
-			{
-			case '(':
-			case '[':
-			case '{':
-				return 0;
-
-			}
-		}
-
-		// 수식을 분석합니다.
-		void parse_expression()
-		{
-
-		}
-	public:
-		ExpressionCell(int _num, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_num)
-		{
-
-		}
-		virtual std::string numtostr() override
-		{
-			
-		}
-		//후위표기식을 바탕으로 수식을 계산해 반환
-		virtual int strtonum() override
-		{
-			double result = 0;
-			
-		}
-	};
-
 	
 
 	class Table
@@ -492,13 +373,215 @@ namespace ExcelProject
 			return total_table;
 		}
 	};
+
 	std::ostream& operator<<(std::ostream& out, const Table& table)
 	{
 		out << table.print_table();
 		return out;
 	}
+
+	class StringCell : public Cell
+	{
+	private:
+		std::string data;
+	public:
+		StringCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_str)
+		{
+
+		}
+		virtual std::string numtostr() override
+		{
+			return data;
+		}
+		virtual int strtonum() override
+		{
+			return 0;
+		}
+	};
+
+	class NumberCell : public Cell
+	{
+	private:
+		int data;
+	public:
+		NumberCell(int _num, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_num)
+		{
+
+		}
+		virtual std::string numtostr() override
+		{
+			return std::to_string(data);
+		}
+		virtual int strtonum() override
+		{
+			return data;
+		}
+	};
+
+	class DateCell : public Cell
+	{
+	private:
+		//1970년 부터 현재 시간까지 몇초가 흘렀는지 보관하는 정수형 변수
+		std::time_t data;
+	public:
+		DateCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo)
+		{
+			//입력받는 날짜형식 문자열은 yyyy-mm-dd로 받는다
+			int year = std::atoi(_str.c_str()); //atoi는 숫자 까지만 변환해주므로 -에서 변환을멈춘다, 0~3까지변환
+			int month = std::atoi(_str.c_str() + 5);//5~6까지변환
+			int day = std::atoi(_str.c_str() + 8);//8~9까지 변환
+			std::tm timeinfo; //std 시간 구조체 tm
+			timeinfo.tm_year = year - 1900;
+			timeinfo.tm_mon = month - 1;
+			timeinfo.tm_mday = day;
+			timeinfo.tm_hour = 0;
+			timeinfo.tm_min = 0;
+			timeinfo.tm_sec = 0;
+			data = std::mktime(&timeinfo); //int64형으로 구조체를 기반으로 리턴하는 함수
+		}
+		virtual std::string numtostr() override
+		{
+			char buf[50];
+			std::tm temp;
+			localtime_s(&temp, &data);
+			strftime(buf, 50, "%F", &temp);
+			return std::string(buf);
+		}
+		virtual int strtonum() override
+		{
+			return static_cast<int>(data);
+		}
+	};
+	class ExpressionCell : public Cell
+	{
+	private:
+		std::string data;
+		//string* parsed_expr; //notuse
+
+		Vector exp_vec;
+
+		//1.피연산자는 그냥 exp_vec에집어넣는다
+		//2.여는괄호를 만날경우 스택에push
+		//3.닫는괄호를 만날경우 기존에 넣었던 여는괄호가 pop될 때 까지 pop되는 연산자들을 exp_vec에 넣는다
+		//4.연산자일 경우 자기보다 우선순위가 낮은 연산자가 스택의 최상단, 혹은 스택이 빌 때 까지 스택을 pop하고 pop된연산자들을 exp_vec에 넣는다, 마지막에 자기자신을 스택에push
+		// 
+		// 연산자 우선 순위를 반환합니다
+		int precedence(char c)
+		{
+			switch (c)
+			{
+			case '+':
+			case '-':
+				return 0;
+			case '*':
+			case '/':
+				return 1;
+			case '(': case ')':
+			case '{': case '}':
+			case '[': case ']':
+				return 2;
+			}
+		}
+
+		// 수식을 분석합니다.
+		// 편의성을 위해 숫자는 1자리정수, 셀이름역시 알파벳+셀이름 으로 두자리로 제한
+		void parse_expression()
+		{
+			Stack st;
+			for (int i = 0; i < data.size(); i++)
+			{
+				if (std::isalpha(data[i])) //셀의경우, 
+				{
+					exp_vec.push_back(data.substr(i, 2)); //i인덱스부터 두자리
+					i++;
+				}
+				else if (std::isdigit(data[i])) //숫자의경우
+				{
+					exp_vec.push_back(data.substr(i, 1));//1자리
+				}
+				else //연산자의경우
+				{
+					if (st.is_empty() || data[i] == '(' || data[i] == '{' || data[i] == '[')
+					{
+						st.push(data.substr(i, 1));
+					}
+					else if (data[i] == ')' || data[i] == '}' || data[i] == ']')
+					{
+						while (!st.is_empty() && st.top() != "(")
+						{
+							exp_vec.push_back(st.pop());
+						}
+						st.pop(); //좌측괄호제거
+					}
+					else //우선순위에따라 스택을 체크
+					{
+						while (!st.is_empty() && st.top() != "(" && st.top() != "{" && st.top() != "[" && precedence(st.top()[0]) >= precedence(data[i]))
+						{
+							exp_vec.push_back(st.pop());
+						}
+						st.push(data.substr(i, 1));
+					}
+				}
+			}
+			while (!st.is_empty())
+				exp_vec.push_back(st.pop());
+		}
+	public:
+		ExpressionCell(std::string _str, int _y, int _x, Table* _tableinfo) : Cell(_y, _x, _tableinfo), data(_str)
+		{
+			parse_expression();
+		}
+		virtual std::string numtostr() override
+		{
+			return std::to_string(strtonum());
+		}
+		//후위표기식을 바탕으로 수식을 계산해 반환
+		virtual int strtonum() override
+		{
+			double result = 0;
+			NumStack st;
+			for (int i = 0; i < exp_vec.size(); i++)
+			{
+				std::string str = exp_vec[i];
+				if (isalpha(str[0])) //피연산자중 셀일경우(A3, B3..)
+				{
+					st.push(table->to_numeric(str)); //특정 셀을 r,c로 변환, 이후 해당 셀의 값을 스택에집어넣음
+				}
+				else if (isdigit(str[0]))
+				{
+					st.push(std::atoi(str.c_str())); //숫자의경우에 스택에집어넣음
+				}
+				else //연산자일경우
+				{
+					double b = st.pop();
+					double a = st.pop();
+					switch (str[0])
+					{
+					case '+':
+					{
+						st.push(a + b);
+					}break;
+					case '-':
+					{
+						st.push(a - b);
+					}break;
+					case '*':
+					{
+						st.push(a * b);
+					}break;
+					case '/':
+					{
+						st.push(a / b);
+					}break;
+					}
+				}
+			}
+			return st.pop(); //최종연산결과를 리턴
+		}
+	};
 	void Exam()
 	{
+		/*
 		TextTable table(5, 6);
 		std::ofstream out("test.txt");
 
@@ -508,5 +591,15 @@ namespace ExcelProject
 		table.reg_cell(new StringCell("Programming", 1, 1, &table));
 		std::cout << std::endl << table;
 		out << table;
+		*/
+		TextTable table(6, 6);
+		table.reg_cell(new NumberCell(2, 1, 1, &table));
+		table.reg_cell(new NumberCell(3, 1, 2, &table));
+
+		table.reg_cell(new NumberCell(4, 2, 1, &table));
+		table.reg_cell(new NumberCell(5, 2, 2, &table));
+		table.reg_cell(new StringCell("B2 + B3 * ( C2 + C3 - 2 ) = ", 3, 1, &table));
+		table.reg_cell(new ExpressionCell("B1+B2*(C1+C2-2)", 3, 2, &table)); //수정한 열계산방식으로 예제와다르게 행 -1을해줌, 0~
+		std::cout << table;
 	}
 }
