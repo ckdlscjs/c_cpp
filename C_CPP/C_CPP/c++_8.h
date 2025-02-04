@@ -256,7 +256,7 @@ namespace ExcelProject
 		// s : 셀 이름 (Ex. A3, B6 과 같이)
 		int to_numeric(const std::string& s)
 		{
-			int r = std::atoi(s.c_str()+1);
+			int r = std::atoi(s.c_str()+1)-1;//두번째원소부터
 			int c = s[0] - 'A';
 			return to_numeric(r, c);
 		}
@@ -273,7 +273,7 @@ namespace ExcelProject
 		// 해당 셀의 문자열을 반환한다.
 		std::string stringify(const std::string& s)
 		{
-			int r = std::atoi(s.c_str() + 1);
+			int r = std::atoi(s.c_str()+1)-1;//두번째원소부터
 			int c = s[0] - 'A';
 			return stringify(r, c);
 		}
@@ -482,7 +482,7 @@ namespace ExcelProject
 				return 2;
 			}
 		}
-
+		 
 		// 수식을 분석합니다.
 		// 편의성을 위해 숫자는 1자리정수, 셀이름역시 알파벳+셀이름 으로 두자리로 제한
 		void parse_expression()
@@ -592,6 +592,7 @@ namespace ExcelProject
 		std::cout << std::endl << table;
 		out << table;
 		*/
+		
 		TextTable table(6, 6);
 		table.reg_cell(new NumberCell(2, 1, 1, &table));
 		table.reg_cell(new NumberCell(3, 1, 2, &table));
@@ -599,7 +600,7 @@ namespace ExcelProject
 		table.reg_cell(new NumberCell(4, 2, 1, &table));
 		table.reg_cell(new NumberCell(5, 2, 2, &table));
 		table.reg_cell(new StringCell("B2 + B3 * ( C2 + C3 - 2 ) = ", 3, 1, &table));
-		table.reg_cell(new ExpressionCell("B1+B2*(C1+C2-2)", 3, 2, &table)); //수정한 열계산방식으로 예제와다르게 행 -1을해줌, 0~
+		table.reg_cell(new ExpressionCell("B2+B3*(C2+C3-2)", 3, 2, &table));
 		std::cout << table;
 	}
 }
