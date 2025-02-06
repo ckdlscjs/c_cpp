@@ -9,7 +9,8 @@
 #include "c++_5.h"
 #include "c++_6.h"
 //#include "c++_7.h"
-#include "c++_8.h"
+//#include "c++_8.h"
+#include "c++_9.h"
 int main()
 {
 	//fileio::Exam2();
@@ -17,6 +18,7 @@ int main()
 	//fileio::Exam4();
 	//fileio::Exam5();
 	//fileio::Exam6();
-	ExcelProject::Exam();
+	//ch9::Exam();
+	ch9::Exam2();
 	return 0;
 }
