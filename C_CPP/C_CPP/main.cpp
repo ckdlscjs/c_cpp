@@ -19,6 +19,8 @@ int main()
 	//fileio::Exam5();
 	//fileio::Exam6();
 	//ch9::Exam();
-	ch9::Exam2();
+	//ch9::Exam2();
+	//Variadic::Exam3();
+	Variadic::Exam5();
 	return 0;
 }

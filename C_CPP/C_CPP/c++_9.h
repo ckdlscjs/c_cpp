@@ -240,3 +240,115 @@ namespace ch9
 			std::cout << int_vec[i] << ' ';
 	}
 }
+
+namespace Variadic
+{
+	//c++에서 템플릿을 이용해 임의의갯수를 받는 함수를 구현 할 수 있다
+
+	//마지막호출시 인자가 한개 뿐 이므로 (5) 로 받아진다
+	template<typename T>
+	void Print(T t)
+	{
+		std::cout << t << '\n';
+	}
+	//첫 호출시 (1, (2,3,4,5))
+	//다음 (2, (3,4,5))...재귀적호출
+	template<typename T, typename... Types>
+	void Print(T t, Types... args)
+	{
+		std::cout << t << ", ";
+		Print(args...);
+	}
+	void Exam1()
+	{
+		Print(1, 2, 3, 4, 5); //가변인자를 통해 받는다
+	}
+
+	//임의의 갯수의 문자열을 합치는함수
+	//std::string str = s1 + s2 + s3.. 는 s1에 s2를 붙일때 메모리할당, 그후 s3를붙일때도 메모리할당, 메모리의 할당/해제는 비용이 크기때문에 한번의 할당으로 처리하는게 효율적이다
+	//인자를 합칠 여러개의 문자열을 가변인자를 통해서 받고 메모리할당을 한번으로 해결 할 수 있을것 이므로 효율적으로 해결가능하다
+	template <typename String>
+	std::string Strcat(const String& str)
+	{
+		return std::string(str);
+	}
+	//할당자체는 +연산자를 이용해서 추가로 임시객체를만들고 하기때문에 할당횟수자체는 같으나 const char* 또한 받는게 가능하다
+	template<typename String, typename... Strings>
+	std::string Strcat(const String& str, Strings... args)
+	{
+		return std::string(str) + Strcat(args...);
+	}
+	void Exam2()
+	{
+		std::cout << Strcat("This", " ", "is", " ", std::string("a"), " ", std::string("sentence"));
+	}
+
+	//재할당되는 과정을 한번으로 해결하기위해 미리 크기를 다 계산해서 붙여준다
+
+	//크기를 계산하는 함수, 가변인자템플릿을 이용해 재귀적으로 계산
+	size_t GetStringSize(const char* _str) { return std::strlen(_str); }
+	size_t GetStringSize(const std::string& _str) { return _str.size(); }
+	template<typename String, typename... Strings>
+	size_t GetStringSize(String _str, Strings... strs)
+	{
+		return GetStringSize(_str) + GetStringSize(strs...);
+	}
+
+	//목적string에 가변인자로 받는 append_str을 하나씩 붙혀준다, dest_str은 strcat에서 reserve통해 크기를 늘려놓았음.
+	void AppendString(std::string& dest_str) { return; }
+	template<typename String, typename... Strings>
+	void AppendString(std::string& dest_str, const String& append_str, Strings... strs)
+	{
+		dest_str.append(append_str);
+		AppendString(dest_str, strs...);
+	}
+
+	template<typename String, typename... Strings>
+	std::string Strcat2(String _str, Strings... strs)
+	{
+		//크기를 미리 체크해놓고 사이즈를 예약
+		std::string concat_str;
+		concat_str.reserve(GetStringSize(_str, strs...));
+		
+		//늘려놓은 새 변수에 첫 문장을 받고 해당문장부터 이어붙힌다
+		concat_str = _str;
+		AppendString(concat_str, strs...);
+		return concat_str;
+	}
+
+	void Exam3()
+	{
+		std::cout << Strcat2(std::string("this"), " ", "is", " ", std::string("a"), " ", std::string("sentence"));
+	}
+	
+	//기저조건을위한 인수0일때의 함수
+	int SumAll() { return 0; }
+	template<typename... Ints>
+	int SumAll(int num, Ints... nums)
+	{
+		return num + SumAll(nums...);
+	}
+
+	template<typename... Ints>
+	double average(Ints... nums)
+	{
+		return static_cast<double>(SumAll(nums...)) / sizeof...(nums); //sizeof... 템플릿 가변인자를 이용한 변수로 갯수를 센다
+	}
+	
+	void Exam4()
+	{
+		std::cout << average(1, 4, 2, 3, 10);
+	}
+
+	//fold식 c++17이상, 
+	template<typename... Ints>
+	int SumAll(Ints... nums)
+	{
+		return (... + nums);
+	}
+
+	void Exam5()
+	{
+		std::cout << SumAll(1, 4, 2, 3, 10);
+	}
+}
