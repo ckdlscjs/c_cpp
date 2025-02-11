@@ -341,6 +341,7 @@ namespace Variadic
 	}
 
 	//fold식 c++17이상, 
+	/*
 	template<typename... Ints>
 	int SumAll(Ints... nums)
 	{
@@ -350,5 +351,204 @@ namespace Variadic
 	void Exam5()
 	{
 		std::cout << SumAll(1, 4, 2, 3, 10);
+	}
+	*/
+}
+
+namespace ArrayTest
+{
+	template<typename T, unsigned int N>
+	class Array
+	{
+	private:
+		T data[N]; //템플릿으로 인해 N에들어가는 값이 T와같이 컴파일타임에 코드가생성된다, 즉 Array<int, 5> Array<int, 3>은 서로 다른클래스로 본다
+	public:
+		Array(T (&arr)[N]) //T (&temp)[N] = arr, 즉 int arr[N]과 동치가된다.
+		{
+			for (int i = 0; i < N; i++)
+				data[i] = arr[i];
+		}
+
+		T* GetArray() { return data; }
+		unsigned int Size() { return N; }
+		void PrintAll()
+		{
+			for (int i = 0; i < N; i++)
+				std::cout << data[i] << ", ";
+			std::cout << '\n';
+		}
+	};
+	void Exam()
+	{
+		int arr[] = { 1, 2, 3 };
+		Array<int, 3> Arr(arr);
+		Arr.PrintAll();
+	}
+}
+
+namespace Int
+{
+	template <int N>
+	struct Int 
+	{
+		static const int num = N; //컴파일타임에 값을 정한다, static 및 const
+	};
+
+	template <typename T, typename U>
+	struct add
+	{
+		typedef Int<T::num + U::num> result;
+	};
+
+	void Exam()
+	{
+		typedef Int<2> two;
+		typedef Int<5> five;
+		std::cout << add<two, five>::result::num; //이미 프로그램 실행전에 컴파일시에 7로 치환되어있다, 즉 컴파일타임에 이미 연산을 끝내버리는 코드자체로 프로그래밍 하는것을 메타프로그래밍 이라한다
+	}
+}
+
+namespace TMP
+{
+	template<int N>
+	struct Factorial
+	{
+		static const int result = N * Factorial<N - 1>::result;
+	};
+	template<>
+	struct Factorial<1>
+	{
+		static const int result = 1;
+	};
+	void Exam()
+	{
+		std::cout << Factorial<5>::result; //이미 컴파일하면서 값이 정해져있다, 다만 런타임에서 값을 임의로 변경 할 수는 없다, 이미 컴파일타임에 끝나기때문, 컴파일타임상수
+	}
+
+	//재귀를 이용한 유클리드 호제법
+	int gcd(int a, int b)
+	{
+		if (b == 0) return a;
+		return gcd(b, a % b);
+	}
+
+	//이를 메타프로그래밍으로 구현
+	template<int X, int Y>
+	struct GCD
+	{
+		static const int ret = GCD<Y, X%Y>::ret;
+	};
+
+	template<int X>
+	struct GCD<X, 0> //템플릿특수화, 원하는 템플릿값만 남긴다
+	{
+		static const int ret = X;
+	};
+	void Exam2()
+	{
+		std::cout << GCD<36, 24>::ret;
+	}
+	
+	//분모, 분자를 받아 표현하는 Ratio클래스
+	//<N, D>로 컴파일타임에 표기한 값들을 n, d로 정적상수화
+	template<int N, int D = 1>
+	struct Ratio
+	{
+		static const int num = N;
+		static const int den = D;
+	};
+	//Ratio를 이용하여 덧셈을 수행하는 템플릿
+	template<typename R1, typename R2>
+	struct _Ratio_Add
+	{
+		using type = Ratio<R1::num* R2::den + R2::num * R1::den, R1::den* R2::den>; //정적상수화된 R1, R2의 NUM DEN값을 기반으로 새로운 Ratio클래스타입 +연산된 클래스를 생성, 편의성을위해 using type = 로 지정
+	};
+	//표현의 통일성을위해 _Ratio_Add를 상속받아사용한다
+	template<typename R1, typename R2>
+	struct Ratio_Add : _Ratio_Add<R1, R2>::type {}; //표현의 통일성을위해 using으로 표현한 type, 즉 Ratio클래스를 상속하여 새로운Ratio생성(_Ratio_Add의상속이아님, Ratio의상속)
+
+	void Exam3()
+	{
+		using rat1 = Ratio<2, 3>;
+		using rat2 = Ratio<3, 2>;
+		using rat3 = Ratio_Add<rat1, rat2>;
+		std::cout << rat3::num << '/' << rat3::den;
+	}
+}
+
+//GCD(최대공약수, 유클리드호제법)을 이용해 유리수의 사칙연산을 수행하는 템플릿을 이용한 메타프로그래밍 코드, 사칙연산 이후 기약분수로 표현을위해 최대공약수를이용한다
+namespace TMP2
+{
+	//이를 메타프로그래밍으로 구현
+	template<int X, int Y>
+	struct GCD
+	{
+		static const int value = GCD<Y, X% Y>::value;
+	};
+
+	template<int X>
+	struct GCD<X, 0> //템플릿특수화, 원하는 템플릿값만 남긴다
+	{
+		static const int value = X;
+	};
+
+	//분모, 분자를 받아 표현하는 Ratio클래스
+	//<N, D>로 컴파일타임에 표기한 값들을 n, d로 정적상수화
+	template<int N, int D = 1>
+	struct Ratio
+	{
+	private:
+		static const int _gcd = GCD<N, D>::value;
+	public:
+		static const int num = N / _gcd;
+		static const int den = D / _gcd;
+	};
+	//Ratio를 이용하여 덧셈을 수행하는 템플릿
+	template<typename R1, typename R2>
+	struct _Ratio_Add
+	{
+		using type = Ratio<R1::num* R2::den + R2::num * R1::den, R1::den* R2::den>; //정적상수화된 R1, R2의 NUM DEN값을 기반으로 새로운 Ratio클래스타입 +연산된 클래스를 생성, 편의성을위해 using type = 로 지정
+	};
+	//표현의 통일성을위해 _Ratio_Add를 상속받아사용한다
+	template<typename R1, typename R2>
+	struct Ratio_Add : _Ratio_Add<R1, R2>::type {}; //표현의 통일성을위해 using으로 표현한 type, 즉 Ratio클래스를 상속하여 새로운Ratio생성(_Ratio_Add의상속이아님, Ratio의상속)
+	
+	//뺄셈
+	template<typename R1, typename R2>
+	struct _Ratio_Subtract
+	{
+		using type = Ratio<R1::num* R2::den - R2::num * R1::den, R1::den* R2::den>;
+	};
+	template<typename R1, typename R2>
+	struct Ratio_Subtract : _Ratio_Subtract<R1, R2>::type {};
+
+	//곱셈
+	template<typename R1, typename R2>
+	struct _Ratio_Multiply
+	{
+		using type = Ratio<R1::num * R2::num, R1::den* R2::den>;
+	};
+	template<typename R1, typename R2>
+	struct Ratio_Multiply : _Ratio_Multiply<R1, R2>::type {};
+
+	//나눗셈
+	template<typename R1, typename R2>
+	struct _Ratio_Divide
+	{
+		using type = Ratio<R1::num * R2::den, R1::den * R2::num>;
+	};
+	template<typename R1, typename R2>
+	struct Ratio_Divide : _Ratio_Divide<R1, R2>::type {};
+
+	void Exam()
+	{
+		using r1 = Ratio<2, 3>;
+		using r2 = Ratio<3, 2>;
+
+		using r3 = Ratio_Add<r1, r2>;
+		std::cout << "2/3 + 3/2 = " << r3::num << " / " << r3::den << std::endl;
+
+		using r4 = Ratio_Multiply<r1, r3>;
+		std::cout << "13 / 6 * 2 /3 = " << r4::num << " / " << r4::den << std::endl;
 	}
 }

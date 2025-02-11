@@ -21,6 +21,8 @@ int main()
 	//ch9::Exam();
 	//ch9::Exam2();
 	//Variadic::Exam3();
-	Variadic::Exam5();
+	//Variadic::Exam5();
+	//ArrayTest::Exam();
+	Int::Exam();
 	return 0;
 }
