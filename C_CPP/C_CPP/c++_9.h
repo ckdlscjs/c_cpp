@@ -498,10 +498,10 @@ namespace TMP2
 	struct Ratio
 	{
 	private:
-		static const int _gcd = GCD<N, D>::value;
+		static const int _gcd = GCD<N, D>::value; //유리수의 사칙연산이후 기약분수의 표현을 위한 최대공약수
 	public:
-		static const int num = N / _gcd;
-		static const int den = D / _gcd;
+		static const int num = N / _gcd; //기약분수표현을위해나눗셈
+		static const int den = D / _gcd; //기약분수표현을위해나눗셈
 	};
 	//Ratio를 이용하여 덧셈을 수행하는 템플릿
 	template<typename R1, typename R2>
