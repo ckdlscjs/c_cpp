@@ -11,9 +11,10 @@
 //#include "c++_7.h"
 //#include "c++_8.h"
 #include "c++_9.h"
+#include "c++_10.h"
 int main()
 {
-	func12_3();
+	//func12_3();
 	//fileio::Exam2();
 	//fileio::Exam3();
 	//fileio::Exam4();
@@ -25,5 +26,7 @@ int main()
 	//Variadic::Exam5();
 	//ArrayTest::Exam();
 	//Int::Exam();
+	//stl_vec::Exam();
+	stl_list::Exam();
 	return 0;
 }

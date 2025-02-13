@@ -135,6 +135,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="c++_10.h" />
     <ClInclude Include="c++_2.h" />
     <ClInclude Include="c++_3.h" />
     <ClInclude Include="c++_4.h" />
