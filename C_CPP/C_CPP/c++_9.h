@@ -552,3 +552,8 @@ namespace TMP2
 		std::cout << "13 / 6 * 2 /3 = " << r4::num << " / " << r4::den << std::endl;
 	}
 }
+
+namespace TMP3
+{
+	template <typename 
+}
