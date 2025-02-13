@@ -33,7 +33,7 @@ namespace MyString5
 		int Find(char _c) const;
 		bool operator==(const MyString& _str);
 		char& operator[](const int idx) const;
-		friend ostream& operator<<(std::ostream& out, const MyString& _str)
+		friend std::ostream& operator<<(std::ostream& out, const MyString& _str)
 		{
 			return out << _str.str;
 		}
@@ -322,7 +322,7 @@ namespace Complex
 			return *this / Complex(_str);
 		}
 		*/
-		friend ostream& operator<<(std::ostream& out, const Complex& c) //출력연산자 오버로딩
+		friend std::ostream& operator<<(std::ostream& out, const Complex& c) //출력연산자 오버로딩
 		{
 			out << '(' << c.real << ", " << c.img << ')';
 			return out;

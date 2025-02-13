@@ -12,11 +12,11 @@ namespace Inheritance1
 	public:
 		A() : s("부모") { idx = idxs++; std::cout << "부모클래스생성자\n"; };
 		virtual void What() { std::cout << s << '\n'; }
-		virtual ostream& Print(std::ostream& out) const
+		virtual std::ostream& Print(std::ostream& out) const
 		{
 			return out << "A클래스:" << idx;
 		}
-		friend ostream& operator<<(std::ostream& out, const A& _a)
+		friend std::ostream& operator<<(std::ostream& out, const A& _a)
 		{
 			return _a.Print(out);
 		}
@@ -34,7 +34,7 @@ namespace Inheritance1
 		{
 			std::cout << "재정의된함수 " << s << '\n';
 		}
-		virtual ostream& Print(std::ostream& out) const
+		virtual std::ostream& Print(std::ostream& out) const
 		{
 			return out << "B클래스:" << idx;
 		}

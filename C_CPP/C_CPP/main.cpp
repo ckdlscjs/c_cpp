@@ -13,6 +13,7 @@
 #include "c++_9.h"
 int main()
 {
+	func12_3();
 	//fileio::Exam2();
 	//fileio::Exam3();
 	//fileio::Exam4();
@@ -23,6 +24,6 @@ int main()
 	//Variadic::Exam3();
 	//Variadic::Exam5();
 	//ArrayTest::Exam();
-	Int::Exam();
+	//Int::Exam();
 	return 0;
 }
