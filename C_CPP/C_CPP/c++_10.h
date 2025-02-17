@@ -87,3 +87,18 @@ namespace stl_deque
 		
 	}
 }
+
+/*
+* 10_2
+* 연관컨테이너(AssociateContainer)에 대해서 다룬다
+* key<->value 쌍의 컨테이너
+* 데이터가 있을시 여부만체크 set, unordered_set
+* 데이터쌍을 체크 map, unordered_map
+* set, map은 레드블랙트리기반의 자가균형이진트리를 이용
+* unordered계열은 해시를 이용
+* multi계열은 중복되는 key값을 허용한다, 리턴은 임의의값을 뱉으나 해당 키에 대응하는
+* 구간을 뱉게끔 할 수 있다 이를 위해 var.equal_range(원소)를 사용한다
+* set, map의 경우 < 혹은 > 연산자 비교를 하는 operator를 재정의하여 임의정의클래스를
+* 삽입 가능하다, unordered계열은 hash를 만들어서사용해야 하므로 비효율적
+* 
+*/
