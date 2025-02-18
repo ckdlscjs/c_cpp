@@ -27,6 +27,7 @@ int main()
 	//ArrayTest::Exam();
 	//Int::Exam();
 	//stl_vec::Exam();
-	stl_list::Exam();
+	//stl_list::Exam();
+	ch10_3::Exam();
 	return 0;
 }
