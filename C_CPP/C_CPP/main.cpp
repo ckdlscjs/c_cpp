@@ -12,6 +12,7 @@
 //#include "c++_8.h"
 #include "c++_9.h"
 #include "c++_10.h"
+#include "c++_12.h"
 int main()
 {
 	//func12_3();
@@ -28,6 +29,10 @@ int main()
 	//Int::Exam();
 	//stl_vec::Exam();
 	//stl_list::Exam();
-	ch10_3::Exam();
+	//ch10_3::Exam();
+	/*
+	ch12::Exam2();
+	ch12::Exam3();*/
+	ch12::Exam4();
 	return 0;
 }
