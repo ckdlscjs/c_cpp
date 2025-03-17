@@ -37,6 +37,8 @@ namespace ch12
 		int length() const; //현재길이반환
 		const char* c_str() const;
 		MyString operator+(const MyString& s); //문자열연결, +연산자재정의
+		MyString& operator=(const MyString& s); //문자열연결, =연산자재정의
+		MyString& operator=(MyString&& s); //문자열연결, =연산자재정의, 이동대입연산자
 		friend std::ostream& operator<<(std::ostream& out, const MyString& str); //출력연산자재정의
 	};
 	MyString::MyString()
@@ -100,6 +102,33 @@ namespace ch12
 		ret.str_length = str_length + s.length();
 		return std::move(ret); //반환시 rvo로 복사생성자를 호출하지 않음, std::move시 강제호출, 복사생성자를 두번 호출해야한다(str+str할때한번, 복사할때한번)
 	}
+	MyString& MyString::operator=(const MyString& s)
+	{
+		std::cout << "대입연산" << std::endl;
+		if (s.str_length > str_capacity) {
+			delete[] str_content;
+			str_capacity = s.str_length + 1;
+			str_content = new char[str_capacity];
+		}
+		str_length = s.str_length;
+		for (int i = 0; i <= str_capacity; i++) {
+			str_content[i] = s.str_content[i];
+		}
+		return *this;
+	}
+	MyString& MyString::operator=(MyString&& s)
+	{
+		std::cout << "이동대입연산" << std::endl;
+		str_content = s.str_content;
+		str_length = s.str_length;
+		str_capacity = s.str_capacity;
+
+		s.str_content = nullptr;
+		s.str_length = 0;
+		s.str_capacity = 0;
+		return *this;
+	}
+
 	
 	int MyString::length() const
 	{
@@ -152,7 +181,6 @@ namespace ch12
 		* 이때 복사생성자를 이용하므로 예외가발생하여도 원본 원소는 문제가없기에 상관없으나
 		* 이동생성의 경우 기존 메모리의 원소들이 이동해 사라졌으므로 새로할당한 메모리를 섣불리 해제할 수 없다
 		* 
-		* 
 		*/
 		MyString s("abc");
 		std::vector<MyString> vec;
@@ -164,5 +192,114 @@ namespace ch12
 		vec.push_back(s);
 		std::cout << "세 번째 추가 ---" << std::endl;
 		vec.push_back(s);
+	}
+
+	template <typename T>
+	void MYSwap(T& a, T& b)
+	{
+		T tmp(a); //복사생성자호출, 값을 복사해둠
+		a = std::move(b); //a에 b의 값을 이동, 복사만큼 오버헤드가발생하지않음
+		b = std::move(tmp); //b에 tmp의 값을 이동, 복사만큼 오버헤드가 발생하지않음
+	}
+	void Exam5()
+	{
+		MyString str1("abc");
+		MyString str2("def");
+		MYSwap(str1, str2); //기본예제, 복사생성자->대입연산자->대입연산자 총 세번의 복사가 발생한다
+	}
+
+	class A2
+	{
+	public:
+		A2() { std::cout << "일반생성자호출" << '\n'; }
+		A2(const A2& a) { std::cout << "복사생성자호출" << '\n'; }
+		A2(const A2&& a) { std::cout << "이동생성자호출" << '\n'; }
+	};
+
+	void Exam6()
+	{
+		A2 a; //일반생성자호출
+		A2 b(a); //복사생성자 호출
+		A2 c(std::move(a)); //이동생성자호출, std::move는 rvalue로 변환시킨다
+	}
+
+	class A3
+	{
+	public:
+		A3() {std::cout << "NormalConstructor\n";}
+		A3(const A3& a3) { std::cout << "CopyConstructor\n"; }
+		A3(A3&& a3) { std::cout << "MoveConstructor\n"; }
+	};
+	class B3 
+	{
+		A3 a3;
+	public:
+		//복사생성으로인한 오버헤드를 피하기위해 우측값으로 받아서 해결하려한다.
+		//A3&& _a3로 rvalue패러미터함수(생성자)를 호출한다, 이때 A3클래스의 생성자에 인자를 넘겨줄때
+		//_a3는 자체로 객체이므로 move를 한번 더취해 넘겨주지 않으면 A3클래스입장에서 일반A3객체(lvaue)로 보기때문에 move를
+		//한번더 사용해 rvalue로 캐스팅해 인자로 넘겨야 올바르게 이동생성자의 호출이 가능해진다
+		B3(A3&& _a3) : a3(std::move(_a3)) {}
+	};
+	
+	void Exam7()
+	{
+		A3 a3;
+		B3 B(std::move(a3));
+	}
+
+	class A4 {};
+	void g(A4& a) { std::cout << "좌측값 레퍼런스 호출\n"; }
+	void g(const A4& a) { std::cout << "좌측값 상수 레퍼런스 호출\n"; }
+	void g(A4&& a) { std::cout << "우측값 레퍼런스 호출\n"; };
+
+	template<typename T>
+	void Wrapper(T u)
+	{
+		g(u);
+	}
+
+	template<typename T>
+	void WrapperRef(T& u)
+	{
+		g(u);
+	}
+
+	template<typename T>
+	void Wrapperforward(T&& u)
+	{
+		g(std::forward<T>(u));
+	}
+	void Exam8()
+	{
+		A4 a;
+		const A4 ca;
+		g(a);
+		g(ca);
+		g(A4());
+		std::cout << "Wrapper(T u), g(u)\n";
+		Wrapper(a); //T(A4) u로 호출, g(u)는 lvalue u로 호출, 좌측값 레퍼런스 호출
+		Wrapper(ca); //T(A4) u로 호출, g(u)는 lvalue u로 호출, 좌측값 레퍼런스 호출
+		Wrapper(A4()); //T(A4) u로 호출, g(u)는 lvalue u로 호출, 좌측값 레퍼런스 호출
+
+		std::cout << "Wrapper(T& u), g(u)\n";
+		WrapperRef(a); //T(A4&) 로 참조u(call by ref)로 호출, 복사가아니므로 컴파일러가 A4&로 추론하여 좌측값레퍼런스호출
+		WrapperRef(ca); //T(const A4&) 로 참조u(call by ref)로 호출, 복사가아니므로 컴파일러가 const A4&로 추론하여 좌측값상수레퍼런스호출
+		//WrapperRef(A4()); //A()는 rvalue이나 &참조로 호출하므로 호출불가능!
+
+		/*
+		* 모던c++에서 레퍼런스겹침규칙(Reference Collapsing Rule)에 따라 T의 타입을 추론한다
+		* &(lvaue Ref)를 1로 보고 &&(rvalue Ref)를 0으로 보는 형태로 OR연산결과의 형태로 타입을 추론한다
+		* typedef int& T;
+		* T& r1; //int& & 의형태, lvalue, lvalue 이므로 r1은 int&로 본다
+		* T&& r2; //int& &&의 형태, lvalue, rvalue이므로 r2는 int&로 본다
+		*
+		* typedef int&& U;
+		* U& r3; //int&& &의 형태, rvalue, lvalue이므로 r3는 int&로 본다
+		* U&& r4; //int&& &&의 형태 rvalue, rvalue이므로 r4는 int&&로 본다
+		*/
+		std::cout << "Wrapper(T& u), g(std::forward<T>(u))\n"; //보편적레퍼런스
+		Wrapperforward(a); //A4&& &의 형태로 넘어가므로 A4&로 본다
+		Wrapperforward(ca); //const A4&& &의형태로 넘어가므로 const A4&로 본다
+		Wrapperforward(A4()); //rvalue(A4)&&형태로 먼저 넘어간다, 다만 u가 A4여도 매개변수기준이므로 lvalue형태기때문에 A4클래스에올바른전달위해 MOVE,FORWARD로 캐스팅이필요
 	}
 }

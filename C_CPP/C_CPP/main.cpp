@@ -33,6 +33,11 @@ int main()
 	/*
 	ch12::Exam2();
 	ch12::Exam3();*/
-	ch12::Exam4();
+	//ch12::Exam4();
+	//ch12::Exam5();
+	//ch12::Exam6();
+	//ch12::Exam5();
+	//ch12::Exam7();
+	ch12::Exam8();
 	return 0;
 }
