@@ -13,6 +13,7 @@
 #include "c++_9.h"
 #include "c++_10.h"
 #include "c++_12.h"
+#include "c++_13.h"
 int main()
 {
 	//func12_3();
@@ -38,6 +39,9 @@ int main()
 	//ch12::Exam6();
 	//ch12::Exam5();
 	//ch12::Exam7();
-	ch12::Exam8();
+	//ch12::Exam8();
+	//ch13::Exam();
+	//ch13::Exam2();
+	ch13::Exam3();
 	return 0;
 }
