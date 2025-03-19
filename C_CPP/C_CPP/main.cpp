@@ -42,6 +42,8 @@ int main()
 	//ch12::Exam8();
 	//ch13::Exam();
 	//ch13::Exam2();
-	ch13::Exam3();
+	//ch13::Exam3();
+	//ch13::Exam4();
+	ch13::Exam5();
 	return 0;
 }
