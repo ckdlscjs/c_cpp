@@ -15,61 +15,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
+    <ClInclude Include="stdafx.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="DxDefine.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="SystemClass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="InputClass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsClass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="AlignedAllocationPolicy.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="D3DClass.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="std.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c_12_1.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c_12_2.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c_12_3.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_2.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_3.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_4.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_5.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_6.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_7.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_8.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_9.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_10.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_12.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_13.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_14.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
-    <ClInclude Include="c++_15.h">
-      <Filter>헤더 파일</Filter>
-    </ClInclude>
+    <ClCompile Include="RasterTek03.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="SystemClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="InputClass.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -15,6 +15,7 @@
 #include "c++_12.h"
 #include "c++_13.h"
 #include "c++_14.h"
+#include "c++_15.h"
 int main()
 {
 	//func12_3();
@@ -50,6 +51,7 @@ int main()
 	//ch14::Exam2();
 	//ch14::Exam3();
 	//ch14::Exam4();
-	ch14::Exam5();
+	//ch14::Exam5();
+	ch15::Exam2();
 	return 0;
 }

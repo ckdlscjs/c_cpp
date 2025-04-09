@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{0532206d-0b15-4eee-a163-8da54381b806}</ProjectGuid>
-    <RootNamespace>CCPP</RootNamespace>
+    <ProjectGuid>{C28164DE-F7AF-4B83-AF50-C9E9E8C08617}</ProjectGuid>
+    <RootNamespace>RasterTek02</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -108,10 +108,9 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../Output/Debug</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -132,26 +131,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
+    <ClInclude Include="AlignedAllocationPolicy.h" />
+    <ClInclude Include="D3DClass.h" />
+    <ClInclude Include="DxDefine.h" />
+    <ClInclude Include="GraphicsClass.h" />
+    <ClInclude Include="InputClass.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SystemClass.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="c++_10.h" />
-    <ClInclude Include="c++_12.h" />
-    <ClInclude Include="c++_13.h" />
-    <ClInclude Include="c++_14.h" />
-    <ClInclude Include="c++_15.h" />
-    <ClInclude Include="c++_2.h" />
-    <ClInclude Include="c++_3.h" />
-    <ClInclude Include="c++_4.h" />
-    <ClInclude Include="c++_5.h" />
-    <ClInclude Include="c++_6.h" />
-    <ClInclude Include="c++_7.h" />
-    <ClInclude Include="c++_8.h" />
-    <ClInclude Include="c++_9.h" />
-    <ClInclude Include="c_12_1.h" />
-    <ClInclude Include="c_12_2.h" />
-    <ClInclude Include="c_12_3.h" />
-    <ClInclude Include="std.h" />
+    <ClCompile Include="GraphicsClass.cpp" />
+    <ClCompile Include="InputClass.cpp" />
+    <ClCompile Include="RasterTek03.cpp" />
+    <ClCompile Include="SystemClass.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
