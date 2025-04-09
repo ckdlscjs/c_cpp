@@ -52,6 +52,9 @@ int main()
 	//ch14::Exam3();
 	//ch14::Exam4();
 	//ch14::Exam5();
-	ch15::Exam2();
+	//ch15::Exam2();
+	//ch15::Exam3();
+	//ch15::Exam4();
+	ch15::Exam5();
 	return 0;
 }

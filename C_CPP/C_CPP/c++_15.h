@@ -89,4 +89,207 @@ namespace ch15
 		for (int i = 0; i < 4; i++) total += results[i];
 		std::cout << "전체합 : " << total << '\n';
 	}
+
+	void workFunc(int& counter)
+	{
+		for (int i = 0; i < 10'000; i++)
+			counter += 1;
+	}
+	void Exam3()
+	{
+		//경쟁상태(RaceCondition)
+		int counter = 0;
+		std::vector<std::thread> workers;
+		//thread객체에 counter를 전달시 std::ref로 전달해주지 않으면 thread는 counter변수를 복사하려한다(call by value), 이때 workFunc는
+		//int&, 즉 참조되는 변수를 요구하기때문에 형이 맞지 않아 std::ref로 참조로 전달을 해줘야한다
+		for (int i = 0; i < 4; i++) workers.push_back(std::thread(workFunc, std::ref(counter)));
+		for (int i = 0; i < 4; i++) workers[i].join();
+		//이때 counter는 쓰레드끼리 변수상태를 공유하기때문에 경쟁상태(RaceCondition)가 되어 의도하는 올바른 값을 기대 할 수 없다
+		std::cout << "counter의 최종값 : " << counter << '\n';
+	}
+	//경쟁상태에서의 값 증가에서 기대값과 다른 연산결과를 보이는 이유는 어떠한 식으로 counter+=1이 컴파일 되는지 알 필요성이 있다
+	/*
+	mov rax, qword ptr [rbp - 8]
+	mov ecx, dword ptr [rax]
+	add ecx, 1
+	mov dword ptr [rax], ecx
+	위와같은 형태로 counter+=1이라는 코드가 어셈블리언어 형태로 컴파일 되었다고 가정한다
+	이때 첫줄 rax레지스터에 rbp-8이라는 주소값을 []역참조한다, 이때 해당주소값은 qword이므로 8바이트를 의미한다, 즉 이를 c언어로 풀이하면
+	rax = *(int**)(rbp-8)이 된다
+	이는 workFunc는 기본적으로 변수를 참조형태(int&)로 받는데 thread클래스를 통해서 전달을 해 줘야 하기 때문에 counter를 그대로 넘기면
+	call by value의 형태로 넘어가 원래주소를 전달해 줄 수 없어 형태가 맞지않는다, 고로 std::ref(counter)를 통해 &counter, 즉 주소를 넘기게되므로
+	8바이트형 정수값(주소값)을 넘겨줘야하는데 해당 주소가 rbp-8에 있다고 가정한다, 넘겨줄때 어떠한 타입을 넘겨줄 지 알수 없기 때문에 void* 타입으로
+	기본형으로 넘겨주는데 실제 필요한 주소값은 int* 즉 8바이트인트형 주소값이므로 이를 포함하는 bsp-8은 int*을 내포해야하기때문에 int**로 캐스팅 할 수
+	있음이 자명하기에 (int**)으로 캐스팅해주는것, 이후에 저장되어있는 8바이트주소값을 역참조(*)하면 8바이트주소값을 rax에 대입해 줄 수 있는것이다
+	
+	이후 ecx는 int형 변수가되며이를 역참조해주는형태로 다시 받아오기때문에
+	ecx = *(int*)(rax), 즉 eax는 counter가 되는결과를 보인다, 이후 add ecx, 1로 counter를 1 증감시킨다
+
+	마지막으로 move dword ptr [rax], ecx 즉 ecx의 값을 rax(&counter)쪽으로 다시 옮겨준다, 증감된값을 다시 반대로옮겨주는것이므로 변경된결과를 
+	rax저장된 주소에 복사한다
+
+	이때 쓰레드타이밍(경쟁상태)로 인한 문제가 생긴다, 쓰레드1, 2에서 각각 어떠한 타이밍에 해당 어셈블리 코드가 실행되고 복사되는 형태가 순서대로 이뤄지지
+	않기때문에 증감된값(ecx)와 이를 다시 원래 rax(&counter)로 복사해주는과정에 덮어씌우기 형태로 값의 중복적인 간섭이 생겨 올바른 결과를 보장 할 수 없는것
+	*/
+	
+	/*
+	위와같은 경쟁상태 문제를 해결하기위해 하나의 쓰레드만 해당 counter += 1에 순차적으로 접근 가능하다면 방지 할 수 있지 않는가 ? 이를 위해
+	mutex를 사용한다
+	*/
+	void workFuncMutex(int& counter, std::mutex& m)
+	{
+		for (int i = 0; i < 10'000; i++)
+		{
+			/*
+			m.lock(); //한번에 한 쓰레드만 뮤텍스의 사용권한을 갖는다
+			counter += 1; //lock~unlock사이의 코드부분을 임계영역(CriticalSection)이라 부른다
+			m.unlock(); //unlock을 하지 않으면 lock한 쓰레드도 다시 lock을 호출하게되어 아무쓰레드도 연산을 끝마치거나 시작하지 못한다, Deadlock(교착상태)
+			*/
+			std::lock_guard<std::mutex> lock(m); //unique_ptr처럼 intent를 빠져나가면 자동으로 해제를해준다
+			counter += 1;
+		}
+			
+	}
+	void Exam4()
+	{
+		//경쟁상태(RaceCondition)
+		int counter = 0;
+		std::mutex m; //뮤텍스변수
+		std::vector<std::thread> workers;
+
+		for (int i = 0; i < 4; i++) workers.push_back(std::thread(workFuncMutex, std::ref(counter), std::ref(m)));
+		for (int i = 0; i < 4; i++) workers[i].join();
+		//이때 counter는 쓰레드끼리 변수상태를 공유하기때문에 경쟁상태(RaceCondition)가 되어 의도하는 올바른 값을 기대 할 수 없다
+		std::cout << "counter의 최종값 : " << counter << '\n';
+	}
+
+	//교착상태는 데드락에의해 이도저도 못하는 상황을 의미한다, 두개의 뮤텍스가 있고 실행함수각각에서 두개의 뮤텍스를 서로 lock하는 상황일때
+	//양쪽에서 각각의뮤텍스를 서로 lock하려고 하면 해당뮤텍스는 unlock이 되어있어야 하지만 해당경우에는 서로 lock을하고있어 교착상태에 빠질 수 있다.
+	//이러한 상태를 기아상태(starvation)이라 한다
+	//해결법중 하나로는 try_lock같은 함수를 이용해 함수 한쪽에 우선권을 주어 우선적으로 뮤텍스를 이용하게 해주어 스레드를 선수행시키고
+	//이후에 수행하는방법또한 존재한다, 이러한 여러가지방법등을 설명한 C++ Concurrency In Action이라는 서적에서 데드락을 피하기위해 다음과같은 가이드라인을 제시한다
+	/*
+	* -중첩된 Lock의 이용을 피하라
+	* 모든 쓰레드들이 최대 한개의 Lock을 이용한다면 데드락을 피할 수 있다, 일반적인 구조디자인으로는 한개의 Lock(Mutex)만으로 충분하기 때문에 여러개의 mutex가필요한가를 고려가필요
+	* 
+	* -Lock을 소유하고 있을때 유저코드를 호출하는것을 피하라
+	* lock의 인텐트, 즉 lock이 해제되기전에 다른함수호출이나 콜백등을 호출하는경우 다른 구조에서 lock을 획득하려는 시도가 있을수 있기 때문에 이를피해야한다
+	* 
+	* -Lock들을 언제나 정해진 순서로 획득해라
+	* Mutex들을 정해진순서대로 lock해야 다른함수등에서 Mutex를 사용하더라도 같은순서로 Lock해야 순서로인한 데드락의 발생을 막을 수 있다
+	* 위의 사항들을 고려해 멀티쓰레드 프로그램에서 자주 사용되는 생산자-소비자(Producer,Consumer)디자인 패턴에 대해 알아본다
+	*/
+	
+	void Producer(std::queue<std::string>* downloaded_pages, std::mutex* m, int index)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(100 * index)); //다운로드시 걸리는 시간이라 가정, 쓰레드 번호가 클수록 시간이 오래걸린다
+			std::string content = "웹사이트 : " + std::to_string(i) + " from thread(" + std::to_string(index) + ")\n";
+
+			m->lock();
+			//임계영역, 데이터는 쓰레드사이에서 공유되야 하므로 임계영역내에서 문제가 없게끔 처리한다
+			downloaded_pages->push(content);
+			m->unlock();
+		}
+	}
+
+	void Consumer(std::queue<std::string>* downloaded_pages, std::mutex* m, int* num_processed)
+	{
+		//다운로드갯수가 25개가 안됐다면
+		while (*num_processed < 25)
+		{
+			m->lock();
+			if (downloaded_pages->empty())
+			{
+				//만약 다운로드완료된게 없다면 바로 lock을 해제하고 10밀리세컨드동안 대기후 재체크(busy-waiting)
+				m->unlock();
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+				continue;
+			}
+			std::string content = downloaded_pages->front();
+			downloaded_pages->pop();
+			(*num_processed)++;
+			m->unlock();
+
+			std::cout << content;
+			std::this_thread::sleep_for(std::chrono::milliseconds(80));
+		}
+	}
+
+	void Exam5()
+	{
+		std::queue<std::string> downloaded_pages;
+		std::mutex m;
+
+		std::vector<std::thread> producers;
+		for (int i = 0; i < 5; i++) producers.push_back(std::thread(Producer, &downloaded_pages, &m, i + 1));
+
+		int num_complete = 0;
+		std::vector<std::thread> consumers;
+		for (int i = 0; i < 3; i++) consumers.push_back(std::thread(Consumer, &downloaded_pages, &m, &num_complete));
+
+		for (int i = 0; i < 5; i++) producers[i].join();
+		for (int i = 0; i < 3; i++) consumers[i].join();
+	}
+
+	//위에 언급된 기본적인 반복외에 특정한 조건을 주어 알림(notify)을 통해 mutex를 사용하기위해 조건변수(condition_value)를 사용한다
+	//std::condition_variable에서 특정 뮤텍스를 인자로 삽입해 wait함수에서 notify함수등으로 호출시 조건을 충족시키면 인자로넘겨받은 mutex를 블로킹상태에서 해제시킨다.
+	void ProducerUsingCV(std::queue<std::string>* downloaded_pages, std::mutex* m, int index, std::condition_variable* cv)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(100 * index)); //다운로드시 걸리는 시간이라 가정, 쓰레드 번호가 클수록 시간이 오래걸린다
+			std::string content = "웹사이트 : " + std::to_string(i) + " from thread(" + std::to_string(index) + ")\n";
+
+			m->lock();
+			//임계영역, 데이터는 쓰레드사이에서 공유되야 하므로 임계영역내에서 문제가 없게끔 처리한다
+			downloaded_pages->push(content);
+			m->unlock();
+			//Consumer에서 Wait중인 cv에 준비되었음을 알린다
+			cv->notify_one();
+		}
+	}
+	void ConsumerUsingCV(std::queue<std::string>* downloaded_pages, std::mutex* m, int* num_processed, std::condition_variable* cv)
+	{
+		//다운로드갯수가 25개가 안됐다면
+		while (*num_processed < 25)
+		{
+			std::unique_lock<std::mutex> lk(*m);
+			//조건이 참이 아닐시 블로킹상태로대기한다
+			cv->wait(lk, [&]() {return !downloaded_pages->empty() || *num_processed >= 25; });
+			if (*num_processed >= 25)
+			{
+				lk.unlock();
+				return;
+			}
+
+			std::string content = downloaded_pages->front();
+			downloaded_pages->pop();
+			(*num_processed)++;
+			m->unlock();
+
+			std::cout << content;
+			std::this_thread::sleep_for(std::chrono::milliseconds(80));
+		}
+	}
+
+	void Exam6()
+	{
+		std::queue<std::string> downloaded_pages;
+		std::mutex m;
+		std::condition_variable cv;
+
+		std::vector<std::thread> producers;
+		for (int i = 0; i < 5; i++) producers.push_back(std::thread(ProducerUsingCV, &downloaded_pages, &m, i + 1, &cv));
+
+		int num_complete = 0;
+		std::vector<std::thread> consumers;
+		for (int i = 0; i < 3; i++) consumers.push_back(std::thread(ConsumerUsingCV, &downloaded_pages, &m, &num_complete, &cv));
+
+		for (int i = 0; i < 5; i++) producers[i].join();
+		//producer들이 전부 리턴되면 조건변수를 전부 깨우고 consumer들이 전부 리턴될때까지 블로킹상태로기다린다
+		cv.notify_all();
+		for (int i = 0; i < 3; i++) consumers[i].join();
+	}
 }
