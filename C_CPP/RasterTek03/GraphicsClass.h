@@ -15,10 +15,10 @@ class GraphicsClass
 {
 public:
 	GraphicsClass();
-	GraphicsClass(const GraphicsClass&);
+	GraphicsClass(const GraphicsClass& graphicClass);
 	~GraphicsClass();
 
-	bool Initialize(int, int, HWND);
+	bool Initialize(int screenWidth, int screenHeight, HWND hwnd);
 	void Shutdown();
 	bool Frame();
 
