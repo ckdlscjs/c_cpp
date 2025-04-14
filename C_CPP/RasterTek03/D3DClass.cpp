@@ -179,6 +179,21 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool vsy
 	// 설정된 깊이버퍼 구조체를 사용하여 깊이 버퍼 텍스쳐를 생성합니다
 	assert(SUCCEEDED(m_Device->CreateTexture2D(&depthBufferDesc, NULL, &m_DetphStencilBuffer)) && "Create Depth StencilBuffer failed!");
 
+	// 깊이 스텐실 뷰의 구조체를 초기화합니다
+	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+	// 깊이 스텐실 뷰 구조체를 설정합니다
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+	// 깊이 스텐실 뷰를 생성합니다
+	assert(SUCCEEDED(m_Device->CreateDepthStencilView(m_DetphStencilBuffer, &depthStencilViewDesc, &m_DSV)) && "Create DSV failed!");
+
+	// 렌더링 대상 뷰와 깊이 스텐실 버퍼를 출력 렌더 파이프 라인에 바인딩합니다
+	m_DeviceContext->OMSetRenderTargets(1, &m_RTV, m_DSV);
+
 	// 스텐실 상태 구조체를 초기화합니다
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
@@ -206,26 +221,10 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool vsy
 
 	// 깊이 스텐실 상태를 생성합니다
 	assert(SUCCEEDED(m_Device->CreateDepthStencilState(&depthStencilDesc, &m_DepthStencilState)) && "Create Detph Stencil State failed!");
-	
+
 
 	// 깊이 스텐실 상태를 설정합니다
 	m_DeviceContext->OMSetDepthStencilState(m_DepthStencilState, 1);
-
-	// 깊이 스텐실 뷰의 구조체를 초기화합니다
-	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
-
-	// 깊이 스텐실 뷰 구조체를 설정합니다
-	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	depthStencilViewDesc.Texture2D.MipSlice = 0;
-
-	// 깊이 스텐실 뷰를 생성합니다
-	assert(SUCCEEDED(m_Device->CreateDepthStencilView(m_DetphStencilBuffer, &depthStencilViewDesc, &m_DSV)) && "Create DSV failed!");
-
-
-	// 렌더링 대상 뷰와 깊이 스텐실 버퍼를 출력 렌더 파이프 라인에 바인딩합니다
-	m_DeviceContext->OMSetRenderTargets(1, &m_RTV, m_DSV);
 
 	// 그려지는 폴리곤과 방법을 결정할 래스터 구조체를 설정합니다
 	D3D11_RASTERIZER_DESC rasterDesc;
