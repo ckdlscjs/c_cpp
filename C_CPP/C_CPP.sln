@@ -11,6 +11,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RasterTek02", "RasterTek02\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RasterTek03", "RasterTek03\RasterTek03.vcxproj", "{C28164DE-F7AF-4B83-AF50-C9E9E8C08617}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PardCode", "PardCode", "{1965B091-43AA-409C-B36B-99DA04944433}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PardCode01", "PardCode01\PardCode01.vcxproj", "{1225B71D-1A7F-444B-A8A2-74354356221C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -43,6 +47,14 @@ Global
 		{C28164DE-F7AF-4B83-AF50-C9E9E8C08617}.Release|x64.Build.0 = Release|x64
 		{C28164DE-F7AF-4B83-AF50-C9E9E8C08617}.Release|x86.ActiveCfg = Release|Win32
 		{C28164DE-F7AF-4B83-AF50-C9E9E8C08617}.Release|x86.Build.0 = Release|Win32
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Debug|x64.ActiveCfg = Debug|x64
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Debug|x64.Build.0 = Debug|x64
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Debug|x86.ActiveCfg = Debug|Win32
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Debug|x86.Build.0 = Debug|Win32
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Release|x64.ActiveCfg = Release|x64
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Release|x64.Build.0 = Release|x64
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Release|x86.ActiveCfg = Release|Win32
+		{1225B71D-1A7F-444B-A8A2-74354356221C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +62,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{BB52F7B6-03DE-4736-B2E5-E9F1E36CB520} = {C8D5274F-AC00-46C7-1F8D-E88E81087A52}
 		{C28164DE-F7AF-4B83-AF50-C9E9E8C08617} = {C8D5274F-AC00-46C7-1F8D-E88E81087A52}
+		{1225B71D-1A7F-444B-A8A2-74354356221C} = {1965B091-43AA-409C-B36B-99DA04944433}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4E4EFD9A-E346-48C5-9A64-445AA2A38A54}
