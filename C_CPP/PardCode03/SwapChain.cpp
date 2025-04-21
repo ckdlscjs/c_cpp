@@ -12,7 +12,7 @@ SwapChain::~SwapChain()
 	std::cout << "SwapChain" << " Class" << "소멸자 호출" << '\n';
 }
 
-bool SwapChain::Init(IDXGIFactory* pFactory, ID3D11Device* pDevice, HWND hWnd, UINT iWidth, UINT iHeight)
+bool SwapChain::Init(IDXGIFactory* pFactory, ID3D11Device* pDevice, HWND hwnd, UINT iWidth, UINT iHeight)
 {
 	DXGI_SWAP_CHAIN_DESC desc_swapchain;
 	ZeroMemory(&desc_swapchain, sizeof(desc_swapchain));
@@ -23,11 +23,11 @@ bool SwapChain::Init(IDXGIFactory* pFactory, ID3D11Device* pDevice, HWND hWnd, U
 	desc_swapchain.BufferDesc.RefreshRate.Numerator = 60;				//60hz를의미, 리프레시레이트
 	desc_swapchain.BufferDesc.RefreshRate.Denominator = 1;				
 	desc_swapchain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;		//버퍼의사용처, 렌더타겟출력용
-	desc_swapchain.OutputWindow = hWnd;									//렌더링할 대상 윈도우핸들
+	desc_swapchain.OutputWindow = hwnd;									//렌더링할 대상 윈도우핸들
 	desc_swapchain.SampleDesc.Count = 1;								//멀티샘플링 설정, 1이면 사용안함 4이상이면 MSAA적용
 	desc_swapchain.SampleDesc.Quality = 0;								//샘플링품질, 0이면 보통값
 	desc_swapchain.Windowed = TRUE;										//TRUE:창모드 FALSE:전체화면
-	HRESULT hResult = pFactory->CreateSwapChain(pDevice, &desc_swapchain, &m_SwapChain);
+	HRESULT hResult = pFactory->CreateSwapChain(pDevice, &desc_swapchain, &m_pSwapChain);
 	if (FAILED(hResult))
 		return false;
 	return true;
@@ -35,6 +35,6 @@ bool SwapChain::Init(IDXGIFactory* pFactory, ID3D11Device* pDevice, HWND hWnd, U
 
 bool SwapChain::Release()
 {
-	m_SwapChain->Release();
+	m_pSwapChain->Release();
 	return true;
 }

@@ -11,7 +11,7 @@ public:
 	bool BroadCast();
 	bool Release();
 	bool IsRun();
-	void SetHwnd(HWND hWnd);
+	void SetHWND(HWND hWnd);
 	HWND GetHwnd() const;
 	RECT GetClientWindowRect();
 	/*WindowEvent*/
@@ -20,8 +20,8 @@ public:
 	virtual void OnDestroy() = 0;
 
 protected:
-	HWND mHwnd;
-	bool mIsRun;
+	HWND m_HWND;
+	bool m_bIsRun;
 };
 //실제정의->cpp
 extern Window* g_pWindow;

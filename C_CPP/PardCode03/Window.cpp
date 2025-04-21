@@ -8,7 +8,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//윈도우생성시
 		case WM_CREATE:
 		{
-			g_pWindow->SetHwnd(hWnd);
+			g_pWindow->SetHWND(hWnd);
 			//Event When WindowCreated
 			g_pWindow->OnCreate();
 		}break;
@@ -81,13 +81,13 @@ bool Window::Init()
 		NULL,
 		NULL
 	);
-	if (!mHwnd)
+	if (!m_HWND)
 		return false;
 
 	//윈도우창을띄운다
-	::ShowWindow(mHwnd, SW_SHOW);
-	::UpdateWindow(mHwnd);
-	return mIsRun = true;
+	::ShowWindow(m_HWND, SW_SHOW);
+	::UpdateWindow(m_HWND);
+	return m_bIsRun = true;
 }
 
 bool Window::BroadCast()
@@ -105,27 +105,27 @@ bool Window::BroadCast()
 
 bool Window::Release()
 {
-	return ::DestroyWindow(mHwnd);
+	return ::DestroyWindow(m_HWND);
 }
 
 bool Window::IsRun()
 {
-	return mIsRun;
+	return m_bIsRun;
 }
 
-void Window::SetHwnd(HWND hWnd)
+void Window::SetHWND(HWND hWnd)
 {
-	mHwnd = hWnd;
+	m_HWND = hWnd;
 }
 
 HWND Window::GetHwnd() const
 {
-	return mHwnd;
+	return m_HWND;
 }
 
 RECT Window::GetClientWindowRect()
 {
 	RECT rt;
-	::GetClientRect(mHwnd, &rt);
+	::GetClientRect(m_HWND, &rt);
 	return rt;
 }

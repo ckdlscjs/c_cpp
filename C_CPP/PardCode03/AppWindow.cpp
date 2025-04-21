@@ -23,5 +23,5 @@ void AppWindow::OnUpdate()
 void AppWindow::OnDestroy()
 {
 	GraphicEngine::Get().Release();
-	mIsRun = false;
+	m_bIsRun = false;
 }

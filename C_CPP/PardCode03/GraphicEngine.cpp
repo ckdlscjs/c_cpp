@@ -43,9 +43,9 @@ bool GraphicEngine::Init(Window* pWindow)
 			feature_levels,						//_In_reads_opt_(FeatureLevels) CONST D3D_FEATURE_LEVEL * pFeatureLevels, 피쳐레벨 배열
 			num_features,						//UINT FeatureLevels, 피쳐레벨의갯수
 			D3D11_SDK_VERSION,					//UINT SDKVersion, sdk버전지정
-			&m_D3DDevice,						//_COM_Outptr_opt_ ID3D11Device * *ppDevice, 반환할 ID3DDevice객체
-			&m_FeatureLevel,					//_Out_opt_ D3D_FEATURE_LEVEL * pFeatureLevel, 반환할FeatureLevel
-			&m_D3DDeviceContext					//_COM_Outptr_opt_ ID3D11DeviceContext * *ppImmediateContext, 반환할ID3DDeviceContext객체
+			&m_pD3D_Device,						//_COM_Outptr_opt_ ID3D11Device * *ppDevice, 반환할 ID3DDevice객체
+			&m_D3D_FeatureLevel,					//_Out_opt_ D3D_FEATURE_LEVEL * pFeatureLevel, 반환할FeatureLevel
+			&m_pD3D_DeviceContext					//_COM_Outptr_opt_ ID3D11DeviceContext * *ppImmediateContext, 반환할ID3DDeviceContext객체
 		);
 		if (SUCCEEDED(hResult))
 			break;
@@ -54,19 +54,19 @@ bool GraphicEngine::Init(Window* pWindow)
 		return false;
 	//D3DDevice부터 Factory까지 역순으로 참조해서 Factory객체까지 주소를 받아온다
 	//__uuidof는 해당 함수에서 받아올 객체의 ID를 의미하며 두번째인자로 (void**)로 캐스팅후 저장해줄 포인터의 주소값을 넘겨야 실제 m_변수에 값을저장해놓을수있다
-	hResult = m_D3DDevice->QueryInterface(__uuidof(IDXGIDevice), (void**)&m_dxgi_device);
+	hResult = m_pD3D_Device->QueryInterface(__uuidof(IDXGIDevice), (void**)&m_pDXGI_Device);
 	if (FAILED(hResult)) 
 		return false;
-	hResult = m_dxgi_device->GetParent(__uuidof(IDXGIAdapter), (void**)&m_dxgi_adapter);
+	hResult = m_pDXGI_Device->GetParent(__uuidof(IDXGIAdapter), (void**)&m_pDXGI_Adapter);
 	if (FAILED(hResult))
 		return false;
-	hResult = m_dxgi_adapter->GetParent(__uuidof(IDXGIFactory), (void**)&m_dxgi_factory);
+	hResult = m_pDXGI_Adapter->GetParent(__uuidof(IDXGIFactory), (void**)&m_pDXGI_Factory);
 	if (FAILED(hResult))
 		return false;
 		
 	m_pCSwapChain = new SwapChain();
 	RECT rect = pWindow->GetClientWindowRect();
-	m_pCSwapChain->Init(m_dxgi_factory, m_D3DDevice, pWindow->GetHwnd(), rect.right - rect.left, rect.bottom - rect.top);
+	m_pCSwapChain->Init(m_pDXGI_Factory, m_pD3D_Device, pWindow->GetHwnd(), rect.right - rect.left, rect.bottom - rect.top);
 	return true;
 }
 
@@ -75,12 +75,12 @@ bool GraphicEngine::Release()
 	delete m_pCSwapChain;
 	m_pCSwapChain = nullptr;
 
-	m_dxgi_factory->Release();
-	m_dxgi_adapter->Release();
-	m_dxgi_device->Release();
+	m_pDXGI_Factory->Release();
+	m_pDXGI_Adapter->Release();
+	m_pDXGI_Device->Release();
 
-	m_D3DDevice->Release();
-	m_D3DDeviceContext->Release();
+	m_pD3D_Device->Release();
+	m_pD3D_DeviceContext->Release();
 	return true;
 }
 
