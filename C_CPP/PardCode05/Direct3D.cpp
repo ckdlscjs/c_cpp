@@ -55,13 +55,6 @@ bool Direct3D::Init()
 	return true;
 }
 
-bool Direct3D::ClearRenderTargetColor(SwapChain* pSwapChain, float red, float green, float blue, float alpha)
-{
-	FLOAT clearColor[] = { red, green, blue, alpha };
-	m_pD3D_DeviceContext->ClearRenderTargetView(pSwapChain->GetRenderTargetView(), clearColor);
-	return true;
-}
-
 bool Direct3D::SetViewportSize(UINT iWidth, UINT iHeight)
 {
 	D3D11_VIEWPORT vp = {};
@@ -75,7 +68,7 @@ bool Direct3D::SetViewportSize(UINT iWidth, UINT iHeight)
 
 bool Direct3D::DrawVertex_TriangleList(UINT vertexCount, UINT startIdx)
 {
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	// Vertex를 TrangleList로그린다
+	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	//Vertex를 TrangleList로그린다
 	m_pD3D_DeviceContext->Draw(vertexCount, startIdx);										//입력받은 vertex_count, 시작번호
 	return true;
 }

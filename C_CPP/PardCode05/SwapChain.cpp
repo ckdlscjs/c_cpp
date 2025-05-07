@@ -70,7 +70,7 @@ bool SwapChain::ClearRenderTargetColor(ID3D11DeviceContext* pDeviceContext, floa
 	FLOAT clearColor[] = { red, green, blue, alpha };
 	pDeviceContext->ClearRenderTargetView(m_pRTV, clearColor);
 	pDeviceContext->OMSetRenderTargets(1, &m_pRTV, NULL);
-	return false;
+	return true;
 }
 
 bool SwapChain::Present(bool vsync)

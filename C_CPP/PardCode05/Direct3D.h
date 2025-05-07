@@ -10,7 +10,6 @@ public:
 	Direct3D();
 	~Direct3D();
 	bool Init();
-	bool ClearRenderTargetColor(SwapChain* pSwapChain, float red, float green, float blue, float alpha);
 	bool SetViewportSize(UINT iWidth, UINT iHeight);
 	bool DrawVertex_TriangleList(UINT vertexCount, UINT startIdx);
 	bool Release();

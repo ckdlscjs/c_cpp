@@ -4,14 +4,6 @@
 #include "SwapChain.h"
 #include "VertexBuffer.h"
 #include "InputLayout.h"
-struct vec3
-{
-	float x, y, z;
-};
-struct vertex
-{
-	vec3 position;
-};
 GraphicEngine::GraphicEngine()
 {
 	std::cout << "GraphicEngine" << " Class" << " 생성자 호출" << '\n';
@@ -31,16 +23,17 @@ bool GraphicEngine::Init(Window* pWindow)
 	m_pCSwapChain = new SwapChain();
 	RECT rect = pWindow->GetClientWindowRect();
 	m_pCSwapChain->Init(m_pCDirect3D->GetDevice(), pWindow->GetHwnd(), rect.right - rect.left, rect.bottom - rect.top);
+	
 
-	vertex vlist[] =
+	XMFLOAT3 vertices[] =
 	{
 		{-0.5f, -0.5f, 0.0f},
 		{0.0f, 0.5f, 0.0f},
 		{0.5f, -0.5f, 0.0f},
 	};
-	UINT size_vertices = ARRAYSIZE(vlist);
+	UINT size_vertices = ARRAYSIZE(vertices);
 	m_pCVertexBuffer = new VertexBuffer();
-	m_pCVertexBuffer->Init(m_pCDirect3D->GetDevice(), vlist, sizeof(vertex), size_vertices);
+	m_pCVertexBuffer->Init(m_pCDirect3D->GetDevice(), vertices, sizeof(XMFLOAT3), size_vertices);
 
 	//vs,ps 컴파일, 이후이관예정
 	ID3DBlob* errBlob;
@@ -88,9 +81,13 @@ bool GraphicEngine::Init(Window* pWindow)
 bool GraphicEngine::Frame()
 {
 	std::cout << "GraphicEngine" << " Class" << " Frame 호출" << '\n';
+	//렌더타겟 초기화 및 출력병합기에 렌더타겟뷰 세팅
 	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
+
 	m_pCInputLayout->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+
 	m_pCVertexBuffer->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+
 	m_pCDirect3D->GetDeviceContext()->VSSetShader(m_pVS, nullptr, 0);
 	m_pCDirect3D->GetDeviceContext()->PSSetShader(m_pPS, nullptr, 0);
 	return true;
