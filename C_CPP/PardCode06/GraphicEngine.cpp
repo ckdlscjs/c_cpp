@@ -24,11 +24,13 @@ bool GraphicEngine::Init(Window* pWindow)
 	RECT rect = pWindow->GetClientWindowRect();
 	m_pCSwapChain->Init(m_pCDirect3D->GetDevice(), pWindow->GetHwnd(), rect.right - rect.left, rect.bottom - rect.top);
 	
+	//렌더링을위한 정점객체 세팅및 VertexBuffer생성
 	XMFLOAT3 vertices[] =
 	{
 		{-0.5f, -0.5f, 0.0f},
-		{0.0f, 0.5f, 0.0f},
-		{0.5f, -0.5f, 0.0f},
+		{-0.5f, 0.5f, 0.0f},
+		{0.5f, -0.5, 0.0f},
+		{0.5f, 0.5f, 0.0f},
 	};
 	UINT size_vertices = ARRAYSIZE(vertices);
 	m_pCVertexBuffer = new VertexBuffer();
@@ -65,6 +67,7 @@ bool GraphicEngine::Init(Window* pWindow)
 	if (FAILED(hResult))
 		return false;
 
+	//입력배치 객체 생성 및 초기화
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
@@ -73,6 +76,7 @@ bool GraphicEngine::Init(Window* pWindow)
 	m_pCInputLayout = new InputLayout();
 	m_pCInputLayout->Init(m_pCDirect3D->GetDevice(), layout, ARRAYSIZE(layout), m_pBlob_VS->GetBufferPointer(), m_pBlob_VS->GetBufferSize());
 
+	//뷰포트세팅
 	m_pCDirect3D->SetViewportSize(rect.right - rect.left, rect.bottom - rect.top);
 	return true;
 }
@@ -95,7 +99,7 @@ bool GraphicEngine::Frame()
 bool GraphicEngine::Render()
 {
 	std::cout << "GraphicEngine" << " Class" << " Render 호출" << '\n';
-	m_pCDirect3D->DrawVertex_TriangleList(m_pCVertexBuffer->GetCountVertices(), 0);
+	m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
 	m_pCSwapChain->Present(false);
 	return true;
 }
