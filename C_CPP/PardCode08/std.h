@@ -19,3 +19,9 @@
 #pragma comment(lib, "d3dcompiler.lib")		//d3dcomplie, 쉐이더사용을위한추가
 
 using namespace DirectX;
+
+struct Vertex
+{
+	XMFLOAT3 pos;
+	XMFLOAT4 color;
+};

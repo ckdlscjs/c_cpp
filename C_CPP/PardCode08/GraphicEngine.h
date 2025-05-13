@@ -27,7 +27,6 @@ public:
 private:
 	ID3DBlob* m_pBlob_VS;
 	ID3DBlob* m_pBlob_PS;
-	ID3D11PixelShader* m_pPS;
 
 	//사용을위해 분할한 클래스객체들
 private:

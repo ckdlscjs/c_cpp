@@ -17,11 +17,7 @@ GraphicEngine::~GraphicEngine()
 	std::cout << "GraphicEngine" << " Class" << "¼Ò¸êÀÚ È£Ãâ" << '\n';
 	Release();
 }
-struct Vertex
-{
-	XMFLOAT3 pos;
-	XMFLOAT4 color;
-};
+
 void GraphicEngine::Init(HWND hWnd, UINT width, UINT height)
 {
 	m_pCDirect3D = new Direct3D();
