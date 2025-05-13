@@ -14,13 +14,12 @@ public:
 	GraphicEngine();
 	~GraphicEngine();
 	
-	void Init(Window* pWindow);
+	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame();
 	void Render();
 	void Release();
 
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
-
 
 	static GraphicEngine& Get(); //Singleton함수, 런타임중 호출시 정적변수로써 생성된다
 

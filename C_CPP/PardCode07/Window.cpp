@@ -8,15 +8,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//윈도우생성시
 		case WM_CREATE:
 		{
-			g_pWindow->SetHWND(hWnd);
 			//Event When WindowCreated
-			g_pWindow->OnCreate();
+			//g_pWindow->SetHWND(hWnd);
+			//g_pWindow->OnCreate();
 		}break;
 		//윈도우소멸시
 		case WM_DESTROY:
 		{
 			//Event When WindowDestroyed
-			g_pWindow->OnDestroy();
+			g_pWindow->Release();
 			::PostQuitMessage(0);
 		}break;
 
@@ -58,7 +58,7 @@ bool Window::Init()
 	descWnd.hIconSm = LoadIcon(NULL, IDI_APPLICATION);		//스몰 아이콘, 1)인스턴스핸들, 2)해당멤버가 NULL이면 시스템에서 기본 아이콘을 제공
 	descWnd.hbrBackground = (HBRUSH)COLOR_WINDOW;			//클래스 배경 브러시에 대한 핸들
 	descWnd.lpszMenuName = L"";								//클래스 메뉴의 리소스이름을 지정, NULL일시 해당클래스에는 기본메뉴가없음
-	descWnd.lpszClassName = L"PardCode01";					//창 클래스이름을 지정
+	descWnd.lpszClassName = L"PardCode";					//창 클래스이름을 지정
 	
 	//WNDCLASSEX 구조체 설정이후 윈도우를 등록한다, 패러미터에 윈도우 구조체의 주소를 넘긴다, 해당 함수 호출이후부터 WndProc가 운영체제에의해서 계속 호출된다
 	if (!::RegisterClassEx(&descWnd))
@@ -66,10 +66,10 @@ bool Window::Init()
 
 	//윈도우 창을 만들고 핸들을 멤버변수 mHwnd에 넘긴다
 	//CreateWindowExW(0L, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam)
-	m_HWND = ::CreateWindowEx
+	m_hWnd = ::CreateWindowEx
 	(
 		WS_EX_OVERLAPPEDWINDOW,
-		L"PardCode01",										//위의 창 클래스 이름과 꼭 같아야한다
+		L"PardCode",										//위의 창 클래스 이름과 꼭 같아야한다
 		L"WIN32API WINDOW",
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
@@ -81,32 +81,38 @@ bool Window::Init()
 		NULL,
 		NULL
 	);
-	if (!m_HWND)
+	if (!m_hWnd)
 		return false;
-	//g_pWindow->OnCreate();
 	//윈도우창을띄운다
-	::ShowWindow(m_HWND, SW_SHOW);
-	::UpdateWindow(m_HWND);
+	::ShowWindow(m_hWnd, SW_SHOW);
+	::UpdateWindow(m_hWnd);
+	RECT rect = GetClientWindowRect();
+	m_iWidth = rect.right - rect.left;
+	m_iHeight = rect.bottom - rect.top;
+	g_pWindow->OnCreate();
 	return m_bIsRun = true;
 }
 
 bool Window::BroadCast()
 {
 	MSG msg;
-	while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	OnUpdate();
-	Sleep(0);
-	
+	else
+	{
+		OnUpdate();
+		Sleep(0);
+	}
 	return true;
 }
 
 bool Window::Release()
 {
-	return ::DestroyWindow(m_HWND);
+	g_pWindow->OnDestroy();
+	return ::DestroyWindow(m_hWnd);
 }
 
 bool Window::IsRun()
@@ -116,17 +122,17 @@ bool Window::IsRun()
 
 void Window::SetHWND(HWND hWnd)
 {
-	m_HWND = hWnd;
+	m_hWnd = hWnd;
 }
 
 HWND Window::GetHwnd() const
 {
-	return m_HWND;
+	return m_hWnd;
 }
 
 RECT Window::GetClientWindowRect()
 {
 	RECT rt;
-	::GetClientRect(m_HWND, &rt);
+	::GetClientRect(m_hWnd, &rt);
 	return rt;
 }

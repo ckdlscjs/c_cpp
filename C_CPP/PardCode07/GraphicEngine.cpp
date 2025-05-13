@@ -17,14 +17,13 @@ GraphicEngine::~GraphicEngine()
 	Release();
 }
 
-void GraphicEngine::Init(Window* pWindow)
+void GraphicEngine::Init(HWND hWnd, UINT width, UINT height)
 {
 	m_pCDirect3D = new Direct3D();
 	m_pCDirect3D->Init();
 
 	m_pCSwapChain = new SwapChain();
-	RECT rect = pWindow->GetClientWindowRect();
-	m_pCSwapChain->Init(m_pCDirect3D->GetDevice(), pWindow->GetHwnd(), rect.right - rect.left, rect.bottom - rect.top);
+	m_pCSwapChain->Init(m_pCDirect3D->GetDevice(), hWnd, width, height);
 	
 	//렌더링을위한 정점객체 세팅및 VertexBuffer생성
 	XMFLOAT3 vertices[] =
@@ -39,7 +38,6 @@ void GraphicEngine::Init(Window* pWindow)
 	m_pCVertexBuffer->Init(m_pCDirect3D->GetDevice(), vertices, sizeof(XMFLOAT3), size_vertices);
 
 	//compile vs
-
 	m_pCVertexShader = new VertexShader();
 	m_pBlob_VS = CompileShader(L"VertexShader.hlsl", "vsmain", "vs_5_0");
 	m_pCVertexShader->Init(m_pCDirect3D->GetDevice(), m_pBlob_VS);
@@ -60,7 +58,7 @@ void GraphicEngine::Init(Window* pWindow)
 	m_pCInputLayout->Init(m_pCDirect3D->GetDevice(), layout, ARRAYSIZE(layout), m_pBlob_VS->GetBufferPointer(), m_pBlob_VS->GetBufferSize());
 
 	//뷰포트세팅
-	m_pCDirect3D->SetViewportSize(rect.right - rect.left, rect.bottom - rect.top);
+	m_pCDirect3D->SetViewportSize(width, height);
 }
 
 void GraphicEngine::Frame()

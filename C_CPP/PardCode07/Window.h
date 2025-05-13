@@ -20,7 +20,9 @@ public:
 	virtual void OnDestroy() = 0;
 
 protected:
-	HWND m_HWND;
+	UINT m_iWidth;
+	UINT m_iHeight;
+	HWND m_hWnd;
 	bool m_bIsRun;
 };
 //실제정의->cpp

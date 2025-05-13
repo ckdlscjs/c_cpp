@@ -14,7 +14,7 @@ AppWindow::~AppWindow()
 void AppWindow::OnCreate()
 {
 	std::cout << "OnCreate" << '\n';
-	GraphicEngine::Get().Init(g_pWindow);
+	GraphicEngine::Get().Init(m_hWnd, m_iWidth, m_iHeight);
 }
 
 void AppWindow::OnUpdate()
