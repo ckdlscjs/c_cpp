@@ -13,15 +13,20 @@ struct VS_OUTPUT
     float4 color1 : COLOR1;
 };
 
-cbuffer constant : register(b0)
+cbuffer cc_wvp : register(b0)
 {
-    float fAngle;
+    row_major float4x4 matWorld;
+    row_major float4x4 matView;
+    row_major float4x4 matProj;
 };
 
 VS_OUTPUT vsmain(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
-    output.pos = lerp(input.pos0, input.pos1, (sin(fAngle) + 1.0f) / 2.0f);
+    output.pos = mul(input.pos0, matWorld);
+    output.pos = mul(output.pos, matView);
+    output.pos = mul(output.pos, matProj);
+    
     output.color0 = input.color0;
     output.color1 = input.color1;
     return output;

@@ -52,6 +52,11 @@ struct Vertex_PPCC
 	XMFLOAT4 color1;
 };
 
+//선형보간(vector3)
+inline XMFLOAT3 lerp(const XMFLOAT3& st, const XMFLOAT3& en, float t)
+{
+	return XMFLOAT3(st.x * (1.0f - t) + en.x * t, st.y * (1.0f - t) + en.y*t, st.z * (1.0f - t) + en.z * t);
+}
 
 inline XMMATRIX GetMat_Identity()
 {
@@ -158,5 +163,27 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTa
 		-XMVectorGetX(XMVector3Dot(w, campos)),
 		1.0f
 	);
+	return mat;
+}
+
+inline XMMATRIX GetMat_Perspective(float width, float height, float fov, float dist_near, float dist_far)
+{
+	XMMATRIX mat;
+	float aspectRatio = width / height;
+	float d = tanf(_DEGTORAD(fov) * 0.5f);
+	mat.r[0] = XMVectorSet(1.0f/(aspectRatio * d), 0.0f, 0.0f, 0.0f);
+	mat.r[1] = XMVectorSet(0.0f, 1.0f / d, 0.0f, 0.0f);
+	mat.r[2] = XMVectorSet(0.0f, 0.0f, dist_far / (dist_far-dist_near), 1.0f);
+	mat.r[3] = XMVectorSet(0.0f, 0.0f, -(dist_near*dist_far) / (dist_far - dist_near), 0.0f);
+	return mat;
+}
+
+inline XMMATRIX GetMat_Ortho(float width, float height, float dist_near, float dist_far)
+{
+	XMMATRIX mat;
+	mat.r[0] = XMVectorSet(2.0f/width, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = XMVectorSet(0.0f, 2.0f/height, 0.0f, 0.0f);
+	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f / (dist_far - dist_near), 0.0f);
+	mat.r[3] = XMVectorSet(0.0f, 0.0f, -dist_near  / (dist_far - dist_near), 1.0f);
 	return mat;
 }

@@ -21,6 +21,8 @@ GraphicEngine::~GraphicEngine()
 
 void GraphicEngine::Init(HWND hWnd, UINT width, UINT height)
 {
+	m_fWidth = width;
+	m_fHeight = height;
 	m_pCDirect3D = new Direct3D();
 	m_pCDirect3D->Init();
 
@@ -84,18 +86,30 @@ void GraphicEngine::Frame()
 	m_pCVertexShader->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 	m_pCPixelShader->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 
-	unsigned long new_time = 0;
-	if (m_lOldtime)
-		new_time = ::GetTickCount() - m_lOldtime;
-	m_fDeltatime = new_time * 0.001f;
-	m_lOldtime = ::GetTickCount();
-	m_fAngle += 1.57f * m_fDeltatime;
 
-	Constant_time cc;
-	cc.fTime = m_fAngle;
-	m_pCConstantBuffer->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc);
-	m_pCConstantBuffer->SetVS(m_pCDirect3D->GetDeviceContext());
-	m_pCConstantBuffer->SetPS(m_pCDirect3D->GetDeviceContext());
+	/*10장, 사각형의 시간경과에따른 형태변환을위한 행렬*/
+	Constant_WVP cc0;
+	Constant_time cc1;
+	cc1.fTime = ::GetTickCount();
+	m_fDeltaPos += m_fDeltatime;
+	if (m_fDeltaPos > 1.0f) m_fDeltaPos = 0.0f;
+	m_fDeltaScale += m_fDeltatime / 0.15f;
+	//축소~확대, 선형보간
+	XMMATRIX matScale = GetMat_Scale(lerp(XMFLOAT3(0.5f*400.0f, 0.5f*400.0f, 0.0f), XMFLOAT3(1.0f*400.0f, 1.0f*400.0f, 0.0f), 0.5f * (sinf(m_fDeltaScale) + 1.0f)));
+	//이동, 선형보간
+	XMMATRIX matTrans = GetMat_Translation(lerp(XMFLOAT3(-1.5f*400.0f, -1.5f*400.0f, 0), XMFLOAT3(1.5f*400.0f, 1.5f*400.0f, 0), m_fDeltaPos));
+	//변환행렬, 뷰는 단위로 투영은 직교투영을사용한다
+	cc0.matWorld = matScale * matTrans;		
+	cc0.matView = GetMat_Identity();
+	cc0.matProj = GetMat_Ortho(m_fWidth, m_fHeight, -4.0f, 4.0f);
+	//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+	m_pCConstantBuffers[0]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+	m_pCConstantBuffers[0]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+	//m_pCConstantBuffers[0]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+
+	m_pCConstantBuffers[1]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
+	//m_pCConstantBuffers[1]->SetVS(m_pCDirect3D->GetDeviceContext(), 1);
+	m_pCConstantBuffers[1]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 }
 
 void GraphicEngine::Render()
@@ -103,6 +117,10 @@ void GraphicEngine::Render()
 	std::cout << "GraphicEngine" << " Class" << " Render 호출" << '\n';
 	m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
 	m_pCSwapChain->Present(false);
+
+	m_lOldtime = m_lNewtime;
+	m_lNewtime = ::GetTickCount();
+	m_fDeltatime = (m_lOldtime) ? ((m_lNewtime - m_lOldtime) / 10000.0f) : 0;
 }
 
 void GraphicEngine::Release()
