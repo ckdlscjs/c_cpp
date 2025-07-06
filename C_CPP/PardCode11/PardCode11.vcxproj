@@ -139,6 +139,7 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="Direct3D.h" />
     <ClInclude Include="GraphicEngine.h" />
+    <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="InputLayout.h" />
     <ClInclude Include="PixelShader.h" />
     <ClInclude Include="std.h" />
@@ -152,6 +153,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="Direct3D.cpp" />
     <ClCompile Include="GraphicEngine.cpp" />
+    <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PixelShader.cpp" />

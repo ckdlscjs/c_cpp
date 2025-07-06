@@ -70,8 +70,20 @@ void Direct3D::DrawVertex_TriangleList(UINT vertexCount, UINT startIdx)
 
 void Direct3D::DrawVertex_TriangleStrip(UINT vertexCount, UINT startIdx)
 {
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	//Vertex를 TrangleList로그린다
+	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	//Vertex를 TrangleStrip
 	m_pD3D_DeviceContext->Draw(vertexCount, startIdx);
+}
+
+void Direct3D::DrawIndex_TriagleList(UINT indexCount, UINT startIdx, INT vertexOffset)
+{
+	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	//Index를 TrangleList로그린다
+	m_pD3D_DeviceContext->DrawIndexed(indexCount, startIdx, vertexOffset);					//시작인덱스, 인덱스버퍼의 시작번호, 버텍스버퍼의 오프셋값
+}
+
+void Direct3D::DrawIndex_TriangleStrip(UINT indexCount, UINT startIdx, INT vertexOffset)
+{
+	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	//Index를 TrangleStrip
+	m_pD3D_DeviceContext->DrawIndexed(indexCount, startIdx, vertexOffset);					//시작인덱스, 인덱스버퍼의 시작번호, 버텍스버퍼의 오프셋값
 }
 
 void Direct3D::Release()

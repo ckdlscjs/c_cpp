@@ -46,6 +46,9 @@
     <ClInclude Include="ConstantBuffer.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -77,6 +80,9 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="ConstantBuffer.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexBuffer.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>

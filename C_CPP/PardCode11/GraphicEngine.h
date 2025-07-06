@@ -10,6 +10,7 @@ class InputLayout;
 class VertexShader;
 class PixelShader;
 class ConstantBuffer;
+class IndexBuffer;
 
 class GraphicEngine
 {
@@ -22,12 +23,12 @@ public:
 	void Render();
 	void Release();
 	
-	void CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);
-	void CreateInputLayout(D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
-	void CreateIndexBuffer();
-	void CreateConstantBuffer();
-	void CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
-	void CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
+	VertexBuffer* CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);
+	InputLayout* CreateInputLayout(D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
+	IndexBuffer* CreateIndexBuffer(void* indices, UINT size_indices);
+	ConstantBuffer* CreateConstantBuffer();
+	VertexShader* CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
+	PixelShader* CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 
@@ -54,6 +55,7 @@ private:
 	Direct3D* m_pCDirect3D;
 	SwapChain* m_pCSwapChain;
 	VertexBuffer* m_pCVertexBuffer;
+	IndexBuffer* m_pCIndexBuffer;
 	InputLayout* m_pCInputLayout;
 	VertexShader* m_pCVertexShader;
 	PixelShader* m_pCPixelShader;

@@ -25,8 +25,16 @@ using namespace DirectX;
 
 struct Vertex_PC
 {
-	XMFLOAT3 pos;
-	XMFLOAT4 color;
+	XMFLOAT3 pos0;
+	XMFLOAT4 color0;
+};
+
+struct Vertex_PPCC
+{
+	XMFLOAT3 pos0;
+	XMFLOAT3 pos1;
+	XMFLOAT4 color0;
+	XMFLOAT4 color1;
 };
 
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다
@@ -42,14 +50,6 @@ struct Constant_WVP
 	XMMATRIX matWorld;
 	XMMATRIX matView;
 	XMMATRIX matProj;
-};
-
-struct Vertex_PPCC
-{
-	XMFLOAT3 pos0;
-	XMFLOAT3 pos1;
-	XMFLOAT4 color0;
-	XMFLOAT4 color1;
 };
 
 //선형보간(vector3)

@@ -13,6 +13,8 @@ public:
 	void SetViewportSize(UINT iWidth, UINT iHeight);
 	void DrawVertex_TriangleList(UINT vertexCount, UINT startIdx);
 	void DrawVertex_TriangleStrip(UINT vertexCount, UINT startIdx);
+	void DrawIndex_TriagleList(UINT indexCount, UINT startIdx, INT vertexOffset);
+	void DrawIndex_TriangleStrip(UINT indexCount, UINT startIdx, INT vertexOffset);
 	void Release();
 
 	ID3D11Device* GetDevice();
