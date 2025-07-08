@@ -213,6 +213,7 @@ public:
 class Object
 {
 public:
+	int cnt = 0;
 	/*
 	float m_speed = 5.0f;
 	float m_posX = 0.0f;
@@ -220,8 +221,8 @@ public:
 	*/
 	size_t m_keyDownListenerId = 0;
 	size_t m_keyPressListenerId = 0;
-	//size_t m_mouseMoveListenerId = 0;
-	//size_t m_mouseDownListenerId = 0;
+	size_t m_mouseMoveListenerId = 0;
+	size_t m_mouseDownListenerId = 0;
 
 public:
 	Object()
@@ -235,29 +236,10 @@ public:
 
 	void EnableInput()
 	{
-		_InputManager.AddListener(InputEventType::KEY_DOWN,
+		
+		m_keyDownListenerId = _InputManager.AddListener(InputEventType::KEY_DOWN,
 			[this](const InputEvent& event) {
-				std::cout << "CallbackFunction " << "KeyDown " << event.keyCode << '\n';
-				/*
-				if (event.keyCode == 'W') m_posY += m_speed;
-				if (event.keyCode == 'S') m_posY -= m_speed;
-				if (event.keyCode == 'A') m_posX -= m_speed;
-				if (event.keyCode == 'D') m_posX += m_speed;
-				*/
-			});
-		 _InputManager.AddListener(InputEventType::KEY_PRESSED,
-			[this](const InputEvent& event) {
-				std::cout << "CallbackFunction " << "KeyPressed " << event.keyCode << '\n';
-				/*
-				if (event.keyCode == 'W') m_posY += m_speed;
-				if (event.keyCode == 'S') m_posY -= m_speed;
-				if (event.keyCode == 'A') m_posX -= m_speed;
-				if (event.keyCode == 'D') m_posX += m_speed;
-				*/
-			});
-		_InputManager.AddListener(InputEventType::KEY_UP,
-			[this](const InputEvent& event) {
-				std::cout << "CallbackFunction " << "KeyUp " << event.keyCode << '\n';
+				cnt++;
 				/*
 				if (event.keyCode == 'W') m_posY += m_speed;
 				if (event.keyCode == 'S') m_posY -= m_speed;
@@ -315,34 +297,39 @@ int main(void)
 	obj.EnableInput();
 	// 프레임 1
 	std::cout << "\n=== Frame 1 ===" << std::endl;
-	_InputManager.Update(); // Update 내부에서 Notify(KEY_PRESSED)와 Notify(MOUSE_MOVE) 호출
 	_InputManager.OnKeyDown(VK_W); // 'W' 키가 눌림 (OnKeyDown 내부에서 Notify(KEY_DOWN) 호출)
 	//_InputManager.OnMouseMove(100, 100); // 마우스 위치만 업데이트
+	_InputManager.Update(); // Update 내부에서 Notify(KEY_PRESSED)와 Notify(MOUSE_MOVE) 호출
+	std::cout << obj.cnt << '\n';
 
 	// 프레임 2
 	std::cout << "\n=== Frame 2 ===" << std::endl;
 	// 'W'는 여전히 눌려있는 상태 -> Update 시 KEY_PRESSED 다시 발생
 	//_InputManager.OnMouseMove(105, 110); // 마우스 위치 업데이트
 	_InputManager.Update();
+	std::cout << obj.cnt << '\n';
 
 	// 프레임 3
 	std::cout << "\n=== Frame 3 ===" << std::endl;
-	_InputManager.Update(); // 'A'는 눌려있는 상태 -> Update 시 KEY_PRESSED 발생
 	_InputManager.OnKeyUp(VK_W); // 'W' 키 떼짐 (OnKeyUp 내부에서 Notify(KEY_UP) 호출)
 	_InputManager.OnKeyDown(VK_A); // 'A' 키 눌림 (OnKeyDown 내부에서 Notify(KEY_DOWN) 호출)
 	//_InputManager.OnMouseDown(0, 50, 50); // 왼쪽 마우스 버튼 클릭 (OnMouseDown 내부에서 Notify(MOUSE_BUTTON_DOWN) 호출)
+	_InputManager.Update(); // 'A'는 눌려있는 상태 -> Update 시 KEY_PRESSED 발생
+	std::cout << obj.cnt << '\n';
 
 	// 프레임 4
 	std::cout << "\n=== Frame 4 ===" << std::endl;
-	_InputManager.Update();
 	//_InputManager.OnMouseUp(0, 50, 50); // 왼쪽 마우스 버튼 떼짐
 	//_InputManager.OnMouseWheel(120); // 휠 업
 	_InputManager.OnKeyDown(VK_SPACE); // 스페이스바 눌림
+	_InputManager.Update();
+	std::cout << obj.cnt << '\n';
 
 	// 프레임 5
 	std::cout << "\n=== Frame 5 ===" << std::endl;
-	_InputManager.Update();
 	_InputManager.OnKeyUp(VK_SPACE); // 스페이스바 떼짐
+	_InputManager.Update();
+	std::cout << obj.cnt << '\n';
 
 	return 0;
 }
