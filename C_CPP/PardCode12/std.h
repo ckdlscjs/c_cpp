@@ -6,10 +6,6 @@
 #define _DEGTORAD(DEG) DEG / 180.0f * DirectX::XM_PI
 #define _RADTODEG(RAD) RAD / DirectX::XM_PI * 180.0f
 
-//SingletonClasses
-#define _RenderSystem RenderSystem::Get()
-#define _InputSystem InputSystem::Get()
-
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>
@@ -189,9 +185,9 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTa
 	XMVECTOR u = XMVector3Normalize(XMVector3Cross(j, w));
 	//up, y
 	XMVECTOR v = XMVector3Cross(w, u);
-	mat.r[0] = u;
-	mat.r[1] = v;
-	mat.r[2] = w;
+	mat.r[0] = XMVectorSet(XMVectorGetX(u), XMVectorGetX(v), XMVectorGetX(w), 0.0f);
+	mat.r[1] = XMVectorSet(XMVectorGetY(u), XMVectorGetY(v), XMVectorGetY(w), 0.0f);
+	mat.r[2] = XMVectorSet(XMVectorGetZ(u), XMVectorGetZ(v), XMVectorGetZ(w), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
 	mat.r[3] = XMVectorSet(

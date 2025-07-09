@@ -15,7 +15,7 @@ InputSystem::~InputSystem()
 }
 
 //싱글톤객체, static선언으로 컴파일타임에 객체가 생성된다
-InputSystem& InputSystem::Get()
+InputSystem& InputSystem::GetInstance()
 {
 	static InputSystem engine;
 	return engine;

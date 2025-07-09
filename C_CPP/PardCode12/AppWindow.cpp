@@ -1,5 +1,7 @@
 #include "AppWindow.h"
 #include "RenderSystem.h"
+#include "InputSystem.h"
+#include "TempObj.h"			//임시오브젝트
 
 AppWindow::AppWindow()
 {
@@ -62,17 +64,27 @@ void AppWindow::OnCreate()
 		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 		{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, 12,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
-	_RenderSystem.CreateVertexBuffer(vertices, sizeof(Vertex_PC), ARRAYSIZE(vertices));
-	_RenderSystem.CreateIndexBuffer(indices, ARRAYSIZE(indices));
-	_RenderSystem.CreateVertexShader(L"VertexShader.hlsl", "vsmain", "vs_5_0");
-	_RenderSystem.CreatePixelShader(L"PixelShader.hlsl", "psmain", "ps_5_0");
-	_RenderSystem.CreateInputLayout(layout, ARRAYSIZE(layout));
-	_RenderSystem.CreateConstantBuffer();
+	_RenderSystem.objs.push_back(new TempObj());
+	TempObj* obj = _RenderSystem.objs.back();
+	size_t resourecidx = 0;
+	_RenderSystem.m_pCVBs[resourecidx] = _RenderSystem.CreateVertexBuffer(vertices, sizeof(Vertex_PC), ARRAYSIZE(vertices));
+	_RenderSystem.m_pCIBs[resourecidx] = _RenderSystem.CreateIndexBuffer(indices, ARRAYSIZE(indices));
+	_RenderSystem.m_pCVSs[resourecidx] = _RenderSystem.CreateVertexShader(L"VertexShader.hlsl", "vsmain", "vs_5_0");
+	_RenderSystem.m_pCPSs[resourecidx] = _RenderSystem.CreatePixelShader(L"PixelShader.hlsl", "psmain", "ps_5_0");
+	_RenderSystem.m_pCILs[resourecidx] = _RenderSystem.CreateInputLayout(layout, ARRAYSIZE(layout));
+	Constant_wvp cc0;
+	_RenderSystem.m_pCCBs[resourecidx] = _RenderSystem.CreateConstantBuffer(&cc0, sizeof(Constant_wvp));
+	Constant_time cc1;
+	_RenderSystem.m_pCCBs[resourecidx+1] = _RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time));
+	obj->m_IdxVB = obj->m_IdxIB = obj->m_IdxVS = obj->m_IdxPS = obj->m_IdxIL = resourecidx;
+	obj->m_IdxCBs.push_back(resourecidx++); 
+	obj->m_IdxCBs.push_back(resourecidx++);
 }
 
 void AppWindow::OnUpdate()
 {
 	std::cout << "OnUpdate" << '\n';
+	_InputSystem.Frame();
 	_RenderSystem.Frame();
 	_RenderSystem.Render();
 }

@@ -1,6 +1,6 @@
 #pragma once
 #include "Window.h"
-
+class TempObj;
 class AppWindow : public Window
 {
 public:

@@ -16,6 +16,9 @@
     <Filter Include="Engine\InputSystem">
       <UniqueIdentifier>{6eaabdf1-603d-4291-86b7-9a8e559094e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\ObjectSystem">
+      <UniqueIdentifier>{cf17b1c6-65a3-4164-9d67-a4d05ea11f68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
@@ -55,6 +58,9 @@
     <ClInclude Include="InputSystem.h">
       <Filter>Engine\InputSystem</Filter>
     </ClInclude>
+    <ClInclude Include="TempObj.h">
+      <Filter>Engine\ObjectSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -93,6 +99,9 @@
     </ClCompile>
     <ClCompile Include="InputSystem.cpp">
       <Filter>Engine\InputSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TempObj.cpp">
+      <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

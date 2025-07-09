@@ -11,7 +11,7 @@ class VertexShader;
 class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
-
+class TempObj;
 class RenderSystem
 {
 private:
@@ -20,7 +20,7 @@ private:
 	RenderSystem(RenderSystem& renderSystem) = delete;
 	RenderSystem& operator=(const RenderSystem& renderSystem) = delete;
 public:
-	static RenderSystem& Get(); //Singleton함수, 런타임중 호출시 정적변수로써 생성된다
+	static RenderSystem& GetInstance(); //Singleton함수, 런타임중 호출시 정적변수로써 생성된다
 	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame();
 	void Render();
@@ -29,15 +29,10 @@ public:
 	VertexBuffer* CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);
 	InputLayout* CreateInputLayout(D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
 	IndexBuffer* CreateIndexBuffer(void* indices, UINT size_indices);
-	ConstantBuffer* CreateConstantBuffer();
+	ConstantBuffer* CreateConstantBuffer(void* data, UINT size_buffer);
+	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 	VertexShader* CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	PixelShader* CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
-
-	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
-
-private:
-	ID3DBlob* m_pBlob_VS;
-	ID3DBlob* m_pBlob_PS;
 
 	//Chapter10, 시간경과에따른 임시변수
 private:
@@ -55,10 +50,18 @@ private:
 private:
 	Direct3D* m_pCDirect3D;
 	SwapChain* m_pCSwapChain;
-	VertexBuffer* m_pCVertexBuffer;
-	IndexBuffer* m_pCIndexBuffer;
-	InputLayout* m_pCInputLayout;
-	VertexShader* m_pCVertexShader;
-	PixelShader* m_pCPixelShader;
-	std::vector<ConstantBuffer*> m_pCConstantBuffers;
+	ID3DBlob* m_pBlob_VS;
+	ID3DBlob* m_pBlob_PS;
+public:
+	//추후 리소스시스템으로 분리해야함
+	std::unordered_map<size_t, VertexBuffer*> m_pCVBs;
+	std::unordered_map<size_t, IndexBuffer*> m_pCIBs;
+	std::unordered_map<size_t, InputLayout*> m_pCILs;
+	std::unordered_map<size_t, VertexShader*> m_pCVSs;
+	std::unordered_map<size_t, PixelShader*> m_pCPSs;
+	std::unordered_map<size_t, ConstantBuffer*> m_pCCBs;
+	
+	std::vector<TempObj*> objs;
 };
+//SingletonClasses
+#define _RenderSystem RenderSystem::GetInstance()
