@@ -23,7 +23,6 @@ VS_OUTPUT vsmain(VS_INPUT input)
     output.pos0 = mul(input.pos0, matWorld);
     output.pos0 = mul(output.pos0, matView);
     output.pos0 = mul(output.pos0, matProj);
-    
     output.color0 = input.color0;
     return output;
 }

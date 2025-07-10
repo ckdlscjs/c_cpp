@@ -128,9 +128,9 @@ inline XMMATRIX GetMat_RotRoll(const float degree)
 
 inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
 {
-	XMMATRIX matRoll = GetMat_RotRoll(_DEGTORAD(eulerDegrees.z));
-	XMMATRIX matPitch = GetMat_RotPitch(_DEGTORAD(eulerDegrees.x));
-	XMMATRIX matYaw = GetMat_RotYaw(_DEGTORAD(eulerDegrees.y));
+	XMMATRIX matRoll = GetMat_RotRoll(eulerDegrees.z);
+	XMMATRIX matPitch = GetMat_RotPitch(eulerDegrees.x);
+	XMMATRIX matYaw = GetMat_RotYaw(eulerDegrees.y);
 	return matRoll * matPitch * matYaw;
 }
 
