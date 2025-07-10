@@ -22,8 +22,7 @@ VS_OUTPUT vsmain(VS_INPUT input)
     VS_OUTPUT output = (VS_OUTPUT) 0;
     output.pos0 = mul(input.pos0, matWorld);
     output.pos0 = mul(output.pos0, matView);
-    output.pos0 = mul(output.pos0, matProj);
-    
+    output.pos0 = mul(output.pos0, matProj); //원근나눗셈은 래스터라이저에서 들어온 w값으로 알아서수행된다
     output.color0 = input.color0;
     return output;
 }

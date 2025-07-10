@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "InputSystem.h"
 
 Window* g_pWindow = nullptr;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -12,6 +13,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//g_pWindow->SetHWND(hWnd);
 			//g_pWindow->OnCreate();
 		}break;
+
 		//윈도우소멸시
 		case WM_DESTROY:
 		{
@@ -20,6 +22,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			::PostQuitMessage(0);
 		}break;
 
+		
+		case WM_KEYDOWN:
+		{
+			_InputSystem.OnKeyDown(wParam);
+		}break;
+
+		case WM_KEYUP:
+		{
+			_InputSystem.OnKeyUp(wParam);
+		}break;
+		
 		default:
 		{
 			return ::DefWindowProc(hWnd, msg, wParam, lParam);
@@ -43,7 +56,7 @@ bool Window::Init()
 	//전역변수 gWindow에 현재 객체를 지정한다, 해당 전역변수는 WndProc에서 호출되므로 순서상 가장먼저 초기화시켜준다
 	if (!g_pWindow)
 		g_pWindow = this;
-
+	HINSTANCE hInstance = GetModuleHandle(NULL);
 	//Window를 띄우기위한 WNDCLASSEX구조체의 초기화
 	WNDCLASSEX descWnd;
 	ZeroMemory(&descWnd, sizeof(WNDCLASSEX));
@@ -52,7 +65,7 @@ bool Window::Init()
 	descWnd.lpfnWndProc = &WndProc;							//창 프로시저에대한 포인터, 해당함수를 통해서 윈도우 창에대한 입력을 받음
 	descWnd.cbClsExtra = NULL;								//클래스에 할당할 추가 바이트 기본은 0
 	descWnd.cbWndExtra = NULL;								//윈도우에 할당할 추가 바이트 기본은 0
-	descWnd.hInstance = NULL;								//해당 인스턴스에 대한 핸들
+	descWnd.hInstance = hInstance;							//해당 인스턴스에 대한 핸들
 	descWnd.hIcon = LoadIcon(NULL, IDI_APPLICATION);		//클래스 아이콘, 1)인스턴스핸들, 2)해당멤버가 NULL이면 시스템에서 기본 아이콘을 제공
 	descWnd.hCursor = LoadCursor(NULL, IDC_ARROW);			//마우스 포인터, 1)인스턴스핸들, 2)해당멤버가 NULL이면 시스템에서 기본 아이콘을 제공
 	descWnd.hIconSm = LoadIcon(NULL, IDI_APPLICATION);		//스몰 아이콘, 1)인스턴스핸들, 2)해당멤버가 NULL이면 시스템에서 기본 아이콘을 제공
@@ -78,7 +91,7 @@ bool Window::Init()
 		768,
 		NULL,
 		NULL,
-		NULL,
+		hInstance,
 		NULL
 	);
 	if (!m_hWnd)
@@ -86,6 +99,7 @@ bool Window::Init()
 	//윈도우창을띄운다
 	::ShowWindow(m_hWnd, SW_SHOW);
 	::UpdateWindow(m_hWnd);
+	::SetFocus(m_hWnd);
 	RECT rect = GetClientWindowRect();
 	m_iWidth = rect.right - rect.left;
 	m_iHeight = rect.bottom - rect.top;
@@ -96,7 +110,8 @@ bool Window::Init()
 bool Window::BroadCast()
 {
 	MSG msg;
-	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	memset(&msg, 0, sizeof(MSG));
+	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -106,6 +121,7 @@ bool Window::BroadCast()
 		OnUpdate();
 		Sleep(0);
 	}
+	
 	return true;
 }
 

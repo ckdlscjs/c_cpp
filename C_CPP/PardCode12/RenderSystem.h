@@ -38,13 +38,10 @@ public:
 private:
 	float m_fWidth = 800.0f;
 	float m_fHeight = 600.0f;
-	unsigned long m_lOldtime = 0;
-	unsigned long m_lNewtime = 0.0f;
+	DWORD m_dwOldTick = 0;
+	DWORD m_dwCurTick = 0;
 	float m_fDeltatime = 0.0f;
-	float m_fDeltaPos = 0.0f;
-	float m_fDeltaScale = 0.0f;
-	float m_fDeltaRotate = 0.0f;
-
+	float m_fElapsedtime = 0.0f;
 
 	//사용을위해 분할한 클래스객체들
 private:

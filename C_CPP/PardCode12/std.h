@@ -52,7 +52,7 @@ struct InputEvent
 	int mouseDeltaY = 0;
 	int wheelDelta = 0;
 };
-using EventCallBack = std::function<size_t(const InputEvent&)>;
+using EventCallBack = std::function<void(const InputEvent&)>;
 
 struct Vertex_PC
 {
@@ -161,9 +161,9 @@ inline XMMATRIX GetMat_RotRoll(const float degree)
 
 inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
 {
-	XMMATRIX matRoll = GetMat_RotRoll(_DEGTORAD(eulerDegrees.z));
-	XMMATRIX matPitch = GetMat_RotPitch(_DEGTORAD(eulerDegrees.x));
-	XMMATRIX matYaw = GetMat_RotYaw(_DEGTORAD(eulerDegrees.y));
+	XMMATRIX matRoll = GetMat_RotRoll(eulerDegrees.z);
+	XMMATRIX matPitch = GetMat_RotPitch(eulerDegrees.x);
+	XMMATRIX matYaw = GetMat_RotYaw(eulerDegrees.y);
 	return matRoll * matPitch * matYaw;
 }
 
@@ -190,12 +190,7 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTa
 	mat.r[2] = XMVectorSet(XMVectorGetZ(u), XMVectorGetZ(v), XMVectorGetZ(w), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
-	mat.r[3] = XMVectorSet(
-		-XMVectorGetX(XMVector3Dot(u, campos)),
-		-XMVectorGetX(XMVector3Dot(v, campos)),
-		-XMVectorGetX(XMVector3Dot(w, campos)),
-		1.0f
-	);
+	mat.r[3] = XMVectorSet(-XMVectorGetX(XMVector3Dot(u, campos)),-XMVectorGetX(XMVector3Dot(v, campos)),-XMVectorGetX(XMVector3Dot(w, campos)),1.0f);
 	return mat;
 }
 
