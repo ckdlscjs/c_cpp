@@ -47,7 +47,6 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return;
-	std::cout << "OnKeyPressed " << VK_KEY << '\n';
 	InputEvent event;
 	event.type = InputEventType::KEY_PRESSED;
 	event.keyCode = VK_KEY;

@@ -37,14 +37,14 @@ void TempObj::Init()
 			m_lControlMask |= (1LL << VK_MASK[event.keyCode]);
 		}
 	));
-
+	/*
 	m_IdxCallbacks[InputEventType::KEY_PRESSED].push_back(_InputSystem.AddListner(InputEventType::KEY_PRESSED, [this](const InputEvent& event)->void
 		{
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;
 			m_lControlMask |= (1LL << VK_MASK[event.keyCode]);
 		}
 	));
-
+	*/
 	m_IdxCallbacks[InputEventType::KEY_UP].push_back(_InputSystem.AddListner(InputEventType::KEY_UP, [this](const InputEvent& event)->void
 		{
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;

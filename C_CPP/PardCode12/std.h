@@ -91,6 +91,13 @@ inline XMFLOAT3 lerp(const XMFLOAT3& st, const XMFLOAT3& en, float t)
 	return XMFLOAT3(st.x * (1.0f - t) + en.x * t, st.y * (1.0f - t) + en.y*t, st.z * (1.0f - t) + en.z * t);
 }
 
+/*
+* 단위행렬
+* 1.0f	0.0f	0.0f	0.0f
+* 0.0f	1.0f	0.0f	0.0f
+* 0.0f	0.0f	1.0f	0.0f
+* 0.0f	0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_Identity()
 {
 	XMMATRIX mat;
@@ -101,6 +108,13 @@ inline XMMATRIX GetMat_Identity()
 	return mat;
 }
 
+/*
+* 스케일행렬
+* Sx	0.0f	0.0f	0.0f
+* 0.0f	Sy		0.0f	0.0f
+* 0.0f	0.0f	Sz		0.0f
+* 0.0f	0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_Scale(const XMFLOAT3 scale)
 {
 	XMMATRIX mat;
@@ -111,15 +125,13 @@ inline XMMATRIX GetMat_Scale(const XMFLOAT3 scale)
 	return mat;
 }
 
-inline XMMATRIX GetMat_Translation(const XMFLOAT3 translation)
-{
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	mat.r[3] = XMVectorSet(translation.x, translation.y, translation.z, 1.0f);
-	return mat;
-}
+/*
+* 회전행렬(Pitch)
+* 1.0f	0.0f	0.0f	0.0f
+* 0.0f	cos		sin		0.0f
+* 0.0f	-sin	cos		0.0f
+* 0.0f	0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_RotPitch(const float degree)
 {
 	XMMATRIX mat;
@@ -133,6 +145,13 @@ inline XMMATRIX GetMat_RotPitch(const float degree)
 	return mat;
 }
 
+/*
+* 회전행렬(Yaw)
+* cos	0.0f	-sin	0.0f
+* 0.0f	1.0f	0.0f	0.0f
+* sin	0.0f	cos		0.0f
+* 0.0f	0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_RotYaw(const float degree)
 {
 	XMMATRIX mat;
@@ -146,6 +165,13 @@ inline XMMATRIX GetMat_RotYaw(const float degree)
 	return mat;
 }
 
+/*
+* 회전행렬(Roll)
+* cos	sin		0.0f	0.0f
+* -sin	cos		0.0f	0.0f
+* 0.0f	0.0f	1.0f	0.0f
+* 0.0f	0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_RotRoll(const float degree)
 {
 	XMMATRIX mat;
@@ -159,6 +185,13 @@ inline XMMATRIX GetMat_RotRoll(const float degree)
 	return mat;
 }
 
+/*
+* 회전행렬(합성, UVW)
+* Ux		Uy		Uz		0.0f
+* Vx		Vx		Vz		0.0f
+* Wx		Wy		Wz		0.0f
+* 0.0f		0.0f	0.0f	1.0f
+*/
 inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
 {
 	XMMATRIX matRoll = GetMat_RotRoll(eulerDegrees.z);
@@ -167,11 +200,42 @@ inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
 	return matRoll * matPitch * matYaw;
 }
 
+/*
+* 이동행렬
+* 1.0f	0.0f	0.0f	0.0f
+* 0.0f	1.0f	0.0f	0.0f
+* 0.0f	0.0f	1.0f	0.0f
+* Tx	Ty		Tz		1.0f
+*/
+inline XMMATRIX GetMat_Translation(const XMFLOAT3 translation)
+{
+	XMMATRIX mat;
+	mat.r[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	mat.r[3] = XMVectorSet(translation.x, translation.y, translation.z, 1.0f);
+	return mat;
+}
+
+/*
+* 월드행렬(모델링행렬)
+* Ux*Sx		Uy*Sx		Uz*Sx		0.0f
+* Vx*Sy		Vx*Sy		Vz*Sy		0.0f
+* Wx*Sz		Wy*Sz		Wz*Sz		0.0f
+* Tx		Ty			Tz			1.0f
+*/
 inline XMMATRIX GetMat_WorldMatrix(const XMFLOAT3 scale, const XMFLOAT3 eulerDegrees, const XMFLOAT3 translation)
 {
 	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(translation);
 }
 
+/*
+* 뷰행렬
+* Ux		Vx			Wx			0.0f
+* Uy		Vy			Wy			0.0f
+* Uz		Vz			Wz			0.0f
+* -QdotU	-QdotV		-QdotW		1.0f
+*/
 inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTarget, const XMFLOAT3 upVector = XMFLOAT3(0.0f, 1.0f, 0.0f))
 {
 	XMMATRIX mat;
@@ -194,6 +258,13 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTa
 	return mat;
 }
 
+/*
+* 원근투영행렬
+* 1.0f/(r*d)	0.0f		0.0f			0.0f
+* 0.0f			1.0f/d		0.0f			0.0f
+* 0.0f			0.0f		f/(f-n)			1.0f
+* 0.0f			0.0f		-nf/(f-n)		0.0f
+*/
 inline XMMATRIX GetMat_Perspective(float width, float height, float fov, float dist_near, float dist_far)
 {
 	XMMATRIX mat;
@@ -206,6 +277,13 @@ inline XMMATRIX GetMat_Perspective(float width, float height, float fov, float d
 	return mat;
 }
 
+/*
+* 직교투영행렬
+* 2.0f/w		0.0f		0.0f			0.0f
+* 0.0f			2.0f/h		0.0f			0.0f
+* 0.0f			0.0f		1.0f/(f-n)		0.0f
+* 0.0f			0.0f		-n/(f-n)		1.0f
+*/
 inline XMMATRIX GetMat_Ortho(float width, float height, float dist_near, float dist_far)
 {
 	XMMATRIX mat;

@@ -94,6 +94,5 @@ void AppWindow::OnDestroy()
 	std::cout << "OnDestroy" << '\n';
 	_RenderSystem.Release();
 	_InputSystem.Release();
-	//GraphicEngine::Get().Release();
 	m_bIsRun = false;
 }

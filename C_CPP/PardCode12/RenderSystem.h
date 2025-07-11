@@ -34,7 +34,6 @@ public:
 	VertexShader* CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	PixelShader* CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 
-	//Chapter10, 시간경과에따른 임시변수
 private:
 	float m_fWidth = 800.0f;
 	float m_fHeight = 600.0f;
