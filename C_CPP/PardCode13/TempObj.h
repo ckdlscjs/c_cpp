@@ -20,7 +20,7 @@ public:
 	XMFLOAT3 m_vTranslation;
 	float m_fSpeedMove;
 	std::unordered_map<int, int> VK_MASK;
-	size_t m_lControlMask;
+	size_t m_lVKMask;
 	std::unordered_map<InputEventType, std::vector<size_t>> m_IdxCallbacks;
 public:
 	//DirectX Variables;

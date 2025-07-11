@@ -15,6 +15,8 @@ public:
 	void OnKeyDown(unsigned char VK_KEY);
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
+	void OnMouseMove(int curX, int curY);
+
 	void Notify(const InputEvent& event);
 	void Frame();
 	void Release();
@@ -23,6 +25,9 @@ private:
 	size_t m_CallbackID = 1;	//0은 오류체크
 	bool m_CurKeystate[256];
 	bool m_OldKeystate[256];
+	
+	PointXY m_OldMousePos;
+	bool m_ChkPosFirst = true;
 };
 #define _InputSystem InputSystem::GetInstance()
 

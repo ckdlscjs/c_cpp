@@ -36,9 +36,11 @@ enum class InputEventType
 	KEY_DOWN,
 	KEY_UP,
 	KEY_PRESSED,
-	MOUSE_BUTTON_DOWN,
-	MOUSE_BUTTON_UP,
 	MOUSE_MOVE,
+	MOUSE_L_DOWN,
+	MOUSE_L_UP,
+	MOUSE_R_DOWN,
+	MOUSE_R_UP,
 	MOUSE_WHEEL,
 };
 
@@ -53,6 +55,13 @@ struct InputEvent
 	int wheelDelta = 0;
 };
 using EventCallBack = std::function<void(const InputEvent&)>;
+
+struct PointXY
+{
+	int x = 0;
+	int y = 0;
+	PointXY(int _x = 0, int _y = 0) : x(_x), y(_y) {}
+};
 
 struct Vertex_PC
 {

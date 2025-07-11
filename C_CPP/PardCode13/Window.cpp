@@ -4,6 +4,26 @@
 Window* g_pWindow = nullptr;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	/*
+	WPARAM wParam (Word Parameter):
+	타입: WPARAM (Word Parameter)
+	설명: 메시지에 특정한 추가 정보를 담는 매개변수입니다. "Word"는 원래 16비트 데이터를 의미했지만, 현재는 시스템 아키텍처에 따라 32비트 또는 64비트 정수 값을 가질 수 있습니다 (보통 UINT_PTR로 정의됨).
+	용도: 어떤 메시지냐에 따라 그 의미가 달라집니다.
+
+	키보드 메시지 (WM_KEYDOWN, WM_KEYUP): 눌리거나 떼어진 키의 가상 키 코드 (Virtual Key Code)를 담습니다 (예: VK_SPACE, VK_A).
+	마우스 메시지 (WM_MOUSEMOVE): 현재 눌려 있는 마우스 버튼 및 Shift/Ctrl 키의 상태를 비트 플래그로 담습니다 (예: MK_LBUTTON, MK_SHIFT).
+	윈도우 크기 변경 메시지 (WM_SIZE): 윈도우가 어떻게 크기 변경되었는지 (최소화, 최대화, 일반 크기)에 대한 정보를 담습니다.
+	마우스 휠 메시지 (WM_MOUSEWHEEL): 마우스 휠의 회전량(델타)을 담습니다.
+
+	LPARAM lParam (Long Parameter):
+	타입: LPARAM (Long Parameter)
+	설명: wParam과 마찬가지로 메시지에 특정한 추가 정보를 담는 매개변수입니다. "Long"은 원래 32비트 데이터를 의미했지만, 현재는 시스템 아키텍처에 따라 32비트 또는 64비트 정수 값을 가질 수 있습니다 (보통 LONG_PTR로 정의됨).
+	용도: wParam과 마찬가지로 메시지에 따라 그 의미가 달라집니다.
+
+	키보드 메시지: 키의 반복 횟수, 스캔 코드, 확장 키 플래그 등 더 상세한 키보드 상태 정보를 비트 필드로 담습니다.
+	마우스 메시지: 마우스 커서의 X, Y 좌표를 담습니다. LOWORD(lParam)으로 X좌표, HIWORD(lParam)으로 Y좌표를 얻습니다. (일부 메시지는 클라이언트 좌표, 일부는 화면 좌표).
+	윈도우 크기 변경 메시지: 변경된 윈도우의 새로운 너비와 높이를 담습니다.
+	*/
 	switch (msg)
 	{
 		//윈도우생성시
@@ -22,7 +42,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			::PostQuitMessage(0);
 		}break;
 
-		
+		//키보드관련
 		case WM_KEYDOWN:
 		{
 			_InputSystem.OnKeyDown(wParam);
@@ -32,7 +52,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			_InputSystem.OnKeyUp(wParam);
 		}break;
+
+		//마우스관련
+		case WM_MOUSEMOVE:
+		{
+			//좌상단0,0~우하단증가
+			_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+		}break;
+
+		/*
+		case WM_LBUTTONDOWN:
+		{
+			std::cout << "btn";
+		}break;
+
+		case WM_LBUTTONUP:
+		{
+			std::cout << "btn";
+		}break;
+
+		case WM_RBUTTONDOWN:
+		{
+			std::cout << "btn";
+		}break;
+
+		case WM_RBUTTONUP:
+		{
+			std::cout << "btn";
+		}break;
 		
+		case WM_SETFOCUS:
+		{
+		}break;
+		case WM_KILLFOCUS:
+		{
+		}break;
+		*/
 		default:
 		{
 			return ::DefWindowProc(hWnd, msg, wParam, lParam);

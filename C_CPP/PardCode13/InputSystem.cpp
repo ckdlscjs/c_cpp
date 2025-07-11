@@ -64,6 +64,18 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 	Notify(event);
 }
 
+void InputSystem::OnMouseMove(int curX, int curY)
+{
+	InputEvent event;
+	event.type = InputEventType::MOUSE_MOVE;
+	event.mouseDeltaX = curX - (m_ChkPosFirst ? curX : m_OldMousePos.x);
+	event.mouseDeltaY = curY - (m_ChkPosFirst ? curY : m_OldMousePos.y);
+	if (m_ChkPosFirst) m_ChkPosFirst = false;
+	m_OldMousePos.x = event.mouseX = curX;
+	m_OldMousePos.y = event.mouseY = curY;
+	Notify(event);
+}
+
 void InputSystem::Notify(const InputEvent& event)
 {
 	if (m_Listners[event.type].size() <= 0) return;
