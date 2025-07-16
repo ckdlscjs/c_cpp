@@ -13,13 +13,6 @@ InputSystem::~InputSystem()
 	std::cout << "InputSystem" << " Class" << " 소멸자 호출" << '\n';
 }
 
-//싱글톤객체, static선언으로 컴파일타임에 객체가 생성된다
-InputSystem& InputSystem::GetInstance()
-{
-	static InputSystem engine;
-	return engine;
-}
-
 size_t InputSystem::AddListner(InputEventType type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)

@@ -6,7 +6,7 @@
 #define _DEGTORAD(DEG) DEG / 180.0f * DirectX::XM_PI
 #define _RADTODEG(RAD) RAD / DirectX::XM_PI * 180.0f
 #define _EPSILON 1e-6f
-
+#define _CLAMP(val, low, high) Clamp(val, low, high)
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>
@@ -99,6 +99,14 @@ struct Constant_wvp
 inline XMFLOAT3 lerp(const XMFLOAT3& st, const XMFLOAT3& en, float t)
 {
 	return XMFLOAT3(st.x * (1.0f - t) + en.x * t, st.y * (1.0f - t) + en.y*t, st.z * (1.0f - t) + en.z * t);
+}
+template<typename T>
+inline const T& Clamp(const T& val, const T& low, const T& high)
+{
+	_ASEERTION_NULCHK(low <= high, "low larger then high!");
+	if (val < low) return low;
+	else if (val > high) return high;
+	else return val;
 }
 
 /*
@@ -268,6 +276,14 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTa
 	return mat;
 }
 
+inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const float fPitch, const float fYaw, const float fRoll)
+{
+	XMMATRIX matRotate = XMMatrixTranspose(GetMat_RotRollPitchYaw({fPitch, fYaw, fRoll}));		//회전행렬의 전치행렬(역행렬)
+	XMMATRIX matTrans = GetMat_Translation({-posCamera.x, -posCamera.y, -posCamera.z});	//이동행렬의 역행렬
+	XMMATRIX mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
+	return mat;
+}
+
 /*
 * 원근투영행렬
 * 1.0f/(r*d)	0.0f		0.0f			0.0f
@@ -284,6 +300,16 @@ inline XMMATRIX GetMat_Perspective(float width, float height, float fov, float d
 	mat.r[1] = XMVectorSet(0.0f, 1.0f / d, 0.0f, 0.0f);
 	mat.r[2] = XMVectorSet(0.0f, 0.0f, dist_far / (dist_far-dist_near), 1.0f);
 	mat.r[3] = XMVectorSet(0.0f, 0.0f, -(dist_near*dist_far) / (dist_far - dist_near), 0.0f);
+	return mat;
+}
+inline XMMATRIX GetMat_Perspective(float aspectRatio, float fov, float dist_near, float dist_far)
+{
+	XMMATRIX mat;
+	float d = tanf(_DEGTORAD(fov) * 0.5f);
+	mat.r[0] = XMVectorSet(1.0f / (aspectRatio * d), 0.0f, 0.0f, 0.0f);
+	mat.r[1] = XMVectorSet(0.0f, 1.0f / d, 0.0f, 0.0f);
+	mat.r[2] = XMVectorSet(0.0f, 0.0f, dist_far / (dist_far - dist_near), 1.0f);
+	mat.r[3] = XMVectorSet(0.0f, 0.0f, -(dist_near * dist_far) / (dist_far - dist_near), 0.0f);
 	return mat;
 }
 
@@ -309,16 +335,18 @@ inline XMMATRIX GetMat_Ortho(float width, float height, float dist_near, float d
 * 행렬식 2x2 ~ 4x4
 * detA = sigma(j to n) A(ij) * (-1)^(i+j) * cofMatA(ij)
 */
+//2*2행렬식
 inline float GetDeterminant2x2
 (
 	float m11, float m12,
 	float m21, float m22
 )
 {
-	float ret11 = m11 * std::pow(-1, 1 + 1) * m22;
-	float ret12 = m12 * std::pow(-1, 1 + 2) * m21;
+	float ret11 = m11 * (float)std::pow(-1, 1 + 1) * m22;
+	float ret12 = m12 * (float)std::pow(-1, 1 + 2) * m21;
 	return ret11 + ret12;
 }
+//3*3행렬식
 inline float GetDeterminant3x3
 (
 	float m11, float m12, float m13, 
@@ -326,21 +354,22 @@ inline float GetDeterminant3x3
 	float m31, float m32, float m33
 )
 {
-	float ret11 = m11 * std::pow(-1, 1 + 1) * GetDeterminant2x2(m22, m23, m32, m33);
-	float ret12 = m12 * std::pow(-1, 1 + 2) * GetDeterminant2x2(m21, m23, m31, m33);
-	float ret13 = m13 * std::pow(-1, 1 + 3) * GetDeterminant2x2(m21, m22, m31, m32);
+	float ret11 = m11 * (float)std::pow(-1, 1 + 1) * GetDeterminant2x2(m22, m23, m32, m33);
+	float ret12 = m12 * (float)std::pow(-1, 1 + 2) * GetDeterminant2x2(m21, m23, m31, m33);
+	float ret13 = m13 * (float)std::pow(-1, 1 + 3) * GetDeterminant2x2(m21, m22, m31, m32);
 	return ret11 + ret12 + ret13;
 }
+//4*4행렬식
 inline float GetDeterminant4x4(const XMMATRIX& mat4x4)
 {
 	XMFLOAT4 r1(XMVectorGetX(mat4x4.r[0]), XMVectorGetY(mat4x4.r[0]), XMVectorGetZ(mat4x4.r[0]), XMVectorGetW(mat4x4.r[0]));
 	XMFLOAT4 r2(XMVectorGetX(mat4x4.r[1]), XMVectorGetY(mat4x4.r[1]), XMVectorGetZ(mat4x4.r[1]), XMVectorGetW(mat4x4.r[1]));
 	XMFLOAT4 r3(XMVectorGetX(mat4x4.r[2]), XMVectorGetY(mat4x4.r[2]), XMVectorGetZ(mat4x4.r[2]), XMVectorGetW(mat4x4.r[2]));
 	XMFLOAT4 r4(XMVectorGetX(mat4x4.r[3]), XMVectorGetY(mat4x4.r[3]), XMVectorGetZ(mat4x4.r[3]), XMVectorGetW(mat4x4.r[3]));
-	float ret11 = r1.x * std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float ret12 = r1.y * std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float ret13 = r1.z * std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float ret14 = r1.w * std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	float ret11 = r1.x * (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
+	float ret12 = r1.y * (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
+	float ret13 = r1.z * (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
+	float ret14 = r1.w * (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
 	return ret11 + ret12 + ret13 + ret14;
 }
 
@@ -354,25 +383,25 @@ inline XMMATRIX GetMat_Cofactor(const XMMATRIX& mat4x4)
 	XMFLOAT4 r2(XMVectorGetX(mat4x4.r[1]), XMVectorGetY(mat4x4.r[1]), XMVectorGetZ(mat4x4.r[1]), XMVectorGetW(mat4x4.r[1]));
 	XMFLOAT4 r3(XMVectorGetX(mat4x4.r[2]), XMVectorGetY(mat4x4.r[2]), XMVectorGetZ(mat4x4.r[2]), XMVectorGetW(mat4x4.r[2]));
 	XMFLOAT4 r4(XMVectorGetX(mat4x4.r[3]), XMVectorGetY(mat4x4.r[3]), XMVectorGetZ(mat4x4.r[3]), XMVectorGetW(mat4x4.r[3]));
-	float m11 = std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float m12 = std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float m13 = std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float m14 = std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	float m11 = (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
+	float m12 = (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
+	float m13 = (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
+	float m14 = (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
 
-	float m21 = std::pow(-1, 2 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float m22 = std::pow(-1, 2 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float m23 = std::pow(-1, 2 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float m24 = std::pow(-1, 2 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	float m21 = (float)std::pow(-1, 2 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
+	float m22 = (float)std::pow(-1, 2 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
+	float m23 = (float)std::pow(-1, 2 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
+	float m24 = (float)std::pow(-1, 2 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
 
-	float m31 = std::pow(-1, 3 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r4.y, r4.z, r4.w);
-	float m32 = std::pow(-1, 3 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r4.x, r4.z, r4.w);
-	float m33 = std::pow(-1, 3 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r4.x, r4.y, r4.w);
-	float m34 = std::pow(-1, 3 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r4.x, r4.y, r4.z);
+	float m31 = (float)std::pow(-1, 3 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r4.y, r4.z, r4.w);
+	float m32 = (float)std::pow(-1, 3 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r4.x, r4.z, r4.w);
+	float m33 = (float)std::pow(-1, 3 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r4.x, r4.y, r4.w);
+	float m34 = (float)std::pow(-1, 3 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r4.x, r4.y, r4.z);
 
-	float m41 = std::pow(-1, 4 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r3.y, r3.z, r3.w);
-	float m42 = std::pow(-1, 4 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r3.x, r3.z, r3.w);
-	float m43 = std::pow(-1, 4 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r3.x, r3.y, r3.w);
-	float m44 = std::pow(-1, 4 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r3.x, r3.y, r3.z);
+	float m41 = (float)std::pow(-1, 4 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r3.y, r3.z, r3.w);
+	float m42 = (float)std::pow(-1, 4 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r3.x, r3.z, r3.w);
+	float m43 = (float)std::pow(-1, 4 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r3.x, r3.y, r3.w);
+	float m44 = (float)std::pow(-1, 4 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r3.x, r3.y, r3.z);
 	
 	XMMATRIX mat;
 	mat.r[0] = XMVectorSet(m11, m12, m13, m14);

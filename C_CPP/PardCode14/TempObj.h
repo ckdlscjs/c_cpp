@@ -10,7 +10,8 @@ public:
 	void Frame(float deltaTime);
 	void Render();
 	void Release();
-	
+private:
+	bool CheckMask(int VK_KEY);
 public:
 	//Object Variables;
 	XMFLOAT3 m_vScale;

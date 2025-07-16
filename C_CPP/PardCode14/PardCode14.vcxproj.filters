@@ -19,6 +19,9 @@
     <Filter Include="Engine\ObjectSystem">
       <UniqueIdentifier>{cf17b1c6-65a3-4164-9d67-a4d05ea11f68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\CameraSystem">
+      <UniqueIdentifier>{fd1199a6-2ee2-43ee-a3ab-5197d52ac16c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
@@ -61,6 +64,18 @@
     <ClInclude Include="TempObj.h">
       <Filter>Engine\ObjectSystem</Filter>
     </ClInclude>
+    <ClInclude Include="CameraSystem.h">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FirstPersonCamera.h">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -102,6 +117,12 @@
     </ClCompile>
     <ClCompile Include="TempObj.cpp">
       <Filter>Engine\ObjectSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraSystem.cpp">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FirstPersonCamera.cpp">
+      <Filter>Engine\CameraSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

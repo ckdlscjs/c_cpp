@@ -2,6 +2,8 @@
 #include "RenderSystem.h"
 #include "InputSystem.h"
 #include "TempObj.h"			//임시오브젝트
+#include "CameraSystem.h"
+#include "FirstPersonCamera.h"
 
 AppWindow::AppWindow()
 {
@@ -17,7 +19,9 @@ void AppWindow::OnCreate()
 {
 	std::cout << "OnCreate" << '\n';
 	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
-
+	_CameraSystem.Init();
+	_CameraSystem.AddCamera(new FirstPersonCamera());
+	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 500.0f, -1000.0f });
 	//렌더링을위한 정점객체
 	Vertex_PC vertices[] =
 	{
@@ -85,6 +89,7 @@ void AppWindow::OnUpdate()
 {
 	std::cout << "OnUpdate" << '\n';
 	_InputSystem.Frame();
+	_CameraSystem.Frame(0.033f);
 	_RenderSystem.Frame();
 	_RenderSystem.Render();
 	std::cout << '\n';
@@ -93,7 +98,8 @@ void AppWindow::OnUpdate()
 void AppWindow::OnDestroy()
 {
 	std::cout << "OnDestroy" << '\n';
+	m_bIsRun = false;
+	_CameraSystem.Release();
 	_RenderSystem.Release();
 	_InputSystem.Release();
-	m_bIsRun = false;
 }

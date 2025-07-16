@@ -1,15 +1,17 @@
 #pragma once
-#include "std.h"
+#include "BaseSystem.h"
 
-class InputSystem
+class InputSystem : public BaseSystem<InputSystem>
 {
+	friend class BaseSystem<InputSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	InputSystem();
 	~InputSystem();
-	InputSystem(InputSystem& inputSystem) = delete;
-	InputSystem& operator=(const InputSystem& inputSystem) = delete;
+	InputSystem(const InputSystem&) = delete;
+	InputSystem& operator=(const InputSystem&) = delete;
+	InputSystem(InputSystem&&) = delete;
+	InputSystem& operator=(InputSystem&&) = delete;
 public:
-	static InputSystem& GetInstance();	//Singleton함수, 런타임중 호출시 정적변수로써 생성된다
 	size_t AddListner(InputEventType type, EventCallBack callback);
 	void RemoveListner(InputEventType type, size_t id);
 	void OnKeyDown(unsigned char VK_KEY);

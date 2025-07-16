@@ -136,8 +136,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h" />
+    <ClInclude Include="BaseSystem.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="Direct3D.h" />
+    <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="RenderSystem.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="InputLayout.h" />
@@ -152,8 +156,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp" />
+    <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="Direct3D.cpp" />
+    <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputLayout.cpp" />

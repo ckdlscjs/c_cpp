@@ -45,6 +45,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//키보드관련
 		case WM_KEYDOWN:
 		{
+			if (wParam == VK_ESCAPE)
+			{
+				g_pWindow->OnDestroy();
+				break;
+			}
 			_InputSystem.OnKeyDown(wParam);
 		}break;
 
@@ -183,7 +188,7 @@ bool Window::BroadCast()
 bool Window::Release()
 {
 	g_pWindow->OnDestroy();
-	return ::DestroyWindow(m_hWnd);
+	return false;
 }
 
 bool Window::IsRun()

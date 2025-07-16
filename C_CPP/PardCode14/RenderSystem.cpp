@@ -9,6 +9,8 @@
 #include "ConstantBuffer.h"
 #include "IndexBuffer.h"
 #include "TempObj.h"
+#include "CameraSystem.h"
+#include "FirstPersonCamera.h"
 
 RenderSystem::RenderSystem()
 {
@@ -22,15 +24,15 @@ RenderSystem::~RenderSystem()
 
 void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 {
-	m_fWidth = width;
-	m_fHeight = height;
+	m_iWidth = width;
+	m_iHeight = height;
 	m_pCDirect3D = new Direct3D();
 	m_pCDirect3D->Init();
 
 	m_pCSwapChain = new SwapChain();
 	m_pCSwapChain->Init(m_pCDirect3D->GetDevice(), hWnd, width, height);
 	
-	m_pCDirect3D->SetViewportSize(m_fWidth, m_fHeight);
+	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
 }
 
 void RenderSystem::Frame()
@@ -41,9 +43,11 @@ void RenderSystem::Frame()
 	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
 
 	//프레임에따른 변환
-	XMMATRIX matView = GetMat_ViewMatrix(XMFLOAT3(-300.0f, 500.0f, -1000.0f), XMFLOAT3(0.0f, 0.0f, 0.0f));
+	//XMMATRIX matView = GetMat_ViewMatrix(XMFLOAT3(-300.0f, 500.0f, -1000.0f), XMFLOAT3(0.0f, 0.0f, 0.0f));
+	XMMATRIX matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
+
 	//cc0.matProj = GetMat_Ortho(m_fWidth, m_fHeight, -4000.0f, 4000.0f);
-	XMMATRIX matProj = GetMat_Perspective(m_fWidth, m_fHeight, 75.0f, 0.1f, 4000.0f);
+	XMMATRIX matProj = GetMat_Perspective((float)m_iWidth, (float)m_iHeight, 75.0f, 0.1f, 4000.0f);
 	for (const auto& iter : objs)
 	{
 		iter->Frame(m_fDeltatime);
@@ -218,12 +222,4 @@ ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entry
 		_ASEERTION_CREATE(hResult, "CompileShader");
 	}
 	return pBlob;
-}
-
-
-//싱글톤객체, static선언으로 컴파일타임에 객체가 생성된다
-RenderSystem& RenderSystem::GetInstance()
-{
-	static RenderSystem engine;
-	return engine;
 }

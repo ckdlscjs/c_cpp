@@ -1,5 +1,5 @@
 #pragma once
-#include "std.h"
+#include "BaseSystem.h"
 
 //클래스 전방선언
 class Window;
@@ -12,15 +12,17 @@ class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
 class TempObj;
-class RenderSystem
+class RenderSystem : public BaseSystem<RenderSystem>
 {
+	friend class BaseSystem<RenderSystem>;
 private:
 	RenderSystem();
 	~RenderSystem();
-	RenderSystem(RenderSystem& renderSystem) = delete;
-	RenderSystem& operator=(const RenderSystem& renderSystem) = delete;
+	RenderSystem(const RenderSystem&) = delete;
+	RenderSystem& operator=(const RenderSystem&) = delete;
+	RenderSystem(RenderSystem&&) = delete;
+	RenderSystem& operator=(RenderSystem&&) = delete;
 public:
-	static RenderSystem& GetInstance(); //Singleton함수, 런타임중 호출시 정적변수로써 생성된다
 	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame();
 	void Render();
@@ -35,8 +37,8 @@ public:
 	PixelShader* CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 
 private:
-	float m_fWidth = 800.0f;
-	float m_fHeight = 600.0f;
+	UINT m_iWidth = 800;
+	UINT m_iHeight = 600;
 	DWORD m_dwOldTick = 0;
 	DWORD m_dwCurTick = 0;
 	float m_fDeltatime = 0.0f;
