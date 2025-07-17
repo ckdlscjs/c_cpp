@@ -3,22 +3,25 @@
 /////////////
 // GLOBALS //
 /////////////
-const bool FULL_SCREEN = false;					//전체화면
-const bool VSYNC_ENABLED = true;				//수직동기화
-const float SCREEN_DEPTH = 1000.0f;				//스크린깊이
-const float SCREEN_NEAR = 0.1f;					
+const bool FULL_SCREEN = false;
+const bool VSYNC_ENABLED = true;
+const float SCREEN_DEPTH = 1000.0f;
+const float SCREEN_NEAR = 0.1f;
 
-//전방선언
+
 class D3DClass;
+class CameraClass;
+class ModelClass;
+class ColorShaderClass;
 
 class GraphicsClass
 {
 public:
 	GraphicsClass();
-	GraphicsClass(const GraphicsClass& graphicClass);
+	GraphicsClass(const GraphicsClass&);
 	~GraphicsClass();
 
-	bool Initialize(int screenWidth, int screenHeight, HWND hwnd);
+	bool Initialize(int, int, HWND);
 	void Shutdown();
 	bool Frame();
 
@@ -26,5 +29,8 @@ private:
 	bool Render();
 
 private:
-	D3DClass* m_Direct3D = nullptr; //DirectX3D객체 멤버변수
+	D3DClass* m_Direct3D = nullptr;
+	CameraClass* m_Camera = nullptr;
+	ModelClass* m_Model = nullptr;
+	ColorShaderClass* m_ColorShader = nullptr;
 };

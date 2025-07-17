@@ -273,7 +273,7 @@ bool D3DClass::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool vsy
 	return true;
 }
 
-void D3DClass::Shotdown()
+void D3DClass::Shutdown()
 {
 	// 종료 전 윈도우 모드로 설정하지 않으면 스왑 체인을 해제 할 때 예외가 발생합니다.
 	if (m_SwapChain)

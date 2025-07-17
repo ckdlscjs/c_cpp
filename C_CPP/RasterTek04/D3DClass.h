@@ -8,7 +8,7 @@ public:
 	~D3DClass();
 
 	bool Initialize(int screenWidth, int screenHeight, HWND hwnd, bool vsync, bool isFullScreen, float screenDepth, float screenNear);
-	void Shotdown();
+	void Shutdown();
 	void BeginScene(float r, float g, float b, float a);
 	void EndScene();
 
