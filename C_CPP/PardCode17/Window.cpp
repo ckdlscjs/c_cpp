@@ -29,6 +29,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//윈도우생성시
 		case WM_CREATE:
 		{
+			//SetWindowLongPtr(hWnd, )
 			//Event When WindowCreated
 			//g_pWindow->SetHWND(hWnd);
 			//g_pWindow->OnCreate();
@@ -38,13 +39,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 		{
 			//Event When WindowDestroyed
-			g_pWindow->Release();
+			g_pWindow->OnDestroy();
 			::PostQuitMessage(0);
 		}break;
 
 		//키보드관련
 		case WM_KEYDOWN:
 		{
+			if (wParam == VK_ESCAPE)
+			{
+				g_pWindow->OnDestroy();
+				break;
+			}
 			_InputSystem.OnKeyDown(wParam);
 		}break;
 
@@ -180,19 +186,9 @@ bool Window::BroadCast()
 	return true;
 }
 
-bool Window::Release()
-{
-	return ::DestroyWindow(m_hWnd);
-}
-
 bool Window::IsRun()
 {
 	return m_bIsRun;
-}
-
-void Window::SetHWND(HWND hWnd)
-{
-	m_hWnd = hWnd;
 }
 
 HWND Window::GetHwnd() const
