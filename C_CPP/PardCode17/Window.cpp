@@ -63,7 +63,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 		{
 			//좌상단0,0~우하단증가
-			_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+			//_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+			_InputSystem.OnMouseMoveCenter(hWnd, LOWORD(lParam), HIWORD(lParam));
 		}break;
 
 		/*

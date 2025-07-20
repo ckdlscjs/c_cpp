@@ -12,5 +12,8 @@ FirstPersonCamera::~FirstPersonCamera()
 
 void FirstPersonCamera::Frame(float deltaTime)
 {
-
+	/*
+	m_Properties.m_fYaw += deltaTime;
+	m_bDirtyFlag_View = true;
+	*/
 }

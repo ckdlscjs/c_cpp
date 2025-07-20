@@ -24,6 +24,7 @@ public:
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
 	void OnMouseMove(int curX, int curY);
+	void OnMouseMoveCenter(HWND hWnd, int curX, int curY);
 	
 private:
 	std::unordered_map<InputEventType, std::unordered_map<size_t, EventCallBack>> m_Listners;

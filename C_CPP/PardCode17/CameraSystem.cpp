@@ -42,7 +42,7 @@ void CameraSystem::Init()
 			for (auto iter = m_Cameras.begin(); iter != m_Cameras.end(); iter++)
 			{
 				//넘겨받은 deltaX,Y를 이용해 카메라의 정보를갱신
-				iter->second->UpdateEulerRotate(event.mouseDeltaX, event.mouseDeltaY);
+				iter->second->UpdateEulerRotate(event.mouseDeltaX, event.mouseDeltaY, 0.1f);
 			}
 		}
 	));
