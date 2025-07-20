@@ -84,8 +84,7 @@ void CameraSystem::Frame(float deltaTime)
 	if (CheckMask('S')) delta_MovZ += -100.0f * deltaTime;				//back
 	for (auto iter = m_Cameras.begin(); iter != m_Cameras.end(); iter++)
 	{
-		XMFLOAT3 vPos = iter->second->GetPosition();
-		iter->second->SetPosition({ vPos.x + delta_MovX, vPos.y + delta_MovY, vPos.z + delta_MovZ });
+		iter->second->MovePosition({ delta_MovX, delta_MovY, delta_MovZ });
 		iter->second->Frame(deltaTime);
 	}
 }

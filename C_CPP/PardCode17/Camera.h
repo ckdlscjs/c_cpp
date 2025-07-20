@@ -59,6 +59,7 @@ public:
 	const XMFLOAT3& GetTarget();
 	void SetPosition(const XMFLOAT3& pos);
 	void SetTarget(const XMFLOAT3& targetPos);
+	void MovePosition(const XMFLOAT3& translation);
 	void UpdateEulerRotate(int deltaX, int deltaY, float sensetivity = 0.1f);
 
 	//투영속성
@@ -90,16 +91,11 @@ inline const XMMATRIX& BaseCamera::GetViewMatrix()
 		//오일러각에의한 행렬갱신
 		m_MatView = GetMat_ViewMatrix(m_Properties.m_vPosition, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
 		m_MatWorld = GetMat_Inverse(m_MatView);
-		//공식체크용
-		//m_MatWorld = GetMat_WorldMatrix({ 1.0f, 1.0f, 1.0f }, { m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll }, m_Properties.m_vPosition);
-		//m_MatView = GetMat_Inverse(m_MatWorld);
-
-		//벡터들 갱신
-		XMMATRIX matTranspose = XMMatrixTranspose(m_MatView);
-		XMStoreFloat3(&m_Properties.m_vRight, matTranspose.r[0]);
-		XMStoreFloat3(&m_Properties.m_vUp, matTranspose.r[1]);
-		XMStoreFloat3(&m_Properties.m_vForward, matTranspose.r[2]);
+		XMStoreFloat3(&m_Properties.m_vRight, m_MatWorld.r[0]);
+		XMStoreFloat3(&m_Properties.m_vUp, m_MatWorld.r[1]);
+		XMStoreFloat3(&m_Properties.m_vForward, m_MatWorld.r[2]);
 		m_Properties.m_vLookAt = m_Properties.m_vForward;
+		
 		m_bDirtyFlag_View = false;
 	}
 	return m_MatView;
@@ -149,6 +145,16 @@ inline void BaseCamera::SetTarget(const XMFLOAT3& targetPos)
 	//roll이 되어있는지 여부는 up벡터에 따라 다르다, 일반적으로는 회전하지않으므로 0으로 가정한다
 	m_Properties.m_fRoll = 0.0f;
 
+	m_bDirtyFlag_View = true;
+}
+inline void BaseCamera::MovePosition(const XMFLOAT3& translation)
+{
+	XMFLOAT3 vDeltaRight(m_Properties.m_vRight.x * translation.x, m_Properties.m_vRight.y * translation.x, m_Properties.m_vRight.z * translation.x);
+	XMFLOAT3 vDeltaUp(m_Properties.m_vUp.x*translation.y, m_Properties.m_vUp.y * translation.y, m_Properties.m_vUp.z * translation.y);
+	XMFLOAT3 vDeltaForward(m_Properties.m_vForward.x * translation.z, m_Properties.m_vForward.y * translation.z, m_Properties.m_vForward.z * translation.z);
+	m_Properties.m_vPosition.x += vDeltaRight.x + vDeltaUp.x + vDeltaForward.x;
+	m_Properties.m_vPosition.y += vDeltaRight.y + vDeltaUp.y + vDeltaForward.y;
+	m_Properties.m_vPosition.z += vDeltaRight.z + vDeltaUp.z + vDeltaForward.z;
 	m_bDirtyFlag_View = true;
 }
 inline void BaseCamera::UpdateEulerRotate(int deltaX, int deltaY, float sensetivity)
