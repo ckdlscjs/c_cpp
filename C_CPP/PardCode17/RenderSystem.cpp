@@ -47,11 +47,15 @@ void RenderSystem::Frame()
 	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
 
 	//프레임에따른 변환
-	//XMMATRIX matView = GetMat_ViewMatrix(XMFLOAT3(-300.0f, 500.0f, -1000.0f), XMFLOAT3(0.0f, 0.0f, 0.0f));
 	XMMATRIX matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
+	//XMMATRIX matView = GetMat_ViewMatrix(XMFLOAT3(-300.0f, 500.0f, -1000.0f), XMFLOAT3(0.0f, 0.0f, 0.0f));
 
 	//cc0.matProj = GetMat_Ortho(m_fWidth, m_fHeight, -4000.0f, 4000.0f);
-	XMMATRIX matProj = GetMat_Perspective((float)m_iWidth, (float)m_iHeight, 75.0f, 0.1f, 4000.0f);
+	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth/(float)m_iHeight);
+	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
+	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 4000.0f);
+	XMMATRIX matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
+	//XMMATRIX matProj = GetMat_Perspective((float)m_iWidth, (float)m_iHeight, 75.0f, 0.1f, 4000.0f);
 	for (const auto& iter : objs)
 	{
 		iter->Frame(m_fDeltatime);
