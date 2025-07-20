@@ -2,7 +2,7 @@
 
 PixelShader::PixelShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
 {
-	std::cout << "PixelShader" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "PixelShader" << " Class" << '\n';
 	_ASEERTION_NULCHK(pBlob, "BlobNULL");
 
 	HRESULT hResult = pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pPS);
@@ -11,7 +11,7 @@ PixelShader::PixelShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
 
 PixelShader::~PixelShader()
 {
-	std::cout << "PixelShader" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "PixelShader" << " Class" << '\n';
 	m_pPS->Release();
 }
 

@@ -2,6 +2,7 @@
 
 Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
 {
+	std::cout << "Initialize : " << "Texture2D" << " Class" << '\n';
 	HRESULT result;
 
 	result = CreateTexture(pDevice, resource->GetImages(), resource->GetImageCount(), resource->GetMetadata(), &m_pTexture);
@@ -36,6 +37,7 @@ Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
 
 Texture2D::~Texture2D()
 {
+	std::cout << "Release : " << "Texture2D" << " Class" << '\n';
 	m_pTexture->Release();
 	m_pSRV->Release();
 }

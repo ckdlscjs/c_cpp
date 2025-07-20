@@ -104,12 +104,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 Window::Window()
 {
-	std::cout << "Window" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "Window" << " Class" << '\n';
 }
 
 Window::~Window()
 {
-	std::cout << "Window" << " Class" << "소멸자 호출" << '\n';
+	std::cout << "Release : " << "Window" << " Class" << '\n';
 }
 
 bool Window::Init()

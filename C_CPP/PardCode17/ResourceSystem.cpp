@@ -1,23 +1,21 @@
 #include "ResourceSystem.h"
 #include "Resource.h"
-// FileSystem
-#if __cplusplus <= 201402L 
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#include <experimental/filesystem>
-#endif
-
-#if __cplusplus >= 201703L
-#include <filesystem>
-#endif
+//// FileSystem
+//#if __cplusplus <= 201402L 
+//#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+//#include <experimental/filesystem>
+//#endif
+//
+//#if __cplusplus >= 201703L
+//#include <filesystem>
+//#endif
 
 ResourceSystem::ResourceSystem()
 {
-	std::cout << "ResourceSystem" << " Class" << " 생성자 호출" << '\n';
 }
 
 ResourceSystem::~ResourceSystem()
 {
-	std::cout << "ResourceSystem" << " Class" << " 소멸자 호출" << '\n';
 }
 
 size_t ResourceSystem::HashFilePath(const std::wstring& path)

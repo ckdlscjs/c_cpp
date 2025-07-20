@@ -2,7 +2,7 @@
 #include "SwapChain.h"
 Direct3D::Direct3D()
 {
-	std::cout << "Direct3D" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "Direct3D" << " Class" << '\n';
 	//드라이버타입
 	D3D_DRIVER_TYPE driver_types[] =
 	{
@@ -44,7 +44,7 @@ Direct3D::Direct3D()
 
 Direct3D::~Direct3D()
 {
-	std::cout << "Direct3D" << " Class" << "소멸자 호출" << '\n';
+	std::cout << "Release : " << "Direct3D" << " Class" << '\n';
 	m_pD3D_Device->Release();
 	m_pD3D_DeviceContext->Release();
 }

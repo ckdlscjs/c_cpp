@@ -2,7 +2,7 @@
 
 ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, void* data, UINT size_buffer)
 {
-	std::cout << "ConstantBuffer" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "ConstantBuffer" << " Class" << '\n';
 	_ASEERTION_NULCHK(!m_pBuffer, "ConstantBuffer NOTNULL");
 	D3D11_BUFFER_DESC buff_desc;
 	ZeroMemory(&buff_desc, sizeof(buff_desc));
@@ -22,7 +22,7 @@ ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, void* data, UINT size_buff
 
 ConstantBuffer::~ConstantBuffer()
 {
-	std::cout << "ConstantBuffer" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "ConstantBuffer" << " Class" << '\n';
 	m_pBuffer->Release();
 }
 

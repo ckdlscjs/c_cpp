@@ -3,12 +3,10 @@
 
 InputSystem::InputSystem()
 {
-	std::cout << "InputSystem" << " Class" << " 생성자 호출" << '\n';
 }
 
 InputSystem::~InputSystem()
 {
-	std::cout << "InputSystem" << " Class" << " 소멸자 호출" << '\n';
 }
 
 size_t InputSystem::AddListner(InputEventType type, EventCallBack callback)

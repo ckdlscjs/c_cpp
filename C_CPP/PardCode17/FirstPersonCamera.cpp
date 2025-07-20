@@ -2,12 +2,12 @@
 
 FirstPersonCamera::FirstPersonCamera()
 {
-	std::cout << "FirstPersonCamera" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "FirstPersonCamera" << " Class" << '\n';
 }
 
 FirstPersonCamera::~FirstPersonCamera()
 {
-	std::cout << "FirstPersonCamera" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Release : " << "FirstPersonCamera" << " Class" << '\n';
 }
 
 void FirstPersonCamera::Frame(float deltaTime)

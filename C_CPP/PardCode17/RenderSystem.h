@@ -61,7 +61,7 @@ private:
 	std::unordered_map<size_t, PixelShader*> m_pCPSs;
 	std::unordered_map<size_t, ConstantBuffer*> m_pCCBs;
 	std::unordered_map<size_t, Texture2D*> m_pCTXs;
-	
+	//패리티체크를위해 1부터둔다
 	size_t m_lIdx_CVBs = 1;
 	size_t m_lIdx_CIBs = 1;
 	size_t m_lIdx_CILs = 1;

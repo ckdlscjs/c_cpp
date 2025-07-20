@@ -4,12 +4,10 @@
 
 CameraSystem::CameraSystem()
 {
-	std::cout << "CameraSystem" << " Class" << " 생성자 호출" << '\n';
 }
 
 CameraSystem::~CameraSystem()
 {
-	std::cout << "CameraSystem" << " Class" << " 소멸자 호출" << '\n';
 }
 
 BaseCamera* CameraSystem::GetCamera(size_t idx)

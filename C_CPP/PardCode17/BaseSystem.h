@@ -18,13 +18,13 @@ public:
 template<typename T>
 inline BaseSystem<T>::BaseSystem()
 {
-	std::cout << "BaseSystem <" << typeid(T).name() << "> Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "BaseSystem <" << typeid(T).name() << "> Class" << " 생성자 호출" << '\n';
 }
 
 template<typename T>
 inline BaseSystem<T>::~BaseSystem()
 {
-	std::cout << "BaseSystem <" << typeid(T).name() << "> Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "BaseSystem <" << typeid(T).name() << "> Class" << " 소멸자 호출" << '\n';
 }
 
 template<typename T>

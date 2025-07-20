@@ -72,12 +72,12 @@ public:
 };
 inline BaseCamera::BaseCamera()
 {
-	std::cout << "BaseCamera" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "BaseCamera" << " Class" << '\n';
 }
 
 inline BaseCamera::~BaseCamera()
 {
-	std::cout << "BaseCamera" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "BaseCamera" << " Class" << '\n';
 }
 
 inline const XMMATRIX& BaseCamera::GetWorldMatrix()

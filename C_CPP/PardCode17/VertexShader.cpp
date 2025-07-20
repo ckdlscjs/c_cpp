@@ -2,7 +2,7 @@
 
 VertexShader::VertexShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
 {
-	std::cout << "VertexShader" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "VertexShader" << " Class" << '\n';
 	_ASEERTION_NULCHK(pBlob, "BlobNULL");
 
 	HRESULT hResult = pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &m_pVS);
@@ -11,7 +11,7 @@ VertexShader::VertexShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
 
 VertexShader::~VertexShader()
 {
-	std::cout << "VertexShader" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "VertexShader" << " Class" << '\n';
 	m_pVS->Release();
 }
 

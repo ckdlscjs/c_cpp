@@ -3,13 +3,13 @@
 
 TempObj::TempObj()
 {
-	std::cout << "TempObj" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "TempObj" << " Class"  << '\n';
 	Init();
 }
 
 TempObj::~TempObj()
 {
-	std::cout << "TempObj" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "TempObj" << " Class"  << '\n';
 	Release();
 }
 

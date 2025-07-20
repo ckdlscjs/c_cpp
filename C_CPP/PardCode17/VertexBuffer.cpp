@@ -2,7 +2,7 @@
 
 VertexBuffer::VertexBuffer(ID3D11Device* pDevice, void* vertices, UINT size_vertex, UINT size_vertices)
 {
-	std::cout << "VertexBuffer" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "VertexBuffer" << " Class" << '\n';
 	/*
 	typedef struct D3D11_BUFFER_DESC
 	{
@@ -42,7 +42,7 @@ VertexBuffer::VertexBuffer(ID3D11Device* pDevice, void* vertices, UINT size_vert
 
 VertexBuffer::~VertexBuffer()
 {
-	std::cout << "VertexBuffer" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "VertexBuffer" << " Class" << '\n';
 	m_pBuffer->Release();
 }
 

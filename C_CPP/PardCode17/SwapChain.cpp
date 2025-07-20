@@ -3,7 +3,7 @@
 
 SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT iWidth, UINT iHeight)
 {
-	std::cout << "SwapChain" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "SwapChain" << " Class" << '\n';
 	//D3DDevice부터 Factory까지 역순으로 참조해서 Factory객체까지 주소를 받아온다
 	//__uuidof는 해당 함수에서 받아올 객체의 ID를 의미하며 두번째인자로 (void**)로 캐스팅후 저장해줄 포인터의 주소값을 넘겨야 실제 m_변수에 값을저장해놓을수있다
 	HRESULT hResult;
@@ -55,7 +55,7 @@ SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT iWidth, UINT iHeight
 
 SwapChain::~SwapChain()
 {
-	std::cout << "SwapChain" << " Class" << "소멸자 호출" << '\n';
+	std::cout << "Release : " << "SwapChain" << " Class" << '\n';
 	m_pRTV->Release();
 	m_pSwapChain->Release();
 }

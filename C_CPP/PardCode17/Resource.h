@@ -31,13 +31,13 @@ protected:
 template<typename T>
 inline BaseResource<T>::BaseResource()
 {
-	std::cout << "BaseResource <" << typeid(T).name() << "> Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "BaseResource <" << typeid(T).name() << "> Class"  << '\n';
 }
 
 template<typename T>
 inline BaseResource<T>::~BaseResource()
 {
-	std::cout << "BaseResource <" << typeid(T).name() << "> Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "BaseResource <" << typeid(T).name() << "> Class"  << '\n';
 }
 
 template<typename T>

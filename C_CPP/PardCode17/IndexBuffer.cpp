@@ -2,7 +2,7 @@
 
 IndexBuffer::IndexBuffer(ID3D11Device* pDevice, void* indices, UINT size_indices)
 {
-	std::cout << "IndexBuffer" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "IndexBuffer" << " Class" << '\n';
 	/*
 		typedef struct D3D11_BUFFER_DESC
 		{
@@ -41,7 +41,7 @@ IndexBuffer::IndexBuffer(ID3D11Device* pDevice, void* indices, UINT size_indices
 
 IndexBuffer::~IndexBuffer()
 {
-	std::cout << "IndexBuffer" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "IndexBuffer" << " Class" << '\n';
 	m_pBuffer->Release();
 }
 

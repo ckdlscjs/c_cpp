@@ -7,12 +7,12 @@
 #include "ResourceSystem.h"
 AppWindow::AppWindow()
 {
-	std::cout << "AppWindow" << " Class" << " 생성자 호출" << '\n';
+	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
 }
 
 AppWindow::~AppWindow()
 {
-	std::cout << "AppWindow" << " Class" << " 소멸자 호출" << '\n';
+	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
 }
 
 void AppWindow::OnCreate()
