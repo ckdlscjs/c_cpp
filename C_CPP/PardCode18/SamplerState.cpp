@@ -15,7 +15,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Sampler State");
+	_ASEERTION_NULCHK(pSamplers, "Wrap_Linear");
 	m_pSamplers.push_back(pSamplers);
 
 	//Wrap_Anisotrpic
@@ -24,7 +24,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Sampler State");
+	_ASEERTION_NULCHK(pSamplers, "Wrap_Anisotropic");
 	m_pSamplers.push_back(pSamplers);
 
 	//필요시 추가
