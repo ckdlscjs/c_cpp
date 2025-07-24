@@ -142,7 +142,7 @@ void AppWindow::OnCreate()
 	Constant_time cc1;
 	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time)));
 
-	obj->m_IdxTX = _RenderSystem.CreateTexture(L"../Assets/Textures/wood.jpg");
+	obj->m_IdxTX = _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", Samplers::WRAP_LINEAR);
 }
 
 void AppWindow::OnUpdate()

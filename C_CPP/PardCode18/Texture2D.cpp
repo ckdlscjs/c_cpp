@@ -1,6 +1,6 @@
 #include "Texture2D.h"
 
-Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
+Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource, Samplers sampler)
 {
 	std::cout << "Initialize : " << "Texture2D" << " Class" << '\n';
 	HRESULT result;
@@ -18,21 +18,7 @@ Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
 	result = pDevice->CreateShaderResourceView(m_pTexture, &desc, &m_pSRV);
 	_ASEERTION_CREATE(result, "SRV not create successfully");
 
-	/*
-	D3D11_SAMPLER_DESC sampler_desc;
-	ZeroMemory(&sampler_desc, sizeof(D3D11_SAMPLER_DESC));
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	sampler_desc.Filter = D3D11_FILTER_ANISOTROPIC; //D3D11_FILTER_ANISOTROPIC 축소, 배율 및 밉 수준 샘플링에 이방성 보간을 사용합니다.
-	sampler_desc.MinLOD = 0;
-	sampler_desc.MaxLOD = (UINT)imageData.GetMetadata().mipLevels;
-
-	// 샘플러스테이트 생성
-	result = pDevice->CreateSamplerState(&sampler_desc, &m_pSamplerState);
-	if (FAILED(result))
-		throw std::exception("SamplerState not create successfully");
-	*/
+	m_Sampler = sampler;
 }
 
 Texture2D::~Texture2D()
@@ -52,4 +38,9 @@ void Texture2D::SetVS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 void Texture2D::SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 {
 	pDeviceContext->PSSetShaderResources(startIdx, 1, &m_pSRV);
+}
+
+Samplers Texture2D::GetSampler()
+{
+	return m_Sampler;
 }

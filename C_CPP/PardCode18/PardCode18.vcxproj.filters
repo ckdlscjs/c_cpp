@@ -25,7 +25,7 @@
     <Filter Include="Engine\ResourceSystem">
       <UniqueIdentifier>{05261a6a-5e91-4433-8356-ec287ffb98ab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Shaders">
+    <Filter Include="Engine\Shaders">
       <UniqueIdentifier>{710e05e5-2c7d-4148-b2a7-674eb333e60a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -94,6 +94,9 @@
     <ClInclude Include="Texture2D.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="SamplerState.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -153,13 +156,16 @@
     <ClCompile Include="main.cpp">
       <Filter>App</Filter>
     </ClCompile>
+    <ClCompile Include="SamplerState.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
-      <Filter>Shaders</Filter>
+      <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>
 </Project>

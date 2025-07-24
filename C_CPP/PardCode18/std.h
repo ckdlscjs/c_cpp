@@ -35,20 +35,29 @@
 
 using namespace DirectX;
 
-//Resources data struct
-enum class InputEventType
+
+//enum classes
+ enum class InputEventType
 {
 	KEY_DOWN,
-	KEY_UP,
-	KEY_PRESSED,
-	MOUSE_MOVE,
-	MOUSE_L_DOWN,
-	MOUSE_L_UP,
-	MOUSE_R_DOWN,
-	MOUSE_R_UP,
-	MOUSE_WHEEL,
+		KEY_UP,
+		KEY_PRESSED,
+		MOUSE_MOVE,
+		MOUSE_L_DOWN,
+		MOUSE_L_UP,
+		MOUSE_R_DOWN,
+		MOUSE_R_UP,
+		MOUSE_WHEEL,
 };
 
+enum class Samplers
+{
+	WRAP_LINEAR,
+	WRAP_ANISOTROPIC,
+
+};
+
+//Resources data struct
 struct InputEvent
 {
 	InputEventType type;

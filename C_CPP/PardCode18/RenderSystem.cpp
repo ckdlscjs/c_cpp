@@ -14,6 +14,7 @@
 #include "Texture2D.h"
 #include "ResourceSystem.h"
 #include "Texture.h"
+#include "SamplerState.h"
 
 RenderSystem::RenderSystem()
 {
@@ -37,6 +38,9 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_ASEERTION_NULCHK(m_pCSwapChain, "SC is nullptr");
 	
 	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
+
+	m_pCSamplers = new SamplerState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCSamplers, "Samplers is nullptr");
 }
 
 void RenderSystem::Frame()
@@ -76,6 +80,7 @@ void RenderSystem::Frame()
 		m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 		m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 		//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[iter->m_IdxTX]->GetSampler());
 		m_pCTXs[iter->m_IdxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
 	}
 	//시간경과, 추후 Timer클래스로분할
@@ -151,6 +156,11 @@ void RenderSystem::Release()
 	{
 		delete *iter;
 		iter = objs.erase(iter);
+	}
+
+	if (m_pCSamplers)
+	{
+		delete m_pCSamplers;
 	}
 
 	if (m_pCSwapChain)
@@ -235,11 +245,11 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 	return m_lIdx_CPSs++;
 }
 
-size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
+size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, Samplers sampler)
 {
 	//이미 있는 리소스라면
 	Texture* pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.HashFilePath(szFilePath));
-	if(pTexture) 
+	if (pTexture)
 		return pTexture->GetTXIdx();
 
 	/*
@@ -265,15 +275,17 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 	// DirectXTex의 함수를 이용하여 image_data로 리턴시킨다
 	ScratchImage imageData;
 	_ASEERTION_CREATE(DirectX::LoadFromWICFile(szFilePath.c_str(), WIC_FLAGS_NONE, nullptr, imageData), "LoadTexture not successfully");
-	size_t idxTX = CreateTexture2D(&imageData);
-	_ResourceSystem.GetResource<Texture>(_ResourceSystem.CreateResourceFromFile<Texture>(szFilePath))->SetTXIdx(idxTX);
+
+	size_t idxTX = CreateTexture2D(&imageData, sampler);
+	pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.CreateResourceFromFile<Texture>(szFilePath));
+	pTexture->SetTXIdx(idxTX);
 	return idxTX;
 }
 
-size_t RenderSystem::CreateTexture2D(const ScratchImage* resource)
+size_t RenderSystem::CreateTexture2D(const ScratchImage* resource, Samplers sampler)
 {
 	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
-	Texture2D* pTexture2D = new Texture2D(m_pCDirect3D->GetDevice(), resource);
+	Texture2D* pTexture2D = new Texture2D(m_pCDirect3D->GetDevice(), resource, sampler);
 	_ASEERTION_NULCHK(pTexture2D, "TX is nullptr");
 	m_pCTXs[m_lIdx_CTXs] = pTexture2D;
 	return m_lIdx_CTXs++;

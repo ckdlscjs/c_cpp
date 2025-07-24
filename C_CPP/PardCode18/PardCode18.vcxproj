@@ -143,6 +143,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="SamplerState.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Direct3D.h" />
     <ClInclude Include="FirstPersonCamera.h" />
@@ -165,6 +166,7 @@
     <ClCompile Include="AppWindow.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="SamplerState.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="Direct3D.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />

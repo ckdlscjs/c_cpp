@@ -12,6 +12,7 @@ class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
 class Texture2D;
+class SamplerState;
 class TempObj;
 
 class RenderSystem : public BaseSystem<RenderSystem>
@@ -36,8 +37,8 @@ public:
 	size_t CreateConstantBuffer(void* data, UINT size_buffer);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
-	size_t CreateTexture(const std::wstring& szFilePath);
-	size_t CreateTexture2D(const ScratchImage* resource);
+	size_t CreateTexture(const std::wstring& szFilePath, Samplers sampler = Samplers::WRAP_LINEAR);
+	size_t CreateTexture2D(const ScratchImage* resource, Samplers sampler);
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 
 private:
@@ -52,6 +53,7 @@ private:
 private:
 	Direct3D* m_pCDirect3D;
 	SwapChain* m_pCSwapChain;
+	SamplerState* m_pCSamplers;
 	ID3DBlob* m_pBlob_VS;
 	ID3DBlob* m_pBlob_PS;
 	std::unordered_map<size_t, VertexBuffer*> m_pCVBs;
@@ -61,6 +63,7 @@ private:
 	std::unordered_map<size_t, PixelShader*> m_pCPSs;
 	std::unordered_map<size_t, ConstantBuffer*> m_pCCBs;
 	std::unordered_map<size_t, Texture2D*> m_pCTXs;
+
 	//패리티체크를위해 1부터둔다
 	size_t m_lIdx_CVBs = 1;
 	size_t m_lIdx_CIBs = 1;
