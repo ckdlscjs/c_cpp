@@ -1,0 +1,11 @@
+Tutorial06조명
+Directional Light의 구현, 방향조명이 도형을 비추기 위해서는 방향벡터, 법선벡터만을 필요로한다
+
+HLSL에서 saturate 함수는 입력값을 [0, 1] 범위 내에 유지합니다. 
+입력값이 0보다 작으면 0으로, 1보다 크면 1로 클램핑합니다. 
+즉, saturate(x) = min(max(x, 0), 1)입니다. 
+이 함수는 일반적으로 컬러 값이나 거리 계산과 같은 다양한 그래픽 알고리즘에서 사용됩니다.
+
+polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+->InputLayout에서 AlignedByteOffset을 사용해서 바이트정렬을 함으로써 직접 offset값을 계산하여적어주지않아도 자동으로 InputLayout의 offset값이정렬된다
+
