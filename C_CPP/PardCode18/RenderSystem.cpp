@@ -15,7 +15,6 @@
 #include "ResourceSystem.h"
 #include "Texture.h"
 #include "SamplerState.h"
-#include "ImguiSystem.h"
 
 RenderSystem::RenderSystem()
 {
@@ -34,15 +33,14 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	m_iHeight = height;
 	m_pCDirect3D = new Direct3D();
 	_ASEERTION_NULCHK(m_pCDirect3D, "D3D is nullptr");
-	_ImguiSystem.Init(hWnd, m_pCDirect3D->GetDevice(), m_pCDirect3D->GetDeviceContext());
 
 	m_pCSwapChain = new SwapChain(m_pCDirect3D->GetDevice(), hWnd, width, height);
 	_ASEERTION_NULCHK(m_pCSwapChain, "SC is nullptr");
 	
-	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
-
 	m_pCSamplers = new SamplerState(m_pCDirect3D->GetDevice());
 	_ASEERTION_NULCHK(m_pCSamplers, "Samplers is nullptr");
+
+	OnResize(m_iWidth, m_iHeight);
 }
 
 void RenderSystem::Frame()
@@ -198,6 +196,39 @@ void RenderSystem::Release()
 		m_pBlob_PS->Release();
 		m_pBlob_PS = nullptr;
 	}
+}
+
+ID3D11Device* RenderSystem::GetD3DDevice() const
+{
+	return m_pCDirect3D->GetDevice();
+}
+
+ID3D11DeviceContext* RenderSystem::GetD3DDeviceContext() const
+{
+	return m_pCDirect3D->GetDeviceContext();
+}
+
+void RenderSystem::OnResize(UINT width, UINT height)
+{
+	if (!m_pCDirect3D) return;
+	if (width == 0 || height == 0) return;
+	m_iWidth = width;
+	m_iHeight = height;
+
+	// 1. ·»´õ Å¸°Ù ºä¿Í ±íÀÌ ½ºÅÙ½Ç ºä¸¦ ÇØÁ¦
+	// m_pRTV->Release();
+	// m_pDSV->Release();
+
+	// 2. ½º¿ÒÃ¼ÀÎ ¹öÆÛ Å©±â ÀçÁ¶Á¤
+	// m_pCSwapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_UNKNOWN, 0);
+
+	// 3. »õ·Î¿î ·»´õ Å¸°Ù ºä »ý¼º (À§ÀÇ SwapChainÀÌ Ä¸½¶È­ÇÑ ·ÎÁ÷)
+	// m_pCSwapChain->CreateNewRTV();
+
+	// 4. »õ·Î¿î ±íÀÌ/½ºÅÙ½Ç ºä »ý¼º
+	// m_pCDirect3D->CreateDepthStencilView();
+
+	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
 }
 
 size_t RenderSystem::CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices)

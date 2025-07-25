@@ -33,6 +33,10 @@ public:
 	void PostRender();
 	void Release();
 	
+	ID3D11Device* GetD3DDevice() const;
+	ID3D11DeviceContext* GetD3DDeviceContext() const;
+
+	void OnResize(UINT width, UINT height);
 	size_t CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);
 	size_t CreateInputLayout(D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
 	size_t CreateIndexBuffer(void* indices, UINT size_indices);

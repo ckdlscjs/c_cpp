@@ -1,4 +1,5 @@
 #include "Window.h"
+#include "RenderSystem.h"
 #include "InputSystem.h"
 #include "ImguiSystem.h"
 Window* g_pWindow = nullptr;
@@ -36,6 +37,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//Event When WindowCreated
 			//g_pWindow->SetHWND(hWnd);
 			//g_pWindow->OnCreate();
+		}break;
+
+		case WM_SIZE:
+		{
+			UINT width = LOWORD(lParam);
+			UINT height = HIWORD(lParam);
+			_RenderSystem.OnResize(width, height);
 		}break;
 
 		//윈도우소멸시

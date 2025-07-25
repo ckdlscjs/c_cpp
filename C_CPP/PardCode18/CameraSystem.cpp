@@ -4,6 +4,7 @@
 
 CameraSystem::CameraSystem()
 {
+
 }
 
 CameraSystem::~CameraSystem()

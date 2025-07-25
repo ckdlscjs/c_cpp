@@ -18,7 +18,7 @@ public:
 
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();
-
+	//ID3D11DeviceContext* GetDeffContext();
 private:
 	ID3D11Device* m_pD3D_Device;
 	ID3D11DeviceContext* m_pD3D_DeviceContext;

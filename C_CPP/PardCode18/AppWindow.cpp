@@ -6,6 +6,8 @@
 #include "FirstPersonCamera.h"
 #include "ResourceSystem.h"
 #include "ImguiSystem.h"
+
+
 AppWindow::AppWindow()
 {
 	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
@@ -21,6 +23,7 @@ void AppWindow::OnCreate()
 	std::cout << "OnCreate" << '\n';
 	_InputSystem.Init();
 	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
+	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 500.0f, -1000.0f });
