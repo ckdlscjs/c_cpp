@@ -112,6 +112,7 @@ void InputSystem::Init()
 
 void InputSystem::Frame()
 {
+	//std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
 	for (int i = 0; i < 256; i++)
 	{
 		if (m_OldKeystate[i] && m_CurKeystate[i])

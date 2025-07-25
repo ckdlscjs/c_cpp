@@ -76,6 +76,7 @@
     <IncludePath>../Include/DXTEX;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
     <LibraryPath>../Lib;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -111,6 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>../Include/ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,11 +140,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Include\ImGui\imconfig.h" />
+    <ClInclude Include="..\Include\ImGui\imgui.h" />
+    <ClInclude Include="..\Include\ImGui\imgui_impl_dx11.h" />
+    <ClInclude Include="..\Include\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="..\Include\ImGui\imgui_internal.h" />
+    <ClInclude Include="..\Include\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="..\Include\ImGui\imstb_textedit.h" />
+    <ClInclude Include="..\Include\ImGui\imstb_truetype.h" />
     <ClInclude Include="AppWindow.h" />
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="SamplerState.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Direct3D.h" />
@@ -163,9 +174,17 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Include\ImGui\imgui.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_impl_dx11.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="AppWindow.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="SamplerState.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="Direct3D.cpp" />
@@ -191,6 +210,9 @@
     <FxCompile Include="VertexShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Include\ImGui\LICENSE.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

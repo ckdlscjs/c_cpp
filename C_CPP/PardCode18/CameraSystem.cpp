@@ -69,6 +69,7 @@ void CameraSystem::Init()
 
 void CameraSystem::Frame(float deltaTime)
 {
+	std::cout << "Frame : " << "CameraSystem" << " Class" << '\n';
 	float delta_MovX = 0.0f;
 	if (CheckMask('A')) delta_MovX += -100.0f * deltaTime;				//left
 	if (CheckMask('D')) delta_MovX += +100.0f * deltaTime;				//right

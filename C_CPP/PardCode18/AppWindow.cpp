@@ -5,6 +5,7 @@
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
 #include "ResourceSystem.h"
+#include "ImguiSystem.h"
 AppWindow::AppWindow()
 {
 	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
@@ -149,9 +150,14 @@ void AppWindow::OnUpdate()
 {
 	std::cout << "OnUpdate" << '\n';
 	_InputSystem.Frame();
+	_ImguiSystem.Frame();
 	_CameraSystem.Frame(0.033f);
 	_RenderSystem.Frame();
+
+	_RenderSystem.PreRender();
 	_RenderSystem.Render();
+	_ImguiSystem.Render();
+	_RenderSystem.PostRender();
 	std::cout << '\n';
 }
 
@@ -163,4 +169,5 @@ void AppWindow::OnDestroy()
 	_CameraSystem.Release();
 	_RenderSystem.Release();
 	_InputSystem.Release();
+	_ImguiSystem.Release();
 }

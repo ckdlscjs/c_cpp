@@ -1,6 +1,6 @@
 #include "Window.h"
 #include "InputSystem.h"
-
+#include "ImguiSystem.h"
 Window* g_pWindow = nullptr;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -24,6 +24,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	마우스 메시지: 마우스 커서의 X, Y 좌표를 담습니다. LOWORD(lParam)으로 X좌표, HIWORD(lParam)으로 Y좌표를 얻습니다. (일부 메시지는 클라이언트 좌표, 일부는 화면 좌표).
 	윈도우 크기 변경 메시지: 변경된 윈도우의 새로운 너비와 높이를 담습니다.
 	*/
+
+	if (_ImguiSystem.WndProc(hWnd, msg, wParam, lParam))
+		return true;
 	switch (msg)
 	{
 		//윈도우생성시

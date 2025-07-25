@@ -28,7 +28,9 @@ private:
 public:
 	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame();
+	void PreRender();
 	void Render();
+	void PostRender();
 	void Release();
 	
 	size_t CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);

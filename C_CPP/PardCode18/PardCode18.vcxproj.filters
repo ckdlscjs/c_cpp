@@ -7,9 +7,6 @@
     <Filter Include="App">
       <UniqueIdentifier>{ebc456e5-4799-4326-bede-27702e8cfac3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\WindowSystem">
-      <UniqueIdentifier>{cd8071f3-62e9-4823-bd08-21d475dbf9f8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\GraphicSystem">
       <UniqueIdentifier>{b2592574-44f9-4e67-9964-70fa202bd5fc}</UniqueIdentifier>
     </Filter>
@@ -28,13 +25,22 @@
     <Filter Include="Engine\Shaders">
       <UniqueIdentifier>{710e05e5-2c7d-4148-b2a7-674eb333e60a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{43cbfc13-4d98-4747-9b15-5aef49ec383f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\ImguiSystem">
+      <UniqueIdentifier>{6887e805-4d40-441b-8cf3-35b42389c57c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Window">
+      <UniqueIdentifier>{cd8071f3-62e9-4823-bd08-21d475dbf9f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
       <Filter>App</Filter>
     </ClInclude>
     <ClInclude Include="Window.h">
-      <Filter>Engine\WindowSystem</Filter>
+      <Filter>Engine\Window</Filter>
     </ClInclude>
     <ClInclude Include="RenderSystem.h">
       <Filter>Engine\GraphicSystem</Filter>
@@ -97,13 +103,40 @@
     <ClInclude Include="SamplerState.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="ImguiSystem.h">
+      <Filter>Engine\ImguiSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_impl_dx11.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_impl_win32.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_internal.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_rectpack.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_textedit.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_truetype.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
       <Filter>App</Filter>
     </ClCompile>
     <ClCompile Include="Window.cpp">
-      <Filter>Engine\WindowSystem</Filter>
+      <Filter>Engine\Window</Filter>
     </ClCompile>
     <ClCompile Include="RenderSystem.cpp">
       <Filter>Engine\GraphicSystem</Filter>
@@ -159,6 +192,30 @@
     <ClCompile Include="SamplerState.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
+    <ClCompile Include="ImguiSystem.cpp">
+      <Filter>Engine\ImguiSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_impl_dx11.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_impl_win32.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
@@ -167,5 +224,10 @@
     <FxCompile Include="PixelShader.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Include\ImGui\LICENSE.txt">
+      <Filter>ImGui</Filter>
+    </Text>
   </ItemGroup>
 </Project>
