@@ -152,8 +152,12 @@
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
+    <ClInclude Include="commonMath.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="ImguiSystem.h" />
+    <ClInclude Include="Matrix4x4.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SamplerState.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Direct3D.h" />
@@ -169,6 +173,9 @@
     <ClInclude Include="SwapChain.h" />
     <ClInclude Include="TempObj.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="Vector2.h" />
+    <ClInclude Include="Vector3.h" />
+    <ClInclude Include="Vector4.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="VertexShader.h" />
     <ClInclude Include="Window.h" />

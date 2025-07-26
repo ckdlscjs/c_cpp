@@ -39,7 +39,7 @@ void AppWindow::OnCreate()
 	* 0 1  4 5
 	* 2 3  6 7
 	*/
-	XMFLOAT3 posList[] =
+	Vector3 posList[] =
 	{
 		{-0.5f	, 0.5f	, -0.5f	},		
 		{0.5f	, 0.5f	, -0.5f	},
@@ -50,7 +50,7 @@ void AppWindow::OnCreate()
 		{-0.5f	, -0.5f	, 0.5f	},
 		{0.5f	, -0.5f	, 0.5f	},
 	};
-	XMFLOAT4 colorList[] =
+	Vector4 colorList[] =
 	{
 		{1, 0, 0, 1.0f},
 		{0, 1, 0, 1.0f},
@@ -61,7 +61,7 @@ void AppWindow::OnCreate()
 		{0, 0, 1, 1.0f},
 		{1, 1, 0, 1.0f},
 	};
-	XMFLOAT2 texcoordList[]
+	Vector2 texcoordList[]
 	{
 		{0.0f, 0.0f},
 		{1.0f, 0.0f},
@@ -137,9 +137,9 @@ void AppWindow::OnCreate()
 	D3D11_INPUT_ELEMENT_DESC layout[] =
 	{
 		//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
-		{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,	0, 12,	D3D11_INPUT_PER_VERTEX_DATA, 0},
-		{"TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,		0, 28,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 	};
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();

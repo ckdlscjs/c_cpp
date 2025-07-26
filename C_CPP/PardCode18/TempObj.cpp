@@ -99,39 +99,33 @@ void TempObj::Frame(float deltaTime)
 	float delta_RotY = 0.0f;
 	if (CheckMask(VK_LEFT)) delta_RotY += -m_fSpeedRotate * deltaTime;			//Yaw-
 	if (CheckMask(VK_RIGHT)) delta_RotY += +m_fSpeedRotate * deltaTime;			//Yaw+
-	m_vRotate.y += delta_RotY;
 
 	float delta_RotX = 0.0f;
 	if (CheckMask(VK_UP)) delta_RotX += m_fSpeedRotate * deltaTime;				//Pitch+
 	if (CheckMask(VK_DOWN)) delta_RotX += -m_fSpeedRotate * deltaTime;			//Pitch-
-	m_vRotate.x += delta_RotX;
 
 	float delta_RotZ = 0.0f;
 	if (CheckMask(VK_PRIOR)) delta_RotZ += m_fSpeedRotate * deltaTime;			//Roll+
 	if (CheckMask(VK_NEXT)) delta_RotZ += -m_fSpeedRotate * deltaTime;			//Roll-
-	m_vRotate.z += delta_RotZ;
+	m_vRotate += Vector3(delta_RotX, delta_RotY, delta_RotZ);
 
 	float delta_Scale = 0.0f;
 	if (CheckMask(VK_OEM_PLUS)) delta_Scale += m_fSpeedScale * deltaTime;		//Scale+
 	if (CheckMask(VK_OEM_MINUS)) delta_Scale += -m_fSpeedScale * deltaTime;		//Scale-
-	m_vScale = XMFLOAT3(m_vScale.x + delta_Scale, m_vScale.y + delta_Scale, m_vScale.z + delta_Scale);
-
+	m_vScale += Vector3(delta_Scale, delta_Scale, delta_Scale);
 	
 	float delta_MovX = 0.0f;
 	if (CheckMask('A')) delta_MovX += -m_fSpeedMove * deltaTime;				//left
 	if (CheckMask('D')) delta_MovX += +m_fSpeedMove * deltaTime;				//right
-	m_vTranslation.x += delta_MovX;
 
 	float delta_MovY = 0.0f;
 	if (CheckMask('Q')) delta_MovY += -m_fSpeedMove * deltaTime;				//down
 	if (CheckMask('E')) delta_MovY += +m_fSpeedMove * deltaTime;				//up
-	m_vTranslation.y += delta_MovY;
 
 	float delta_MovZ = 0.0f;
 	if (CheckMask('W')) delta_MovZ += +m_fSpeedMove * deltaTime;				//forward
 	if (CheckMask('S')) delta_MovZ += -m_fSpeedMove * deltaTime;				//back
-	m_vTranslation.z += delta_MovZ;
-	
+	m_vTranslation += Vector3(delta_MovX, delta_MovY, delta_MovZ);
 }
 
 void TempObj::Render()

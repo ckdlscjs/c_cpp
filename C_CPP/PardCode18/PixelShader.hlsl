@@ -5,7 +5,7 @@ struct PS_INPUT
 {
     float4 pos0 : SV_POSITION;
     float4 color0 : COLOR0;
-    float2 tex0 : TEXCOORD0;
+    float4 tex0 : TEXCOORD0;
 };
 cbuffer cc_time : register(b1)
 {

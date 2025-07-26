@@ -3,12 +3,12 @@
 struct CameraProperties
 {
 	//카메라의 속성
-	XMFLOAT3 m_vPosition;			//카메라의 위치
-	XMFLOAT3 m_vLookAt;				//카메라가 시선방향
+	Position m_vPosition;			//카메라의 위치
+	Position m_vLookAt;				//카메라의 시선
 
-	XMFLOAT3 m_vRight;				//카메라의 우측벡터		(right)
-	XMFLOAT3 m_vUp;					//카메라의 업벡터			(up)
-	XMFLOAT3 m_vForward;			//카메라의 정면벡터		(forward)
+	Vector3 m_vRight;				//카메라의 우측벡터		(right)
+	Vector3 m_vUp;					//카메라의 업벡터			(up)
+	Vector3 m_vForward;				//카메라의 정면벡터		(forward)
 
 	//사원수를 추가해야 오일러각<->사원수<->벡터 간의 원활한 각도계산이 가능 추후에 추가
 	float m_fRoll;					
@@ -43,23 +43,23 @@ protected:
 	BaseCamera(BaseCamera&&) = delete;					//이동생성자삭제
 	BaseCamera& operator=(BaseCamera&&) = delete;		//이동대입연산자삭제
 	CameraProperties m_Properties;
-	XMMATRIX m_MatWorld = GetMat_Identity();
-	XMMATRIX m_MatView = GetMat_Identity();
-	XMMATRIX m_MatProj = GetMat_Identity();
+	Matrix4x4 m_MatWorld = GetMat_Identity();
+	Matrix4x4 m_MatView = GetMat_Identity();
+	Matrix4x4 m_MatProj = GetMat_Identity();
 	bool m_bDirtyFlag_View = true;
 	bool m_bDirtyFlag_Proj = true;
 public:
 	//행렬
-	const XMMATRIX& GetWorldMatrix();
-	const XMMATRIX& GetViewMatrix();
-	const XMMATRIX& GetProjMatrix();
+	const Matrix4x4& GetWorldMatrix();
+	const Matrix4x4& GetViewMatrix();
+	const Matrix4x4& GetProjMatrix();
 
 	//카메라속성
-	const XMFLOAT3& GetPosition();
-	const XMFLOAT3& GetTarget();
-	void SetPosition(const XMFLOAT3& pos);
-	void SetTarget(const XMFLOAT3& targetPos);
-	void MovePosition(const XMFLOAT3& translation);
+	const Position& GetPosition();
+	const Position& GetTarget();
+	void SetPosition(const Position& pos);
+	void SetTarget(const Position& target);
+	void MovePosition(const Vector3& translation);
 	void UpdateEulerRotate(int deltaX, int deltaY, float sensetivity = 0.1f);
 
 	//투영속성
@@ -80,20 +80,20 @@ inline BaseCamera::~BaseCamera()
 	std::cout << "Release : " << "BaseCamera" << " Class" << '\n';
 }
 
-inline const XMMATRIX& BaseCamera::GetWorldMatrix()
+inline const Matrix4x4& BaseCamera::GetWorldMatrix()
 {
 	return m_MatWorld;
 }
-inline const XMMATRIX& BaseCamera::GetViewMatrix()
+inline const Matrix4x4& BaseCamera::GetViewMatrix()
 {
 	if (m_bDirtyFlag_View)
 	{
 		//오일러각에의한 행렬갱신
 		m_MatView = GetMat_ViewMatrix(m_Properties.m_vPosition, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
 		m_MatWorld = GetMat_Inverse(m_MatView);
-		XMStoreFloat3(&m_Properties.m_vRight, m_MatWorld.r[0]);
-		XMStoreFloat3(&m_Properties.m_vUp, m_MatWorld.r[1]);
-		XMStoreFloat3(&m_Properties.m_vForward, m_MatWorld.r[2]);
+		m_Properties.m_vRight = m_MatWorld.r[0].ToVector3();
+		m_Properties.m_vUp = m_MatWorld.r[1].ToVector3();
+		m_Properties.m_vForward = m_MatWorld.r[2].ToVector3();
 		m_Properties.m_vLookAt = m_Properties.m_vForward;
 		
 		m_bDirtyFlag_View = false;
@@ -101,7 +101,7 @@ inline const XMMATRIX& BaseCamera::GetViewMatrix()
 	return m_MatView;
 }
 
-inline const XMMATRIX& BaseCamera::GetProjMatrix()
+inline const Matrix4x4& BaseCamera::GetProjMatrix()
 {
 	if (m_bDirtyFlag_Proj)
 	{
@@ -110,32 +110,30 @@ inline const XMMATRIX& BaseCamera::GetProjMatrix()
 	}
 	return m_MatProj;
 }
-inline const XMFLOAT3& BaseCamera::GetPosition()
+inline const Position& BaseCamera::GetPosition()
 {
 	return m_Properties.m_vPosition;
 }
 
-inline const XMFLOAT3& BaseCamera::GetTarget()
+inline const Position& BaseCamera::GetTarget()
 {
 	return m_Properties.m_vLookAt;
 }
-inline void BaseCamera::SetPosition(const XMFLOAT3& pos)
+inline void BaseCamera::SetPosition(const Position& pos)
 {
 	m_Properties.m_vPosition = pos;
 	m_bDirtyFlag_View = true;
 }
-inline void BaseCamera::SetTarget(const XMFLOAT3& targetPos)
+inline void BaseCamera::SetTarget(const Position& target)
 {
 	//forward계산
-	XMVECTOR vPos = XMLoadFloat3(&m_Properties.m_vPosition);
-	XMVECTOR vTarget = XMLoadFloat3(&targetPos);
-	XMVECTOR vLookAt = XMVector3Normalize(vTarget - vPos);
-	XMStoreFloat3(&m_Properties.m_vLookAt, vLookAt);
+	Vector3 vLookAt = (m_Properties.m_vPosition - target).Normalize();
+	m_Properties.m_vLookAt = vLookAt;
 
 	//forward로 부터 yaw계산
-	float forwardX = XMVectorGetX(vLookAt);
-	float forwardY = XMVectorGetY(vLookAt);
-	float forwardZ = XMVectorGetZ(vLookAt);
+	float forwardX = vLookAt.GetX();
+	float forwardY = vLookAt.GetY();
+	float forwardZ = vLookAt.GetZ();
 	//yaw는 시계방향 회전이 되므로(왼손좌표계), atan2는 반시계의 회전각을 의미하기에 평면을 반대로 넣어준다(result -> radian, need to convert degree)
 	m_Properties.m_fYaw = _RADTODEG(atan2f(forwardX, forwardZ));
 	
@@ -147,14 +145,13 @@ inline void BaseCamera::SetTarget(const XMFLOAT3& targetPos)
 
 	m_bDirtyFlag_View = true;
 }
-inline void BaseCamera::MovePosition(const XMFLOAT3& translation)
+//방향벡터만큼 델타스칼라배한 벡터를 다 합해 최종 크기를 이동시킨다(선형독립)
+inline void BaseCamera::MovePosition(const Vector3& translation)
 {
-	XMFLOAT3 vDeltaRight(m_Properties.m_vRight.x * translation.x, m_Properties.m_vRight.y * translation.x, m_Properties.m_vRight.z * translation.x);
-	XMFLOAT3 vDeltaUp(m_Properties.m_vUp.x*translation.y, m_Properties.m_vUp.y * translation.y, m_Properties.m_vUp.z * translation.y);
-	XMFLOAT3 vDeltaForward(m_Properties.m_vForward.x * translation.z, m_Properties.m_vForward.y * translation.z, m_Properties.m_vForward.z * translation.z);
-	m_Properties.m_vPosition.x += vDeltaRight.x + vDeltaUp.x + vDeltaForward.x;
-	m_Properties.m_vPosition.y += vDeltaRight.y + vDeltaUp.y + vDeltaForward.y;
-	m_Properties.m_vPosition.z += vDeltaRight.z + vDeltaUp.z + vDeltaForward.z;
+	Vector3 vDeltaRight = m_Properties.m_vRight * translation.GetX();
+	Vector3 vDeltaUp = m_Properties.m_vUp * translation.GetY();
+	Vector3 vDeltaForward = m_Properties.m_vForward * translation.GetZ();
+	m_Properties.m_vPosition += vDeltaRight + vDeltaUp + vDeltaForward;
 	m_bDirtyFlag_View = true;
 }
 inline void BaseCamera::UpdateEulerRotate(int deltaX, int deltaY, float sensetivity)

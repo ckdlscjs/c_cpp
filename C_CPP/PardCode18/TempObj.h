@@ -14,11 +14,11 @@ private:
 	bool CheckMask(int VK_KEY);
 public:
 	//Object Variables;
-	XMFLOAT3 m_vScale;
+	Vector3 m_vScale;
 	float m_fSpeedScale;
-	XMFLOAT3 m_vRotate;
+	Vector3 m_vRotate;
 	float m_fSpeedRotate;
-	XMFLOAT3 m_vTranslation;
+	Vector3 m_vTranslation;
 	float m_fSpeedMove;
 	std::unordered_map<int, int> VK_MASK;
 	size_t m_lVKMask;

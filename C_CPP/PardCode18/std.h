@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <functional>
 //#include "bits/stdc++.h"
+#include "commonMath.h"
 
 //d3d Header
 #include <d3d11.h>
@@ -79,23 +80,23 @@ struct PointXY
 
 struct Vertex_PC
 {
-	XMFLOAT3 pos0;
-	XMFLOAT4 color0;
+	Position pos0;
+	Vector4 color0;
 };
 
 struct Vertex_PCT
 {
-	XMFLOAT3 pos0;
-	XMFLOAT4 color0;
-	XMFLOAT2 tex0;
+	Position pos0;
+	Vector4 color0;
+	Vector2 tex0;
 };
 
 struct Vertex_PPCC
 {
-	XMFLOAT3 pos0;
-	XMFLOAT3 pos1;
-	XMFLOAT4 color0;
-	XMFLOAT4 color1;
+	Position pos0;
+	Position pos1;
+	Vector4 color0;
+	Vector4 color1;
 };
 
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다
@@ -108,17 +109,17 @@ struct Constant_time
 __declspec(align(16))
 struct Constant_wvp
 {
-	XMMATRIX matWorld;
-	XMMATRIX matView;
-	XMMATRIX matProj;
+	Matrix4x4 matWorld;
+	Matrix4x4 matView;
+	Matrix4x4 matProj;
 };
 
 //공용함수들
 
 //선형보간(vector3)
-inline XMFLOAT3 lerp(const XMFLOAT3& st, const XMFLOAT3& en, float t)
+inline Vector3 lerp(const Vector3& st, const Vector3& en, float t)
 {
-	return XMFLOAT3(st.x * (1.0f - t) + en.x * t, st.y * (1.0f - t) + en.y*t, st.z * (1.0f - t) + en.z * t);
+	return Vector3(st.GetX() * (1.0f - t) + en.GetX() * t, st.GetY() * (1.0f - t) + en.GetY()*t, st.GetZ() * (1.0f - t) + en.GetZ() * t);
 }
 template<typename T>
 inline const T& Clamp(const T& val, const T& low, const T& high)
@@ -136,13 +137,13 @@ inline const T& Clamp(const T& val, const T& low, const T& high)
 * 0.0f	0.0f	1.0f	0.0f
 * 0.0f	0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_Identity()
+inline Matrix4x4 GetMat_Identity()
 {
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	Matrix4x4 mat;
+	mat.r[0] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	return mat;
 }
 
@@ -153,13 +154,13 @@ inline XMMATRIX GetMat_Identity()
 * 0.0f	0.0f	Sz		0.0f
 * 0.0f	0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_Scale(const XMFLOAT3 scale)
+inline Matrix4x4 GetMat_Scale(const Vector3 scale)
 {
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(scale.x, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, scale.y, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, scale.z, 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	Matrix4x4 mat;
+	mat.r[0] = Vector4(scale.GetX(), 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, scale.GetY(), 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, scale.GetZ(), 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	return mat;
 }
 
@@ -170,16 +171,16 @@ inline XMMATRIX GetMat_Scale(const XMFLOAT3 scale)
 * 0.0f	-sin	cos		0.0f
 * 0.0f	0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_RotPitch(const float degree)
+inline Matrix4x4 GetMat_RotPitch(const float degree)
 {
-	XMMATRIX mat;
+	Matrix4x4 mat;
 	float radAngle = degree / 180.0f * DirectX::XM_PI;
 	float cost = cosf(radAngle);
 	float sint = sinf(radAngle);
-	mat.r[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, cost, sint, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, -sint, cost, 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	mat.r[0] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, cost, sint, 0.0f);
+	mat.r[2] = Vector4(0.0f, -sint, cost, 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	return mat;
 }
 
@@ -190,16 +191,16 @@ inline XMMATRIX GetMat_RotPitch(const float degree)
 * sin	0.0f	cos		0.0f
 * 0.0f	0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_RotYaw(const float degree)
+inline Matrix4x4 GetMat_RotYaw(const float degree)
 {
-	XMMATRIX mat;
+	Matrix4x4 mat;
 	float radAngle = _DEGTORAD(degree);
 	float cost = cosf(radAngle);
 	float sint = sinf(radAngle);
-	mat.r[0] = XMVectorSet(cost, 0.0f, -sint, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(sint, 0.0f, cost, 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	mat.r[0] = Vector4(cost, 0.0f, -sint, 0.0f);
+	mat.r[1] = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
+	mat.r[2] = Vector4(sint, 0.0f, cost, 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	return mat;
 }
 
@@ -210,16 +211,16 @@ inline XMMATRIX GetMat_RotYaw(const float degree)
 * 0.0f	0.0f	1.0f	0.0f
 * 0.0f	0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_RotRoll(const float degree)
+inline Matrix4x4 GetMat_RotRoll(const float degree)
 {
-	XMMATRIX mat;
+	Matrix4x4 mat;
 	float radAngle = _DEGTORAD(degree);
 	float cost = cosf(radAngle);
 	float sint = sinf(radAngle);
-	mat.r[0] = XMVectorSet(cost, sint, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(-sint, cost, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	mat.r[0] = Vector4(cost, sint, 0.0f, 0.0f);
+	mat.r[1] = Vector4(-sint, cost, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 	return mat;
 }
 
@@ -230,11 +231,11 @@ inline XMMATRIX GetMat_RotRoll(const float degree)
 * Wx		Wy		Wz		0.0f
 * 0.0f		0.0f	0.0f	1.0f
 */
-inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
+inline Matrix4x4 GetMat_RotRollPitchYaw(const Vector3 eulerDegrees)
 {
-	XMMATRIX matRoll = GetMat_RotRoll(eulerDegrees.z);
-	XMMATRIX matPitch = GetMat_RotPitch(eulerDegrees.x);
-	XMMATRIX matYaw = GetMat_RotYaw(eulerDegrees.y);
+	Matrix4x4 matRoll = GetMat_RotRoll(eulerDegrees.GetZ());
+	Matrix4x4 matPitch = GetMat_RotPitch(eulerDegrees.GetX());
+	Matrix4x4 matYaw = GetMat_RotYaw(eulerDegrees.GetY());
 	return matRoll * matPitch * matYaw;
 }
 
@@ -245,13 +246,13 @@ inline XMMATRIX GetMat_RotRollPitchYaw(const XMFLOAT3 eulerDegrees)
 * 0.0f	0.0f	1.0f	0.0f
 * Tx	Ty		Tz		1.0f
 */
-inline XMMATRIX GetMat_Translation(const XMFLOAT3 translation)
+inline Matrix4x4 GetMat_Translation(const Vector3 translation)
 {
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	mat.r[3] = XMVectorSet(translation.x, translation.y, translation.z, 1.0f);
+	Matrix4x4 mat;
+	mat.r[0] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, 1.0f, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+	mat.r[3] = Vector4(translation.GetX(), translation.GetY(), translation.GetZ(), 1.0f);
 	return mat;
 }
 
@@ -262,7 +263,7 @@ inline XMMATRIX GetMat_Translation(const XMFLOAT3 translation)
 * Wx*Sz		Wy*Sz		Wz*Sz		0.0f
 * Tx		Ty			Tz			1.0f
 */
-inline XMMATRIX GetMat_WorldMatrix(const XMFLOAT3 scale, const XMFLOAT3 eulerDegrees, const XMFLOAT3 translation)
+inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegrees, const Vector3 translation)
 {
 	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(translation);
 }
@@ -274,33 +275,34 @@ inline XMMATRIX GetMat_WorldMatrix(const XMFLOAT3 scale, const XMFLOAT3 eulerDeg
 * Uz		Vz			Wz			0.0f
 * -QdotU	-QdotV		-QdotW		1.0f
 */
-inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const XMFLOAT3 posTarget, const XMFLOAT3 upVector = XMFLOAT3(0.0f, 1.0f, 0.0f))
+
+inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Vector3 posTarget, const Vector3 upVector = Vector3(0.0f, 1.0f, 0.0f))
 {
-	XMMATRIX mat;
-	XMVECTOR campos = XMLoadFloat3(&posCamera);
+	Matrix4x4 mat;
+	Vector3 camPos = posCamera.ToVector3();
 	//forward, z
-	XMVECTOR w = XMLoadFloat3(&posTarget) - campos;
-	w = XMVector3Normalize(w);
+	Vector3 w = posTarget - camPos;
+	w = w.Normalize();
 	//worldup
-	XMVECTOR j = XMLoadFloat3(&upVector);
+	Vector3 j = upVector;
 	//right, x
-	XMVECTOR u = XMVector3Normalize(XMVector3Cross(j, w));
+	Vector3 u = CrossProduct(j, w).Normalize();
 	//up, y
-	XMVECTOR v = XMVector3Cross(w, u);
-	mat.r[0] = XMVectorSet(XMVectorGetX(u), XMVectorGetX(v), XMVectorGetX(w), 0.0f);
-	mat.r[1] = XMVectorSet(XMVectorGetY(u), XMVectorGetY(v), XMVectorGetY(w), 0.0f);
-	mat.r[2] = XMVectorSet(XMVectorGetZ(u), XMVectorGetZ(v), XMVectorGetZ(w), 0.0f);
+	Vector3 v = CrossProduct(w, u);
+	mat.r[0] = Vector4(u.GetX(), v.GetX(), w.GetX(), 0.0f);
+	mat.r[1] = Vector4(u.GetY(), v.GetY(), w.GetY(), 0.0f);
+	mat.r[2] = Vector4(u.GetZ(), v.GetZ(), w.GetZ(), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
-	mat.r[3] = XMVectorSet(-XMVectorGetX(XMVector3Dot(u, campos)),-XMVectorGetX(XMVector3Dot(v, campos)),-XMVectorGetX(XMVector3Dot(w, campos)),1.0f);
+	mat.r[3] = Vector4(-DotProduct(u, camPos), -DotProduct(v, camPos), -DotProduct(w, camPos), 1.0f);
 	return mat;
 }
 
-inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const float fPitch, const float fYaw, const float fRoll)
+inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const float fPitch, const float fYaw, const float fRoll)
 {
-	XMMATRIX matRotate = XMMatrixTranspose(GetMat_RotRollPitchYaw({fPitch, fYaw, fRoll}));		//회전행렬의 전치행렬(역행렬)
-	XMMATRIX matTrans = GetMat_Translation({-posCamera.x, -posCamera.y, -posCamera.z});	//이동행렬의 역행렬
-	XMMATRIX mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
+	Matrix4x4 matRotate = GetMat_RotRollPitchYaw({fPitch, fYaw, fRoll}).Transpose();		//회전행렬의 전치행렬(역행렬)
+	Matrix4x4 matTrans = GetMat_Translation({-posCamera.GetX(), -posCamera.GetY(), -posCamera.GetZ()});	//이동행렬의 역행렬
+	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;
 }
 
@@ -311,25 +313,25 @@ inline XMMATRIX GetMat_ViewMatrix(const XMFLOAT3 posCamera, const float fPitch, 
 * 0.0f			0.0f		f/(f-n)			1.0f
 * 0.0f			0.0f		-nf/(f-n)		0.0f
 */
-inline XMMATRIX GetMat_Perspective(float width, float height, float fov, float dist_near, float dist_far)
+inline Matrix4x4 GetMat_Perspective(float width, float height, float fov, float dist_near, float dist_far)
 {
-	XMMATRIX mat;
+	Matrix4x4 mat;
 	float aspectRatio = width / height;
 	float d = tanf(_DEGTORAD(fov) * 0.5f);
-	mat.r[0] = XMVectorSet(1.0f/(aspectRatio * d), 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f / d, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, dist_far / (dist_far-dist_near), 1.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, -(dist_near*dist_far) / (dist_far - dist_near), 0.0f);
+	mat.r[0] = Vector4(1.0f/(aspectRatio * d), 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, 1.0f / d, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, dist_far / (dist_far-dist_near), 1.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, -(dist_near*dist_far) / (dist_far - dist_near), 0.0f);
 	return mat;
 }
-inline XMMATRIX GetMat_Perspective(float aspectRatio, float fov, float dist_near, float dist_far)
+inline Matrix4x4 GetMat_Perspective(float aspectRatio, float fov, float dist_near, float dist_far)
 {
-	XMMATRIX mat;
+	Matrix4x4 mat;
 	float d = tanf(_DEGTORAD(fov) * 0.5f);
-	mat.r[0] = XMVectorSet(1.0f / (aspectRatio * d), 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 1.0f / d, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, dist_far / (dist_far - dist_near), 1.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, -(dist_near * dist_far) / (dist_far - dist_near), 0.0f);
+	mat.r[0] = Vector4(1.0f / (aspectRatio * d), 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, 1.0f / d, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, dist_far / (dist_far - dist_near), 1.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, -(dist_near * dist_far) / (dist_far - dist_near), 0.0f);
 	return mat;
 }
 
@@ -340,13 +342,13 @@ inline XMMATRIX GetMat_Perspective(float aspectRatio, float fov, float dist_near
 * 0.0f			0.0f		1.0f/(f-n)		0.0f
 * 0.0f			0.0f		-n/(f-n)		1.0f
 */
-inline XMMATRIX GetMat_Ortho(float width, float height, float dist_near, float dist_far)
+inline Matrix4x4 GetMat_Ortho(float width, float height, float dist_near, float dist_far)
 {
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(2.0f/width, 0.0f, 0.0f, 0.0f);
-	mat.r[1] = XMVectorSet(0.0f, 2.0f/height, 0.0f, 0.0f);
-	mat.r[2] = XMVectorSet(0.0f, 0.0f, 1.0f / (dist_far - dist_near), 0.0f);
-	mat.r[3] = XMVectorSet(0.0f, 0.0f, -dist_near  / (dist_far - dist_near), 1.0f);
+	Matrix4x4 mat;
+	mat.r[0] = Vector4(2.0f/width, 0.0f, 0.0f, 0.0f);
+	mat.r[1] = Vector4(0.0f, 2.0f/height, 0.0f, 0.0f);
+	mat.r[2] = Vector4(0.0f, 0.0f, 1.0f / (dist_far - dist_near), 0.0f);
+	mat.r[3] = Vector4(0.0f, 0.0f, -dist_near  / (dist_far - dist_near), 1.0f);
 	return mat;
 }
 
@@ -380,16 +382,16 @@ inline float GetDeterminant3x3
 	return ret11 + ret12 + ret13;
 }
 //4*4행렬식
-inline float GetDeterminant4x4(const XMMATRIX& mat4x4)
+inline float GetDeterminant4x4(const Matrix4x4& mat4x4)
 {
-	XMFLOAT4 r1(XMVectorGetX(mat4x4.r[0]), XMVectorGetY(mat4x4.r[0]), XMVectorGetZ(mat4x4.r[0]), XMVectorGetW(mat4x4.r[0]));
-	XMFLOAT4 r2(XMVectorGetX(mat4x4.r[1]), XMVectorGetY(mat4x4.r[1]), XMVectorGetZ(mat4x4.r[1]), XMVectorGetW(mat4x4.r[1]));
-	XMFLOAT4 r3(XMVectorGetX(mat4x4.r[2]), XMVectorGetY(mat4x4.r[2]), XMVectorGetZ(mat4x4.r[2]), XMVectorGetW(mat4x4.r[2]));
-	XMFLOAT4 r4(XMVectorGetX(mat4x4.r[3]), XMVectorGetY(mat4x4.r[3]), XMVectorGetZ(mat4x4.r[3]), XMVectorGetW(mat4x4.r[3]));
-	float ret11 = r1.x * (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float ret12 = r1.y * (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float ret13 = r1.z * (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float ret14 = r1.w * (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	Vector4 r1(mat4x4.r[0].GetX(), mat4x4.r[0].GetY(), mat4x4.r[0].GetZ(), mat4x4.r[0].GetW());
+	Vector4 r2(mat4x4.r[1].GetX(), mat4x4.r[1].GetY(), mat4x4.r[1].GetZ(), mat4x4.r[1].GetW());
+	Vector4 r3(mat4x4.r[2].GetX(), mat4x4.r[2].GetY(), mat4x4.r[2].GetZ(), mat4x4.r[2].GetW());
+	Vector4 r4(mat4x4.r[3].GetX(), mat4x4.r[3].GetY(), mat4x4.r[3].GetZ(), mat4x4.r[3].GetW());
+	float ret11 = r1.GetX() * (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.GetY(), r2.GetZ(), r2.GetW(), r3.GetY(), r3.GetZ(), r3.GetW(), r4.GetY(), r4.GetZ(), r4.GetW());
+	float ret12 = r1.GetY() * (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.GetX(), r2.GetZ(), r2.GetW(), r3.GetX(), r3.GetZ(), r3.GetW(), r4.GetX(), r4.GetZ(), r4.GetW());
+	float ret13 = r1.GetZ() * (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.GetX(), r2.GetY(), r2.GetW(), r3.GetX(), r3.GetY(), r3.GetW(), r4.GetX(), r4.GetY(), r4.GetW());
+	float ret14 = r1.GetW() * (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.GetX(), r2.GetY(), r2.GetZ(), r3.GetX(), r3.GetY(), r3.GetZ(), r4.GetX(), r4.GetY(), r4.GetZ());
 	return ret11 + ret12 + ret13 + ret14;
 }
 
@@ -397,37 +399,43 @@ inline float GetDeterminant4x4(const XMMATRIX& mat4x4)
 * 여인수행렬 C(A)
 * (-1)^(i+j) * cofMatA(ij) 로 행렬의 각 요소를 구성시킨다
 */
-inline XMMATRIX GetMat_Cofactor(const XMMATRIX& mat4x4)
+inline Matrix4x4 GetMat_Cofactor(const Matrix4x4& mat4x4)
 {
-	XMFLOAT4 r1(XMVectorGetX(mat4x4.r[0]), XMVectorGetY(mat4x4.r[0]), XMVectorGetZ(mat4x4.r[0]), XMVectorGetW(mat4x4.r[0]));
-	XMFLOAT4 r2(XMVectorGetX(mat4x4.r[1]), XMVectorGetY(mat4x4.r[1]), XMVectorGetZ(mat4x4.r[1]), XMVectorGetW(mat4x4.r[1]));
-	XMFLOAT4 r3(XMVectorGetX(mat4x4.r[2]), XMVectorGetY(mat4x4.r[2]), XMVectorGetZ(mat4x4.r[2]), XMVectorGetW(mat4x4.r[2]));
-	XMFLOAT4 r4(XMVectorGetX(mat4x4.r[3]), XMVectorGetY(mat4x4.r[3]), XMVectorGetZ(mat4x4.r[3]), XMVectorGetW(mat4x4.r[3]));
-	float m11 = (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.y, r2.z, r2.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float m12 = (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.x, r2.z, r2.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float m13 = (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.x, r2.y, r2.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float m14 = (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.x, r2.y, r2.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	// 매트릭스 행을 Vector4로 변환 (각 성분 접근자 함수 사용)
+	Vector4 r1(mat4x4.r[0].GetX(), mat4x4.r[0].GetY(), mat4x4.r[0].GetZ(), mat4x4.r[0].GetW());
+	Vector4 r2(mat4x4.r[1].GetX(), mat4x4.r[1].GetY(), mat4x4.r[1].GetZ(), mat4x4.r[1].GetW());
+	Vector4 r3(mat4x4.r[2].GetX(), mat4x4.r[2].GetY(), mat4x4.r[2].GetZ(), mat4x4.r[2].GetW());
+	Vector4 r4(mat4x4.r[3].GetX(), mat4x4.r[3].GetY(), mat4x4.r[3].GetZ(), mat4x4.r[3].GetW());
 
-	float m21 = (float)std::pow(-1, 2 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r3.y, r3.z, r3.w, r4.y, r4.z, r4.w);
-	float m22 = (float)std::pow(-1, 2 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r3.x, r3.z, r3.w, r4.x, r4.z, r4.w);
-	float m23 = (float)std::pow(-1, 2 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r3.x, r3.y, r3.w, r4.x, r4.y, r4.w);
-	float m24 = (float)std::pow(-1, 2 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r3.x, r3.y, r3.z, r4.x, r4.y, r4.z);
+	// 1행의 여인수(Cofactor) 계산 (Getters 사용)
+	float m11 = (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.GetY(), r2.GetZ(), r2.GetW(), r3.GetY(), r3.GetZ(), r3.GetW(), r4.GetY(), r4.GetZ(), r4.GetW());
+	float m12 = (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.GetX(), r2.GetZ(), r2.GetW(), r3.GetX(), r3.GetZ(), r3.GetW(), r4.GetX(), r4.GetZ(), r4.GetW());
+	float m13 = (float)std::pow(-1, 1 + 3) * GetDeterminant3x3(r2.GetX(), r2.GetY(), r2.GetW(), r3.GetX(), r3.GetY(), r3.GetW(), r4.GetX(), r4.GetY(), r4.GetW());
+	float m14 = (float)std::pow(-1, 1 + 4) * GetDeterminant3x3(r2.GetX(), r2.GetY(), r2.GetZ(), r3.GetX(), r3.GetY(), r3.GetZ(), r4.GetX(), r4.GetY(), r4.GetZ());
 
-	float m31 = (float)std::pow(-1, 3 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r4.y, r4.z, r4.w);
-	float m32 = (float)std::pow(-1, 3 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r4.x, r4.z, r4.w);
-	float m33 = (float)std::pow(-1, 3 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r4.x, r4.y, r4.w);
-	float m34 = (float)std::pow(-1, 3 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r4.x, r4.y, r4.z);
+	// 2행의 여인수 계산 (Getters 사용)
+	float m21 = (float)std::pow(-1, 2 + 1) * GetDeterminant3x3(r1.GetY(), r1.GetZ(), r1.GetW(), r3.GetY(), r3.GetZ(), r3.GetW(), r4.GetY(), r4.GetZ(), r4.GetW());
+	float m22 = (float)std::pow(-1, 2 + 2) * GetDeterminant3x3(r1.GetX(), r1.GetZ(), r1.GetW(), r3.GetX(), r3.GetZ(), r3.GetW(), r4.GetX(), r4.GetZ(), r4.GetW());
+	float m23 = (float)std::pow(-1, 2 + 3) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetW(), r3.GetX(), r3.GetY(), r3.GetW(), r4.GetX(), r4.GetY(), r4.GetW());
+	float m24 = (float)std::pow(-1, 2 + 4) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetZ(), r3.GetX(), r3.GetY(), r3.GetZ(), r4.GetX(), r4.GetY(), r4.GetZ());
 
-	float m41 = (float)std::pow(-1, 4 + 1) * GetDeterminant3x3(r1.y, r1.z, r1.w, r2.y, r2.z, r2.w, r3.y, r3.z, r3.w);
-	float m42 = (float)std::pow(-1, 4 + 2) * GetDeterminant3x3(r1.x, r1.z, r1.w, r2.x, r2.z, r2.w, r3.x, r3.z, r3.w);
-	float m43 = (float)std::pow(-1, 4 + 3) * GetDeterminant3x3(r1.x, r1.y, r1.w, r2.x, r2.y, r2.w, r3.x, r3.y, r3.w);
-	float m44 = (float)std::pow(-1, 4 + 4) * GetDeterminant3x3(r1.x, r1.y, r1.z, r2.x, r2.y, r2.z, r3.x, r3.y, r3.z);
+	// 3행의 여인수 계산 (Getters 사용)
+	float m31 = (float)std::pow(-1, 3 + 1) * GetDeterminant3x3(r1.GetY(), r1.GetZ(), r1.GetW(), r2.GetY(), r2.GetZ(), r2.GetW(), r4.GetY(), r4.GetZ(), r4.GetW());
+	float m32 = (float)std::pow(-1, 3 + 2) * GetDeterminant3x3(r1.GetX(), r1.GetZ(), r1.GetW(), r2.GetX(), r2.GetZ(), r2.GetW(), r4.GetX(), r4.GetZ(), r4.GetW());
+	float m33 = (float)std::pow(-1, 3 + 3) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetW(), r2.GetX(), r2.GetY(), r2.GetW(), r4.GetX(), r4.GetY(), r4.GetW());
+	float m34 = (float)std::pow(-1, 3 + 4) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetZ(), r2.GetX(), r2.GetY(), r2.GetZ(), r4.GetX(), r4.GetY(), r4.GetZ());
+
+	// 4행의 여인수 계산 (Getters 사용)
+	float m41 = (float)std::pow(-1, 4 + 1) * GetDeterminant3x3(r1.GetY(), r1.GetZ(), r1.GetW(), r2.GetY(), r2.GetZ(), r2.GetW(), r3.GetY(), r3.GetZ(), r3.GetW());
+	float m42 = (float)std::pow(-1, 4 + 2) * GetDeterminant3x3(r1.GetX(), r1.GetZ(), r1.GetW(), r2.GetX(), r2.GetZ(), r2.GetW(), r3.GetX(), r3.GetZ(), r3.GetW());
+	float m43 = (float)std::pow(-1, 4 + 3) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetW(), r2.GetX(), r2.GetY(), r2.GetW(), r3.GetX(), r3.GetY(), r3.GetW());
+	float m44 = (float)std::pow(-1, 4 + 4) * GetDeterminant3x3(r1.GetX(), r1.GetY(), r1.GetZ(), r2.GetX(), r2.GetY(), r2.GetZ(), r3.GetX(), r3.GetY(), r3.GetZ());
 	
-	XMMATRIX mat;
-	mat.r[0] = XMVectorSet(m11, m12, m13, m14);
-	mat.r[1] = XMVectorSet(m21, m22, m23, m24);
-	mat.r[2] = XMVectorSet(m31, m32, m33, m34);
-	mat.r[3] = XMVectorSet(m41, m42, m43, m44);
+	Matrix4x4 mat;
+	mat.r[0] = Vector4(m11, m12, m13, m14);
+	mat.r[1] = Vector4(m21, m22, m23, m24);
+	mat.r[2] = Vector4(m31, m32, m33, m34);
+	mat.r[3] = Vector4(m41, m42, m43, m44);
 	return mat;
 }
 
@@ -436,10 +444,10 @@ inline XMMATRIX GetMat_Cofactor(const XMMATRIX& mat4x4)
 * AdjMat(A*) = C(A)^T , 여인수행렬의 전치를 의미, 수반행렬
 * InvMat = AdjMat * 1.0f/detA
 */
-inline XMMATRIX GetMat_Inverse(const XMMATRIX& matOrigin)
+inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 {
 	//수반행렬(여인수행렬의 전치행렬)
-	XMMATRIX matAdj = XMMatrixTranspose(GetMat_Cofactor(matOrigin));
+	Matrix4x4 matAdj = GetMat_Cofactor(matOrigin).Transpose();
 	//행렬식
 	float detA = GetDeterminant4x4(matOrigin);
 	//행렬식을 이용한 역행렬 여부 판별
@@ -450,6 +458,6 @@ inline XMMATRIX GetMat_Inverse(const XMMATRIX& matOrigin)
 		return GetMat_Identity();
 	}
 	float invDetA = 1.0f / detA;
-	XMMATRIX mat = matAdj * invDetA;
+	Matrix4x4 mat = matAdj * invDetA;
 	return mat;
 }
