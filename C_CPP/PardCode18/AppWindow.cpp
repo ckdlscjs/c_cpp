@@ -11,6 +11,11 @@
 AppWindow::AppWindow()
 {
 	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
+	_InputSystem;
+	_ResourceSystem;
+	_RenderSystem;
+	_ImguiSystem;
+	_CameraSystem;
 }
 
 AppWindow::~AppWindow()
@@ -22,9 +27,11 @@ void AppWindow::OnCreate()
 {
 	std::cout << "OnCreate" << '\n';
 	_InputSystem.Init();
+	_ResourceSystem.Init();
 	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
 	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
+
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 500.0f, -1000.0f });
 	//·»´õ¸µÀ»À§ÇÑ Á¤Á¡°´Ã¼

@@ -1,5 +1,4 @@
 #include "RenderSystem.h"
-#include "Window.h"
 #include "Direct3D.h"
 #include "SwapChain.h"
 #include "VertexBuffer.h"
