@@ -3,8 +3,8 @@
 struct CameraProperties
 {
 	//카메라의 속성
-	Position m_vPosition;			//카메라의 위치
-	Position m_vLookAt;				//카메라의 시선
+	Position m_vTranslation;		//카메라의 위치
+	Vector3 m_vLookAt;				//카메라의 시선
 
 	Vector3 m_vRight;				//카메라의 우측벡터		(right)
 	Vector3 m_vUp;					//카메라의 업벡터			(up)
@@ -20,7 +20,7 @@ struct CameraProperties
 	float m_fNearZ;					//근단면
 	float m_fFarZ;					//원단면
 	CameraProperties() :
-		m_vPosition({ 0.0f, 0.0f, 0.0f }),
+		m_vTranslation({ 0.0f, 0.0f, 0.0f }),
 		m_vLookAt({ 0.0f, 0.0f, 0.0f }),
 		m_vRight({1.0f, 0.0f, 0.0f}),
 		m_vUp({ 0.0f, 1.0f, 0.0f }),
@@ -89,7 +89,7 @@ inline const Matrix4x4& BaseCamera::GetViewMatrix()
 	if (m_bDirtyFlag_View)
 	{
 		//오일러각에의한 행렬갱신
-		m_MatView = GetMat_ViewMatrix(m_Properties.m_vPosition, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
+		m_MatView = GetMat_ViewMatrix(m_Properties.m_vTranslation, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
 		m_MatWorld = GetMat_Inverse(m_MatView);
 		m_Properties.m_vRight = m_MatWorld.r[0].ToVector3();
 		m_Properties.m_vUp = m_MatWorld.r[1].ToVector3();
@@ -112,7 +112,7 @@ inline const Matrix4x4& BaseCamera::GetProjMatrix()
 }
 inline const Position& BaseCamera::GetPosition()
 {
-	return m_Properties.m_vPosition;
+	return m_Properties.m_vTranslation;
 }
 
 inline const Position& BaseCamera::GetTarget()
@@ -121,13 +121,13 @@ inline const Position& BaseCamera::GetTarget()
 }
 inline void BaseCamera::SetPosition(const Position& pos)
 {
-	m_Properties.m_vPosition = pos;
+	m_Properties.m_vTranslation = pos;
 	m_bDirtyFlag_View = true;
 }
 inline void BaseCamera::SetTarget(const Position& target)
 {
 	//forward계산
-	Vector3 vLookAt = (m_Properties.m_vPosition - target).Normalize();
+	Vector3 vLookAt = (target - m_Properties.m_vTranslation).Normalize();
 	m_Properties.m_vLookAt = vLookAt;
 
 	//forward로 부터 yaw계산
@@ -138,7 +138,7 @@ inline void BaseCamera::SetTarget(const Position& target)
 	m_Properties.m_fYaw = _RADTODEG(atan2f(forwardX, forwardZ));
 	
 	//단위벡터는 빗변의 길이가 1이므로 sin함수는 높이/빗변 이므로 아크사인에 높이를 집어넣으면 각이 나온다
-	m_Properties.m_fPitch = _RADTODEG(asinf(forwardY));
+	m_Properties.m_fPitch = _RADTODEG(asinf(-forwardY));
 
 	//roll이 되어있는지 여부는 up벡터에 따라 다르다, 일반적으로는 회전하지않으므로 0으로 가정한다
 	m_Properties.m_fRoll = 0.0f;
@@ -151,7 +151,7 @@ inline void BaseCamera::MovePosition(const Vector3& translation)
 	Vector3 vDeltaRight = m_Properties.m_vRight * translation.GetX();
 	Vector3 vDeltaUp = m_Properties.m_vUp * translation.GetY();
 	Vector3 vDeltaForward = m_Properties.m_vForward * translation.GetZ();
-	m_Properties.m_vPosition += vDeltaRight + vDeltaUp + vDeltaForward;
+	m_Properties.m_vTranslation += vDeltaRight + vDeltaUp + vDeltaForward;
 	m_bDirtyFlag_View = true;
 }
 inline void BaseCamera::UpdateEulerRotate(int deltaX, int deltaY, float sensetivity)

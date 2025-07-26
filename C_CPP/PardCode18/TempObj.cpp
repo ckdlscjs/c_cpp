@@ -15,11 +15,11 @@ TempObj::~TempObj()
 
 void TempObj::Init()
 {
-	m_vScale = XMFLOAT3(200.0f, 200.0f, 200.0f);
+	m_vScale = Vector3(200.0f, 200.0f, 200.0f);
 	m_fSpeedScale = 100.0f;
-	m_vRotate = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	m_fSpeedRotate = 100.0f;
-	m_vTranslation = XMFLOAT3(0.0f, 0.0f, 0.0f);
+	m_vTranslation = Vector3(0.0f, 0.0f, 0.0f);
 	m_fSpeedMove = 100.0f;
 	m_lVKMask = 0;
 	int maskNum = 0;

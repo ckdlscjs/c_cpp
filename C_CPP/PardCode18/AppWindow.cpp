@@ -33,13 +33,13 @@ void AppWindow::OnCreate()
 	_CameraSystem.Init();
 
 	_CameraSystem.AddCamera(new FirstPersonCamera());
-	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 500.0f, -1000.0f });
+	
 	//·»´õ¸µÀ»À§ÇÑ Á¤Á¡°´Ã¼
 	/*
 	* 0 1  4 5
 	* 2 3  6 7
 	*/
-	Vector3 posList[] =
+	Position posList[] =
 	{
 		{-0.5f	, 0.5f	, -0.5f	},		
 		{0.5f	, 0.5f	, -0.5f	},
@@ -154,6 +154,9 @@ void AppWindow::OnCreate()
 	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time)));
 
 	obj->m_IdxTX = _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", Samplers::WRAP_LINEAR);
+	obj->m_vTranslation = Vector3(-200, -200.0f, 100.0f);
+	_CameraSystem.GetCamera(0)->SetPosition({ 100, -200, -1000.0f });
+	_CameraSystem.GetCamera(0)->SetTarget(obj->m_vTranslation);
 }
 
 void AppWindow::OnUpdate()
