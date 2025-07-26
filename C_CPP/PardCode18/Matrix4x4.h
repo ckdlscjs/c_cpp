@@ -96,8 +96,8 @@ struct Matrix4x4
     }
     
     //행 접근 (읽기/쓰기 가능)
-    inline DirectX::XMVECTOR& operator[](int idx) { return m_mat.r[idx]; }
-    inline const DirectX::XMVECTOR& operator[](int idx) const { return m_mat.r[idx]; }
+    inline Vector4& operator[](int idx) { return r[idx]; }
+    inline const Vector4& operator[](int idx) const { return r[idx]; }
 
     //유틸함수들
     inline Matrix4x4 Transpose() const { return Matrix4x4(DirectX::XMMatrixTranspose(m_mat)); }
@@ -112,7 +112,7 @@ struct Matrix4x4
     }
     friend inline Vector4 operator*(const Vector4& v, const Matrix4x4& m);
     friend inline Vector3 operator*(const Vector3& v, const Matrix4x4& m);
-public:
+private:
     union
     {
         DirectX::XMMATRIX m_mat;

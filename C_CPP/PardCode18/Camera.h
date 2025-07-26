@@ -91,11 +91,9 @@ inline const Matrix4x4& BaseCamera::GetViewMatrix()
 		//오일러각에의한 행렬갱신
 		m_MatView = GetMat_ViewMatrix(m_Properties.m_vPosition, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
 		m_MatWorld = GetMat_Inverse(m_MatView);
-		m_Properties.m_vRight = m_MatWorld.r[0].ToVector3();
-		m_Properties.m_vUp = m_MatWorld.r[1].ToVector3();
-		m_Properties.m_vForward = m_MatWorld.r[2].ToVector3();
-		m_Properties.m_vLookAt = m_Properties.m_vForward;
-		
+		m_Properties.m_vRight = m_MatWorld[0].ToVector3();
+		m_Properties.m_vUp = m_MatWorld[1].ToVector3();
+		m_Properties.m_vForward = m_MatWorld[2].ToVector3();
 		m_bDirtyFlag_View = false;
 	}
 	return m_MatView;
