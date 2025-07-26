@@ -19,7 +19,7 @@ void TempObj::Init()
 	m_fSpeedScale = 100.0f;
 	m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	m_fSpeedRotate = 100.0f;
-	m_vTranslation = Vector3(0.0f, 0.0f, 0.0f);
+	m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
 	m_fSpeedMove = 100.0f;
 	m_lVKMask = 0;
 	int maskNum = 0;
@@ -125,7 +125,7 @@ void TempObj::Frame(float deltaTime)
 	float delta_MovZ = 0.0f;
 	if (CheckMask('W')) delta_MovZ += +m_fSpeedMove * deltaTime;				//forward
 	if (CheckMask('S')) delta_MovZ += -m_fSpeedMove * deltaTime;				//back
-	m_vTranslation += Vector3(delta_MovX, delta_MovY, delta_MovZ);
+	m_vPosition += Vector3(delta_MovX, delta_MovY, delta_MovZ);
 }
 
 void TempObj::Render()

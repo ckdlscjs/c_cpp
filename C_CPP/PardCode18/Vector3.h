@@ -26,6 +26,7 @@ public:
 		m_vec = DirectX::XMVectorAdd(m_vec, other.m_vec);
 		return *this;
 	}
+	inline Vector3 operator-() const { return Vector3(-GetX(), -GetY(), -GetZ()); }
 	inline Vector3 operator-(const Vector3& other) const { return Vector3(DirectX::XMVectorSubtract(m_vec, other.m_vec)); }
 	inline Vector3& operator-=(const Vector3& other)
 	{

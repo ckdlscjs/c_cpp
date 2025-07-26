@@ -32,6 +32,7 @@ void AppWindow::OnCreate()
 	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
 
+	_InputSystem.SetMouseCenter(m_hWnd);
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	
 	//·»´õ¸µÀ»À§ÇÑ Á¤Á¡°´Ã¼
@@ -154,9 +155,9 @@ void AppWindow::OnCreate()
 	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time)));
 
 	obj->m_IdxTX = _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", Samplers::WRAP_LINEAR);
-	obj->m_vTranslation = Vector3(-200, -200.0f, 100.0f);
+	obj->m_vPosition = Vector3(-200, -200.0f, 100.0f);
 	_CameraSystem.GetCamera(0)->SetPosition({ 100, -200, -1000.0f });
-	_CameraSystem.GetCamera(0)->SetTarget(obj->m_vTranslation);
+	_CameraSystem.GetCamera(0)->SetTarget(obj->m_vPosition);
 }
 
 void AppWindow::OnUpdate()

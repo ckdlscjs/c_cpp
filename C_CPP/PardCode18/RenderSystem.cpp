@@ -53,7 +53,7 @@ void RenderSystem::Frame()
 	}
 
 	//시간경과, 추후 Timer클래스로분할
-	m_dwCurTick = ::GetTickCount();
+	m_dwCurTick = (DWORD)::GetTickCount64();
 	if(m_dwOldTick <= 0)
 		m_dwOldTick = m_dwCurTick;
 	DWORD dwElaspsed = m_dwCurTick - m_dwOldTick;
@@ -93,7 +93,7 @@ void RenderSystem::Render()
 		m_pCPSs[iter->m_IdxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 		//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 		Constant_wvp cc0;
-		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vTranslation);
+		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
 		cc0.matView = matView;
 		cc0.matProj = matProj;
 		m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);

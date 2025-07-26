@@ -96,6 +96,24 @@ void InputSystem::OnMouseMoveCenter(HWND hWnd, int curX, int curY)
 	Notify(event);
 }
 
+void InputSystem::SetMouseCenter(HWND hWnd)
+{
+	// 1. 게임 창의 클라이언트 영역 크기를 가져옵니다. (넘겨받은 hWnd 사용)
+	RECT clientRect;
+	GetClientRect(hWnd, &clientRect);
+
+	// 2. 클라이언트 영역의 중앙 좌표를 계산합니다. (클라이언트 좌표 기준)
+	int clientCenterX = (clientRect.right - clientRect.left) / 2;
+	int clientCenterY = (clientRect.bottom - clientRect.top) / 2;
+
+	// 4. 클라이언트 중앙 좌표를 화면 좌표로 변환합니다. (넘겨받은 hWnd 사용)
+	POINT screenCenterPos = { clientCenterX, clientCenterY };
+	ClientToScreen(hWnd, &screenCenterPos);						//화면좌상단(0,0) 이 아니므로 상대좌표값을계산한다
+
+	// 5. 마우스 커서를 화면 중앙 (변환된 좌표)으로 재배치합니다.
+	SetCursorPos(screenCenterPos.x, screenCenterPos.y);
+}
+
 void InputSystem::Notify(const InputEvent& event)
 {
 	if (m_Listners[event.type].size() <= 0) return;

@@ -34,7 +34,7 @@
     <Filter Include="Engine\Window">
       <UniqueIdentifier>{cd8071f3-62e9-4823-bd08-21d475dbf9f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Math">
+    <Filter Include="Engine\Math">
       <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -134,25 +134,25 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Vector2.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Vector3.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Vector4.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Quaternion.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Matrix4x4.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="commonMath.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Position.h">
-      <Filter>Math</Filter>
+      <Filter>Engine\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

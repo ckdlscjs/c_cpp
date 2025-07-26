@@ -18,7 +18,7 @@ public:
 	float m_fSpeedScale;
 	Vector3 m_vRotate;
 	float m_fSpeedRotate;
-	Vector3 m_vTranslation;
+	Position m_vPosition;
 	float m_fSpeedMove;
 	std::unordered_map<int, int> VK_MASK;
 	size_t m_lVKMask;

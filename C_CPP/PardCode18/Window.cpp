@@ -35,16 +35,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			//SetWindowLongPtr(hWnd, )
 			//Event When WindowCreated
-			//g_pWindow->SetHWND(hWnd);
-			//g_pWindow->OnCreate();
-		}break;
+
+			//fall-through를 피하기위해 return 0; 으로 메시지처리시 올바르게끝낸다
+			return 0;
+		}
 
 		case WM_SIZE:
 		{
 			UINT width = LOWORD(lParam);
 			UINT height = HIWORD(lParam);
 			_RenderSystem.OnResize(width, height);
-		}break;
+			return 0;
+		}
 
 		//윈도우소멸시
 		case WM_DESTROY:
@@ -52,23 +54,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//Event When WindowDestroyed
 			g_pWindow->OnDestroy();
 			::PostQuitMessage(0);
-		}break;
+			return 0;
+		}
 
 		//키보드관련
 		case WM_KEYDOWN:
 		{
-			if (wParam == VK_ESCAPE)
-			{
-				g_pWindow->OnDestroy();
-				break;
-			}
-			_InputSystem.OnKeyDown(wParam);
-		}break;
+			if (wParam == VK_ESCAPE) g_pWindow->OnDestroy();
+			else _InputSystem.OnKeyDown((unsigned char)wParam);
+			return 0;
+		}
 
 		case WM_KEYUP:
 		{
-			_InputSystem.OnKeyUp(wParam);
-		}break;
+			_InputSystem.OnKeyUp((unsigned char)wParam);
+			return 0;
+		}
 
 		//마우스관련
 		case WM_MOUSEMOVE:
@@ -76,7 +77,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//좌상단0,0~우하단증가
 			//_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
 			_InputSystem.OnMouseMoveCenter(hWnd, LOWORD(lParam), HIWORD(lParam));
-		}break;
+			return 0;
+		}
 
 		/*
 		case WM_LBUTTONDOWN:
@@ -106,11 +108,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 		}break;
 		*/
-		default:
-		{
-			return ::DefWindowProc(hWnd, msg, wParam, lParam);
-		}
 	}
+	return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 Window::Window()

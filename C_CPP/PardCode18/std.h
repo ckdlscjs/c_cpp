@@ -263,9 +263,10 @@ inline Matrix4x4 GetMat_Translation(const Vector3 translation)
 * Wx*Sz		Wy*Sz		Wz*Sz		0.0f
 * Tx		Ty			Tz			1.0f
 */
-inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegrees, const Vector3 translation)
+
+inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegrees, const Position position)
 {
-	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(translation);
+	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position.ToVector3());
 }
 
 /*
@@ -276,12 +277,11 @@ inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegr
 * -QdotU	-QdotV		-QdotW		1.0f
 */
 
-inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Vector3 posTarget, const Vector3 upVector = Vector3(0.0f, 1.0f, 0.0f))
+inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Position posTarget, const Vector3 upVector = Vector3(0.0f, 1.0f, 0.0f))
 {
 	Matrix4x4 mat;
-	Vector3 camPos = posCamera.ToVector3();
 	//forward, z
-	Vector3 w = posTarget - camPos;
+	Vector3 w = posTarget - posCamera;
 	w = w.Normalize();
 	//worldup
 	Vector3 j = upVector;
@@ -294,6 +294,7 @@ inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Vector3 posTa
 	mat.r[2] = Vector4(u.GetZ(), v.GetZ(), w.GetZ(), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
+	Vector3 camPos = posCamera.ToVector3();
 	mat.r[3] = Vector4(-DotProduct(u, camPos), -DotProduct(v, camPos), -DotProduct(w, camPos), 1.0f);
 	return mat;
 }
@@ -301,7 +302,7 @@ inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Vector3 posTa
 inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const float fPitch, const float fYaw, const float fRoll)
 {
 	Matrix4x4 matRotate = GetMat_RotRollPitchYaw({fPitch, fYaw, fRoll}).Transpose();		//회전행렬의 전치행렬(역행렬)
-	Matrix4x4 matTrans = GetMat_Translation({-posCamera.GetX(), -posCamera.GetY(), -posCamera.GetZ()});	//이동행렬의 역행렬
+	Matrix4x4 matTrans = GetMat_Translation(-posCamera.ToVector3());	//이동행렬의 역행렬
 	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;
 }
@@ -324,6 +325,7 @@ inline Matrix4x4 GetMat_Perspective(float width, float height, float fov, float 
 	mat.r[3] = Vector4(0.0f, 0.0f, -(dist_near*dist_far) / (dist_far - dist_near), 0.0f);
 	return mat;
 }
+
 inline Matrix4x4 GetMat_Perspective(float aspectRatio, float fov, float dist_near, float dist_far)
 {
 	Matrix4x4 mat;
@@ -446,6 +448,7 @@ inline Matrix4x4 GetMat_Cofactor(const Matrix4x4& mat4x4)
 */
 inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 {
+#ifndef __OPTIMIZED
 	//수반행렬(여인수행렬의 전치행렬)
 	Matrix4x4 matAdj = GetMat_Cofactor(matOrigin).Transpose();
 	//행렬식
@@ -458,6 +461,18 @@ inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 		return GetMat_Identity();
 	}
 	float invDetA = 1.0f / detA;
-	Matrix4x4 mat = matAdj * invDetA;
-	return mat;
+	Matrix4x4 matInverse = matAdj * invDetA;
+	return matInverse;
+#else
+	XMVECTOR deteminant;
+	Matrix4x4 matInverse = XMMatrixInverse(&deteminant, matOrigin.ToXMMATRIX());
+	if (XMVector4NearEqual(deteminant, XMVectorZero(), DirectX::XMVectorSplatEpsilon()))
+	{
+		//역행렬이 존재하지 아니함(행렬식이 0에 한없이 가까움)
+		std::cerr << "InverseMatrix NotExist!" << '\n';
+		return GetMat_Identity();
+	}	
+
+	return matInverse;
+#endif 
 }
