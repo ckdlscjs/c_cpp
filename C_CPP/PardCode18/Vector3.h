@@ -7,9 +7,10 @@ public:
 	//생성자(복사/이동 생성자는 컴파일러의 자동생성에 맡긴다)
 	inline Vector3() : m_vec(DirectX::XMVectorZero()) {}
 	inline Vector3(float x , float y , float z) : m_vec(DirectX::XMVectorSet(x, y, z, 0.0f)) {} //vector3의 경우 w를 0으로한다
-	inline Vector3(const Vector2& v, float z = 0.0f) : Vector3( v.GetX(), v.GetY(), z) {}
 	inline Vector3(const DirectX::XMFLOAT3& v) : Vector3(v.x, v.y, v.z) {}
 	inline Vector3(const DirectX::XMVECTOR& v) : m_vec(v) {}
+
+	inline Vector3(const Vector2& v, float z = 0.0f) : Vector3( v.GetX(), v.GetY(), z) {}
 
 	// 성분별 접근
 	inline float GetX() const { return DirectX::XMVectorGetX(m_vec); }

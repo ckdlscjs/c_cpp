@@ -7,9 +7,10 @@ public:
 	//생성자(복사/이동 생성자는 컴파일러의 자동생성에 맡긴다)
 	inline Vector4() : m_vec(DirectX::XMVectorZero()) {} 
 	inline Vector4(float x , float y , float z , float w) : m_vec(DirectX::XMVectorSet(x, y, z, w)) {}
-	inline Vector4(const Vector3& v, float w = 0.0f) : Vector4(v.GetX(), v.GetY(), v.GetZ(), w) {}
 	inline Vector4(const DirectX::XMFLOAT4& v) : m_vec(DirectX::XMLoadFloat4(&v)) {}
 	inline Vector4(const DirectX::XMVECTOR& v) : m_vec(v) {}
+
+	inline Vector4(const Vector3& v, float w = 0.0f) : Vector4(v.GetX(), v.GetY(), v.GetZ(), w) {}
 
 	//성분별 접근
 	inline float GetX() const { return DirectX::XMVectorGetX(m_vec); }
