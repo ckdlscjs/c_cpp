@@ -12,9 +12,11 @@ public:
 	Texture(Texture&&) = delete;
 	Texture& operator=(Texture&&) = delete;
 
-	void SetTXIdx(size_t idxTX);
-	size_t GetTXIdx();
+	void SetIdx_TX(size_t idxTX);
+	size_t GetIdx_TX() const;
+	const ScratchImage* GetImage() const;
 private:
 	size_t m_IdxTX;
+	ScratchImage m_ScratchImage;
 };
 

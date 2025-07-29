@@ -154,6 +154,9 @@
     <ClInclude Include="Position.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -240,12 +243,21 @@
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexShaderPTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShaderPTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

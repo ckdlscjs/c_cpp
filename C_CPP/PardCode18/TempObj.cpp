@@ -15,7 +15,7 @@ TempObj::~TempObj()
 
 void TempObj::Init()
 {
-	m_vScale = Vector3(200.0f, 200.0f, 200.0f);
+	m_vScale = Vector3(1.0f, 1.0f, 1.0f);
 	m_fSpeedScale = 100.0f;
 	m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	m_fSpeedRotate = 100.0f;

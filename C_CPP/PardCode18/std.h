@@ -1,4 +1,16 @@
 #pragma once
+//Macro
+#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용은 Windows 헤더에서 제외합니다.
+
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+
+#define _ASEERTION_NULCHK(result, message) assert(result && message)
+#define _ASEERTION_CREATE(result, message) assert(result == S_OK && message)
+#define _DEGTORAD(DEG) DEG / 180.0f * XM_PI
+#define _RADTODEG(RAD) RAD / XM_PI * 180.0f
+#define _EPSILON 1e-6f
+#define _CLAMP(val, low, high) Clamp(val, low, high)
+
 
 //App Header
 #include <cstdlib>
@@ -13,6 +25,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <functional>
+#include <codecvt>							//need to w to m, m to w
 //#include "bits/stdc++.h"
 #include "commonMath.h"
 
@@ -22,20 +35,11 @@
 #include <d3dcompiler.h>					//d3dcomplie, 쉐이더사용을위한추가
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")		//d3dcomplie, 쉐이더사용을위한추가
+
 #include <DirectXTex.h>						//Include/DXTEX, 텍스쳐사용을위한추가
 #pragma comment(lib, "DirectXTex.lib")
 
-//Macro
-#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용은 Windows 헤더에서 제외합니다.
-#define _ASEERTION_NULCHK(result, message) assert(result && message)
-#define _ASEERTION_CREATE(result, message) assert(result == S_OK && message)
-#define _DEGTORAD(DEG) DEG / 180.0f * XM_PI
-#define _RADTODEG(RAD) RAD / XM_PI * 180.0f
-#define _EPSILON 1e-6f
-#define _CLAMP(val, low, high) Clamp(val, low, high)
-
 using namespace DirectX;
-
 
 //enum classes
  enum class InputEventType
@@ -83,6 +87,27 @@ struct Vertex_PC
 	Position pos0;
 	Vector4 color0;
 };
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+static UINT size_InputLayout_VertexPC = ARRAYSIZE(InputLayout_VertexPC);
+struct Vertex_PTN
+{
+	Position pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+};
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTN[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+static UINT size_InputLayout_VertexPTN = ARRAYSIZE(InputLayout_VertexPTN);
 
 struct Vertex_PCT
 {
@@ -90,7 +115,14 @@ struct Vertex_PCT
 	Vector4 color0;
 	Vector2 tex0;
 };
-
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPCT[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+static UINT size_InputLayout_VertexPCT = ARRAYSIZE(InputLayout_VertexPCT);
 struct Vertex_PPCC
 {
 	Position pos0;
@@ -98,7 +130,15 @@ struct Vertex_PPCC
 	Vector4 color0;
 	Vector4 color1;
 };
-
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPPCC[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"POSITION",	1, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+static UINT size_InputLayout_VertexPPCC = ARRAYSIZE(InputLayout_VertexPPCC);
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다
 __declspec(align(16))
 struct Constant_time
@@ -474,4 +514,17 @@ inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 
 	return matInverse;
 #endif 
+}
+
+inline static std::wstring _tomw(std::string str)
+{
+	std::wstring content;
+	content.assign(str.begin(), str.end());
+	return content;
+}
+
+inline static std::string _towm(std::wstring wstr)
+{
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+	return myconv.to_bytes(wstr);
 }

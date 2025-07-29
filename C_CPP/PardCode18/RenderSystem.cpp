@@ -14,6 +14,7 @@
 #include "ResourceSystem.h"
 #include "Texture.h"
 #include "SamplerState.h"
+#include "Mesh.h"
 
 RenderSystem::RenderSystem()
 {
@@ -86,27 +87,39 @@ void RenderSystem::Render()
 
 	for (const auto& iter : objs)
 	{
-		m_pCVBs[iter->m_IdxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
-		m_pCIBs[iter->m_IdxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
-		m_pCILs[iter->m_IdxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
-		m_pCVSs[iter->m_IdxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
-		m_pCPSs[iter->m_IdxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
-		//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-		Constant_wvp cc0;
-		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
-		cc0.matView = matView;
-		cc0.matProj = matProj;
-		m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-		m_pCCBs[iter->m_IdxCBs[0]]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-		Constant_time cc1;
-		cc1.fTime = _DEGTORAD(m_fElapsedtime * 360.0f);
-		m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-		m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
-		//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[iter->m_IdxTX]->GetSampler());
-		m_pCTXs[iter->m_IdxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-		//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
-		m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[iter->m_IdxIB]->GetCountIndices(), 0, 0);
+		for (const auto hash : iter->m_IdxMHs)
+		{
+			size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
+			size_t idxIB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IB();
+			size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
+			size_t idxVS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VS();
+			size_t idxPS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_PS();
+
+			m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCILs[idxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+			m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
+			m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
+
+			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+			Constant_wvp cc0;
+			cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
+			cc0.matView = matView;
+			cc0.matProj = matProj;
+			m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+			m_pCCBs[iter->m_IdxCBs[0]]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+
+			Constant_time cc1;
+			cc1.fTime = _DEGTORAD(m_fElapsedtime * 360.0f);
+			m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
+			m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+			//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[iter->m_IdxTX]->GetSampler());
+			m_pCTXs[iter->m_IdxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
+
+			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
+		}
 	}
 }
 
@@ -293,35 +306,14 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, Samplers samp
 	//이미 있는 리소스라면
 	Texture* pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.HashFilePath(szFilePath));
 	if (pTexture)
-		return pTexture->GetTXIdx();
-
-	/*
-	WIC_FLAGS_NONE(0x0) :
-	설명: 아무 플래그도 설정하지 않습니다.WIC가 파일의 메타데이터를 기반으로 최선의 판단을 내려 텍스처를 로드합니다.
-	특별한 변환이나 처리가 필요 없는 대부분의 기본 텍스처 로딩에 사용됩니다.파일에 sRGB 정보가 있으면 일반적으로 sRGB 포맷으로 로드되고, 없으면 선형 포맷으로 로드됩니다.
-
-	WIC_FLAGS_IGNORE_SRGB(0x20) :
-	설명 : 이미지 파일에 sRGB 메타데이터가 있더라도 이를 무시하고 강제로 선형(Linear) 감마 공간으로 텍스처를 로드합니다.즉, 텍스처는 DXGI_FORMAT_R8G8B8A8_UNORM(sRGB 아님)과 같은 선형 포맷으로 GPU에 올라갑니다.
-	데이터 텍스처 : 노멀 맵(Normal Map), 러프니스 맵(Roughness Map), 메탈니스 맵(Metallic Map), AO(Ambient Occlusion) 맵 등 색상 정보가 아닌 물리적 속성이나 벡터 데이터를 담는 텍스처를 로드할 때 필수적입니다.
-	이들은 감마 보정이 적용되면 안 되기 때문입니다.
-	자체적인 감마 관리 : 만약 셰이더에서 모든 감마 보정을 수동으로 처리하고 싶거나, 렌더 타겟 포맷(RTV)에서 sRGB를 지정하여 최종 출력 단계에서만 감마 보정을 하려는 경우에도 사용할 수 있습니다.
-
-	WIC_FLAGS_FORCE_SRGB(0x40) :
-	설명 : 파일의 메타데이터와 관계없이 강제로 sRGB 감마 공간으로 텍스처를 로드합니다.즉, 텍스처는 DXGI_FORMAT_R8G8B8A8_UNORM_SRGB와 같은 sRGB 포맷으로 GPU에 올라갑니다.
-	알베도(Albedo) 또는 디퓨즈(Diffuse) 맵 : 물체의 기본 색상을 나타내는 텍스처는 일반적으로 sRGB 감마 공간에 있습니다.
-	이 플래그를 사용하면 GPU가 셰이더에서 샘플링할 때 자동으로 선형 공간으로 변환해 주어 정확한 라이팅 계산이 가능해집니다.
-	대부분의 ColorMap에 이 플래그를 사용하거나, WIC_FLAGS_DEFAULT_SRGB를 사용합니다.
-	*/
-	// imageData로부터 ID3D11Resource 객체를 생성한다
-	// 라이브러리의 함수에 파일주소만을 넘겨 객체포인터를 받아와 이를 이용한다
+		return pTexture->GetIdx_TX();
 
 	// DirectXTex의 함수를 이용하여 image_data로 리턴시킨다
-	ScratchImage imageData;
-	_ASEERTION_CREATE(DirectX::LoadFromWICFile(szFilePath.c_str(), WIC_FLAGS_NONE, nullptr, imageData), "LoadTexture not successfully");
-
-	size_t idxTX = CreateTexture2D(&imageData, sampler);
 	pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.CreateResourceFromFile<Texture>(szFilePath));
-	pTexture->SetTXIdx(idxTX);
+	
+	// imageData로부터 ID3D11Resource 객체를 생성한다
+	size_t idxTX = CreateTexture2D(pTexture->GetImage(), sampler);
+	pTexture->SetIdx_TX(idxTX);
 	return idxTX;
 }
 
@@ -332,6 +324,28 @@ size_t RenderSystem::CreateTexture2D(const ScratchImage* resource, Samplers samp
 	_ASEERTION_NULCHK(pTexture2D, "TX is nullptr");
 	m_pCTXs[m_lIdx_CTXs] = pTexture2D;
 	return m_lIdx_CTXs++;
+}
+
+size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
+{
+	//이미 있는 리소스라면
+	size_t hash = _ResourceSystem.HashFilePath(szFilePath);
+	Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
+	if (pMesh)
+		return hash;
+
+	pMesh = _ResourceSystem.GetResource<Mesh>(_ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath));
+	size_t idxVB = _RenderSystem.CreateVertexBuffer(pMesh->GetVertices(), sizeof(Vertex_PTN), pMesh->GetVerticesSize());
+	size_t idxIB = _RenderSystem.CreateIndexBuffer(pMesh->GetIndices(), pMesh->GetIndicesSize());
+	size_t idxVS = _RenderSystem.CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");
+	size_t idxPS = _RenderSystem.CreatePixelShader(L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
+	size_t idxIL = _RenderSystem.CreateInputLayout(InputLayout_VertexPTN, size_InputLayout_VertexPTN);
+	pMesh->SetIdx_VB(idxVB);
+	pMesh->SetIdx_IB(idxIB);
+	pMesh->SetIdx_VS(idxVS);
+	pMesh->SetIdx_PS(idxPS);
+	pMesh->SetIdx_IL(idxIL);
+	return hash;
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)

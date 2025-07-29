@@ -51,6 +51,32 @@ SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT iWidth, UINT iHeight
 
 	//사용한 백버퍼의 레퍼런스 카운팅을 낮춘다
 	backBuffer->Release();
+
+	//임시, 뎁스스텐실사용 추후 클래스화필요(10장, 깊이스텐실부분)
+	D3D11_TEXTURE2D_DESC tex_desc;
+	ZeroMemory(&tex_desc, sizeof(D3D11_TEXTURE2D_DESC));
+	tex_desc.Width = iWidth;
+	tex_desc.Height = iHeight;
+	tex_desc.MipLevels = 1;
+	tex_desc.ArraySize = 1;
+	tex_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	tex_desc.SampleDesc.Count = 1;
+	tex_desc.Usage = D3D11_USAGE_DEFAULT;
+	tex_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	tex_desc.CPUAccessFlags = 0;					// AccessFlag 값의 조합
+	tex_desc.MiscFlags = 0;							// 텍스처의 다양한 속성(큐브맵, 배열 등을 제어하는 기타플래그)
+
+	hResult = pDevice->CreateTexture2D(&tex_desc, nullptr, &backBuffer);
+	if (FAILED(hResult))
+	{
+		throw std::exception("DepthStencilBuffer not create successfully");
+	}
+	hResult = pDevice->CreateDepthStencilView(backBuffer, NULL, &m_pDSV); //해당버퍼를 이용하여 깊이스텐실 뷰를 생성
+	backBuffer->Release();											//임의의 사용한 버퍼를 제거
+	if (FAILED(hResult))
+	{
+		throw std::exception("DepthStenilView not create successfully");
+	}
 }
 
 SwapChain::~SwapChain()
@@ -58,6 +84,8 @@ SwapChain::~SwapChain()
 	std::cout << "Release : " << "SwapChain" << " Class" << '\n';
 	m_pRTV->Release();
 	m_pSwapChain->Release();
+
+	m_pDSV->Release();
 }
 
 //렌더타겟 초기화 및 출력병합기에 렌더타겟뷰 세팅
@@ -65,7 +93,8 @@ void SwapChain::ClearRenderTargetColor(ID3D11DeviceContext* pDeviceContext, floa
 {
 	FLOAT clearColor[] = { red, green, blue, alpha };
 	pDeviceContext->ClearRenderTargetView(m_pRTV, clearColor);
-	pDeviceContext->OMSetRenderTargets(1, &m_pRTV, NULL);
+	pDeviceContext->ClearDepthStencilView(m_pDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	pDeviceContext->OMSetRenderTargets(1, &m_pRTV, m_pDSV);
 }
 
 //더블버퍼링

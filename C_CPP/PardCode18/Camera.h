@@ -31,7 +31,7 @@ struct CameraProperties
 		m_fFov(60.0f),
 		m_fAspectRatio(800.0f / 600.0f),
 		m_fNearZ(0.1f),
-		m_fFarZ(1000.0f)
+		m_fFarZ(4000.0f)
 	{}
 };
 class BaseCamera

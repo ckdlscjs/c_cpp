@@ -45,6 +45,7 @@ public:
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateTexture(const std::wstring& szFilePath, Samplers sampler = Samplers::WRAP_LINEAR);
 	size_t CreateTexture2D(const ScratchImage* resource, Samplers sampler);
+	size_t CreateMesh(const std::wstring& szFilePath);
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 
 private:

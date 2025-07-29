@@ -15,5 +15,7 @@ public:
 private:
 	IDXGISwapChain* m_pSwapChain;
 	ID3D11RenderTargetView* m_pRTV;
+	
+	ID3D11DepthStencilView* m_pDSV;
 };
 

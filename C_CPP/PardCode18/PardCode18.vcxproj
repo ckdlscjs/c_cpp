@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>../Output/Debug/</OutDir>
     <IntDir>../Output/</IntDir>
-    <IncludePath>../Include/DXTEX;$(IncludePath)</IncludePath>
+    <IncludePath>../Include/tinyobjloader;../Include/DXTEX;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
     <LibraryPath>../Lib;$(LibraryPath)</LibraryPath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
@@ -156,6 +156,7 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="Matrix4x4.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SamplerState.h" />
@@ -192,6 +193,7 @@
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="SamplerState.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="Direct3D.cpp" />
@@ -214,7 +216,13 @@
     <FxCompile Include="PixelShader.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
+    <FxCompile Include="PixelShaderPTN.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="VertexShader.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="VertexShaderPTN.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
   </ItemGroup>
