@@ -96,7 +96,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Light °´Ã¼ ÃÊ±âÈ­
-	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
+	m_Light->SetDiffuseColor(1.0f, 0.3f, 0.7f, 1.0f);
 	m_Light->SetDirection(0.0f, -0.5f, 1.0f);
 
 	return true;
