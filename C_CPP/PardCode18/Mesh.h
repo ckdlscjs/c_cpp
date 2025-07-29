@@ -12,9 +12,9 @@ public:
 	Mesh(Mesh&&) = delete;
 	Mesh& operator=(Mesh&&) = delete;
 	
-	void* GetVertices() const;
+	Vertex_PTN* GetVertices();
 	size_t GetVerticesSize() const;
-	void* GetIndices() const;
+	UINT* GetIndices();
 	size_t GetIndicesSize() const;
 	void SetIdx_VB(size_t idxVB);
 	size_t GetIdx_VB() const;

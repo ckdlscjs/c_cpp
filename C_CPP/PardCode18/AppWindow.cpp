@@ -37,8 +37,8 @@ void AppWindow::OnCreate()
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();
 
-	obj->m_IdxMHs.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/teapot.obj"));
-	obj->m_IdxTX = _RenderSystem.CreateTexture(L"../Assets/Textures/brick.png", Samplers::WRAP_LINEAR);
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/teapot.obj"));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/brick.png", Samplers::WRAP_LINEAR));
 	Constant_wvp cc0;
 	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc0, sizeof(Constant_wvp)));
 	Constant_time cc1;

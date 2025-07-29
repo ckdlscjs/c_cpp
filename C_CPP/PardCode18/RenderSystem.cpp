@@ -87,14 +87,14 @@ void RenderSystem::Render()
 
 	for (const auto& iter : objs)
 	{
-		for (const auto hash : iter->m_IdxMHs)
+		for (const auto hash : iter->m_hashMeshes)
 		{
 			size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
 			size_t idxIB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IB();
 			size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
 			size_t idxVS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VS();
 			size_t idxPS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_PS();
-
+			
 			m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCILs[idxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
@@ -113,11 +113,13 @@ void RenderSystem::Render()
 			cc1.fTime = _DEGTORAD(m_fElapsedtime * 360.0f);
 			m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 			m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
-			//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[iter->m_IdxTX]->GetSampler());
-			m_pCTXs[iter->m_IdxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
 
+			size_t idxTX = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures.back())->GetIdx_TX();
+			//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
+			m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+
+			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
 			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
 		}
 	}
@@ -304,17 +306,18 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, Samplers sampler)
 {
 	//이미 있는 리소스라면
+	size_t hash = _ResourceSystem.HashFilePath(szFilePath);
 	Texture* pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.HashFilePath(szFilePath));
 	if (pTexture)
-		return pTexture->GetIdx_TX();
+		return hash;
 
 	// DirectXTex의 함수를 이용하여 image_data로 리턴시킨다
-	pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.CreateResourceFromFile<Texture>(szFilePath));
+	pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath);
 	
 	// imageData로부터 ID3D11Resource 객체를 생성한다
 	size_t idxTX = CreateTexture2D(pTexture->GetImage(), sampler);
 	pTexture->SetIdx_TX(idxTX);
-	return idxTX;
+	return hash;
 }
 
 size_t RenderSystem::CreateTexture2D(const ScratchImage* resource, Samplers sampler)
@@ -334,7 +337,7 @@ size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
 	if (pMesh)
 		return hash;
 
-	pMesh = _ResourceSystem.GetResource<Mesh>(_ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath));
+	pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
 	size_t idxVB = _RenderSystem.CreateVertexBuffer(pMesh->GetVertices(), sizeof(Vertex_PTN), pMesh->GetVerticesSize());
 	size_t idxIB = _RenderSystem.CreateIndexBuffer(pMesh->GetIndices(), pMesh->GetIndicesSize());
 	size_t idxVS = _RenderSystem.CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");

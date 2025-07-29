@@ -61,9 +61,9 @@ Mesh::~Mesh()
 {
 }
 
-void* Mesh::GetVertices() const
+Vertex_PTN* Mesh::GetVertices()
 {
-	return (void*)&m_Vertices[0];
+	return m_Vertices.data();
 }
 
 size_t Mesh::GetVerticesSize() const
@@ -71,9 +71,9 @@ size_t Mesh::GetVerticesSize() const
 	return m_Vertices.size();
 }
 
-void* Mesh::GetIndices() const
+UINT* Mesh::GetIndices()
 {
-	return (void*)&m_Indices[0];
+	return m_Indices.data();
 }
 
 size_t Mesh::GetIndicesSize() const

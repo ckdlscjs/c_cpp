@@ -18,7 +18,9 @@ public:
 
 	size_t HashFilePath(const std::wstring& path);
 	template<typename T>
-	size_t CreateResourceFromFile(const std::wstring& szFilePath);
+	T* CreateResourceFromFile(const std::wstring& szFilePath);
+	template<typename T, typename... Types>
+	T* CreateResourceFromFile(const std::wstring& szFilePath, Types... args);
 	template<typename T>
 	T* GetResource(size_t id);
 	
@@ -28,15 +30,27 @@ private:
 #define _ResourceSystem ResourceSystem::GetInstance()
 
 template<typename T>
-size_t ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath)
+T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath)
 {
-	size_t hashID = HashFilePath(szFilePath);						
-	if (m_Resources.find(hashID) != m_Resources.end()) return hashID;	
+	size_t hashID = HashFilePath(szFilePath);
+	if (m_Resources.find(hashID) != m_Resources.end()) return GetResource<T>(hashID);
 	//객체생성후 컨테이너에 등록
 	T* newResource = new T(hashID, szFilePath);
 	_ASEERTION_NULCHK(newResource, typeid(T).name());
 	m_Resources[hashID] = newResource;
-	return hashID;
+	return newResource;
+}
+
+template<typename T, typename... Types>
+T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types... args)
+{
+	size_t hashID = HashFilePath(szFilePath);						
+	if (m_Resources.find(hashID) != m_Resources.end()) return GetResource<T>(hashID);
+	//객체생성후 컨테이너에 등록
+	T* newResource = new T(hashID, szFilePath, std::forward<Types>(args)...);
+	_ASEERTION_NULCHK(newResource, typeid(T).name());
+	m_Resources[hashID] = newResource;
+	return newResource;
 }
 
 template<typename T>

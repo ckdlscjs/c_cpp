@@ -11,7 +11,6 @@
 #define _EPSILON 1e-6f
 #define _CLAMP(val, low, high) Clamp(val, low, high)
 
-
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>

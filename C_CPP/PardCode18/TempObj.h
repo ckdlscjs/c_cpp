@@ -32,6 +32,7 @@ public:
 	size_t m_IdxPS;
 	size_t m_IdxTX;
 	std::vector<size_t> m_IdxCBs;
-	std::vector<size_t> m_IdxMHs;
+	std::vector<size_t> m_hashMeshes;
+	std::vector<size_t> m_hashTextures;
 };
 
