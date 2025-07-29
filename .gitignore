@@ -49,3 +49,16 @@ Output/
 
 # End of https://www.toptal.com/developers/gitignore/api/c++
 /C_CPP/Lib
+/C_CPP/RasterTek07/data/body.dds
+/C_CPP/RasterTek07/data/face.dds
+/C_CPP/RasterTek07/data/face.png
+/C_CPP/RasterTek07/data/hair.dds
+/C_CPP/RasterTek07/data/nene.txt
+/C_CPP/RasterTek07/data/yuni.txt
+/C_CPP/RasterTek07/data/yuniface2.txt
+/C_CPP/RasterTek07/nene.txt
+/C_CPP/RasterTek08/IronMan.mtl
+/C_CPP/RasterTek08/model.txt
+/C_CPP/RasterTek08/nene.txt
+/C_CPP/RasterTek08/yuni.txt
+/C_CPP/RasterTek08/v1_0_IronManRigged.max
