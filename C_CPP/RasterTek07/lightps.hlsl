@@ -48,6 +48,22 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
     // 이 픽셀의 빛의 양을 계산합니다.
     lightIntensity = saturate(dot(input.normal, lightDir));
 
+    //if (0.0f < lightIntensity && lightIntensity <= 0.3f)
+    //{
+    //    lightIntensity = 0.15f;
+    //}
+    //else if (0.3f < lightIntensity && lightIntensity <= 0.6f)
+    //{
+    //    lightIntensity = 0.45f;
+    //}
+    //else if (0.6f < lightIntensity && lightIntensity <= 0.85f)
+    //{
+    //    lightIntensity = 0.7f;
+    //}
+    //else if (0.7f < lightIntensity)
+    //{
+    //    lightIntensity = 0.95f;
+    //}
     // 빛의 강도와 결합 된 확산 색을 기준으로 최종 색상의 최종 색상을 결정합니다.
     color = saturate(diffuseColor * lightIntensity);
 

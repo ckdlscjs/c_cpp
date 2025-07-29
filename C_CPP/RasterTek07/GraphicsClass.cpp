@@ -46,9 +46,9 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// 카메라 포지션 설정, 임의의위치에서 0.0을 바라보게한다
-	XMVECTOR campos = XMVectorSet(0.0f, 5.0f, -15.0f, 1.0f);
+	XMVECTOR campos = XMVectorSet(0.0f, 18, -15, 1.0f);
 	m_Camera->SetPosition(XMVectorGetX(campos), XMVectorGetY(campos), XMVectorGetZ(campos));
-	XMVECTOR vLookAT = XMVectorSubtract(XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f), campos);
+	XMVECTOR vLookAT = XMVectorSubtract(XMVectorSet(0.0f, 30, 0.0f, 1.0f), campos);
 	vLookAT = XMVector3Normalize(vLookAT);
 	float x = XMVectorGetX(vLookAT);
 	float y = XMVectorGetY(vLookAT);
@@ -68,7 +68,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// m_Model 객체 초기화
-	if (!m_Model->Initialize(m_Direct3D->GetDevice(), "../RasterTek07/data/cube.txt", L"../RasterTek07/data/seafloor.dds"))
+	if (!m_Model->Initialize(m_Direct3D->GetDevice(), "../RasterTek07/data/nene.txt", L"../RasterTek07/data/face.dds"))
 	{
 		MessageBox(hwnd, L"Could not initialize the model object.", L"Error", MB_OK);
 		return false;
@@ -97,7 +97,7 @@ bool GraphicsClass::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// m_Light 객체 초기화
 	m_Light->SetDiffuseColor(1.0f, 1.0f, 1.0f, 1.0f);
-	m_Light->SetDirection(0.0f, -0.5f, 1.0f);
+	m_Light->SetDirection(0.0f, 0.5f, 1.0f);
 
 	return true;
 }
