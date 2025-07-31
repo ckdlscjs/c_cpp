@@ -1,0 +1,123 @@
+#include "AppWindow.h"
+#include "RenderSystem.h"
+#include "InputSystem.h"
+#include "TempObj.h"			//임시오브젝트
+#include "CameraSystem.h"
+#include "FirstPersonCamera.h"
+#include "ResourceSystem.h"
+#include "ImguiSystem.h"
+#include "LightSystem.h"
+#include "Light.h"
+AppWindow::AppWindow()
+{
+	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
+	_InputSystem;
+	_ResourceSystem;
+	_RenderSystem;
+	_ImguiSystem;
+	_CameraSystem;
+	_LightSystem;
+}
+
+AppWindow::~AppWindow()
+{
+	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
+}
+
+void AppWindow::OnCreate()
+{
+	std::cout << "OnCreate" << '\n';
+	_InputSystem.Init();
+	_ResourceSystem.Init();
+	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
+	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
+	_CameraSystem.Init();
+	_LightSystem.Init();
+
+	_InputSystem.SetMouseCenter(m_hWnd);
+	_CameraSystem.AddCamera(new FirstPersonCamera());
+	_CameraSystem.GetCamera(0)->SetPosition({ 100, -200, -1000.0f });
+	_RenderSystem.objs.push_back(new TempObj());
+	TempObj* obj = _RenderSystem.objs.back();
+	obj->m_vScale = Vector3(200.0f, 200.0f, 200.0f);
+	obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
+	obj->m_vPosition = Vector3(-200, -200.0f, 100.0f);
+	_CameraSystem.GetCamera(0)->SetTarget(obj->m_vPosition);
+
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/nene.obj"));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/body.dds", WIC_FLAGS_NONE));
+
+	DirectionalLight* pLight_Directional = new DirectionalLight();
+	pLight_Directional->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
+	pLight_Directional->m_mDiffuse = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
+	pLight_Directional->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	auto campos = _CameraSystem.GetCamera(0)->GetPosition();
+	auto objpos = obj->m_vPosition;
+	pLight_Directional->m_vDirection = (Position(0.0f, 0.0f, 0.0f) - Position(0.0f, 5.0f, -5.0f)).Normalize();
+	_LightSystem.AddLight(pLight_Directional);
+	CB_DirectionalLight cb_directionalLight;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_directionalLight, sizeof(CB_DirectionalLight)));
+
+	PointLight* pLight_Point = new PointLight();
+	pLight_Point->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
+	pLight_Point->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+	pLight_Point->m_mSpecular = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+	pLight_Point->m_vPosition = Position(-25.0f, 5.0f, 0.0f);
+	pLight_Point->m_fRange = 35.0f;
+	pLight_Point->m_fAtt_a0 = 0.0f;
+	pLight_Point->m_fAtt_a1 = 1.0f;
+	pLight_Point->m_fAtt_a2 = 0.0f;
+	_LightSystem.AddLight(pLight_Point);
+	CB_PointLight cb_pointLight;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_pointLight, sizeof(CB_PointLight)));
+
+	SpotLight* pLight_Spot = new SpotLight();
+	pLight_Spot->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
+	pLight_Spot->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+	pLight_Spot->m_mSpecular = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+	pLight_Spot->m_vPosition = Position(25.0f, 5.0f, 0.0f);
+	pLight_Spot->m_fRange = 35.0f;
+	pLight_Spot->m_fAtt_a0 = 0.0f;
+	pLight_Spot->m_fAtt_a1 = 1.0f;
+	pLight_Spot->m_fAtt_a2 = 0.0f;
+	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(20.0f));
+	pLight_Spot->m_fCos_OuterCone = cosf(_DEGTORAD(45.0f));
+	pLight_Spot->m_fSpot = 96.0f;
+	_LightSystem.AddLight(pLight_Spot);
+	CB_SpotLight cb_spotLight;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_spotLight, sizeof(CB_SpotLight)));
+
+	CB_WVPITMatrix cb_wvpit;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_wvpit, sizeof(CB_WVPITMatrix)));
+	Constant_time cc1;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time)));
+	CB_Campos cc2;
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc2, sizeof(CB_Campos)));
+}
+
+void AppWindow::OnUpdate()
+{
+	std::cout << "OnUpdate" << '\n';
+	_InputSystem.Frame();
+	_ImguiSystem.Frame();
+	_CameraSystem.Frame(0.033f);
+	_RenderSystem.Frame();
+
+	_RenderSystem.PreRender();
+	_RenderSystem.Render();
+	_ImguiSystem.Render();
+	_RenderSystem.PostRender();
+	std::cout << '\n';
+}
+
+void AppWindow::OnDestroy()
+{
+	std::cout << "OnDestroy" << '\n';
+	m_bIsRun = false;
+	_ResourceSystem.Release();
+	_CameraSystem.Release();
+	_RenderSystem.Release();
+	_InputSystem.Release();
+	_ImguiSystem.Release();
+	_LightSystem.Release();
+}
