@@ -289,9 +289,9 @@ size_t RenderSystem::CreateIndexBuffer(void* indices, UINT size_indices)
 	return m_lIdx_CIBs++;
 }
 
-size_t RenderSystem::CreateConstantBuffer(void* data, UINT size_buffer)
+size_t RenderSystem::CreateConstantBuffer(UINT size_buffer, void* data)
 {
-	ConstantBuffer* pConstantBuffer = new ConstantBuffer(m_pCDirect3D->GetDevice(), data, size_buffer);
+	ConstantBuffer* pConstantBuffer = new ConstantBuffer(m_pCDirect3D->GetDevice(), size_buffer, data);
 	_ASEERTION_NULCHK(pConstantBuffer, "CB is nullptr");
 	m_pCCBs[m_lIdx_CCBs] = pConstantBuffer;
 	return m_lIdx_CCBs++;

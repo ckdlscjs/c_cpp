@@ -175,7 +175,7 @@ struct CB_DirectionalLight
 	Vector4 m_Ambient;
 	Vector4 m_Diffuse;
 	Vector4 m_Specular;
-	Vector3 v_direction;	//w is padding
+	Vector4 v_Direction;	//w is shiness
 };
 
 __declspec(align(16))
@@ -184,8 +184,8 @@ struct CB_PointLight
 	Vector4 m_Ambient;
 	Vector4 m_Diffuse;
 	Vector4 m_Specular;
-	Vector4 v_Position;		//w is range
-	Vector3 f_Attenuation;	//a0, a1, a2, padding
+	Vector4 v_Position;		//w is shiness
+	Vector4 f_Attenuation;	//a0, a1, a2, range
 };
 
 __declspec(align(16))
@@ -194,9 +194,10 @@ struct CB_SpotLight
 	Vector4 m_Ambient;
 	Vector4 m_Diffuse;
 	Vector4 m_Specular;
-	Vector4 v_Position;		//w is range
-	Vector3 f_Attenuation;	//a0, a1, a2, padding
-	Vector3 f_Spots;		//spot, cosOuter, cosInner, padding
+	Vector4 v_Direction;	//w is padd1
+	Vector4 v_Position;		//w is shiness
+	Vector4 f_Attenuation;	//a0, a1, a2, range
+	Vector4 f_Spots;		//spot, cosOuter, cosInner, padd2
 };
 
 //공용함수들

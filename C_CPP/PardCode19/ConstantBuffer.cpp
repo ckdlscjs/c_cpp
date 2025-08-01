@@ -1,6 +1,6 @@
 #include "ConstantBuffer.h"
 
-ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, void* data, UINT size_buffer)
+ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, UINT size_buffer, void* data)
 {
 	std::cout << "Initialize : " << "ConstantBuffer" << " Class" << '\n';
 	_ASEERTION_NULCHK(!m_pBuffer, "ConstantBuffer NOTNULL");
@@ -16,7 +16,7 @@ ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, void* data, UINT size_buff
 	ZeroMemory(&init_data, sizeof(init_data));
 	init_data.pSysMem = data;
 
-	HRESULT hResult = pDevice->CreateBuffer(&buff_desc, &init_data, &m_pBuffer);
+	HRESULT hResult = pDevice->CreateBuffer(&buff_desc, (data ? &init_data : NULL), &m_pBuffer);
 	_ASEERTION_CREATE(hResult, "ConstantBuffer");
 }
 

@@ -258,7 +258,9 @@
     <ClCompile Include="LightSystem.cpp">
       <Filter>Engine\LightSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp" />
+    <ClCompile Include="Light.cpp">
+      <Filter>Engine\LightSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">

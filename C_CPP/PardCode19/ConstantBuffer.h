@@ -3,7 +3,7 @@
 class ConstantBuffer
 {
 public:
-	ConstantBuffer(ID3D11Device* pDevice, void* data, UINT size_buffer);
+	ConstantBuffer(ID3D11Device* pDevice, UINT size_buffer, void* data);
 	~ConstantBuffer();
 	ConstantBuffer(const ConstantBuffer&) = delete;
 	ConstantBuffer& operator=(const ConstantBuffer&) = delete;

@@ -36,63 +36,61 @@ void AppWindow::OnCreate()
 
 	_InputSystem.SetMouseCenter(m_hWnd);
 	_CameraSystem.AddCamera(new FirstPersonCamera());
-	_CameraSystem.GetCamera(0)->SetPosition({ 100, -200, -1000.0f });
+	_CameraSystem.GetCamera(0)->SetPosition({ 100, 200.0f, -1000.0f });
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();
-	obj->m_vScale = Vector3(200.0f, 200.0f, 200.0f);
+	obj->m_vScale = Vector3(1000.0f, 1000.0f, 1000.0f);
 	obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
-	obj->m_vPosition = Vector3(-200, -200.0f, 100.0f);
+	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
 	_CameraSystem.GetCamera(0)->SetTarget(obj->m_vPosition);
 
-	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/nene.obj"));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/body.dds", WIC_FLAGS_NONE));
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/teapot.obj"));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/brick.png", WIC_FLAGS_NONE));
 
 	DirectionalLight* pLight_Directional = new DirectionalLight();
-	pLight_Directional->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
-	pLight_Directional->m_mDiffuse = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
-	pLight_Directional->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	pLight_Directional->m_mAmbient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
+	pLight_Directional->m_mDiffuse = Vector4(0.8f, 0.8f, 0.8f, 1.0f);
+	pLight_Directional->m_mSpecular = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
 	auto campos = _CameraSystem.GetCamera(0)->GetPosition();
 	auto objpos = obj->m_vPosition;
 	pLight_Directional->m_vDirection = (Position(0.0f, 0.0f, 0.0f) - Position(0.0f, 5.0f, -5.0f)).Normalize();
+	pLight_Directional->m_fShiness = 100.0f;
 	_LightSystem.AddLight(pLight_Directional);
-	CB_DirectionalLight cb_directionalLight;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_directionalLight, sizeof(CB_DirectionalLight)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_DirectionalLight)));
 
 	PointLight* pLight_Point = new PointLight();
 	pLight_Point->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
-	pLight_Point->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
-	pLight_Point->m_mSpecular = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
-	pLight_Point->m_vPosition = Position(-25.0f, 5.0f, 0.0f);
-	pLight_Point->m_fRange = 35.0f;
-	pLight_Point->m_fAtt_a0 = 0.0f;
-	pLight_Point->m_fAtt_a1 = 1.0f;
+	pLight_Point->m_mDiffuse = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+	pLight_Point->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	pLight_Point->m_vPosition = Position(-500.0f, 500.0f, 0.0f);
+	pLight_Point->m_fShiness = 50.0f;
+	pLight_Point->m_fAtt_a0 = 0.10f;
+	pLight_Point->m_fAtt_a1 = 0.0f;
 	pLight_Point->m_fAtt_a2 = 0.0f;
+	pLight_Point->m_fRange = 300000;
 	_LightSystem.AddLight(pLight_Point);
-	CB_PointLight cb_pointLight;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_pointLight, sizeof(CB_PointLight)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_PointLight)));
 
 	SpotLight* pLight_Spot = new SpotLight();
-	pLight_Spot->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
-	pLight_Spot->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
-	pLight_Spot->m_mSpecular = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
-	pLight_Spot->m_vPosition = Position(25.0f, 5.0f, 0.0f);
-	pLight_Spot->m_fRange = 35.0f;
+	pLight_Spot->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
+	pLight_Spot->m_mDiffuse = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	pLight_Spot->m_mSpecular = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	pLight_Spot->m_vDirection = (Position(0.0f, 0.0f, 0.0f) - Position(-250.0f, 500.0f, -5.0f)).Normalize();
+	pLight_Spot->m_vPosition = Position(-250.0f, 500.0f, -5.0f);
+	pLight_Spot->m_fShiness = 1000.0f;
 	pLight_Spot->m_fAtt_a0 = 0.0f;
-	pLight_Spot->m_fAtt_a1 = 1.0f;
-	pLight_Spot->m_fAtt_a2 = 0.0f;
-	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(20.0f));
-	pLight_Spot->m_fCos_OuterCone = cosf(_DEGTORAD(45.0f));
-	pLight_Spot->m_fSpot = 96.0f;
+	pLight_Spot->m_fAtt_a1 = 0.0f;
+	pLight_Spot->m_fAtt_a2 = 1.0f;
+	pLight_Spot->m_fRange = 2000.0f;
+	pLight_Spot->m_fSpot = 95.0f;
+	pLight_Spot->m_fCos_OuterCone = cosf(_DEGTORAD(75.0f));
+	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(10.0f));
 	_LightSystem.AddLight(pLight_Spot);
-	CB_SpotLight cb_spotLight;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_spotLight, sizeof(CB_SpotLight)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_SpotLight)));
 
-	CB_WVPITMatrix cb_wvpit;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cb_wvpit, sizeof(CB_WVPITMatrix)));
-	Constant_time cc1;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc1, sizeof(Constant_time)));
-	CB_Campos cc2;
-	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(&cc2, sizeof(CB_Campos)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_WVPITMatrix)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(Constant_time)));
+	obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_Campos)));
 }
 
 void AppWindow::OnUpdate()

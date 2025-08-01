@@ -40,7 +40,7 @@ public:
 	size_t CreateVertexBuffer(void* vertices, UINT size_vertex, UINT size_vertices);
 	size_t CreateInputLayout(D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
 	size_t CreateIndexBuffer(void* indices, UINT size_indices);
-	size_t CreateConstantBuffer(void* data, UINT size_buffer);
+	size_t CreateConstantBuffer(UINT size_buffer, void* data = nullptr);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE, Samplers sampler = Samplers::WRAP_LINEAR);

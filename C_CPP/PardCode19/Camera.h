@@ -94,6 +94,7 @@ inline const Matrix4x4& BaseCamera::GetViewMatrix()
 		m_Properties.m_vRight = m_MatWorld[0].ToVector3();
 		m_Properties.m_vUp = m_MatWorld[1].ToVector3();
 		m_Properties.m_vForward = m_MatWorld[2].ToVector3();
+		m_Properties.m_vLookAt = m_Properties.m_vForward * 1000000.0f;
 		m_bDirtyFlag_View = false;
 	}
 	return m_MatView;
