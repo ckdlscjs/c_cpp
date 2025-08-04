@@ -49,7 +49,7 @@ void AppWindow::OnCreate()
 
 	DirectionalLight* pLight_Directional = new DirectionalLight();
 	pLight_Directional->m_mAmbient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-	pLight_Directional->m_mDiffuse = Vector4(0.8f, 0.8f, 0.8f, 1.0f);
+	pLight_Directional->m_mDiffuse = Vector4(0.8f, 0.3f, 0.2f, 1.0f);
 	pLight_Directional->m_mSpecular = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
 	auto campos = _CameraSystem.GetCamera(0)->GetPosition();
 	auto objpos = obj->m_vPosition;

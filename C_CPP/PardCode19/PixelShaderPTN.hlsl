@@ -60,59 +60,59 @@ cbuffer CB_Campos : register(b5)
     float4 campos;
 };
 
-float4 DirectionalLight(float4 M, float3 L, float3 N, float3 R, float3 V)
+float4 DirectionalLight(float3 L, float3 N, float3 R, float3 V)
 {
     float4 D_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 D_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 D_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
     //ambient
-    D_A = ld_ambient * M;                                   
+    D_A = ld_ambient;                            
     
     //diffuse
     float Kd = max(dot(L, N), 0.0f); //max(L dot N, 0)          //일치도내적결과
-    D_D = Kd * ld_diffuse * M;              
+    D_D = Kd * ld_diffuse;
 
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), ld_shiness);           //반사벡터와 시점벡터의 일치도를 구해서 표면의 광택도로 지수승하여 구한다
-    D_S = Kd * Ks * ld_specular * M;                            //Kd, 즉 표면에서의 내적결과를 곱해 올바른 내적결과인지를 반영시킨다
+    D_S = Kd * Ks * ld_specular;                                //Kd, 즉 표면에서의 내적결과를 곱해 올바른 내적결과인지를 반영시킨다
     return D_A + D_D + D_S;
 }
 
-float4 PointLight(float4 M, float3 L, float D, float3 N, float3 R, float3 V)
+float4 PointLight(float3 L, float D, float3 N, float3 R, float3 V)
 {
     float4 P_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
     //ambient
-    P_A = lp_ambient * M;
+    P_A = lp_ambient;
     
     //diffuse,
     float Kd = max(dot(L, N), 0.0f); //max(L dot N, 0)
-    P_D = Kd * lp_diffuse * M;
+    P_D = Kd * lp_diffuse;
     
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), lp_shiness);
-    P_S = Kd * Ks * lp_specular * M;
+    P_S = Kd * Ks * lp_specular;
     
     float att = 1.0f / dot(float3(lp_att_a0, lp_att_a1, lp_att_a2), float3(1.0f, D, D * D));    //감쇠계산, a0 + a1d + a2d^2
     return P_A + (P_D + P_S) * att;                                                             //Ambient는 그냥 발산된다
 }
 
-float4 SpotLight(float4 M, float3 L, float D, float3 N, float3 R, float3 V)
+float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
 {
     float4 S_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
     //ambient
-    S_A = ls_ambient * M;
+    S_A = ls_ambient;
     
     //diffuse,
     float Kd = max(dot(L, N), 0.0f); //max(L dot N, 0)
-    S_D = Kd * ls_diffuse * M;
+    S_D = Kd * ls_diffuse;
     
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), ls_shiness);
-    S_S = Kd * Ks * ls_specular * M;
+    S_S = Kd * Ks * ls_specular;
     
     //spot
     float match = max(dot(normalize(ls_dir), -L), 0.0f);
@@ -138,7 +138,7 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 N = normalize(input.normal0.xyz);                    //정점법선벡터 정규화
     float3 R = reflect(ld_dir, N);                              //반사벡터(입사벡터, 법선을 인자로사용)
     float3 V = normalize(campos.xyz - P.xyz);                   //시점을향하는벡터
-    return DirectionalLight(M, L, N, R, V);                        
+    return DirectionalLight(L, N, R, V) * M;                    //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
     */
     /*
     //PointLight
@@ -150,8 +150,9 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 N = normalize(input.normal0.xyz);
     float3 R = reflect(-L, N);                                  //빛의 입사벡터(-L)
     float3 V = normalize(campos.xyz - P.xyz);
-    return PointLight(M, L, D, N, R, V);
+    return PointLight(L, D, N, R, V) * M;
     */
+    ///*
     //SpotLight
     float3 L = ls_pos - P.xyz;
     float D = length(L);
@@ -161,6 +162,6 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 N = normalize(input.normal0.xyz);
     float3 R = reflect(-L, N);
     float3 V = normalize(campos.xyz - P.xyz);
-    return SpotLight(M, L, D, N, R, V);
-    
+    return SpotLight(L, D, N, R, V) * M;
+    //*/
 }
