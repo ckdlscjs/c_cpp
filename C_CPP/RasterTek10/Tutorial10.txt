@@ -1,0 +1,48 @@
+정반사광의 방정식은 다음과같다
+Specular = reflectColor * (ReflectLightColor * ((normal dot halfVector) ^ reflectIntensity) * attenuationIntensity * spotLightIntensity)
+->반사광 = 반사색*(반사된빛의색 * ((법선,하프벡터의내적) ^ 반사강도) * 감쇄계수 * 스폿라이트계수)
+
+여기서 기본적인 정반사광효과만을 보기위한 식의 수정이 필요하다
+->반사광 = 반사된빛의색 * (보는방향, 반사광의 내적) ^ 반사강도
+
+해당식에서 반사광벡터는 빛의강도의 두배의크기를 법선에 곱하고 여기에 빛의방향을 뺀다 ->reflectVector
+->반사벡터 = (2 * 빛의강도 * 법선) - 빛의방향 
+
+보는방향은 카메라의위치에서 정점의위치를 뺀다(정점에서부터 바라보는방향)
+->보는방향 = 카메라위치 - 정점위치
+
+픽셀쉐이더에서 조명과 텍스쳐의 계산은 다음과같다
+
+// 모든 픽셀의 기본 출력 색상을 주변 광원 값으로 설정합니다.
+    color = ambientColor;
+
+	// 계산을 위해 빛 방향을 반전시킵니다.
+    lightDir = -lightDirection;
+
+	// 이 픽셀의 빛의 양을 계산합니다.
+    lightIntensity = saturate(dot(input.normal, lightDir));
+
+	if(lightIntensity > 0.0f)
+    {
+        // 확산 색과 광 강도의 양에 따라 최종 확산 색을 결정합니다.
+        color += (diffuseColor * lightIntensity);
+    
+    	// 최종 빛의 색상을 채 웁니다.
+    	color = saturate(color);
+
+		// 빛의 강도, 법선 벡터 및 빛의 방향에 따라 반사 벡터를 계산합니다.
+		reflection = normalize(2 * lightIntensity * input.normal - lightDir); 
+
+		// 반사 벡터, 시선 방향 및 반사 출력을 기준으로 반사 조명의 양을 결정합니다.
+		specular = pow(saturate(dot(reflection, input.viewDirection)), specularPower);
+	}
+
+	// 텍스처 픽셀과 최종 확산 색을 곱하여 최종 픽셀 색상 결과를 얻습니다.
+    color = color * textureColor;
+
+	// 출력 색상의 마지막에 반사 컴포넌트를 추가합니다.
+	color = saturate(color + specular);
+
+	*
+	Shader Model 4.0 이상에서는 상수 버퍼에 대한 레지스터 번호를 명시적으로 지정할 필요가 없으므로, cbuffer CameraBuffer에서 register 구문을 생략해도 됩니다. 
+	그러나 float3 변수 cameraPosition과 float 변수 padding은 각각 16바이트와 4바이트의 크기를 갖으므로, 상수 버퍼 내에서 적절한 위치에 배치되어야 합니다.
