@@ -8,9 +8,12 @@
 #include "ImguiSystem.h"
 #include "LightSystem.h"
 #include "Light.h"
+#include "TimerSystem.h"
+
 AppWindow::AppWindow()
 {
 	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
+	_TimerSystem;
 	_InputSystem;
 	_ResourceSystem;
 	_RenderSystem;
@@ -27,13 +30,13 @@ AppWindow::~AppWindow()
 void AppWindow::OnCreate()
 {
 	std::cout << "OnCreate" << '\n';
+	_TimerSystem.Init();
 	_InputSystem.Init();
 	_ResourceSystem.Init();
 	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
 	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
 	_LightSystem.Init();
-
 	_InputSystem.SetMouseCenter(m_hWnd);
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	_CameraSystem.GetCamera(0)->SetPosition({ 100, 200.0f, -1000.0f });
@@ -96,11 +99,12 @@ void AppWindow::OnCreate()
 void AppWindow::OnUpdate()
 {
 	std::cout << "OnUpdate" << '\n';
+	_TimerSystem.Frame();
+	std::cout << "ElapsedTime : " << _TimerSystem.GetElapsedTime() << '\n';
 	_InputSystem.Frame();
 	_ImguiSystem.Frame();
-	_CameraSystem.Frame(0.033f);
-	_RenderSystem.Frame();
-
+	_CameraSystem.Frame(_TimerSystem.GetDeltaTime());
+	_RenderSystem.Frame(_TimerSystem.GetDeltaTime());
 	_RenderSystem.PreRender();
 	_RenderSystem.Render();
 	_ImguiSystem.Render();

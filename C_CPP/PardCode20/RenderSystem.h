@@ -27,6 +27,7 @@ private:
 	RenderSystem& operator=(RenderSystem&&) = delete;
 public:
 	void Init(HWND hWnd, UINT width, UINT height);
+	void Frame(float deltatime);
 	void Frame();
 	void PreRender();
 	void Render();
@@ -51,10 +52,12 @@ public:
 private:
 	UINT m_iWidth = 800;
 	UINT m_iHeight = 600;
+	/*
 	DWORD m_dwOldTick = 0;
 	DWORD m_dwCurTick = 0;
 	float m_fDeltatime = 0.0f;
 	float m_fElapsedtime = 0.0f;
+	*/
 
 	//사용을위해 분할한 클래스객체들
 private:

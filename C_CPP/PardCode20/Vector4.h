@@ -17,6 +17,7 @@ public:
 	inline float GetY() const { return DirectX::XMVectorGetY(m_vec); }
 	inline float GetZ() const { return DirectX::XMVectorGetZ(m_vec); }
 	inline float GetW() const { return DirectX::XMVectorGetW(m_vec); }
+	inline void Set(float x = 0, float y = 0, float z = 0, float w = 0) { SetX(x); SetY(y); SetZ(z); SetW(w); }
 	inline void SetX(float x) { m_vec = DirectX::XMVectorSetX(m_vec, x); }
 	inline void SetY(float y) { m_vec = DirectX::XMVectorSetY(m_vec, y); }
 	inline void SetZ(float z) { m_vec = DirectX::XMVectorSetZ(m_vec, z); }

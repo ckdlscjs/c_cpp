@@ -124,8 +124,8 @@ void InputSystem::Notify(const InputEvent& event)
 
 void InputSystem::Init()
 {
-	std::memset(m_CurKeystate, 0, sizeof(m_CurKeystate));
-	std::memset(m_OldKeystate, 0, sizeof(m_CurKeystate));
+	std::memset(m_CurKeystate, false, sizeof(m_CurKeystate));
+	std::memset(m_OldKeystate, false, sizeof(m_CurKeystate));
 }
 
 void InputSystem::Frame()

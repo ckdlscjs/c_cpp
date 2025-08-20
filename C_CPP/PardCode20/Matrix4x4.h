@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector4.h"
+
 __declspec(align(16))
 struct Matrix4x4
 {

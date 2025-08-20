@@ -40,6 +40,9 @@
     <Filter Include="Engine\LightSystem">
       <UniqueIdentifier>{60773b21-fb92-443b-bc6d-0f585001bf6d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\TimerSystem">
+      <UniqueIdentifier>{6b9b85d4-64fb-40fa-95b5-14de369f4d2d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
@@ -151,7 +154,7 @@
     <ClInclude Include="Matrix4x4.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
-    <ClInclude Include="commonMath.h">
+    <ClInclude Include="CommonMath.h">
       <Filter>Engine\Math</Filter>
     </ClInclude>
     <ClInclude Include="Position.h">
@@ -165,6 +168,16 @@
     </ClInclude>
     <ClInclude Include="Light.h">
       <Filter>Engine\LightSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Components.h" />
+    <ClInclude Include="TimerSystem.h">
+      <Filter>Engine\TimerSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Engine\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>Engine\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -260,6 +273,9 @@
     </ClCompile>
     <ClCompile Include="Light.cpp">
       <Filter>Engine\LightSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerSystem.cpp">
+      <Filter>Engine\TimerSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

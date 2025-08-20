@@ -152,13 +152,16 @@
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
-    <ClInclude Include="commonMath.h" />
+    <ClInclude Include="CommonMath.h" />
+    <ClInclude Include="Components.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="Frustum.h" />
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="LightSystem.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Plane.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SamplerState.h" />
@@ -176,6 +179,7 @@
     <ClInclude Include="SwapChain.h" />
     <ClInclude Include="TempObj.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="TimerSystem.h" />
     <ClInclude Include="Vector2.h" />
     <ClInclude Include="Vector3.h" />
     <ClInclude Include="Vector4.h" />
@@ -212,6 +216,7 @@
     <ClCompile Include="SwapChain.cpp" />
     <ClCompile Include="TempObj.cpp" />
     <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TimerSystem.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="VertexShader.cpp" />
     <ClCompile Include="Window.cpp" />

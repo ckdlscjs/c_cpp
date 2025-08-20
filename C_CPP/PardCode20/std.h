@@ -26,7 +26,7 @@
 #include <functional>
 #include <codecvt>							//need to w to m, m to w
 //#include "bits/stdc++.h"
-#include "commonMath.h"
+#include "CommonMath.h"
 
 //d3d Header
 #include <d3d11.h>

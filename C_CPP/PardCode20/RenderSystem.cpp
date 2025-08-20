@@ -45,8 +45,21 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	OnResize(m_iWidth, m_iHeight);
 }
 
+void RenderSystem::Frame(float deltatime)
+{
+	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
+	std::cout << "deltatime : " << deltatime << '\n';
+
+	for (const auto& iter : objs)
+	{
+		iter->Frame(deltatime);
+	}
+}
+
+
 void RenderSystem::Frame()
 {
+	/*
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "ElapsedTime : " << m_fElapsedtime << '\n';
 	
@@ -63,6 +76,7 @@ void RenderSystem::Frame()
 	m_fDeltatime = (float)dwElaspsed * 0.001f;
 	m_fElapsedtime += m_fDeltatime;
 	m_dwOldTick = m_dwCurTick;
+	*/
 }
 
 void RenderSystem::PreRender()
@@ -71,7 +85,7 @@ void RenderSystem::PreRender()
 	//RTVÃÊ±âÈ­
 	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
 }
-#define __OPTIMIZED
+
 void RenderSystem::Render()
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
@@ -125,7 +139,7 @@ void RenderSystem::Render()
 			m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
 			Constant_time cc1;
-			cc1.fTime = _DEGTORAD(m_fElapsedtime * 360.0f);
+			cc1.fTime = _DEGTORAD(1.0f * 360.0f);
 			m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 			m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
 
