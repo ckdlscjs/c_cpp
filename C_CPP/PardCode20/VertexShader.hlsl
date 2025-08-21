@@ -22,6 +22,7 @@ cbuffer cc_wvp : register(b0)
 VS_OUTPUT vsmain(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
+    input.pos0.w = 1.0f;
     output.pos0 = mul(input.pos0, matWorld);
     output.pos0 = mul(output.pos0, matView);
     output.pos0 = mul(output.pos0, matProj); //원근나눗셈은 래스터라이저에서 들어온 w값으로 알아서수행된다

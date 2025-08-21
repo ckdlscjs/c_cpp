@@ -24,6 +24,7 @@ cbuffer CB_WVPIT : register(b3)
 VS_OUTPUT vsmain(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
+    input.pos0.w = 1.0f;
     output.pos0 = mul(input.pos0, matWorld);
     output.pos1 = output.pos0;
     output.normal0 = float4(mul(input.normal0.xyz, (float3x3) matInvTrans), 0.0f);

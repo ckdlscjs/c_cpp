@@ -28,7 +28,7 @@ ConstantBuffer::~ConstantBuffer()
 
 void ConstantBuffer::UpdateBufferData(ID3D11DeviceContext* pDeviceContext, void* data)
 {
-	std::cout << "ConstantBuffer" << " Class" << " UpdateSubresource" << '\n';
+	//std::cout << "ConstantBuffer" << " Class" << " UpdateSubresource" << '\n';
 	/*
 	 virtual void STDMETHODCALLTYPE UpdateSubresource( 
 		_In_  ID3D11Resource* pDstResource,						//업데이트 대상 버퍼

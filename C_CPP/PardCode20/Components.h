@@ -11,3 +11,8 @@ public:
 	Vector3 m_vRotation;
 	Vector3 m_vScale;
 };
+
+class InputComponent : public Component
+{
+
+};

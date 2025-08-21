@@ -38,7 +38,7 @@ void* PointLight::GetConstant()
 	m_CBData.m_Ambient = m_mAmbient;
 	m_CBData.m_Diffuse = m_mDiffuse;
 	m_CBData.m_Specular = m_mSpecular;
-	m_CBData.v_Position = Vector4(m_vPosition.ToVector3(), m_fShiness);
+	m_CBData.v_Position = Vector4(m_vPosition,m_fShiness);
 	m_CBData.f_Attenuation = Vector4(m_fAtt_a0, m_fAtt_a1, m_fAtt_a2, m_fRange);
 	return &m_CBData;
 }
@@ -52,8 +52,8 @@ void* SpotLight::GetConstant()
 	m_CBData.m_Ambient = m_mAmbient;
 	m_CBData.m_Diffuse = m_mDiffuse;
 	m_CBData.m_Specular = m_mSpecular;
-	m_CBData.v_Direction = _CameraSystem.GetCamera(0)->GetTarget().ToVector3().Normalize();
-	m_CBData.v_Position = Vector4(_CameraSystem.GetCamera(0)->GetPosition().ToVector3(), m_fShiness);
+	m_CBData.v_Direction = _CameraSystem.GetCamera(0)->GetTarget().Normalize();
+	m_CBData.v_Position = Vector4(_CameraSystem.GetCamera(0)->GetPosition(), m_fShiness);
 	m_CBData.f_Attenuation = Vector4(m_fAtt_a0, m_fAtt_a1, m_fAtt_a2, m_fRange);
 	m_CBData.f_Spots = Vector3(m_fSpot, m_fCos_OuterCone, m_fCos_InnerCone);
 	return &m_CBData;

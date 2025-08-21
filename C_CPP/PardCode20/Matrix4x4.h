@@ -111,8 +111,8 @@ struct Matrix4x4
         DirectX::XMStoreFloat4x4(&result, m_mat);
         return result;
     }
-    friend inline Vector4 operator*(const Vector4& v, const Matrix4x4& m);
     friend inline Vector3 operator*(const Vector3& v, const Matrix4x4& m);
+    friend inline Vector4 operator*(const Vector4& v, const Matrix4x4& m);
 private:
     union
     {
@@ -124,18 +124,9 @@ private:
 // v * m 연산을 위한 함수
 inline Vector3 operator*(const Vector3& v, const Matrix4x4& m)
 {
-    // 1. Vector3를 XMVECTOR로 변환
-    DirectX::XMVECTOR v_vec = v.ToXMVECTOR();
-
-    // 2. XMMatrix에 XMVector3TransformNormal 함수 적용
-    //    이 함수는 w=0인 벡터를 행렬 변환하고, 정규화(Normalize)까지 해줍니다.
-    DirectX::XMVECTOR result_vec = DirectX::XMVector3TransformNormal(v_vec, m.ToXMMATRIX());
-
-    // 3. 결과를 다시 Vector3 객체로 반환
-    return Vector3(result_vec);
+    // 결과를 다시 Vector3 객체로 반환, w를 1로 처리하고 연산해준다
+    return Vector3(DirectX::XMVector3Transform(v.ToXMVECTOR(), m.ToXMMATRIX()));
 }
-
-// Vector4 * Matrix4x4 연산자를 전역 함수로 오버로드
 inline Vector4 operator*(const Vector4& v, const Matrix4x4& m)
 {
     // DirectXMath의 XMVector4Transform은 Vector * Matrix 연산을 수행합니다.

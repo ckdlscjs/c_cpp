@@ -39,6 +39,7 @@ Mesh::Mesh(size_t hashID, const std::wstring& szFilePath)
 					ty = attributes.texcoords[index.texcoord_index * 2 + 1];
 					//// V 텍스처 좌표를 왼손 시스템으로 반전시킵니다.
 					//texcoords[texcoordIndex].y = 1.0f - texcoords[texcoordIndex].y;
+					tx = 1.0f - tx;
 					ty = 1.0f - ty;
 				}
 				
@@ -48,6 +49,7 @@ Mesh::Mesh(size_t hashID, const std::wstring& szFilePath)
 					ny = attributes.normals[index.normal_index * 3 + 1];
 					nz = attributes.normals[index.normal_index * 3 + 2];
 				}
+				m_Poss.push_back({ vx, vy, vz });
 				m_Vertices.push_back({ {vx, vy, vz}, {tx, ty}, {nx, ny, nz} });
 				m_Indices.push_back((UINT)m_Vertices.size()-1);
 			}
@@ -58,6 +60,11 @@ Mesh::Mesh(size_t hashID, const std::wstring& szFilePath)
 
 Mesh::~Mesh()
 {
+}
+
+const std::vector<Vector3>* Mesh::GetPoss()
+{
+	return &m_Poss;
 }
 
 Vertex_PTN* Mesh::GetVertices()
@@ -128,4 +135,14 @@ void Mesh::SetIdx_IL(size_t idxIL)
 size_t Mesh::GetIdx_IL() const
 {
 	return m_IdxIL;
+}
+
+void Mesh::SetIdx_Collider(size_t idxCollider)
+{
+	m_IdxCollider = idxCollider;
+}
+
+size_t Mesh::GetIdx_Collider() const
+{
+	return m_IdxCollider;
 }

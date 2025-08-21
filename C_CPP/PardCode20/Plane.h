@@ -1,7 +1,8 @@
 #pragma once
-#include "Vector4.h"
+#include "Collider.h"
+
 __declspec(align(16))
-struct Plane
+class Plane : public Collider
 {
 public:
 	/*
@@ -19,14 +20,14 @@ public:
 	inline Plane(const Vector3& n, const Vector3& p) : Plane(n, DotProduct(n, p)) {}
 	inline Plane(float a, float b, float c, float d) : Plane(Vector3(a, b, c), d) {}
 	inline Plane(const Vector4& v) : Plane(v.ToVector3(), v.GetW()) {}
-	inline Plane(const Position& p0, const Position& p1, const Position& p2)
+	inline Plane(const Vector3& p0, const Vector3& p1, const Vector3& p2)
 	{
 		Vector3 v0 = p1 - p0;
 		Vector3 v1 = p2 - p0;
 		Vector3 n = CrossProduct(v0, v1);
 		_ASEERTION_NULCHK(n != Vector3(0, 0, 0), "normal is zero");
 		n = n.Normalize();
-		float d = -DotProduct(n, p0.ToVector3());
+		float d = -DotProduct(n, p0);
 		m_vec.Set(n.GetX(), n.GetY(), n.GetZ(), d);
 	}
 	inline Vector3 GetNormal() const
@@ -37,9 +38,13 @@ public:
 	{
 		return m_vec.GetW();
 	}
-	inline bool IsOutside(const Position& p) const
+	inline float Distance(const Vector3& p) const
 	{
-		float result = DotProduct(GetNormal(), p.ToVector3()) + GetDistance();
+		return DotProduct(GetNormal(), p) + GetDistance();
+	}
+	inline bool IsOutside(const Vector3& p) const
+	{
+		float result = DotProduct(GetNormal(), p) + GetDistance();
 		return result < 0.0f;
 	}
 	

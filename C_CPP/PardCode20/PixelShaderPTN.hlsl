@@ -132,14 +132,14 @@ float4 psmain(PS_INPUT input) : SV_Target
     float4 M = Texture.Sample(TextureSampler, input.tex0.xy);   //텍스쳐값
     float4 P = input.pos1;                                      //변환된 월드의정점
     
-    
+    /*
     //DirectionalLight
     float3 L = -ld_dir;                                         //광원을향하는벡터
     float3 N = normalize(input.normal0.xyz);                    //정점법선벡터 정규화
     float3 R = reflect(ld_dir, N);                              //반사벡터(입사벡터, 법선을 인자로사용)
     float3 V = normalize(campos.xyz - P.xyz);                   //시점을향하는벡터
     return DirectionalLight(L, N, R, V) * M;                    //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
-    
+    */
     /*
     //PointLight
     float3 L = lp_pos - P.xyz;                                  //점광, 정점에서 광원을향하는방향
@@ -152,7 +152,7 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 V = normalize(campos.xyz - P.xyz);
     return PointLight(L, D, N, R, V) * M;
     */
-    /*
+    
     //SpotLight
     float3 L = ls_pos - P.xyz;
     float D = length(L);
@@ -163,5 +163,5 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 R = reflect(-L, N);
     float3 V = normalize(campos.xyz - P.xyz);
     return SpotLight(L, D, N, R, V) * M;
-    */
+    
 }

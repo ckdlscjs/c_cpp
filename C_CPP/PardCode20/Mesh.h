@@ -12,6 +12,7 @@ public:
 	Mesh(Mesh&&) = delete;
 	Mesh& operator=(Mesh&&) = delete;
 	
+	const std::vector<Vector3>* GetPoss();
 	Vertex_PTN* GetVertices();
 	size_t GetVerticesSize() const;
 	UINT* GetIndices();
@@ -26,7 +27,10 @@ public:
 	size_t GetIdx_PS() const;
 	void SetIdx_IL(size_t idxIL);
 	size_t GetIdx_IL() const;
+	void SetIdx_Collider(size_t idxCollider);
+	size_t GetIdx_Collider() const;
 private:
+	std::vector<Vector3> m_Poss;
 	std::vector<Vertex_PTN> m_Vertices;
 	std::vector<UINT> m_Indices;
 	size_t m_IdxVB;
@@ -34,5 +38,6 @@ private:
 	size_t m_IdxVS;
 	size_t m_IdxPS;
 	size_t m_IdxIL;
+	size_t m_IdxCollider;
 };
 

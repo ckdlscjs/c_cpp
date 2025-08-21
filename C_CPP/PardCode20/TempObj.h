@@ -18,8 +18,10 @@ public:
 	float m_fSpeedScale;
 	Vector3 m_vRotate;
 	float m_fSpeedRotate;
-	Position m_vPosition;
+	Vector3 m_vPosition;
 	float m_fSpeedMove;
+	bool bRenderable;
+
 	std::unordered_map<int, int> VK_MASK;
 	size_t m_lVKMask;
 	std::unordered_map<InputEventType, std::vector<size_t>> m_IdxCallbacks;

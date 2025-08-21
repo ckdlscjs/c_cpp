@@ -53,6 +53,12 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 	Notify(event);
 }
 
+bool InputSystem::GetKeyState(unsigned char VK_KEY) const
+{
+	if (VK_KEY < 0 || VK_KEY > 255) return false;
+	return m_CurKeystate[VK_KEY];
+}
+
 void InputSystem::OnMouseMove(int curX, int curY)
 {
 	InputEvent event;

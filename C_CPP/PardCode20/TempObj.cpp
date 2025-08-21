@@ -65,14 +65,13 @@ void TempObj::Init()
 		}
 	));
 
+	/*
 	m_IdxCallbacks[InputEventType::MOUSE_MOVE].push_back(_InputSystem.AddListner(InputEventType::MOUSE_MOVE, [this](const InputEvent& event)->void
 		{
 			std::cout << "MousePosVal : (" << event.mouseX << ", " << event.mouseY << ")" << '\n';
 			std::cout << "MouseDeltaVal : (" << event.mouseDeltaX << ", " << event.mouseDeltaY << ")" << '\n';
 		}
 	));
-
-	/*NEED?
 	m_IdxCallbacks[InputEventType::MOUSE_L_DOWN].push_back(_InputSystem.AddListner(InputEventType::MOUSE_L_DOWN, [this](const InputEvent& event)->void
 		{
 		}

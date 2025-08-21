@@ -2,6 +2,10 @@
 #include "Vector3.h"
 #include "Vector4.h"
 
+/*
+* 
+deprecated, use vector3/4 250822
+
 struct Position
 {
 public:
@@ -55,6 +59,13 @@ public:
 		ret *= scalar;
 		return ret;
 	}
+
+	inline Position operator/(float scalar) const { return Position(DirectX::XMVectorScale(m_vec.ToXMVECTOR(), 1.0f / scalar)); }
+	inline Position& operator/=(float scalar)
+	{
+		m_vec = DirectX::XMVectorScale(m_vec.ToXMVECTOR(), 1.0f / scalar);
+		return *this;
+	}
 	inline Vector3 ToVector3() const { return m_vec.ToVector3(); }
 	friend inline Vector3 operator-(const Position& p1, const Position& p2);
 private:
@@ -64,3 +75,4 @@ inline Vector3 operator-(const Position& p1, const Position& p2)
 {
 	return (p1.m_vec - p2.m_vec).ToVector3();
 }
+*/

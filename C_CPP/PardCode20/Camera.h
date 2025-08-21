@@ -3,8 +3,8 @@
 struct CameraProperties
 {
 	//카메라의 속성
-	Position m_vPosition;			//카메라의 위치
-	Position m_vLookAt;				//카메라가 보는 위치
+	Vector3 m_vPosition;			//카메라의 위치
+	Vector3 m_vLookAt;				//카메라가 보는 위치
 
 	Vector3 m_vRight;				//카메라의 우측벡터		(right)
 	Vector3 m_vUp;					//카메라의 업벡터			(up)
@@ -19,19 +19,24 @@ struct CameraProperties
 	float m_fAspectRatio;			//화면비, (화면너비 / 높이), fov와같이사용되어 투영행렬에 이용됨
 	float m_fNearZ;					//근단면
 	float m_fFarZ;					//원단면
+
+	float m_fSpeedMove;				//이동속도
+	float m_fSpeedRotate;			//회전속도
 	CameraProperties() :
 		m_vPosition({ 0.0f, 0.0f, 0.0f }),
 		m_vLookAt({ 0.0f, 0.0f, 0.0f }),
-		m_vRight({1.0f, 0.0f, 0.0f}),
+		m_vRight({ 1.0f, 0.0f, 0.0f }),
 		m_vUp({ 0.0f, 1.0f, 0.0f }),
-		m_vForward({0.0f, 0.0f, 1.0f}),
+		m_vForward({ 0.0f, 0.0f, 1.0f }),
 		m_fRoll(0.0f),
 		m_fPitch(0.0f),
 		m_fYaw(0.0f),
 		m_fFov(60.0f),
 		m_fAspectRatio(800.0f / 600.0f),
 		m_fNearZ(0.1f),
-		m_fFarZ(4000.0f)
+		m_fFarZ(4000.0f),
+		m_fSpeedMove(500.0f),
+		m_fSpeedRotate(200.0f)
 	{}
 };
 class BaseCamera
@@ -55,10 +60,11 @@ public:
 	const Matrix4x4& GetProjMatrix();
 
 	//카메라속성
-	const Position& GetPosition();
-	const Position& GetTarget();
-	void SetPosition(const Position& pos);
-	void SetTarget(const Position& target);
+	const Vector3& GetPosition();
+	const Vector3& GetTarget();
+	const float GetMoveSpeed();
+	void SetPosition(const Vector3& pos);
+	void SetTarget(const Vector3& target);
 	void MovePosition(const Vector3& translation);
 	void UpdateEulerRotate(int deltaX, int deltaY, float sensetivity = 0.1f);
 
@@ -66,8 +72,9 @@ public:
 	void SetFOV(float Fov);
 	void SetAsepectRatio(float aspectRatio);
 	void SetClipPlanes(float nearZ, float farZ);
+	float GetNearZ();
+	float GetFarZ();
 
-	virtual void Frame(float detlaTime) = 0;
 	virtual ~BaseCamera();
 };
 inline BaseCamera::BaseCamera()
@@ -91,9 +98,9 @@ inline const Matrix4x4& BaseCamera::GetViewMatrix()
 		//오일러각에의한 행렬갱신
 		m_MatView = GetMat_ViewMatrix(m_Properties.m_vPosition, m_Properties.m_fPitch, m_Properties.m_fYaw, m_Properties.m_fRoll);
 		m_MatWorld = GetMat_Inverse(m_MatView);
-		m_Properties.m_vRight = m_MatWorld[0].ToVector3();
-		m_Properties.m_vUp = m_MatWorld[1].ToVector3();
-		m_Properties.m_vForward = m_MatWorld[2].ToVector3();
+		m_Properties.m_vRight = m_MatWorld[0].ToVector3();		//u
+		m_Properties.m_vUp = m_MatWorld[1].ToVector3();			//v
+		m_Properties.m_vForward = m_MatWorld[2].ToVector3();	//w
 		m_Properties.m_vLookAt = m_Properties.m_vForward * 1000000.0f;
 		m_bDirtyFlag_View = false;
 	}
@@ -109,21 +116,25 @@ inline const Matrix4x4& BaseCamera::GetProjMatrix()
 	}
 	return m_MatProj;
 }
-inline const Position& BaseCamera::GetPosition()
+inline const Vector3& BaseCamera::GetPosition()
 {
 	return m_Properties.m_vPosition;
 }
 
-inline const Position& BaseCamera::GetTarget()
+inline const Vector3& BaseCamera::GetTarget()
 {
 	return m_Properties.m_vLookAt;
 }
-inline void BaseCamera::SetPosition(const Position& pos)
+inline const float BaseCamera::GetMoveSpeed()
+{
+	return m_Properties.m_fSpeedMove;
+}
+inline void BaseCamera::SetPosition(const Vector3& pos)
 {
 	m_Properties.m_vPosition = pos;
 	m_bDirtyFlag_View = true;
 }
-inline void BaseCamera::SetTarget(const Position& target)
+inline void BaseCamera::SetTarget(const Vector3& target)
 {
 	/*
 	vLookat을 구했다면 여기서 역산하여 오일러각을 구할 수 있다 기본적으로 벡터의 구성요소인 x,y,z에서 역산한다
@@ -191,4 +202,14 @@ inline void BaseCamera::SetClipPlanes(float nearZ, float farZ)
 	m_Properties.m_fNearZ = nearZ;
 	m_Properties.m_fFarZ = farZ;
 	m_bDirtyFlag_Proj = true;
+}
+
+inline float BaseCamera::GetNearZ()
+{
+	return m_Properties.m_fNearZ;
+}
+
+inline float BaseCamera::GetFarZ()
+{
+	return m_Properties.m_fFarZ;
 }

@@ -23,6 +23,7 @@ public:
 	void OnKeyDown(unsigned char VK_KEY);
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
+	bool GetKeyState(unsigned char VK_KEY) const;
 	void OnMouseMove(int curX, int curY);
 	void OnMouseMoveCenter(HWND hWnd, int curX, int curY);
 	void SetMouseCenter(HWND hWnd);

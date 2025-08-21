@@ -152,6 +152,8 @@
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionSystem.h" />
     <ClInclude Include="CommonMath.h" />
     <ClInclude Include="Components.h" />
     <ClInclude Include="ConstantBuffer.h" />
@@ -165,6 +167,7 @@
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SamplerState.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Direct3D.h" />
     <ClInclude Include="FirstPersonCamera.h" />
@@ -197,6 +200,7 @@
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="AppWindow.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
+    <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />

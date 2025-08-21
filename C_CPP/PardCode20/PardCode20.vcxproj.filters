@@ -43,6 +43,9 @@
     <Filter Include="Engine\TimerSystem">
       <UniqueIdentifier>{6b9b85d4-64fb-40fa-95b5-14de369f4d2d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\CollisionSystem">
+      <UniqueIdentifier>{23f0691b-7b2a-472c-b152-c77308a4b2ac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
@@ -173,11 +176,20 @@
     <ClInclude Include="TimerSystem.h">
       <Filter>Engine\TimerSystem</Filter>
     </ClInclude>
+    <ClInclude Include="CollisionSystem.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
     <ClInclude Include="Plane.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
     <ClInclude Include="Frustum.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -276,6 +288,9 @@
     </ClCompile>
     <ClCompile Include="TimerSystem.cpp">
       <Filter>Engine\TimerSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionSystem.cpp">
+      <Filter>Engine\CollisionSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

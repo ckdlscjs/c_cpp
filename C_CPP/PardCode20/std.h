@@ -25,6 +25,10 @@
 #include <algorithm>
 #include <functional>
 #include <codecvt>							//need to w to m, m to w
+
+#include <random>							//랜덤난수생성을위함(mt19937)
+#include <ctime>							//랜덤난수생성을위함(mt19937)
+
 //#include "bits/stdc++.h"
 #include "CommonMath.h"
 
@@ -83,7 +87,7 @@ struct PointXY
 
 struct Vertex_PC
 {
-	Position pos0;
+	Vector3 pos0;
 	Vector4 color0;
 };
 static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
@@ -95,7 +99,7 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
 static UINT size_InputLayout_VertexPC = ARRAYSIZE(InputLayout_VertexPC);
 struct Vertex_PTN
 {
-	Position pos0;
+	Vector3 pos0;
 	Vector2 tex0;
 	Vector3 normal0;
 };
@@ -110,7 +114,7 @@ static UINT size_InputLayout_VertexPTN = ARRAYSIZE(InputLayout_VertexPTN);
 
 struct Vertex_PCT
 {
-	Position pos0;
+	Vector3 pos0;
 	Vector4 color0;
 	Vector2 tex0;
 };
@@ -124,8 +128,8 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPCT[] =
 static UINT size_InputLayout_VertexPCT = ARRAYSIZE(InputLayout_VertexPCT);
 struct Vertex_PPCC
 {
-	Position pos0;
-	Position pos1;
+	Vector3 pos0;
+	Vector3 pos1;
 	Vector4 color0;
 	Vector4 color1;
 };
@@ -149,7 +153,7 @@ struct Constant_time
 __declspec(align(16))
 struct CB_Campos
 {
-	Position camPos;
+	Vector3 camPos;
 };
 
 __declspec(align(16))
@@ -214,6 +218,17 @@ inline const T& Clamp(const T& val, const T& low, const T& high)
 	if (val < low) return low;
 	else if (val > high) return high;
 	else return val;
+}
+
+inline size_t HashFilePath(const std::wstring& path)
+{
+	// FNV-1a (64비트) 구현 예시
+	size_t hash = 14695981039346656037ULL; // FNV_PRIME_64
+	for (wchar_t c : path) {
+		hash ^= static_cast<size_t>(c);
+		hash *= 1099511628211ULL; // FNV_OFFSET_64
+	}
+	return hash;
 }
 
 /*
@@ -350,9 +365,9 @@ inline Matrix4x4 GetMat_Translation(const Vector3 translation)
 * Tx		Ty			Tz			1.0f
 */
 
-inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegrees, const Position position)
+inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegrees, const Vector3 position)
 {
-	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position.ToVector3());
+	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position);
 }
 
 /*
@@ -363,7 +378,7 @@ inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegr
 * -QdotU	-QdotV		-QdotW		1.0f
 */
 
-inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Position posTarget, const Vector3 upVector = Vector3(0.0f, 1.0f, 0.0f))
+inline Matrix4x4 GetMat_ViewMatrix(const Vector3 posCamera, const Vector3 posTarget, const Vector3 upVector = Vector3(0.0f, 1.0f, 0.0f))
 {
 	Matrix4x4 mat;
 	//forward, z
@@ -380,15 +395,15 @@ inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const Position posT
 	mat[2] = Vector4(u.GetZ(), v.GetZ(), w.GetZ(), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
-	Vector3 camPos = posCamera.ToVector3();
+	Vector3 camPos = posCamera;
 	mat[3] = Vector4(-DotProduct(u, camPos), -DotProduct(v, camPos), -DotProduct(w, camPos), 1.0f);
 	return mat;
 }
 
-inline Matrix4x4 GetMat_ViewMatrix(const Position posCamera, const float fPitch, const float fYaw, const float fRoll)
+inline Matrix4x4 GetMat_ViewMatrix(const Vector3 posCamera, const float fPitch, const float fYaw, const float fRoll)
 {
 	Matrix4x4 matRotate = GetMat_RotRollPitchYaw({fPitch, fYaw, fRoll}).Transpose();		//회전행렬의 전치행렬(역행렬)
-	Matrix4x4 matTrans = GetMat_Translation(-posCamera.ToVector3());	//이동행렬의 역행렬
+	Matrix4x4 matTrans = GetMat_Translation(-posCamera);	//이동행렬의 역행렬
 	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;
 }

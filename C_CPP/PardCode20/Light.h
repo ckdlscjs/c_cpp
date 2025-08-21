@@ -37,7 +37,7 @@ public:
 	~PointLight() override;
 	void* GetConstant() override;
 public:
-	Position m_vPosition;
+	Vector3 m_vPosition;
 	float m_fShiness;
 	float m_fAtt_a0;
 	float m_fAtt_a1;
@@ -53,7 +53,7 @@ public:
 	void* GetConstant() override;
 public:
 	Vector3 m_vDirection;
-	Position m_vPosition;
+	Vector3 m_vPosition;
 	float m_fShiness;
 	float m_fAtt_a0;
 	float m_fAtt_a1;

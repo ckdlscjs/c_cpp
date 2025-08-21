@@ -17,6 +17,7 @@
 #include "Mesh.h"
 #include "LightSystem.h"
 #include "Light.h"
+#include "CollisionSystem.h"
 
 RenderSystem::RenderSystem()
 {
@@ -56,29 +57,6 @@ void RenderSystem::Frame(float deltatime)
 	}
 }
 
-
-void RenderSystem::Frame()
-{
-	/*
-	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
-	std::cout << "ElapsedTime : " << m_fElapsedtime << '\n';
-	
-	for (const auto& iter : objs)
-	{
-		iter->Frame(m_fDeltatime);
-	}
-
-	//시간경과, 추후 Timer클래스로분할
-	m_dwCurTick = (DWORD)::GetTickCount64();
-	if(m_dwOldTick <= 0)
-		m_dwOldTick = m_dwCurTick;
-	DWORD dwElaspsed = m_dwCurTick - m_dwOldTick;
-	m_fDeltatime = (float)dwElaspsed * 0.001f;
-	m_fElapsedtime += m_fDeltatime;
-	m_dwOldTick = m_dwCurTick;
-	*/
-}
-
 void RenderSystem::PreRender()
 {
 	std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
@@ -92,17 +70,11 @@ void RenderSystem::Render()
 
 	//프레임에따른 변환
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
-	//XMMATRIX matView = GetMat_ViewMatrix(XMFLOAT3(-300.0f, 500.0f, -1000.0f), XMFLOAT3(0.0f, 0.0f, 0.0f));
-
-	//cc0.matProj = GetMat_Ortho(m_fWidth, m_fHeight, -4000.0f, 4000.0f);
-	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth / (float)m_iHeight);
-	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
-	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 4000.0f);
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
-	//XMMATRIX matProj = GetMat_Perspective((float)m_iWidth, (float)m_iHeight, 75.0f, 0.1f, 4000.0f);
 
 	for (const auto& iter : objs)
 	{
+		if (!iter->bRenderable) continue;
 		for (const auto hash : iter->m_hashMeshes)
 		{
 			size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
@@ -110,7 +82,7 @@ void RenderSystem::Render()
 			size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
 			size_t idxVS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VS();
 			size_t idxPS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_PS();
-			
+
 			m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCILs[idxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
@@ -340,8 +312,8 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag, Samplers sampler)
 {
 	//이미 있는 리소스라면
-	size_t hash = _ResourceSystem.HashFilePath(szFilePath);
-	Texture* pTexture = _ResourceSystem.GetResource<Texture>(_ResourceSystem.HashFilePath(szFilePath));
+	size_t hash = HashFilePath(szFilePath);
+	Texture* pTexture = _ResourceSystem.GetResource<Texture>(HashFilePath(szFilePath));
 	if (pTexture)
 		return hash;
 
@@ -366,12 +338,13 @@ size_t RenderSystem::CreateTexture2D(const ScratchImage* resource, Samplers samp
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
 {
 	//이미 있는 리소스라면
-	size_t hash = _ResourceSystem.HashFilePath(szFilePath);
+	size_t hash = HashFilePath(szFilePath);
 	Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
 	if (pMesh)
 		return hash;
 
 	pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
+	pMesh->SetIdx_Collider(_CollisionSystem.CreateCollider_Sphere(szFilePath, pMesh->GetPoss()));
 	pMesh->SetIdx_VB(CreateVertexBuffer(pMesh->GetVertices(), sizeof(Vertex_PTN), pMesh->GetVerticesSize()));
 	pMesh->SetIdx_IB(CreateIndexBuffer(pMesh->GetIndices(), pMesh->GetIndicesSize()));
 	pMesh->SetIdx_VS(CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0"));
