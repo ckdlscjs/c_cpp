@@ -1,5 +1,6 @@
 #pragma once
-#include "std.h"
+#include "CommonHeader.h"
+
 template<typename T>
 class BaseSystem
 {

@@ -1,6 +1,6 @@
 #pragma once
 #include "Collider.h"
-__declspec(align(16))
+
 class Sphere : public Collider
 {
 public:

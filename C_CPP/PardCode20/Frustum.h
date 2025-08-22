@@ -1,7 +1,6 @@
 #pragma once
 #include "Plane.h"
 
-__declspec(align(16))
 class Frustum
 {
 public:

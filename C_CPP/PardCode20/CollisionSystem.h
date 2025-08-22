@@ -1,8 +1,10 @@
 #pragma once
 #include "BaseSystem.h"
+
 class Collider;
 class Frustum;
 class Sphere;
+
 class CollisionSystem : public BaseSystem<CollisionSystem>
 {
 	friend class BaseSystem<CollisionSystem>;	//CRTP패턴을 위한 friend선언

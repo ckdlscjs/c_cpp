@@ -2,6 +2,7 @@
 #include "Frustum.h"
 #include "Plane.h"
 #include "Sphere.h"
+//밑부분은 책임분리 고려필요
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
 #include "RenderSystem.h"	//임시, obj를받아오기위함 추후 objectSystem에서 받아와야함
@@ -24,7 +25,7 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	int count = 0;
+	UINT count = 0;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
 	for (const auto& iter : _RenderSystem.objs)
@@ -42,7 +43,7 @@ void CollisionSystem::Frame(float deltatime)
 			}
 		}
 	}
-	std::cout << "렌더링될 객체수 : " << count << '\n';
+	std::cout << "렌더링될 객체수 : " << count << ", 컬링된 객체수 : " << _RenderSystem.objs .size() - count << '\n';
 }
 
 

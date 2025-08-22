@@ -40,6 +40,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.Init();
 	_LightSystem.Init();
 
+
 	_InputSystem.SetMouseCenter(m_hWnd);
 
 	//카메라 기본세팅

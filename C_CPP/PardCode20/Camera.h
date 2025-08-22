@@ -1,5 +1,5 @@
 #pragma once
-#include "std.h"
+#include "CommonHeader.h"
 struct CameraProperties
 {
 	//카메라의 속성

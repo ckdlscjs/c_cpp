@@ -1,5 +1,5 @@
 #pragma once
-#include "std.h"
+#include "CommonHeader.h"
 class SwapChain;
 class Direct3D
 {

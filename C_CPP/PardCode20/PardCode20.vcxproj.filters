@@ -191,6 +191,7 @@
     <ClInclude Include="Collider.h">
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
+    <ClInclude Include="CommonHeader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">

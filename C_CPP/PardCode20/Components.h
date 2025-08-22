@@ -1,5 +1,6 @@
 #pragma once
-#include "std.h"
+#include "CommonHeader.h"
+
 class Component
 {
 };
@@ -7,7 +8,7 @@ class Component
 class TransformComponent : public Component
 {
 public:
-	Position m_vPosition;
+	Vector3 m_vPosition;
 	Vector3 m_vRotation;
 	Vector3 m_vScale;
 };

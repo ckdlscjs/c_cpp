@@ -1,7 +1,6 @@
 #pragma once
 #include "Collider.h"
 
-__declspec(align(16))
 class Plane : public Collider
 {
 public:

@@ -154,6 +154,7 @@
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="CollisionSystem.h" />
+    <ClInclude Include="CommonHeader.h" />
     <ClInclude Include="CommonMath.h" />
     <ClInclude Include="Components.h" />
     <ClInclude Include="ConstantBuffer.h" />
