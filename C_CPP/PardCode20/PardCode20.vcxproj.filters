@@ -34,9 +34,6 @@
     <Filter Include="Engine\Window">
       <UniqueIdentifier>{cd8071f3-62e9-4823-bd08-21d475dbf9f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\Math">
-      <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\LightSystem">
       <UniqueIdentifier>{60773b21-fb92-443b-bc6d-0f585001bf6d}</UniqueIdentifier>
     </Filter>
@@ -45,6 +42,9 @@
     </Filter>
     <Filter Include="Engine\CollisionSystem">
       <UniqueIdentifier>{23f0691b-7b2a-472c-b152-c77308a4b2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -143,25 +143,25 @@
       <Filter>ImGui</Filter>
     </ClInclude>
     <ClInclude Include="Vector2.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Vector3.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Vector4.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Quaternion.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Matrix4x4.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="CommonMath.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Position.h">
-      <Filter>Engine\Math</Filter>
+      <Filter>Math</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Engine\ResourceSystem</Filter>
@@ -192,6 +192,15 @@
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
     <ClInclude Include="CommonHeader.h" />
+    <ClInclude Include="ObjectSystem.h">
+      <Filter>Engine\ObjectSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Engine\ObjectSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Box.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -292,6 +301,12 @@
     </ClCompile>
     <ClCompile Include="CollisionSystem.cpp">
       <Filter>Engine\CollisionSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectSystem.cpp">
+      <Filter>Engine\ObjectSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -14,6 +14,7 @@ public:
 	// 성분별 접근
 	inline float GetX() const { return DirectX::XMVectorGetX(m_vec); }
 	inline float GetY() const { return DirectX::XMVectorGetY(m_vec); }
+	inline void Set(float x = 0, float y = 0) { SetX(x); SetY(y); }
 	inline void SetX(float x) { m_vec = DirectX::XMVectorSetX(m_vec, x); }
 	inline void SetY(float y) { m_vec = DirectX::XMVectorSetY(m_vec, y); }
 

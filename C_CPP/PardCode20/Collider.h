@@ -2,7 +2,6 @@
 #include "CommonHeader.h"
 enum class ColliderType
 {
-    NONE,
     SPHERE,
     AABB,
     OBB,

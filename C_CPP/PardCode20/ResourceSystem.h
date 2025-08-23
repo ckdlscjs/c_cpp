@@ -1,5 +1,6 @@
 #pragma once
 #include "BaseSystem.h"
+
 class Resource;
 class ResourceSystem : public BaseSystem<ResourceSystem>
 {

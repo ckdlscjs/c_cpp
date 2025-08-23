@@ -1,6 +1,5 @@
 #pragma once
 #include "Plane.h"
-
 class Frustum
 {
 public:

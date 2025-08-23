@@ -27,6 +27,7 @@
 #include <codecvt>							//need to w to m, m to w
 #include <random>							//랜덤난수생성을위함(mt19937)
 #include <ctime>							//랜덤난수생성을위함(mt19937)
+#include <typeindex>						//std::type_index
 
 //d3d Header
 #include <d3d11.h>
