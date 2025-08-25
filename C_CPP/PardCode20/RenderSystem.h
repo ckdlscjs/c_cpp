@@ -45,7 +45,7 @@ public:
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE, Samplers sampler = Samplers::WRAP_LINEAR);
 	size_t CreateTexture2D(const ScratchImage* resource, Samplers sampler);
-	size_t CreateMesh(const std::wstring& szFilePath);
+	size_t CreateMesh(const std::wstring& szFilePath, Colliders collider = Colliders::AABB);
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 
 private:

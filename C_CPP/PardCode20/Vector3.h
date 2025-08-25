@@ -61,6 +61,7 @@ public:
 	inline float Length() const { return DirectX::XMVectorGetX(DirectX::XMVector3Length(m_vec)); }
 	inline float LengthSquared() const { return DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(m_vec)); }
 	inline Vector3 Normalize() const { return Vector3(DirectX::XMVector3Normalize(m_vec)); }
+	inline Vector3 ABS() const { return Vector3(DirectX::XMVectorAbs(m_vec)); }
 	inline float DotProduct(const Vector3& other) const { return DirectX::XMVectorGetX(DirectX::XMVector3Dot(m_vec, other.m_vec)); }
 	inline Vector3 CrossProduct(const Vector3& other) const { return Vector3(DirectX::XMVector3Cross(m_vec, other.m_vec)); }
 

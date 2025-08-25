@@ -335,7 +335,7 @@ size_t RenderSystem::CreateTexture2D(const ScratchImage* resource, Samplers samp
 	return m_lIdx_CTXs++;
 }
 
-size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
+size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, Colliders collider)
 {
 	//이미 있는 리소스라면
 	size_t hash = HashFilePath(szFilePath);
@@ -344,7 +344,7 @@ size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
 		return hash;
 
 	pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
-	pMesh->SetIdx_Collider(_CollisionSystem.CreateCollider_Sphere(szFilePath, pMesh->GetPoss()));
+	pMesh->SetIdx_Collider(_CollisionSystem.CreateCollider(szFilePath, pMesh->GetPoss(), collider));
 	pMesh->SetIdx_VB(CreateVertexBuffer(pMesh->GetVertices(), sizeof(Vertex_PTN), pMesh->GetVerticesSize()));
 	pMesh->SetIdx_IB(CreateIndexBuffer(pMesh->GetIndices(), pMesh->GetIndicesSize()));
 	pMesh->SetIdx_VS(CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0"));

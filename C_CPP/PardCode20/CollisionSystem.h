@@ -4,6 +4,7 @@
 class Collider;
 class Frustum;
 class Sphere;
+class Box;
 
 class CollisionSystem : public BaseSystem<CollisionSystem>
 {
@@ -19,12 +20,14 @@ public:
 	void Init();
 	void Frame(float deltatime);
 	void Release();
-	size_t CreateCollider_Sphere(const std::wstring& szName, const std::vector<Vector3>* poss);
+	size_t CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, Colliders collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
+	
 private:
 	template<typename T, typename... Types>
 	size_t AddCollider(const std::wstring& szName, Types... args);
-
+	bool CheckBound(const Frustum& frustum, size_t idxCollider, const Matrix4x4& matWorld);
 	bool CheckBound(const Frustum& frustum, const Sphere& sphere, const Matrix4x4& matWorld);
+	bool CheckBound(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld);
 
 	std::unordered_map<size_t, Collider*> m_Colliders;
 	size_t m_lColliderID;

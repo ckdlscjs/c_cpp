@@ -109,7 +109,9 @@ void AppWindow::OnCreate()
 		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
 		_CameraSystem.GetCamera(0)->SetTarget(obj->m_vPosition);
 
-		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/teapot.obj" : L"../Assets/Meshes/cube.obj"));
+		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", Colliders::SPHERE));
+
+		//obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/teapot.obj" : L"../Assets/Meshes/cube.obj"));
 		obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE));
 
 		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_DirectionalLight)));

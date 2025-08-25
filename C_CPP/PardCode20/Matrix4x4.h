@@ -277,6 +277,34 @@ inline Matrix4x4 GetMat_WorldMatrix(const Vector3 scale, const Vector3 eulerDegr
 	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position);
 }
 
+
+//정규화된 좌표축을 가져온다 right, up, forward
+inline Vector3 GetAxesRightFromWorld(const Matrix4x4& matWorld)
+{
+
+	return Vector3(matWorld[0].GetX(), matWorld[1].GetX(), matWorld[2].GetX()).Normalize();
+}
+
+inline Vector3 GetAxesUpFromWorld(const Matrix4x4& matWorld)
+{
+	return Vector3(matWorld[0].GetY(), matWorld[1].GetY(), matWorld[2].GetY()).Normalize();
+}
+
+inline Vector3 GetAxesForwardFromWorld(const Matrix4x4& matWorld)
+{
+	return Vector3(matWorld[0].GetZ(), matWorld[1].GetZ(), matWorld[2].GetZ()).Normalize();
+}
+
+//각 회전축의 길이는 스케일값이 곱해져있으므로 길이값이 각 x, y, z스케일값을의미한다
+inline Vector3 GetScaleFromWorld(const Matrix4x4& matWorld)
+{
+	return Vector3(Vector3(matWorld[0].GetX(), matWorld[1].GetX(), matWorld[2].GetX()).Length(), Vector3(matWorld[0].GetY(), matWorld[1].GetY(), matWorld[2].GetY()).Length(), Vector3(matWorld[0].GetZ(), matWorld[1].GetZ(), matWorld[2].GetZ()).Length());
+}
+
+inline Vector3 GetTraslationFromWorld(const Matrix4x4& matWorld)
+{
+	return matWorld[3].ToVector3();
+}
 /*
 * 뷰행렬
 * Ux		Vx			Wx			0.0f

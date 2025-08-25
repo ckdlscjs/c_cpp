@@ -58,6 +58,7 @@ public:
 	inline float Length() const { return DirectX::XMVectorGetX(DirectX::XMVector2Length(m_vec)); }
 	inline float LengthSquared() const { return DirectX::XMVectorGetX(DirectX::XMVector2LengthSq(m_vec)); }
 	inline Vector2 Normalize() const { return Vector2(DirectX::XMVector2Normalize(m_vec)); }
+	inline Vector2 ABS() const { return Vector2(DirectX::XMVectorAbs(m_vec)); }
 	inline float DotProduct(const Vector2& other) const { return DirectX::XMVectorGetX(DirectX::XMVector2Dot(m_vec, other.m_vec)); }
 	// 2D 벡터의 외적은 스칼라 값을 반환합니다 (실제로 2D 평면에 수직인 3D 벡터의 Z 성분)
 	inline float CrossProduct(const Vector2& other) const {

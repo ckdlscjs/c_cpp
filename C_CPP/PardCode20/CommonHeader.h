@@ -21,6 +21,15 @@ enum class Samplers
 
 };
 
+enum class Colliders
+{
+	NONE,
+	SPHERE,
+	AABB,
+	OBB,
+	RAY,
+};
+
 //Resources data struct
 struct InputEvent
 {

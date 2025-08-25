@@ -1,7 +1,7 @@
 #pragma once
-#include "Collider.h"
+#include "CommonHeader.h"
 
-class Plane : public Collider
+class Plane
 {
 public:
 	/*

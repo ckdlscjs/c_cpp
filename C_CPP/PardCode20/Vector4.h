@@ -58,9 +58,11 @@ public:
 	inline bool operator==(const Vector4& other) { return DirectX::XMVector4NearEqual(m_vec, other.m_vec, DirectX::XMVectorSplatEpsilon()); }
 
 	//유틸함수들
+
 	inline float Length() const { return DirectX::XMVectorGetX(DirectX::XMVector4Length(m_vec)); }
 	inline float LengthSquared() const { return DirectX::XMVectorGetX(DirectX::XMVector4LengthSq(m_vec)); }
 	inline Vector4 Normalize() const { return Vector4(DirectX::XMVector4Normalize(m_vec)); }
+	inline Vector4 ABS() const { return Vector4(DirectX::XMVectorAbs(m_vec)); }
 	inline float DotProduct(const Vector4& other) const { return DirectX::XMVectorGetX(DirectX::XMVector4Dot(m_vec, other.m_vec)); }
 	friend inline float DotProduct(const Vector4& v1, const Vector4& v2);
 
