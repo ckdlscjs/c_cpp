@@ -14,6 +14,7 @@
 #include "ResourceSystem.h"
 #include "Texture.h"
 #include "SamplerState.h"
+#include "RasterizerState.h"
 #include "Mesh.h"
 #include "LightSystem.h"
 #include "Light.h"
@@ -43,6 +44,9 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	m_pCSamplers = new SamplerState(m_pCDirect3D->GetDevice());
 	_ASEERTION_NULCHK(m_pCSamplers, "Samplers is nullptr");
 
+	m_pCRSStaets = new RasterizerState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCRSStaets, "Samplers is nullptr");
+
 	OnResize(m_iWidth, m_iHeight);
 }
 
@@ -50,10 +54,10 @@ void RenderSystem::Frame(float deltatime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "deltatime : " << deltatime << '\n';
-
-	for (const auto& iter : objs)
+	objs[0]->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
+	for (int i = 1; i < objs.size(); i++)
 	{
-		iter->Frame(deltatime);
+		objs[i]->Frame(deltatime);
 	}
 }
 
@@ -71,9 +75,11 @@ void RenderSystem::Render()
 	//프레임에따른 변환
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
+	
 
-	for (const auto& iter : objs)
+	for (int i = 0; i < _RenderSystem.objs.size(); i++)
 	{
+		auto iter = _RenderSystem.objs[i];
 		if (!iter->bRenderable) continue;
 		for (const auto hash : iter->m_hashMeshes)
 		{
@@ -81,7 +87,7 @@ void RenderSystem::Render()
 			size_t idxIB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IB();
 			size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
 			size_t idxVS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VS();
-			size_t idxPS = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_PS();
+			size_t idxPS = i == 0 ? 2 : _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_PS();
 
 			m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
@@ -124,8 +130,12 @@ void RenderSystem::Render()
 			//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
 			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
 			m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-
+			if(i == 0)
+				m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 2);
+			else
+				m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);
 			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
+		
 			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
 		}
 	}
@@ -192,6 +202,13 @@ void RenderSystem::Release()
 	if (m_pCSamplers)
 	{
 		delete m_pCSamplers;
+		m_pCSamplers = nullptr;
+	}
+
+	if (m_pCRSStaets)
+	{
+		delete m_pCRSStaets;
+		m_pCRSStaets = nullptr;
 	}
 
 	if (m_pCSwapChain)

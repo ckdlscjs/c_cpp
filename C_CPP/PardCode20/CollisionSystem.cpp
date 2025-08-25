@@ -26,11 +26,13 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	UINT count = 0;
+	UINT count = 1;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
-	for (const auto& iter : _RenderSystem.objs)
+	_RenderSystem.objs[0]->bRenderable = true;
+	for (int i = 1; i < _RenderSystem.objs.size(); i++)	//i(0) skysphere
 	{
+		auto iter = _RenderSystem.objs[i];
 		iter->bRenderable = false;
 		Matrix4x4 matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
 		for (const auto hash : iter->m_hashMeshes)
@@ -44,9 +46,14 @@ void CollisionSystem::Frame(float deltatime)
 			}
 		}
 	}
+	/*
+	for (const auto& iter : _RenderSystem.objs)
+	{
+		
+	}
+	*/
 	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << _RenderSystem.objs .size() - count << '\n';
 }
-
 
 void CollisionSystem::Release()
 {

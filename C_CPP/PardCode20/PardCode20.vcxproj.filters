@@ -201,6 +201,9 @@
     <ClInclude Include="Box.h">
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
+    <ClInclude Include="RasterizerState.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -308,6 +311,9 @@
     <ClCompile Include="Object.cpp">
       <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
+    <ClCompile Include="RasterizerState.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="VertexShader.hlsl">
@@ -320,6 +326,9 @@
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShaderPTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PSSkySphere.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

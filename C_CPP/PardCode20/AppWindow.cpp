@@ -49,6 +49,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth / (float)m_iHeight);
 	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
 	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 10000.0f);
+	_CameraSystem.GetCamera(0)->SetTarget(Vector3(0, 0, 0));
 
 	//라이팅 기본세팅
 	DirectionalLight* pLight_Directional = new DirectionalLight();
@@ -87,6 +88,31 @@ void AppWindow::OnCreate()
 	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(10.0f));
 	_LightSystem.AddLight(pLight_Spot);
 
+	//상수버퍼 기본세팅
+	size_t idx_cb_DL = _RenderSystem.CreateConstantBuffer(sizeof(CB_DirectionalLight));
+	size_t idx_cb_PL = _RenderSystem.CreateConstantBuffer(sizeof(CB_PointLight));
+	size_t idx_cb_SL = _RenderSystem.CreateConstantBuffer(sizeof(CB_SpotLight));
+	size_t idx_cb_wvpitmat = _RenderSystem.CreateConstantBuffer(sizeof(CB_WVPITMatrix));
+	size_t idx_cb_cbtime = _RenderSystem.CreateConstantBuffer(sizeof(Constant_time));
+	size_t idx_cb_campos = _RenderSystem.CreateConstantBuffer(sizeof(CB_Campos));
+
+	//SkySphere
+	_RenderSystem.objs.push_back(new TempObj());
+	TempObj* SkySphere = _RenderSystem.objs.back();
+	SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f);
+
+	SkySphere->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj"));
+	SkySphere->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE));
+	
+	SkySphere->m_IdxCBs.push_back(idx_cb_DL);
+	SkySphere->m_IdxCBs.push_back(idx_cb_PL);
+	SkySphere->m_IdxCBs.push_back(idx_cb_SL);
+
+	SkySphere->m_IdxCBs.push_back(idx_cb_wvpitmat);
+	SkySphere->m_IdxCBs.push_back(idx_cb_cbtime);
+	SkySphere->m_IdxCBs.push_back(idx_cb_campos);
+	size_t psskysphere = _RenderSystem.CreatePixelShader(L"PSSkySphere.hlsl", "psmain", "ps_5_0");
+
 	// 1. 난수 시드(seed)를 설정합니다.
    // std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
    // 매번 다른 시드를 얻을 수 있습니다.
@@ -98,29 +124,26 @@ void AppWindow::OnCreate()
 
 	// 3. 난수 분포(distribution)를 정의합니다.
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
-	std::uniform_int_distribution<int> dis(-50, 50);
+	std::uniform_int_distribution<int> dis(-100, 100);
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i <50; i++)
 	{
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
 		obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
 		obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
 		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
-		_CameraSystem.GetCamera(0)->SetTarget(obj->m_vPosition);
 
-		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", Colliders::SPHERE));
+		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj"));
+		obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter3.webp", WIC_FLAGS_NONE));
 
-		//obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/teapot.obj" : L"../Assets/Meshes/cube.obj"));
-		obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE));
+		obj->m_IdxCBs.push_back(idx_cb_DL);
+		obj->m_IdxCBs.push_back(idx_cb_PL);
+		obj->m_IdxCBs.push_back(idx_cb_SL);
 
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_DirectionalLight)));
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_PointLight)));
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_SpotLight)));
-
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_WVPITMatrix)));
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(Constant_time)));
-		obj->m_IdxCBs.push_back(_RenderSystem.CreateConstantBuffer(sizeof(CB_Campos)));
+		obj->m_IdxCBs.push_back(idx_cb_wvpitmat);
+		obj->m_IdxCBs.push_back(idx_cb_cbtime);
+		obj->m_IdxCBs.push_back(idx_cb_campos);
 	}
 }
 

@@ -13,6 +13,7 @@ class ConstantBuffer;
 class IndexBuffer;
 class Texture2D;
 class SamplerState;
+class RasterizerState;
 class TempObj;
 
 class RenderSystem : public BaseSystem<RenderSystem>
@@ -57,6 +58,7 @@ private:
 	Direct3D* m_pCDirect3D;
 	SwapChain* m_pCSwapChain;
 	SamplerState* m_pCSamplers;
+	RasterizerState* m_pCRSStaets;
 	ID3DBlob* m_pBlob_VS;
 	ID3DBlob* m_pBlob_PS;
 	std::unordered_map<size_t, VertexBuffer*> m_pCVBs;

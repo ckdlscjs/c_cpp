@@ -21,6 +21,13 @@ enum class Samplers
 
 };
 
+enum class Rasterizers
+{
+	WRAP_LINEAR,
+	WRAP_ANISOTROPIC,
+
+};
+
 enum class Colliders
 {
 	NONE,
