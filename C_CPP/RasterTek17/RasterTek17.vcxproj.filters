@@ -102,5 +102,6 @@
   <ItemGroup>
     <None Include="multitextureps.hlsl" />
     <None Include="multitexturevs.hlsl" />
+    <None Include="alphamapps.hlsl" />
   </ItemGroup>
 </Project>
