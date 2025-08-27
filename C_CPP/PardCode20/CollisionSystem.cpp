@@ -132,7 +132,7 @@ bool CollisionSystem::CheckBound(const Frustum& frustum, const Sphere& sphere, c
 bool CollisionSystem::CheckBound(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld)
 {
 	std::array<Vector3, 8> corners;
-	box.GetBoxCorners(matWorld, corners);
+	box.GetWorldCorners(matWorld, corners);
 
 	//6개의 평면에 8개의 꼭지점을 대응시킨다, 평면과 점의 거리를 재어 판단한다
 	for (int i = 0; i < 6; i++)

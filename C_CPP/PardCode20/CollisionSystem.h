@@ -40,8 +40,8 @@ inline size_t CollisionSystem::AddCollider(const std::wstring& szName, Types ...
 	size_t hashID = HashFilePath(szName);
 	if (m_Colliders.find(hashID) != m_Colliders.end()) return hashID;
 	//객체생성후 컨테이너에 등록
-	T* newResource = new T(std::forward<Types>(args)...);
-	_ASEERTION_NULCHK(newResource, typeid(T).name());
-	m_Colliders[hashID] = newResource;
+	T* newCollider = new T(std::forward<Types>(args)...);
+	_ASEERTION_NULCHK(newCollider, typeid(T).name());
+	m_Colliders[hashID] = newCollider;
 	return hashID;
 }

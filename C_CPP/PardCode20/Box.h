@@ -174,7 +174,7 @@ public:
 		m_vMax.Set(maxX, maxY, maxZ);
 	}
 
-    inline void GetBoxCorners(const Matrix4x4& matWorld, std::array<Vector3, 8>& corners) const
+    inline void GetWorldCorners(const Matrix4x4& matWorld, std::array<Vector3, 8>& corners) const
     {
         corners =
         {
@@ -193,7 +193,7 @@ public:
     {
         //8개의 월드변환된 꼭지점을 만든다
         std::array<Vector3, 8> corners;
-        GetBoxCorners(matWorld, corners);
+        GetWorldCorners(matWorld, corners);
         
         //해당 코너를 기반으로 하는 AABB를 생성해서 반환한다
         float minX, minY, minZ, maxX, maxY, maxZ;

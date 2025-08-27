@@ -17,9 +17,10 @@ AppWindow::AppWindow()
 	_TimerSystem;
 	_InputSystem;
 	_ResourceSystem;
+	_CameraSystem;
+	_CollisionSystem;
 	_RenderSystem;
 	_ImguiSystem;
-	_CameraSystem;
 	_LightSystem;
 }
 
@@ -154,9 +155,9 @@ void AppWindow::OnUpdate()
 	std::cout << "ElapsedTime : " << _TimerSystem.GetElapsedTime() << '\n';
 	std::cout << "FPS : " << _TimerSystem.GetFps() << '\n';
 	_InputSystem.Frame();
-	_ImguiSystem.Frame();
 	_CameraSystem.Frame(_TimerSystem.GetDeltaTime());
 	_CollisionSystem.Frame(_TimerSystem.GetDeltaTime());
+	_ImguiSystem.Frame();
 	_RenderSystem.Frame(_TimerSystem.GetDeltaTime());
 
 	_RenderSystem.PreRender();
