@@ -1,0 +1,66 @@
+멀티텍스쳐를 이용하여 여러텍스쳐를 픽셀셰이더에 의해서 픽셀단위로 혼합시킨다,
+BlendColor = basePixel * colorPixel * gammaCorrection
+baseColor = (basePixel * 0.5) + (colorPixel * 0.5)의 공식으로 진행시에 제공되는 픽셀색상은 모니터의 감마값으로 수정되어 제공되므로 비선형색상값을 처리하기위해 감마보정이 필요하며
+단순히 반반을 더하면 텍스쳐가 서로 혼합되면서 흐려지는 문제가 발생한다
+
+
+픽셀 셰이더에서 감마 보정값을 전달하기 위해서는 텍스쳐 리소스의 메타데이터에서 감마 보정값을 읽어와서 상수 버퍼(Constant Buffer)에 저장하고, 이를 픽셀 셰이더에서 사용할 수 있도록 바인딩하는 작업이 필요합니다. 이를 위해서는 다음과 같은 작업이 필요합니다.
+
+상수 버퍼(Constant Buffer) 정의: 감마 보정값을 저장하기 위한 상수 버퍼를 정의합니다. 예를 들어, 다음과 같이 구조체를 정의할 수 있습니다.
+
+cbuffer GammaCorrectionBuffer : register(b0)
+{
+    float4 gammaValues;
+};
+텍스쳐 로드 및 감마 보정값 읽기: 텍스쳐를 로드할 때, 해당 텍스쳐 파일의 감마 보정값을 읽어와서 상수 버퍼에 저장합니다. 예를 들어, DirectX 11에서는 다음과 같이 작성할 수 있습니다.
+
+// Load texture
+ID3D11ShaderResourceView* pTextureSRV;
+ID3D11Texture2D* pTexture;
+D3DX11_IMAGE_LOAD_INFO loadInfo = D3DX11_DEFAULT;
+loadInfo.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // Specify sRGB format
+HR(D3DX11CreateShaderResourceViewFromFile(pDevice, L"texture.png", &loadInfo, NULL, &pTextureSRV, NULL));
+HR(pTextureSRV->GetResource(reinterpret_cast<ID3D11Resource**>(&pTexture)));
+
+// Read gamma correction value from texture metadata
+float gammaValue = pTexture->GetDesc().Gamma;
+
+// Update constant buffer with gamma value
+cbGammaCorrectionBuffer.gammaValues = float4(gammaValue, 0.0f, 0.0f, 0.0f);
+pDeviceContext->UpdateSubresource(pGammaCorrectionBuffer, 0, NULL, &cbGammaCorrectionBuffer, 0, 0);
+
+
+픽셀 셰이더에서 상수 버퍼 바인딩: 픽셀 셰이더에서 상수 버퍼를 바인딩하여 감마 보정값을 사용할 수 있도록 합니다. 예를 들어, 다음과 같이 작성할 수 있습니다.
+
+cbuffer GammaCorrectionBuffer : register(b0)
+{
+    float4 gammaValues;
+};
+
+Texture2D g_texture : register(t0);
+SamplerState g_sampler : register(s0);
+
+float4 PS_Main(float4 pos : SV_POSITION, float2 texCoord : TEXCOORD) : SV_TARGET
+{
+    // Sample texture and apply gamma correction
+    float4 color = g_texture.Sample(g_sampler, texCoord);
+    color.rgb = pow(color.rgb, gammaValues.rgb);
+
+    return color;
+}
+위와 같이 구현하면, 픽셀 셰이더에서 텍스쳐를 샘플링할 때, 상수 버퍼에 저장된 감마 보정값을 사용하여 색상 값을 보정할 수 있습니다.
+
+-D3D11_MAP_FLAG에 대해서 설명해줘
+D3D11_MAP_FLAG는 Direct3D 11에서 ID3D11DeviceContext::Map 함수에서 사용되는 플래그 값입니다. 
+이 플래그 값은 버퍼나 리소스의 매핑 방법을 지정하며, 다음과 같은 세 가지 옵션 중 하나를 선택할 수 있습니다.
+
+D3D11_MAP_FLAG_DO_NOT_WAIT: 이 플래그를 사용하면 매핑 요청이 즉시 이루어지지 않고 대기열에 들어가서 다른 명령이 실행될 때까지 기다립니다. 
+대기열이 비어 있을 때 즉시 매핑이 이루어지도록 하려면 이 플래그를 사용하지 않습니다.
+
+D3D11_MAP_FLAG_DISCARD: 이 플래그를 사용하면 기존에 할당된 버퍼나 리소스의 데이터를 모두 삭제하고, 새로운 데이터를 작성하기 위한 공간을 확보합니다. 
+이 플래그는 동적으로 업데이트되는 데이터를 다루는 데 유용합니다.
+
+D3D11_MAP_FLAG_NO_OVERWRITE: 이 플래그를 사용하면 이전에 작성된 데이터를 유지한 채로 새로운 데이터를 작성하기 위한 공간을 확보합니다. 
+이 플래그는 동적으로 업데이트되는 데이터를 다루는 데 유용합니다.
+
+따라서 D3D11_MAP_FLAG를 적절히 사용하여 데이터를 업데이트할 때 성능을 최적화할 수 있습니다.
