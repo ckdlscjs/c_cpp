@@ -331,6 +331,12 @@
     <FxCompile Include="PSSkySphere.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="PS_Lights.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_TextureFlow.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Include\ImGui\LICENSE.txt">

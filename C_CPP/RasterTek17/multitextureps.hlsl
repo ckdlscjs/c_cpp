@@ -6,7 +6,10 @@
 /////////////
 // GLOBALS //
 /////////////
-Texture2D shaderTextures[3]; //멀티텍스쳐를위해서 두장의 Texture2D를 받는다
+//Texture2D shaderTextures[3];  //멀티텍스쳐를위해서 두장의 Texture2D를 받는다
+Texture2D shaderTextures0;      //멀티텍스쳐를위해서 두장의 Texture2D를 받는다
+Texture2D shaderTextures1;      //멀티텍스쳐를위해서 두장의 Texture2D를 받는다
+Texture2D shaderTextures2;      //멀티텍스쳐를위해서 두장의 Texture2D를 받는다
 SamplerState SampleType;
 
 
@@ -32,13 +35,13 @@ float4 MultiTexturePixelShader(PixelInputType input) : SV_TARGET
 
 
     // 첫 번째 텍스처에서 픽셀 색상을 가져옵니다.
-    color1 = shaderTextures[0].Sample(SampleType, input.tex);
+    color1 = shaderTextures0.Sample(SampleType, input.tex);
 
     // 두 번째 텍스처에서 픽셀 색상을 가져옵니다.
-    color2 = shaderTextures[1].Sample(SampleType, input.tex);
+    color2 = shaderTextures1.Sample(SampleType, input.tex);
 
     // 세 번째 텍스처에서 픽셀 색상을 가져옵니다.
-    lightColor = shaderTextures[2].Sample(SampleType, input.tex);
+    lightColor = shaderTextures2.Sample(SampleType, input.tex);
 
 
     // 두 픽셀을 혼합하고 감마 값을 곱합니다.

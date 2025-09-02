@@ -54,6 +54,8 @@ void RenderSystem::Frame(float deltatime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "deltatime : " << deltatime << '\n';
+	Vector3& dir = static_cast<DirectionalLight*>(_LightSystem.GetLight(0))->m_vDirection;
+	dir = dir * GetMat_RotYaw(deltatime * 100.0f);
 	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
 	for (const auto& iter : objs)
 	{
@@ -68,13 +70,14 @@ void RenderSystem::PreRender()
 	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
 }
 
-void RenderSystem::Render()
+void RenderSystem::Render(float deltatime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 
 	//프레임에따른 변환
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
+
 	for (const auto hash : SkyObj->m_hashMeshes)
 	{
 		size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
@@ -111,7 +114,7 @@ void RenderSystem::Render()
 		m_pCCBs[SkyObj->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
 		Constant_time cc1;
-		cc1.fTime = _DEGTORAD(1.0f * 360.0f);
+		cc1.fTime = deltatime;
 		m_pCCBs[SkyObj->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 		m_pCCBs[SkyObj->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
 
@@ -130,6 +133,66 @@ void RenderSystem::Render()
 		m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
 	}
 
+	//for (const auto& iter : objs)
+	//{
+	//	if (!iter->bRenderable) continue;
+	//	for (const auto hash : iter->m_hashMeshes)
+	//	{
+	//		size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
+	//		size_t idxIB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IB();
+	//		size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
+	//		size_t idxVS = iter->m_IdxVS;
+	//		size_t idxPS = iter->m_IdxPS;
+
+	//		m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+	//		m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+	//		m_pCILs[idxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+	//		m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
+	//		m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
+
+	//		//DirectionalLight
+	//		m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
+	//		m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+
+	//		//PointLight
+	//		m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
+	//		m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+
+	//		//SpotLight
+	//		m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
+	//		m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
+
+	//		//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+	//		CB_WVPITMatrix cc0;
+	//		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
+	//		cc0.matView = matView;
+	//		cc0.matProj = matProj;
+	//		cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+	//		m_pCCBs[iter->m_IdxCBs[3]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+	//		m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
+
+	//		Constant_time cc1;
+	//		cc1.fTime = _DEGTORAD(1.0f * 360.0f);
+	//		m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
+	//		m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
+
+	//		CB_Campos cc2;
+	//		cc2.camPos = _CameraSystem.GetCamera(0)->GetPosition();
+	//		m_pCCBs[iter->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
+	//		m_pCCBs[iter->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
+
+	//		size_t idxTX = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures.back())->GetIdx_TX();
+	//		//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
+	//		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
+	//		m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+	//		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);			
+	//		//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
+	//	
+	//		m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
+	//	}
+	//}
+
+	//PardCode22
 	for (const auto& iter : objs)
 	{
 		if (!iter->bRenderable) continue;
@@ -151,13 +214,13 @@ void RenderSystem::Render()
 			m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 			m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
 
-			//PointLight
-			m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+			////PointLight
+			//m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
+			//m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 
-			//SpotLight
-			m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
+			////SpotLight
+			//m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
+			//m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
 
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 			CB_WVPITMatrix cc0;
@@ -169,7 +232,7 @@ void RenderSystem::Render()
 			m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
 			Constant_time cc1;
-			cc1.fTime = _DEGTORAD(1.0f * 360.0f);
+			cc1.fTime = deltatime;
 			m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 			m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
 
@@ -178,13 +241,14 @@ void RenderSystem::Render()
 			m_pCCBs[iter->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 			m_pCCBs[iter->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
-			size_t idxTX = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures.back())->GetIdx_TX();
-			//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
-			m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);			
-			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
-		
+			for (int txreg = 0; txreg < iter->m_hashTextures.size(); txreg++)
+			{
+				size_t idxTX = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures[txreg])->GetIdx_TX();
+				m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
+				m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), txreg);
+			}
+			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);
+
 			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
 		}
 	}
@@ -417,7 +481,8 @@ ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entry
 	HRESULT hResult;
 	DWORD dwShaderFlags = D3DCOMPILE_DEBUG;
 	//compile Shader
-	hResult = D3DCompileFromFile(shaderName.c_str(), nullptr, nullptr, entryName.c_str(), target.c_str(), dwShaderFlags, NULL, &pBlob, &errBlob);
+	//D3D_COMPILE_STANDARD_FILE_INCLUDE, include를 위해 추가
+	hResult = D3DCompileFromFile(shaderName.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryName.c_str(), target.c_str(), dwShaderFlags, NULL, &pBlob, &errBlob);
 	if (FAILED(hResult))
 	{
 		OutputDebugStringA((char*)errBlob->GetBufferPointer());

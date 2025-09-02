@@ -213,6 +213,10 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectSystem.cpp" />
+    <FxCompile Include="PS_TextureFlow.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+    </FxCompile>
     <ClCompile Include="RasterizerState.cpp" />
     <ClCompile Include="SamplerState.cpp" />
     <ClCompile Include="Texture2D.cpp" />
@@ -245,6 +249,9 @@
       <FileType>Document</FileType>
     </FxCompile>
     <FxCompile Include="PSSkySphere.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="PS_Lights.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="VertexShader.hlsl">

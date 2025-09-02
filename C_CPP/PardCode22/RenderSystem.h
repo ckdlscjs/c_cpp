@@ -30,7 +30,7 @@ public:
 	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame(float deltatime);
 	void PreRender();
-	void Render();
+	void Render(float deltatime);
 	void PostRender();
 	void Release();
 	

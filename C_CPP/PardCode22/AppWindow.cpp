@@ -41,7 +41,6 @@ void AppWindow::OnCreate()
 	_CameraSystem.Init();
 	_LightSystem.Init();
 
-
 	_InputSystem.SetMouseCenter(m_hWnd);
 
 	//카메라 기본세팅
@@ -54,10 +53,10 @@ void AppWindow::OnCreate()
 
 	//라이팅 기본세팅
 	DirectionalLight* pLight_Directional = new DirectionalLight();
-	pLight_Directional->m_mAmbient = Vector4(0.1f, 0.1f, 0.1f, 1.0f);
-	pLight_Directional->m_mDiffuse = Vector4(0.8f, 0.3f, 0.2f, 1.0f);
-	pLight_Directional->m_mSpecular = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
-	pLight_Directional->m_vDirection = (Vector3(0.0f, 0.0f, 0.0f) - Vector3(0.0f, 5.0f, -5.0f)).Normalize();
+	pLight_Directional->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
+	pLight_Directional->m_mDiffuse = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
+	pLight_Directional->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	pLight_Directional->m_vDirection = (Vector3(0.0f, 0.0f, 0.0f) - _CameraSystem.GetCamera(0)->GetPosition()).Normalize();
 	pLight_Directional->m_fShiness = 100.0f;
 	_LightSystem.AddLight(pLight_Directional);
 
@@ -101,7 +100,7 @@ void AppWindow::OnCreate()
 	size_t idx_vs_0 = _RenderSystem.CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");
 	size_t idx_ps_sky = _RenderSystem.CreatePixelShader(L"PSSkySphere.hlsl", "psmain", "ps_5_0");
 	size_t idx_ps_0 = _RenderSystem.CreatePixelShader(L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
-
+	size_t idx_ps_1 = _RenderSystem.CreatePixelShader(L"PS_TextureFlow.hlsl", "psmain", "ps_5_0");
 	//SkySphere
 	TempObj* SkySphere = new TempObj();
 	SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f);
@@ -121,8 +120,8 @@ void AppWindow::OnCreate()
 	_RenderSystem.SkyObj = SkySphere;
 
 	// 1. 난수 시드(seed)를 설정합니다.
-   // std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
-   // 매번 다른 시드를 얻을 수 있습니다.
+	// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
+	// 매번 다른 시드를 얻을 수 있습니다.
 	std::random_device rd;
 
 	// 2. mt19937 난수 생성 엔진을 초기화합니다.
@@ -133,7 +132,7 @@ void AppWindow::OnCreate()
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
 	std::uniform_int_distribution<int> dis(-100, 100);
 
-	for (int i = 0; i <50; i++)
+	/*for (int i = 0; i <50; i++)
 	{
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
@@ -153,7 +152,30 @@ void AppWindow::OnCreate()
 		obj->m_IdxCBs.push_back(idx_cb_wvpitmat);
 		obj->m_IdxCBs.push_back(idx_cb_cbtime);
 		obj->m_IdxCBs.push_back(idx_cb_campos);
-	}
+	}*/
+
+	//PardCode22
+	_RenderSystem.objs.push_back(new TempObj());
+	TempObj* obj = _RenderSystem.objs.back();
+	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
+	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
+
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj"));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE));
+	obj->m_IdxVS = idx_vs_0;
+	obj->m_IdxPS = idx_ps_1;
+
+	obj->m_IdxCBs.push_back(idx_cb_DL);
+	obj->m_IdxCBs.push_back(idx_cb_PL);
+	obj->m_IdxCBs.push_back(idx_cb_SL);
+
+	obj->m_IdxCBs.push_back(idx_cb_wvpitmat);
+	obj->m_IdxCBs.push_back(idx_cb_cbtime);
+	obj->m_IdxCBs.push_back(idx_cb_campos);
 }
 
 void AppWindow::OnUpdate()
@@ -169,7 +191,7 @@ void AppWindow::OnUpdate()
 	_RenderSystem.Frame(_TimerSystem.GetDeltaTime());
 
 	_RenderSystem.PreRender();
-	_RenderSystem.Render();
+	_RenderSystem.Render(_TimerSystem.GetElapsedTime());
 	_ImguiSystem.Render();
 	_RenderSystem.PostRender();
 	std::cout << '\n';
