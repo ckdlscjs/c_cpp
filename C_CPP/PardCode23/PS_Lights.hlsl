@@ -74,6 +74,7 @@ float4 PointLight(float3 L, float D, float3 N, float3 R, float3 V)
     float4 P_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float normalizeD = D / lp_range;
     //ambient
     P_A = lp_ambient;
     
@@ -134,6 +135,7 @@ float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
     float4 S_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float normalizeD = D / ls_range;
     //ambient
     S_A = ls_ambient;
     

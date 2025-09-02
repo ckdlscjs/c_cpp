@@ -54,8 +54,10 @@ void RenderSystem::Frame(float deltatime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "deltatime : " << deltatime << '\n';
-	Vector3& dir = static_cast<DirectionalLight*>(_LightSystem.GetLight(0))->m_vDirection;
-	dir = dir * GetMat_RotYaw(deltatime * 100.0f);
+
+	Vector3& pos = static_cast<PointLight*>(_LightSystem.GetLight(1))->m_vPosition;
+	pos = pos * GetMat_RotYaw(deltatime * 200.0f);
+
 	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
 	for (const auto& iter : objs)
 	{
@@ -192,7 +194,7 @@ void RenderSystem::Render(float deltatime)
 	//	}
 	//}
 
-	//PardCode22
+	//PardCode23
 	for (const auto& iter : objs)
 	{
 		if (!iter->bRenderable) continue;
@@ -211,12 +213,12 @@ void RenderSystem::Render(float deltatime)
 			m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 
 			//DirectionalLight
-			m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+			/*m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
+			m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);*/
 
-			////PointLight
-			//m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-			//m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+			//PointLight
+			m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
+			m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 
 			////SpotLight
 			//m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
@@ -231,10 +233,10 @@ void RenderSystem::Render(float deltatime)
 			m_pCCBs[iter->m_IdxCBs[3]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
 			m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-			Constant_time cc1;
+			/*Constant_time cc1;
 			cc1.fTime = deltatime;
 			m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-			m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
+			m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);*/
 
 			CB_Campos cc2;
 			cc2.camPos = _CameraSystem.GetCamera(0)->GetPosition();

@@ -62,14 +62,14 @@ void AppWindow::OnCreate()
 
 	PointLight* pLight_Point = new PointLight();
 	pLight_Point->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
-	pLight_Point->m_mDiffuse = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+	pLight_Point->m_mDiffuse = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
 	pLight_Point->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	pLight_Point->m_vPosition = Vector3(-500.0f, 500.0f, 0.0f);
-	pLight_Point->m_fShiness = 50.0f;
-	pLight_Point->m_fAtt_a0 = 0.10f;
-	pLight_Point->m_fAtt_a1 = 0.0f;
-	pLight_Point->m_fAtt_a2 = 0.0f;
-	pLight_Point->m_fRange = 300000;
+	pLight_Point->m_vPosition = Vector3(0.0f, 400.0f, 400.0f);
+	pLight_Point->m_fShiness = 100.0f;
+	pLight_Point->m_fAtt_a0 = 0.0f;
+	pLight_Point->m_fAtt_a1 = 0.5f;
+	pLight_Point->m_fAtt_a2 = 0.5f;
+	pLight_Point->m_fRange = 1000.0f;
 	_LightSystem.AddLight(pLight_Point);
 	
 	SpotLight* pLight_Spot = new SpotLight();
@@ -101,6 +101,8 @@ void AppWindow::OnCreate()
 	size_t idx_ps_sky = _RenderSystem.CreatePixelShader(L"PSSkySphere.hlsl", "psmain", "ps_5_0");
 	size_t idx_ps_0 = _RenderSystem.CreatePixelShader(L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
 	size_t idx_ps_1 = _RenderSystem.CreatePixelShader(L"PS_TextureFlow.hlsl", "psmain", "ps_5_0");
+	size_t idx_ps_2 = _RenderSystem.CreatePixelShader(L"PS_RotatePointLight.hlsl", "psmain", "ps_5_0");
+
 	//SkySphere
 	TempObj* SkySphere = new TempObj();
 	SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f);
@@ -154,20 +156,17 @@ void AppWindow::OnCreate()
 		obj->m_IdxCBs.push_back(idx_cb_campos);
 	}*/
 
-	//PardCode22
+	//PardCode23
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();
 	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
 	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
 
-	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj"));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE));
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/scene.obj"));
+	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE));
 	obj->m_IdxVS = idx_vs_0;
-	obj->m_IdxPS = idx_ps_1;
+	obj->m_IdxPS = idx_ps_2;
 
 	obj->m_IdxCBs.push_back(idx_cb_DL);
 	obj->m_IdxCBs.push_back(idx_cb_PL);
