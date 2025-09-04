@@ -26,7 +26,7 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	UINT count = 1;
+	UINT count = 0;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
 	for (const auto& iter : _RenderSystem.objs)
@@ -35,7 +35,8 @@ void CollisionSystem::Frame(float deltatime)
 		Matrix4x4 matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
 		for (const auto hash : iter->m_hashMeshes)
 		{
-			if (CheckBound(frustum, hash, matWorld))
+			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
+			if (CheckBound(frustum, pMesh->GetCL(), matWorld))
 			{
 				iter->bRenderable = true;
 				count++;
@@ -43,7 +44,7 @@ void CollisionSystem::Frame(float deltatime)
 			}
 		}
 	}
-	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << _RenderSystem.objs .size() - count << '\n';
+	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << _RenderSystem.objs.size() - count << '\n';
 }
 
 void CollisionSystem::Release()
@@ -55,18 +56,18 @@ void CollisionSystem::Release()
 	}
 }
 
-Collider* CollisionSystem::CreateCollider(size_t hash, const std::vector<Vector3>* vertices, Colliders collider)
+size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, Colliders collider)
 {
 	switch (collider)
 	{
 		case Colliders::SPHERE:
 		{
-			return AddCollider<Sphere>(hash, vertices);
+			return AddCollider<Sphere>(szName + L"Sphere", vertices);
 		}	break;
 			
 		case Colliders::AABB:
 		{
-			return AddCollider<Box>(hash, vertices);
+			return AddCollider<Box>(szName + L"Box", vertices);
 		}break;
 			
 		case Colliders::OBB:
@@ -74,7 +75,7 @@ Collider* CollisionSystem::CreateCollider(size_t hash, const std::vector<Vector3
 		case Colliders::RAY:
 			break;
 		default:
-			return nullptr;
+			return size_t();
 	}
 }
 

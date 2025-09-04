@@ -25,7 +25,7 @@ protected:
 	BaseResource& operator=(const BaseResource&) = delete;
 	BaseResource(BaseResource&&) = delete;
 	BaseResource& operator=(BaseResource&&) = delete;
-public:
+protected:
 	void SetHash(size_t hash) override;
 	void SetFilePath(const std::wstring& szFilepath) override;
 	const size_t GetHash() const override;

@@ -18,7 +18,7 @@ public:
 	void Release();
 
 	template<typename T, typename... Types>
-	T* CreateResourceFromFile(size_t hash, const std::wstring& szFilePath, Types... args);
+	T* CreateResourceFromFile(const std::wstring& szFilePath, Types... args);
 	template<typename T>
 	T* GetResource(size_t hash);
 	
@@ -28,9 +28,10 @@ private:
 #define _ResourceSystem ResourceSystem::GetInstance()
 
 template<typename T, typename... Types>
-T* ResourceSystem::CreateResourceFromFile(size_t hash, const std::wstring& szFilePath, Types... args)
+T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types... args)
 {					
-	if (m_Resources.find(hash) != m_Resources.end()) return GetResource<T>(hash);
+	size_t hash = HashingFile(szFilePath);
+	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<T*>(m_Resources[hash]);
 	//객체생성후 컨테이너에 등록
 	T* newResource = new T(hash, szFilePath, std::forward<Types>(args)...);
 	_ASEERTION_NULCHK(newResource, typeid(T).name());

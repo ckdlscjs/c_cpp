@@ -13,7 +13,7 @@ public:
 
 	void SetVS(ID3D11DeviceContext* pDeviceContext, UINT startIdx = 0);
 	void SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx = 0);
-	Samplers GetSampler();
+	Samplers GetSampler() const;
 private:
 	ID3D11Resource* m_pTexture;			//실제리소스
 	ID3D11ShaderResourceView* m_pSRV;	//리소스를 가리키는 세이더리소스뷰

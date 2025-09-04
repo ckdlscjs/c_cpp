@@ -38,17 +38,20 @@ public:
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 
 	void OnResize(UINT width, UINT height);
-	VertexBuffer* CreateVertexBuffer(size_t hash, void* vertices, UINT size_vertex, UINT size_vertices);
-	InputLayout* CreateInputLayout(size_t hash, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
-	IndexBuffer* CreateIndexBuffer(size_t hash, void* indices, UINT size_indices);
-	ConstantBuffer* CreateConstantBuffer(size_t hash, UINT size_buffer, void* data = nullptr);
-	VertexShader* CreateVertexShader(size_t hash, std::wstring shaderName, std::string entryName, std::string target);
-	PixelShader* CreatePixelShader(size_t hash, std::wstring shaderName, std::string entryName, std::string target);
+	
+	size_t CreateConstantBuffer(const std::wstring& szName, UINT size_buffer, void* data = nullptr);
+	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
+	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE, Samplers sampler = Samplers::WRAP_LINEAR);
-	Texture2D* CreateTexture2D(size_t hash, const ScratchImage* resource, Samplers sampler);
 	size_t CreateMesh(const std::wstring& szFilePath, Colliders collider = Colliders::AABB);
+	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
+	
+private:
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
-
+	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
+	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout);
+	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
+	size_t CreateTexture2D(const std::wstring& szName, const ScratchImage* resource, Samplers sampler);
 private:
 	UINT m_iWidth = 800;
 	UINT m_iHeight = 600;
@@ -69,14 +72,6 @@ private:
 	std::unordered_map<size_t, ConstantBuffer*> m_pCCBs;
 	std::unordered_map<size_t, Texture2D*> m_pCTXs;
 
-	//패리티체크를위해 1부터둔다
-	size_t m_lIdx_CVBs = 1;
-	size_t m_lIdx_CIBs = 1;
-	size_t m_lIdx_CILs = 1;
-	size_t m_lIdx_CVSs = 1;
-	size_t m_lIdx_CPSs = 1;
-	size_t m_lIdx_CCBs = 1;
-	size_t m_lIdx_CTXs = 1;
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;

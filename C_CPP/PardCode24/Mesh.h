@@ -17,21 +17,22 @@ public:
 	size_t GetVerticesSize() const;
 	UINT* GetIndices();
 	size_t GetIndicesSize() const;
-	/*void SetIdx_VB(size_t idxVB);
-	size_t GetIdx_VB() const;
-	void SetIdx_IB(size_t idxIB);
-	size_t GetIdx_IB() const;
-	void SetIdx_IL(size_t idxIL);
-	size_t GetIdx_IL() const;
-	void SetIdx_Collider(size_t idxCollider);
-	size_t GetIdx_Collider() const;*/
+
+	void SetVB(size_t hashVB);
+	size_t GetVB() const;
+	void SetIB(size_t hashIB);
+	size_t GetIB() const;
+	void SetIL(size_t hashIL);
+	size_t GetIL() const;
+	void SetCL(size_t hashCL);
+	size_t GetCL() const;
 private:
 	std::vector<Vector3> m_Points;
 	std::vector<Vertex_PTN> m_Vertices;
 	std::vector<UINT> m_Indices;
-	/*size_t m_IdxVB;
-	size_t m_IdxIB;
-	size_t m_IdxIL;
-	size_t m_IdxCollider;*/
+	size_t m_lVB;
+	size_t m_lIB;
+	size_t m_lIL;
+	size_t m_lCL;
 };
 

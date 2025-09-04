@@ -204,6 +204,9 @@
     <ClInclude Include="RasterizerState.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -313,6 +316,9 @@
     </ClCompile>
     <ClCompile Include="RasterizerState.cpp">
       <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

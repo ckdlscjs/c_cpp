@@ -30,15 +30,15 @@ Texture::~Texture()
 {
 }
 
-//void Texture::SetIdx_TX(size_t idxTX)
-//{
-//	m_IdxTX = idxTX;
-//}
-//
-//size_t Texture::GetIdx_TX() const
-//{
-//	return m_IdxTX;
-//}
+void Texture::SetTX(size_t hashTX)
+{
+	m_lTX = hashTX;
+}
+
+size_t Texture::GetTX() const
+{
+	return m_lTX;
+}
 
 const ScratchImage* Texture::GetImage() const
 {

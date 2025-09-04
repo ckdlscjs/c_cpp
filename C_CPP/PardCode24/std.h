@@ -73,7 +73,7 @@ inline static std::string _towm(std::wstring wstr)
 	return myconv.to_bytes(wstr);
 }
 
-inline size_t HashFilePath(const std::wstring& path)
+inline size_t HashingFile(const std::wstring& path)
 {
 	// FNV-1a (64비트) 구현 예시
 	size_t hash = 14695981039346656037ULL; // FNV_PRIME_64

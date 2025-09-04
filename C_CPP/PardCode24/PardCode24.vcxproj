@@ -163,6 +163,7 @@
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="LightSystem.h" />
     <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Object.h" />
@@ -210,6 +211,7 @@
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />
+    <ClCompile Include="Material.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectSystem.cpp" />

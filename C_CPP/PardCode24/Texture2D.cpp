@@ -40,7 +40,7 @@ void Texture2D::SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 	pDeviceContext->PSSetShaderResources(startIdx, 1, &m_pSRV);
 }
 
-Samplers Texture2D::GetSampler()
+Samplers Texture2D::GetSampler() const
 {
 	return m_Sampler;
 }

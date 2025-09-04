@@ -87,42 +87,42 @@ size_t Mesh::GetIndicesSize() const
 	return m_Indices.size();
 }
 
-//void Mesh::SetIdx_VB(size_t idxVB)
-//{
-//	m_IdxVB = idxVB;
-//}
-//
-//size_t Mesh::GetIdx_VB() const
-//{
-//	return m_IdxVB;
-//}
-//
-//void Mesh::SetIdx_IB(size_t idxIB)
-//{
-//	m_IdxIB = idxIB;
-//}
-//
-//size_t Mesh::GetIdx_IB() const
-//{
-//	return m_IdxIB;
-//}
-//
-//void Mesh::SetIdx_IL(size_t idxIL)
-//{
-//	m_IdxIL = idxIL;
-//}
-//
-//size_t Mesh::GetIdx_IL() const
-//{
-//	return m_IdxIL;
-//}
-//
-//void Mesh::SetIdx_Collider(size_t idxCollider)
-//{
-//	m_IdxCollider = idxCollider;
-//}
-//
-//size_t Mesh::GetIdx_Collider() const
-//{
-//	return m_IdxCollider;
-//}
+void Mesh::SetVB(size_t hashVB)
+{
+	m_lVB = hashVB;
+}
+
+size_t Mesh::GetVB() const
+{
+	return m_lVB;
+}
+
+void Mesh::SetIB(size_t hashIB)
+{
+	m_lIB = hashIB;
+}
+
+size_t Mesh::GetIB() const
+{
+	return m_lIB;
+}
+
+void Mesh::SetIL(size_t hashIL)
+{
+	m_lIL = hashIL;
+}
+
+size_t Mesh::GetIL() const
+{
+	return m_lIL;
+}
+
+void Mesh::SetCL(size_t hashCL)
+{
+	m_lCL = hashCL;
+}
+
+size_t Mesh::GetCL() const
+{
+	return m_lCL;
+}

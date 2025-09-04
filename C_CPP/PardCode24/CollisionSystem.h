@@ -20,11 +20,11 @@ public:
 	void Init();
 	void Frame(float deltatime);
 	void Release();
-	Collider* CreateCollider(size_t hash, const std::vector<Vector3>* vertices, Colliders collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
+	size_t CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, Colliders collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
 	
 private:
 	template<typename T, typename... Types>
-	Collider* AddCollider(size_t hash, Types... args);
+	size_t AddCollider(const std::wstring& szName, Types... args);
 	bool CheckBound(const Frustum& frustum, size_t hash, const Matrix4x4& matWorld);
 	bool CheckBound(const Frustum& frustum, const Sphere& sphere, const Matrix4x4& matWorld);
 	bool CheckBound(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld);
@@ -35,12 +35,13 @@ private:
 #define _CollisionSystem CollisionSystem::GetInstance()
 
 template<typename T, typename ...Types>
-inline Collider* CollisionSystem::AddCollider(size_t hash, Types ...args)
+inline size_t CollisionSystem::AddCollider(const std::wstring& szName, Types ...args)
 {
-	if (m_Colliders.find(hash) != m_Colliders.end()) return m_Colliders[hash];
+	size_t hash = HashingFile(szName);
+	if (m_Colliders.find(hash) != m_Colliders.end()) return hash;
 	//객체생성후 컨테이너에 등록
 	T* newCollider = new T(std::forward<Types>(args)...);
 	_ASEERTION_NULCHK(newCollider, typeid(T).name());
 	m_Colliders[hash] = newCollider;
-	return newCollider;
+	return hash;
 }

@@ -19,6 +19,7 @@
 #include "LightSystem.h"
 #include "Light.h"
 #include "CollisionSystem.h"
+#include "Material.h"
 
 RenderSystem::RenderSystem()
 {
@@ -83,17 +84,8 @@ void RenderSystem::Render(float deltatime)
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
 
-	for (const auto hash : SkyObj->m_hashMeshes)
+	//skyobj
 	{
-		size_t idxVS = SkyObj->m_IdxVS;
-		size_t idxPS = SkyObj->m_IdxPS;
-
-		m_pCVBs[hash]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
-		m_pCIBs[hash]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
-		m_pCILs[hash]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
-		m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
-		m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
-
 		//DirectionalLight
 		m_pCCBs[SkyObj->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 		m_pCCBs[SkyObj->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
@@ -125,129 +117,93 @@ void RenderSystem::Render(float deltatime)
 		m_pCCBs[SkyObj->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 		m_pCCBs[SkyObj->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
+		Texture* pTexture = _ResourceSystem.GetResource<Texture>(SkyObj->m_hashTextures.back());
+		size_t hashTX = pTexture->GetTX();
 		//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[SkyObj->m_hashTextures.back()]->GetSampler());
-		m_pCTXs[SkyObj->m_hashTextures.back()]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[hashTX]->GetSampler());
+		m_pCTXs[hashTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
 		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 2);
-		//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
 
-		m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[hash]->GetCountIndices(), 0, 0);
-	}
-
-	//for (const auto& iter : objs)
-	//{
-	//	if (!iter->bRenderable) continue;
-	//	for (const auto hash : iter->m_hashMeshes)
-	//	{
-	//		size_t idxVB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_VB();
-	//		size_t idxIB = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IB();
-	//		size_t idxIL = _ResourceSystem.GetResource<Mesh>(hash)->GetIdx_IL();
-	//		size_t idxVS = iter->m_IdxVS;
-	//		size_t idxPS = iter->m_IdxPS;
-
-	//		m_pCVBs[idxVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
-	//		m_pCIBs[idxIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
-	//		m_pCILs[idxIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
-	//		m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
-	//		m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
-
-	//		//DirectionalLight
-	//		m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-	//		m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-
-	//		//PointLight
-	//		m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-	//		m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
-
-	//		//SpotLight
-	//		m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-	//		m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
-
-	//		//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-	//		CB_WVPITMatrix cc0;
-	//		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
-	//		cc0.matView = matView;
-	//		cc0.matProj = matProj;
-	//		cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-	//		m_pCCBs[iter->m_IdxCBs[3]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-	//		m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
-
-	//		Constant_time cc1;
-	//		cc1.fTime = _DEGTORAD(1.0f * 360.0f);
-	//		m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-	//		m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
-
-	//		CB_Campos cc2;
-	//		cc2.camPos = _CameraSystem.GetCamera(0)->GetPosition();
-	//		m_pCCBs[iter->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
-	//		m_pCCBs[iter->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
-
-	//		size_t idxTX = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures.back())->GetIdx_TX();
-	//		//m_pCTXs[iter->m_IdxTX]->SetVS(m_pCDirect3D->GetDeviceContext(), 0);
-	//		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[idxTX]->GetSampler());
-	//		m_pCTXs[idxTX]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
-	//		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);			
-	//		//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
-	//	
-	//		m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[idxIB]->GetCountIndices(), 0, 0);
-	//	}
-	//}
-
-	//PardCode23
-	for (const auto& iter : objs)
-	{
-		if (!iter->bRenderable) continue;
-		for (const auto hash : iter->m_hashMeshes)
+		for (const auto hash : SkyObj->m_hashMeshes)
 		{
-			size_t idxVS = iter->m_IdxVS;
-			size_t idxPS = iter->m_IdxPS;
-
-			m_pCVBs[hash]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
-			m_pCIBs[hash]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
-			m_pCILs[hash]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
+			size_t hashVB = pMesh->GetVB();
+			size_t hashIB = pMesh->GetIB();
+			size_t hashIL = pMesh->GetIL();
+			size_t idxVS = SkyObj->m_IdxVS;
+			size_t idxPS = SkyObj->m_IdxPS;
+			m_pCVBs[hashVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCIBs[hashIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCILs[hashIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
 			m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 			m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 
-			//DirectionalLight
-			m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+			//m_pCDirect3D->DrawVertex_TriangleStrip(m_pCVertexBuffer->GetCountVertices(), 0);
+			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[hashIB]->GetCountIndices(), 0, 0);
+		}
+	}
 
-			//PointLight
-			m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+	//obj
+	for (const auto& iter : objs)
+	{
+		if (!iter->bRenderable) continue;
 
-			//SpotLight
-			m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-			m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
+		//DirectionalLight
+		m_pCCBs[iter->m_IdxCBs[0]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
+		m_pCCBs[iter->m_IdxCBs[0]]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
 
-			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-			CB_WVPITMatrix cc0;
-			cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
-			cc0.matView = matView;
-			cc0.matProj = matProj;
-			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-			m_pCCBs[iter->m_IdxCBs[3]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-			m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
+		//PointLight
+		m_pCCBs[iter->m_IdxCBs[1]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
+		m_pCCBs[iter->m_IdxCBs[1]]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 
-			Constant_time cc1;
-			cc1.fTime = deltatime;
-			m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-			m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
+		//SpotLight
+		m_pCCBs[iter->m_IdxCBs[2]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
+		m_pCCBs[iter->m_IdxCBs[2]]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
 
-			CB_Campos cc2;
-			cc2.camPos = _CameraSystem.GetCamera(0)->GetPosition();
-			m_pCCBs[iter->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
-			m_pCCBs[iter->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
+		//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+		CB_WVPITMatrix cc0;
+		cc0.matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
+		cc0.matView = matView;
+		cc0.matProj = matProj;
+		cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+		m_pCCBs[iter->m_IdxCBs[3]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+		m_pCCBs[iter->m_IdxCBs[3]]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-			for (int txreg = 0; txreg < iter->m_hashTextures.size(); txreg++)
-			{
-				size_t txhash = iter->m_hashTextures[txreg];
-				m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[txhash]->GetSampler());
-				m_pCTXs[txhash]->SetPS(m_pCDirect3D->GetDeviceContext(), txreg);
-			}
-			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);
+		Constant_time cc1;
+		cc1.fTime = deltatime;
+		m_pCCBs[iter->m_IdxCBs[4]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
+		m_pCCBs[iter->m_IdxCBs[4]]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
 
-			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[hash]->GetCountIndices(), 0, 0);
+		CB_Campos cc2;
+		cc2.camPos = _CameraSystem.GetCamera(0)->GetPosition();
+		m_pCCBs[iter->m_IdxCBs[5]]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
+		m_pCCBs[iter->m_IdxCBs[5]]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
+
+
+		for (int txreg = 0; txreg < iter->m_hashTextures.size(); txreg++)
+		{
+			Texture* pTexture = _ResourceSystem.GetResource<Texture>(iter->m_hashTextures[txreg]);
+			size_t hashTX = pTexture->GetTX();
+			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), m_pCTXs[hashTX]->GetSampler());
+			m_pCTXs[hashTX]->SetPS(m_pCDirect3D->GetDeviceContext(), txreg);
+		}
+		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), 0);
+
+		for (const auto hash : iter->m_hashMeshes)
+		{
+			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
+			size_t hashVB = pMesh->GetVB();
+			size_t hashIB = pMesh->GetIB();
+			size_t hashIL = pMesh->GetIL();
+			size_t idxVS = iter->m_IdxVS;
+			size_t idxPS = iter->m_IdxPS;
+			m_pCVBs[hashVB]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCIBs[hashIB]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+			m_pCILs[hashIL]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+			m_pCVSs[idxVS]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
+			m_pCPSs[idxPS]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
+
+			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[hashIB]->GetCountIndices(), 0, 0);
 		}
 	}
 }
@@ -371,61 +327,89 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	m_pCSwapChain->CreateDepthStencilView(m_pCDirect3D->GetDevice(), width, height);
 	m_pCDirect3D->SetViewportSize(width, height);
 }
-
-VertexBuffer* RenderSystem::CreateVertexBuffer(size_t hash, void* vertices, UINT size_vertex, UINT size_vertices)
+size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
 {
-	if (m_pCVBs.find(hash) != m_pCVBs.end())
-		return m_pCVBs[hash];
+	size_t hash = HashingFile(szName);
+	if (m_pCVBs.find(hash) != m_pCVBs.end()) return hash;
 	VertexBuffer* pVertexBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), vertices, size_vertex, size_vertices);
 	_ASEERTION_NULCHK(pVertexBuffer, "VB is nullptr");
-	return m_pCVBs[hash] = pVertexBuffer;
+	m_pCVBs[hash] = pVertexBuffer;
+	return hash;
 }
 
-InputLayout* RenderSystem::CreateInputLayout(size_t hash, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout)
+size_t RenderSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout)
 {
-	if (m_pCILs.find(hash) != m_pCILs.end())
-		return m_pCILs[hash];
+	size_t hash = HashingFile(szName);
+	if (m_pCILs.find(hash) != m_pCILs.end()) return hash;
 	InputLayout* pInputLayout = new InputLayout(m_pCDirect3D->GetDevice(), pInputElementDescs, size_layout, m_pBlob_VS->GetBufferPointer(), m_pBlob_VS->GetBufferSize());
 	_ASEERTION_NULCHK(pInputLayout, "IL is nullptr");
-	return m_pCILs[hash] = pInputLayout;
+	m_pCILs[hash] = pInputLayout;
+	return hash;
 }
 
-IndexBuffer* RenderSystem::CreateIndexBuffer(size_t hash, void* indices, UINT size_indices)
+size_t RenderSystem::CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices)
 {
-	if (m_pCIBs.find(hash) != m_pCIBs.end())
-		return m_pCIBs[hash];
+	size_t hash = HashingFile(szName);
+	if (m_pCIBs.find(hash) != m_pCIBs.end()) return hash;
 	IndexBuffer* pIndexBuffer = new IndexBuffer(m_pCDirect3D->GetDevice(), indices, size_indices);
 	_ASEERTION_NULCHK(pIndexBuffer, "IB is nullptr");
-	return m_pCIBs[hash] = pIndexBuffer;
+	m_pCIBs[hash] = pIndexBuffer;
+	return hash;
 }
 
-ConstantBuffer* RenderSystem::CreateConstantBuffer(size_t hash, UINT size_buffer, void* data)
+size_t RenderSystem::CreateTexture2D(const std::wstring& szName, const ScratchImage* resource, Samplers sampler)
 {
-	if (m_pCCBs.find(hash) != m_pCCBs.end())
-		return m_pCCBs[hash];
+	size_t hash;
+	switch (sampler)
+	{
+		case Samplers::WRAP_LINEAR:
+			hash = HashingFile(szName + L"WRAP_LINEAR");
+			break;
+		case Samplers::WRAP_ANISOTROPIC:
+			hash = HashingFile(szName + L"WRAP_ANISOTROPIC");
+			break;
+		default:
+			hash = HashingFile(szName);
+			break;
+	}
+	if (m_pCTXs.find(hash) != m_pCTXs.end()) return hash;
+	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
+	Texture2D* pTexture2D = new Texture2D(m_pCDirect3D->GetDevice(), resource, sampler);
+	_ASEERTION_NULCHK(pTexture2D, "TX is nullptr");
+	m_pCTXs[hash] = pTexture2D;
+	return hash;
+}
+
+size_t RenderSystem::CreateConstantBuffer(const std::wstring& szName, UINT size_buffer, void* data)
+{
+	size_t hash = HashingFile(szName);
+	if (m_pCCBs.find(hash) != m_pCCBs.end()) return hash;
 	ConstantBuffer* pConstantBuffer = new ConstantBuffer(m_pCDirect3D->GetDevice(), size_buffer, data);
 	_ASEERTION_NULCHK(pConstantBuffer, "CB is nullptr");
-	return m_pCCBs[hash] = pConstantBuffer;
+	m_pCCBs[hash] = pConstantBuffer;
+	return hash;
 }
 
-VertexShader* RenderSystem::CreateVertexShader(size_t hash, std::wstring shaderName, std::string entryName, std::string target)
+size_t RenderSystem::CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	if (m_pCVSs.find(hash) != m_pCVSs.end())
-		return m_pCVSs[hash];
+	size_t hash = HashingFile(shaderName);
+	if (m_pCVSs.find(hash) != m_pCVSs.end()) return hash;
 	if(m_pBlob_VS)
 		m_pBlob_VS->Release();
+
 	m_pBlob_VS = CompileShader(shaderName, entryName, target);
 	_ASEERTION_NULCHK(m_pBlob_VS, "blob is nullptr");
 
 	VertexShader* pVertexShader = new VertexShader(m_pCDirect3D->GetDevice(), m_pBlob_VS);
 	_ASEERTION_NULCHK(pVertexShader, "VS is nullptr");
-	return m_pCVSs[hash] = pVertexShader;
+	m_pCVSs[hash] = pVertexShader;
+	return hash;
 }
 
-PixelShader* RenderSystem::CreatePixelShader(size_t hash, std::wstring shaderName, std::string entryName, std::string target)
+size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	if (m_pCPSs.find(hash) != m_pCPSs.end())
-		return m_pCPSs[hash];
+	size_t hash = HashingFile(shaderName);
+	if (m_pCPSs.find(hash) != m_pCPSs.end()) return hash;
 	if(m_pBlob_PS)
 		m_pBlob_PS->Release();
 	m_pBlob_PS = CompileShader(shaderName, entryName, target);
@@ -433,48 +417,34 @@ PixelShader* RenderSystem::CreatePixelShader(size_t hash, std::wstring shaderNam
 
 	PixelShader* pPixelShader = new PixelShader(m_pCDirect3D->GetDevice(), m_pBlob_PS);
 	_ASEERTION_NULCHK(pPixelShader, "PS is nullptr");
-	return m_pCPSs[hash] = pPixelShader;
+	m_pCPSs[hash] = pPixelShader;
+	return hash;
 }
 
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag, Samplers sampler)
 {
-	//이미 있는 리소스라면
-	size_t hash = HashFilePath(szFilePath);
-	Texture* pTexture = _ResourceSystem.GetResource<Texture>(HashFilePath(szFilePath));
-	if (pTexture)
-		return hash;
-
-	// DirectXTex의 함수를 이용하여 image_data로 리턴시킨다
-	pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(hash, szFilePath, flag);
-
-	// imageData로부터 ID3D11Resource 객체를 생성한다
-	CreateTexture2D(hash, pTexture->GetImage(), sampler);
-	return hash;
-}
-
-Texture2D* RenderSystem::CreateTexture2D(size_t hash, const ScratchImage* resource, Samplers sampler)
-{
-	if (m_pCTXs.find(hash) != m_pCTXs.end())
-		return m_pCTXs[hash];
-	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
-	Texture2D* pTexture2D = new Texture2D(m_pCDirect3D->GetDevice(), resource, sampler);
-	_ASEERTION_NULCHK(pTexture2D, "TX is nullptr");
-	return m_pCTXs[hash] = pTexture2D;
+	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
+	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
+	pTexture->SetTX(CreateTexture2D(szFilePath, pTexture->GetImage(), sampler));
+	return HashingFile(szFilePath);
 }
 
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, Colliders collider)
 {
-	//이미 있는 리소스라면
-	size_t hash = HashFilePath(szFilePath);
-	Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
-	if (pMesh)
-		return hash;
-	pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(hash, szFilePath);
-	_CollisionSystem.CreateCollider(hash, pMesh->GetPoints(), collider);
-	CreateVertexBuffer(hash, pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize());
-	CreateIndexBuffer(hash, pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize());
-	CreateInputLayout(hash, InputLayout_VertexPTN, size_InputLayout_VertexPTN);
-	return hash;
+	Mesh* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
+	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	pMesh->SetIL(CreateInputLayout(szFilePath + L"IL", InputLayout_VertexPTN, size_InputLayout_VertexPTN));
+	pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath, pMesh->GetPoints(), collider));
+	return HashingFile(szFilePath);
+}
+
+size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsFilePath, const std::wstring& psFilePath)
+{
+	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
+	CreateVertexShader(vsFilePath, "vsmain", "vs_5_0");
+	CreatePixelShader(psFilePath, "psmain", "ps_5_0");
+	return size_t();
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)
@@ -495,3 +465,4 @@ ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entry
 	}
 	return pBlob;
 }
+

@@ -67,8 +67,8 @@ void AppWindow::OnCreate()
 	pLight_Point->m_vPosition = Vector3(0.0f, 400.0f, 400.0f);
 	pLight_Point->m_fShiness = 100.0f;
 	pLight_Point->m_fAtt_a0 = 0.0f;
-	pLight_Point->m_fAtt_a1 = 1.0f;
-	pLight_Point->m_fAtt_a2 = 0.0f;
+	pLight_Point->m_fAtt_a1 = 0.3f;
+	pLight_Point->m_fAtt_a2 = 0.7f;
 	pLight_Point->m_fRange = 1000.0f;
 	_LightSystem.AddLight(pLight_Point);
 	
@@ -89,30 +89,19 @@ void AppWindow::OnCreate()
 	_LightSystem.AddLight(pLight_Spot);
 
 	//상수버퍼 기본세팅
-	size_t hash_cb_dl = HashFilePath(L"CB_DirectionalLight");
-	size_t hash_cb_pl = HashFilePath(L"CB_PointLight");
-	size_t hash_cb_sl = HashFilePath(L"CB_SpotLight");
-	size_t hash_cb_wvpitmat = HashFilePath(L"CB_WVPITMatrix");
-	size_t hash_cb_cbtime = HashFilePath(L"Constant_time");
-	size_t hash_cb_campos = HashFilePath(L"CB_Campos");
-	_RenderSystem.CreateConstantBuffer(hash_cb_dl, sizeof(CB_DirectionalLight));
-	_RenderSystem.CreateConstantBuffer(hash_cb_pl, sizeof(CB_PointLight));
-	_RenderSystem.CreateConstantBuffer(hash_cb_sl, sizeof(CB_SpotLight));
-	_RenderSystem.CreateConstantBuffer(hash_cb_wvpitmat, sizeof(CB_WVPITMatrix));
-	_RenderSystem.CreateConstantBuffer(hash_cb_cbtime, sizeof(Constant_time));
-	_RenderSystem.CreateConstantBuffer(hash_cb_campos, sizeof(CB_Campos));
+	size_t hash_cb_dl = _RenderSystem.CreateConstantBuffer(L"CB_DirectionalLight", sizeof(CB_DirectionalLight));
+	size_t hash_cb_pl =_RenderSystem.CreateConstantBuffer(L"CB_PointLight", sizeof(CB_PointLight));
+	size_t hash_cb_sl = _RenderSystem.CreateConstantBuffer(L"CB_SpotLight", sizeof(CB_SpotLight));
+	size_t hash_cb_wvpitmat = _RenderSystem.CreateConstantBuffer(L"CB_WVPITMatrix", sizeof(CB_WVPITMatrix));
+	size_t hash_cb_cbtime = _RenderSystem.CreateConstantBuffer(L"Constant_time", sizeof(Constant_time));
+	size_t hash_cb_campos = _RenderSystem.CreateConstantBuffer(L"CB_Campos", sizeof(CB_Campos));
 	
 	//쉐이더 기본세팅, 추후 Material필요
-	size_t hash_vs_0 = HashFilePath(L"VertexShaderPTN.hlsl");
-	size_t hash_ps_0 = HashFilePath(L"PSSkySphere.hlsl");
-	size_t hash_ps_1 = HashFilePath(L"PixelShaderPTN.hlsl");
-	size_t hash_ps_2 = HashFilePath(L"PS_TextureFlow.hlsl");
-	size_t hash_ps_3 = HashFilePath(L"PS_RotatePointLight.hlsl");
-	_RenderSystem.CreateVertexShader(hash_vs_0, L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");
-	_RenderSystem.CreatePixelShader(hash_ps_0, L"PSSkySphere.hlsl", "psmain", "ps_5_0");
-	_RenderSystem.CreatePixelShader(hash_ps_1, L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
-	_RenderSystem.CreatePixelShader(hash_ps_2, L"PS_TextureFlow.hlsl", "psmain", "ps_5_0");
-	_RenderSystem.CreatePixelShader(hash_ps_3, L"PS_RotatePointLight.hlsl", "psmain", "ps_5_0");
+	size_t hash_vs_0 = _RenderSystem.CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");
+	size_t hash_ps_0 = _RenderSystem.CreatePixelShader(L"PSSkySphere.hlsl", "psmain", "ps_5_0");
+	size_t hash_ps_1 = _RenderSystem.CreatePixelShader(L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
+	size_t hash_ps_2 = _RenderSystem.CreatePixelShader(L"PS_TextureFlow.hlsl", "psmain", "ps_5_0");
+	size_t hash_ps_3 = _RenderSystem.CreatePixelShader(L"PS_RotatePointLight.hlsl", "psmain", "ps_5_0");
 
 	//SkySphere
 	TempObj* SkySphere = new TempObj();
@@ -124,10 +113,10 @@ void AppWindow::OnCreate()
 	SkySphere->m_IdxCBs.push_back(hash_cb_dl);
 	SkySphere->m_IdxCBs.push_back(hash_cb_pl);
 	SkySphere->m_IdxCBs.push_back(hash_cb_sl);
-
 	SkySphere->m_IdxCBs.push_back(hash_cb_wvpitmat);
 	SkySphere->m_IdxCBs.push_back(hash_cb_cbtime);
 	SkySphere->m_IdxCBs.push_back(hash_cb_campos);
+
 	SkySphere->m_IdxVS = hash_vs_0;
 	SkySphere->m_IdxPS = hash_ps_0;
 	_RenderSystem.SkyObj = SkySphere;
@@ -153,20 +142,20 @@ void AppWindow::OnCreate()
 		obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
 		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
 
-		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj"));
+		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", Colliders::SPHERE));
 		obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter3.webp", WIC_FLAGS_NONE));
-		obj->m_IdxVS = idx_vs_0;
-		obj->m_IdxPS = idx_ps_0;
+		obj->m_IdxVS = hash_vs_0;
+		obj->m_IdxPS = hash_ps_1;
 
-		obj->m_IdxCBs.push_back(idx_cb_DL);
-		obj->m_IdxCBs.push_back(idx_cb_PL);
-		obj->m_IdxCBs.push_back(idx_cb_SL);
+		obj->m_IdxCBs.push_back(hash_cb_dl);
+		obj->m_IdxCBs.push_back(hash_cb_pl);
+		obj->m_IdxCBs.push_back(hash_cb_sl);
 
-		obj->m_IdxCBs.push_back(idx_cb_wvpitmat);
-		obj->m_IdxCBs.push_back(idx_cb_cbtime);
-		obj->m_IdxCBs.push_back(idx_cb_campos);
+		obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
+		obj->m_IdxCBs.push_back(hash_cb_cbtime);
+		obj->m_IdxCBs.push_back(hash_cb_campos);
 	}*/
-
+	
 	//PardCode23
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();
@@ -183,7 +172,6 @@ void AppWindow::OnCreate()
 	obj->m_IdxCBs.push_back(hash_cb_dl);
 	obj->m_IdxCBs.push_back(hash_cb_pl);
 	obj->m_IdxCBs.push_back(hash_cb_sl);
-
 	obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
 	obj->m_IdxCBs.push_back(hash_cb_cbtime);
 	obj->m_IdxCBs.push_back(hash_cb_campos);
@@ -195,18 +183,18 @@ void AppWindow::OnCreate()
 	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	obj->m_vPosition = Vector3(0.0f, 300, 0.0f);
 
-	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj"));
+	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", Colliders::SPHERE));
 	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE));
 	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE));
 	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE));
 	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE));
+
 	obj->m_IdxVS = hash_vs_0;
 	obj->m_IdxPS = hash_ps_2;
 
 	obj->m_IdxCBs.push_back(hash_cb_dl);
 	obj->m_IdxCBs.push_back(hash_cb_pl);
 	obj->m_IdxCBs.push_back(hash_cb_sl);
-
 	obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
 	obj->m_IdxCBs.push_back(hash_cb_cbtime);
 	obj->m_IdxCBs.push_back(hash_cb_campos);
