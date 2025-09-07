@@ -13,5 +13,6 @@ public:
 	void SetPixelShader(ID3D11DeviceContext* pDeviceContext);
 private:
 	ID3D11PixelShader* m_pPS;
+	ID3DBlob* m_pBlob;
 };
 

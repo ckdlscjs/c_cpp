@@ -44,7 +44,7 @@ void TempObj::Init()
 	VK_MASK[VK_MBUTTON] = maskNum++;		//MouseMiddle
 
 
-	m_IdxCallbacks[InputEventType::KEY_DOWN].push_back(_InputSystem.AddListner(InputEventType::KEY_DOWN, [this](const InputEvent& event)->void
+	m_IdxCallbacks[E_InputEventType::KEY_DOWN].push_back(_InputSystem.AddListner(E_InputEventType::KEY_DOWN, [this](const InputEvent& event)->void
 		{ 
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;
 			m_lVKMask |= (1LL << VK_MASK[event.keyCode]);
@@ -58,7 +58,7 @@ void TempObj::Init()
 		}
 	));
 	*/
-	m_IdxCallbacks[InputEventType::KEY_UP].push_back(_InputSystem.AddListner(InputEventType::KEY_UP, [this](const InputEvent& event)->void
+	m_IdxCallbacks[E_InputEventType::KEY_UP].push_back(_InputSystem.AddListner(E_InputEventType::KEY_UP, [this](const InputEvent& event)->void
 		{
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;
 			m_lVKMask &= ~(1LL << VK_MASK[event.keyCode]);

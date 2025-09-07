@@ -48,7 +48,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.GetCamera(0)->SetPosition({ 100, 200.0f, -1000.0f });
 	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth / (float)m_iHeight);
 	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
-	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 10000.0f);
+	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 50000.0f);
 	_CameraSystem.GetCamera(0)->SetTarget(Vector3(0, 0, 0));
 
 	//라이팅 기본세팅
@@ -67,8 +67,8 @@ void AppWindow::OnCreate()
 	pLight_Point->m_vPosition = Vector3(0.0f, 400.0f, 400.0f);
 	pLight_Point->m_fShiness = 100.0f;
 	pLight_Point->m_fAtt_a0 = 0.0f;
-	pLight_Point->m_fAtt_a1 = 0.3f;
-	pLight_Point->m_fAtt_a2 = 0.7f;
+	pLight_Point->m_fAtt_a1 = 0.5f;
+	pLight_Point->m_fAtt_a2 = 0.5f;
 	pLight_Point->m_fRange = 1000.0f;
 	_LightSystem.AddLight(pLight_Point);
 	
@@ -78,7 +78,7 @@ void AppWindow::OnCreate()
 	pLight_Spot->m_mSpecular = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 	pLight_Spot->m_vDirection = (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize();
 	pLight_Spot->m_vPosition = Vector3(-250.0f, 500.0f, -5.0f);
-	pLight_Spot->m_fShiness = 1000.0f;
+	pLight_Spot->m_fShiness = 100.0f;
 	pLight_Spot->m_fAtt_a0 = 0.0f;
 	pLight_Spot->m_fAtt_a1 = 0.0f;
 	pLight_Spot->m_fAtt_a2 = 1.0f;
@@ -87,38 +87,17 @@ void AppWindow::OnCreate()
 	pLight_Spot->m_fCos_OuterCone = cosf(_DEGTORAD(130.0f));
 	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(10.0f));
 	_LightSystem.AddLight(pLight_Spot);
-
-	//상수버퍼 기본세팅
-	size_t hash_cb_dl = _RenderSystem.CreateConstantBuffer(L"CB_DirectionalLight", sizeof(CB_DirectionalLight));
-	size_t hash_cb_pl =_RenderSystem.CreateConstantBuffer(L"CB_PointLight", sizeof(CB_PointLight));
-	size_t hash_cb_sl = _RenderSystem.CreateConstantBuffer(L"CB_SpotLight", sizeof(CB_SpotLight));
-	size_t hash_cb_wvpitmat = _RenderSystem.CreateConstantBuffer(L"CB_WVPITMatrix", sizeof(CB_WVPITMatrix));
-	size_t hash_cb_cbtime = _RenderSystem.CreateConstantBuffer(L"Constant_time", sizeof(Constant_time));
-	size_t hash_cb_campos = _RenderSystem.CreateConstantBuffer(L"CB_Campos", sizeof(CB_Campos));
 	
-	//쉐이더 기본세팅, 추후 Material필요
-	size_t hash_vs_0 = _RenderSystem.CreateVertexShader(L"VertexShaderPTN.hlsl", "vsmain", "vs_5_0");
-	size_t hash_ps_0 = _RenderSystem.CreatePixelShader(L"PSSkySphere.hlsl", "psmain", "ps_5_0");
-	size_t hash_ps_1 = _RenderSystem.CreatePixelShader(L"PixelShaderPTN.hlsl", "psmain", "ps_5_0");
-	size_t hash_ps_2 = _RenderSystem.CreatePixelShader(L"PS_TextureFlow.hlsl", "psmain", "ps_5_0");
-	size_t hash_ps_3 = _RenderSystem.CreatePixelShader(L"PS_RotatePointLight.hlsl", "psmain", "ps_5_0");
-
 	//SkySphere
 	TempObj* SkySphere = new TempObj();
 	SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f);
 
-	SkySphere->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj"));
-	SkySphere->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE));
-	
-	SkySphere->m_IdxCBs.push_back(hash_cb_dl);
-	SkySphere->m_IdxCBs.push_back(hash_cb_pl);
-	SkySphere->m_IdxCBs.push_back(hash_cb_sl);
-	SkySphere->m_IdxCBs.push_back(hash_cb_wvpitmat);
-	SkySphere->m_IdxCBs.push_back(hash_cb_cbtime);
-	SkySphere->m_IdxCBs.push_back(hash_cb_campos);
-
-	SkySphere->m_IdxVS = hash_vs_0;
-	SkySphere->m_IdxPS = hash_ps_0;
+	size_t hash_material_skysphere = _RenderSystem.CreateMaterial(L"Mat_SkySphere", L"VertexShaderPTN.hlsl", L"PSSkySphere.hlsl");
+	std::vector<pTX_HASH> txs_skysphere;
+	txs_skysphere.push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE)});
+	_RenderSystem.Material_SetTextures(hash_material_skysphere, &txs_skysphere);
+	size_t hash_mesh_skysphere = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj");
+	SkySphere->m_Mesh_Material.push_back({ hash_mesh_skysphere , hash_material_skysphere });
 	_RenderSystem.SkyObj = SkySphere;
 
 	// 1. 난수 시드(seed)를 설정합니다.
@@ -134,7 +113,7 @@ void AppWindow::OnCreate()
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
 	std::uniform_int_distribution<int> dis(-100, 100);
 
-	/*for (int i = 0; i <50; i++)
+	/*for (int i = 0; i < 50; i++)
 	{
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
@@ -156,48 +135,36 @@ void AppWindow::OnCreate()
 		obj->m_IdxCBs.push_back(hash_cb_campos);
 	}*/
 	
-	//PardCode23
+	//Pard22
 	_RenderSystem.objs.push_back(new TempObj());
 	TempObj* obj = _RenderSystem.objs.back();
 	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
 	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
-	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
+	obj->m_vPosition = Vector3(0.0f, 600.0f, 0.0f);
 
-	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/scene.obj"));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE));
+	size_t hash_mesh_obj0 = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
+	size_t hash_material_0 = _RenderSystem.CreateMaterial(L"Mat_Earth", L"VertexShaderPTN.hlsl", L"PS_TextureFlow.hlsl");
+	std::vector<pTX_HASH> txs_obj0;
+	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE)});
+	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE) });
+	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE) });
+	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE) });
+	_RenderSystem.Material_SetTextures(hash_material_0, &txs_obj0);
+	obj->m_Mesh_Material.push_back({ hash_mesh_obj0 , hash_material_0 });
 
-	obj->m_IdxVS = hash_vs_0;
-	obj->m_IdxPS = hash_ps_3;
-
-	obj->m_IdxCBs.push_back(hash_cb_dl);
-	obj->m_IdxCBs.push_back(hash_cb_pl);
-	obj->m_IdxCBs.push_back(hash_cb_sl);
-	obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
-	obj->m_IdxCBs.push_back(hash_cb_cbtime);
-	obj->m_IdxCBs.push_back(hash_cb_campos);
-
-	//pard22
+	//Pard23
 	_RenderSystem.objs.push_back(new TempObj());
 	obj = _RenderSystem.objs.back();
 	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
 	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
-	obj->m_vPosition = Vector3(0.0f, 300, 0.0f);
+	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
 
-	obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", Colliders::SPHERE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE));
-	obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE));
-
-	obj->m_IdxVS = hash_vs_0;
-	obj->m_IdxPS = hash_ps_2;
-
-	obj->m_IdxCBs.push_back(hash_cb_dl);
-	obj->m_IdxCBs.push_back(hash_cb_pl);
-	obj->m_IdxCBs.push_back(hash_cb_sl);
-	obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
-	obj->m_IdxCBs.push_back(hash_cb_cbtime);
-	obj->m_IdxCBs.push_back(hash_cb_campos);
+	size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/scene.obj");
+	size_t hash_material_1 = _RenderSystem.CreateMaterial(L"Mat_PointLight", L"VertexShaderPTN.hlsl", L"PS_RotatePointLight.hlsl");
+	std::vector<pTX_HASH> txs_obj1;
+	txs_obj1.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE) });
+	_RenderSystem.Material_SetTextures(hash_material_1, &txs_obj1);
+	obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , hash_material_1 });
 }
 
 void AppWindow::OnUpdate()

@@ -28,7 +28,7 @@ private:
 	size_t m_lLightID;
 
 	//입력관련, 추후 컴포넌트로 분리필요
-	std::unordered_map<InputEventType, std::vector<size_t>> m_IdxCallbacks;
+	std::unordered_map<E_InputEventType, std::vector<size_t>> m_IdxCallbacks;
 	std::unordered_map<int, int> VK_MASK;
 	size_t m_lVKMask;
 };

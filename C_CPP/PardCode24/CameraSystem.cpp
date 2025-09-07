@@ -36,7 +36,7 @@ void CameraSystem::Init()
 	VK_MASK[VK_SPACE] = maskNum++;			//SPACE
 	
 	//마우스 이동에따른 카메라의 변환
-	m_IdxCallbacks[InputEventType::MOUSE_MOVE].push_back(_InputSystem.AddListner(InputEventType::MOUSE_MOVE, [this](const InputEvent& event)->void
+	m_IdxCallbacks[E_InputEventType::MOUSE_MOVE].push_back(_InputSystem.AddListner(E_InputEventType::MOUSE_MOVE, [this](const InputEvent& event)->void
 		{
 			for (auto iter = m_Cameras.begin(); iter != m_Cameras.end(); iter++)
 			{
@@ -46,7 +46,7 @@ void CameraSystem::Init()
 		}
 	));
 	
-	m_IdxCallbacks[InputEventType::KEY_DOWN].push_back(_InputSystem.AddListner(InputEventType::KEY_DOWN, [this](const InputEvent& event)->void
+	m_IdxCallbacks[E_InputEventType::KEY_DOWN].push_back(_InputSystem.AddListner(E_InputEventType::KEY_DOWN, [this](const InputEvent& event)->void
 		{
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;
 			m_lVKMask |= (1LL << VK_MASK[event.keyCode]);
@@ -60,7 +60,7 @@ void CameraSystem::Init()
 		}
 	));
 	*/
-	m_IdxCallbacks[InputEventType::KEY_UP].push_back(_InputSystem.AddListner(InputEventType::KEY_UP, [this](const InputEvent& event)->void
+	m_IdxCallbacks[E_InputEventType::KEY_UP].push_back(_InputSystem.AddListner(E_InputEventType::KEY_UP, [this](const InputEvent& event)->void
 		{
 			if (VK_MASK.find(event.keyCode) == VK_MASK.end()) return;
 			m_lVKMask &= ~(1LL << VK_MASK[event.keyCode]);

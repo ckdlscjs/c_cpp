@@ -159,7 +159,7 @@ public:
 	inline Box() = default;
 	inline Box(const std::vector<Vector3>* vertices)
 	{
-        SetType(Colliders::AABB);
+        SetType(E_Colliders::AABB);
 		if (vertices->size() <= 0) return;
 		float minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = FLT_MAX;

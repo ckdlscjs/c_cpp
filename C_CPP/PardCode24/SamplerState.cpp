@@ -28,6 +28,35 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	m_pSamplers.push_back(pSamplers);
 
 	//필요시 추가
+	/*
+	// Point_Clamp: 픽셀 아트, 스프라이트, UI 등에 사용
+	D3D11_SAMPLER_DESC pointClampDesc = DefaultSamplerDesc();
+	pointClampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	pointClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	pointClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	pointClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	pDevice->CreateSamplerState(&pointClampDesc, &m_pSamplers[static_cast<size_t>(Samplers::POINT_CLAMP)]);
+	assert(m_pSamplers[static_cast<size_t>(Samplers::POINT_CLAMP)]);
+
+	// Linear_Clamp: 그림자 맵, 라이트 맵, 데칼 등에 사용
+	D3D11_SAMPLER_DESC linearClampDesc = DefaultSamplerDesc();
+	linearClampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	linearClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	linearClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	linearClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	pDevice->CreateSamplerState(&linearClampDesc, &m_pSamplers[static_cast<size_t>(Samplers::LINEAR_CLAMP)]);
+	assert(m_pSamplers[static_cast<size_t>(Samplers::LINEAR_CLAMP)]);
+
+	// Anisotropic_Clamp: 텍스처가 비스듬히 보이지만 반복되면 안 되는 경우 사용
+	D3D11_SAMPLER_DESC anisotropicClampDesc = DefaultSamplerDesc();
+	anisotropicClampDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+	anisotropicClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	anisotropicClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	anisotropicClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	anisotropicClampDesc.MaxAnisotropy = 16;
+	pDevice->CreateSamplerState(&anisotropicClampDesc, &m_pSamplers[static_cast<size_t>(Samplers::ANISOTROPIC_CLAMP)]);
+	assert(m_pSamplers[static_cast<size_t>(Samplers::ANISOTROPIC_CLAMP)]);
+	*/
 }
 
 SamplerState::~SamplerState()
@@ -49,12 +78,12 @@ SamplerState::~SamplerState()
 //NumSamplers : 바인딩할 샘플러 스테이트의 개수입니다(보통 1개).
 //ppSamplerStates : 바인딩할 ID3D11SamplerState 포인터들의 배열입니다.
 */
-void SamplerState::SetVS(ID3D11DeviceContext* pDeviceContext, Samplers sampler, UINT startIdx)
+void SamplerState::SetVS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx)
 {
 	pDeviceContext->VSSetSamplers(startIdx, 1, &m_pSamplers[(UINT)sampler]);
 }
 
-void SamplerState::SetPS(ID3D11DeviceContext* pDeviceContext, Samplers sampler, UINT startIdx)
+void SamplerState::SetPS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx)
 {
 	pDeviceContext->PSSetSamplers(startIdx, 1, &m_pSamplers[(UINT)sampler]);
 }

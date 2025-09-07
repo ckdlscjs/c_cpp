@@ -1,7 +1,9 @@
 #pragma once
 #include "std.h"
+
+using pMesh_Material = std::pair<size_t, size_t>;
 //enum classes
-enum class InputEventType
+enum class E_InputEventType
 {
 	KEY_DOWN,
 	KEY_UP,
@@ -14,21 +16,26 @@ enum class InputEventType
 	MOUSE_WHEEL,
 };
 
-enum class Samplers
+enum class E_Samplers
 {
 	WRAP_LINEAR,
 	WRAP_ANISOTROPIC,
 
+	// 새롭게 추가된 샘플러 상태들
+	//POINT_CLAMP,
+	//LINEAR_CLAMP,
+	//ANISOTROPIC_CLAMP,
 };
 
-enum class Rasterizers
+enum class E_Rasterizers
 {
-	WRAP_LINEAR,
-	WRAP_ANISOTROPIC,
+	SOLID_CULLBACK_CW,
+	SOLID_CULLFRONT_CW,
+	WIRE_CULLBACK_CW,
 
 };
 
-enum class Colliders
+enum class E_Colliders
 {
 	NONE,
 	SPHERE,
@@ -37,10 +44,22 @@ enum class Colliders
 	RAY,
 };
 
+enum class E_Textures
+{
+	Diffuse,
+	Normal,
+	Roughness,
+	Metalic,
+	AmbientOcclusion,
+	Emissive,
+	count,
+};
+using pTX_HASH = std::pair<E_Textures, size_t>;
+
 //Resources data struct
 struct InputEvent
 {
-	InputEventType type;
+	E_InputEventType type;
 	int keyCode = 0;
 	int mouseX = 0;
 	int mouseY = 0;
@@ -62,6 +81,7 @@ struct Vertex_PC
 	Vector3 pos0;
 	Vector4 color0;
 };
+
 static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
 {
 	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
@@ -117,7 +137,7 @@ static UINT size_InputLayout_VertexPPCC = ARRAYSIZE(InputLayout_VertexPPCC);
 
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다, 최대 16바이트 * 4096 이 가능하다(하나의레지스터), 최대14레지스터까지가능(0~13)
 __declspec(align(16))
-struct Constant_time
+struct CB_Time
 {
 	float fTime;
 };
@@ -125,7 +145,7 @@ struct Constant_time
 __declspec(align(16))
 struct CB_Campos
 {
-	Vector3 camPos;
+	Vector3 vPosition;
 };
 
 __declspec(align(16))
@@ -148,30 +168,30 @@ struct CB_WVPITMatrix
 __declspec(align(16))
 struct CB_DirectionalLight
 {
-	Vector4 m_Ambient;
-	Vector4 m_Diffuse;
-	Vector4 m_Specular;
-	Vector4 v_Direction;	//w is shiness
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vDirection;	//w is shiness
 };
 
 __declspec(align(16))
 struct CB_PointLight
 {
-	Vector4 m_Ambient;
-	Vector4 m_Diffuse;
-	Vector4 m_Specular;
-	Vector4 v_Position;		//w is shiness
-	Vector4 f_Attenuation;	//a0, a1, a2, range
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vPosition;		//w is shiness
+	Vector4 fAttenuations;	//a0, a1, a2, range
 };
 
 __declspec(align(16))
 struct CB_SpotLight
 {
-	Vector4 m_Ambient;
-	Vector4 m_Diffuse;
-	Vector4 m_Specular;
-	Vector4 v_Direction;	//w is padd1
-	Vector4 v_Position;		//w is shiness
-	Vector4 f_Attenuation;	//a0, a1, a2, range
-	Vector4 f_Spots;		//spot, cosOuter, cosInner, padd2
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vDirection;		//w is padd1
+	Vector4 vPosition;		//w is shiness
+	Vector4 fAttenuations;	//a0, a1, a2, range
+	Vector4 fSpots;			//spot, cosOuter, cosInner, padd2
 };

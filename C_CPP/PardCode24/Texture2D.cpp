@@ -1,6 +1,6 @@
 #include "Texture2D.h"
 
-Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource, Samplers sampler)
+Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
 {
 	std::cout << "Initialize : " << "Texture2D" << " Class" << '\n';
 	HRESULT result;
@@ -17,8 +17,6 @@ Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource, Sample
 
 	result = pDevice->CreateShaderResourceView(m_pTexture, &desc, &m_pSRV);
 	_ASEERTION_CREATE(result, "SRV not create successfully");
-
-	m_Sampler = sampler;
 }
 
 Texture2D::~Texture2D()
@@ -38,9 +36,4 @@ void Texture2D::SetVS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 void Texture2D::SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 {
 	pDeviceContext->PSSetShaderResources(startIdx, 1, &m_pSRV);
-}
-
-Samplers Texture2D::GetSampler() const
-{
-	return m_Sampler;
 }

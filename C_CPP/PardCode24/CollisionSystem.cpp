@@ -29,16 +29,16 @@ void CollisionSystem::Frame(float deltatime)
 	UINT count = 0;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
-	for (const auto& iter : _RenderSystem.objs)
+	for (const auto& obj : _RenderSystem.objs)
 	{
-		iter->bRenderable = false;
-		Matrix4x4 matWorld = GetMat_WorldMatrix(iter->m_vScale, iter->m_vRotate, iter->m_vPosition);
-		for (const auto hash : iter->m_hashMeshes)
+		obj->bRenderable = false;
+		Matrix4x4 matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+		for (const auto& MeshMat : obj->m_Mesh_Material)
 		{
-			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(hash);
+			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(MeshMat.first);
 			if (CheckBound(frustum, pMesh->GetCL(), matWorld))
 			{
-				iter->bRenderable = true;
+				obj->bRenderable = true;
 				count++;
 				break;
 			}
@@ -56,23 +56,23 @@ void CollisionSystem::Release()
 	}
 }
 
-size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, Colliders collider)
+size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Colliders collider)
 {
 	switch (collider)
 	{
-		case Colliders::SPHERE:
+		case E_Colliders::SPHERE:
 		{
 			return AddCollider<Sphere>(szName + L"Sphere", vertices);
 		}	break;
 			
-		case Colliders::AABB:
+		case E_Colliders::AABB:
 		{
 			return AddCollider<Box>(szName + L"Box", vertices);
 		}break;
 			
-		case Colliders::OBB:
+		case E_Colliders::OBB:
 			break;
-		case Colliders::RAY:
+		case E_Colliders::RAY:
 			break;
 		default:
 			return size_t();
@@ -84,20 +84,20 @@ bool CollisionSystem::CheckBound(const Frustum& frustum, size_t hash, const Matr
 {
 	switch (m_Colliders[hash]->GetType())
 	{
-		case Colliders::SPHERE:
+		case E_Colliders::SPHERE:
 		{
 			return (CheckBound(frustum, *static_cast<Sphere*>(m_Colliders[hash]), matWorld));
 		}break;
 
 		//추후 box로 통일후 type에 따른 분별형태로 변화필요
-		case Colliders::AABB:
+		case E_Colliders::AABB:
 		{
 			return CheckBound(frustum, *static_cast<Box*>(m_Colliders[hash]), matWorld);
 		}break;
 
-		case Colliders::OBB:
+		case E_Colliders::OBB:
 			break;
-		case Colliders::RAY:
+		case E_Colliders::RAY:
 			break;
 		default:
 			return false;

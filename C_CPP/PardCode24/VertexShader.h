@@ -11,7 +11,9 @@ public:
 	VertexShader(VertexShader&&) = delete;
 	VertexShader& operator=(VertexShader&&) = delete;
 	void SetVertexShader(ID3D11DeviceContext* pDeviceContext);
+	ID3DBlob* GetBlob() const;
 private:
 	ID3D11VertexShader* m_pVS;
+	ID3DBlob* m_pBlob;
 };
 

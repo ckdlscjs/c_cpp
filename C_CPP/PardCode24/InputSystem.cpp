@@ -9,14 +9,14 @@ InputSystem::~InputSystem()
 {
 }
 
-size_t InputSystem::AddListner(InputEventType type, EventCallBack callback)
+size_t InputSystem::AddListner(E_InputEventType type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)
 	m_Listners[type][m_CallbackID] = callback;
 	return m_CallbackID++;
 }
 
-void InputSystem::RemoveListner(InputEventType type, size_t id)
+void InputSystem::RemoveListner(E_InputEventType type, size_t id)
 {
 	if (m_Listners[type].empty()) return;
 	m_Listners[type].erase(id);
@@ -28,7 +28,7 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 	if (m_OldKeystate[VK_KEY]) return; 
 	m_CurKeystate[VK_KEY] = true;
 	InputEvent event;
-	event.type = InputEventType::KEY_DOWN;
+	event.type = E_InputEventType::KEY_DOWN;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -37,7 +37,7 @@ void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return;
 	InputEvent event;
-	event.type = InputEventType::KEY_PRESSED;
+	event.type = E_InputEventType::KEY_PRESSED;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -48,7 +48,7 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 	if (!m_OldKeystate[VK_KEY]) return; 
 	m_CurKeystate[VK_KEY] = false;
 	InputEvent event;
-	event.type = InputEventType::KEY_UP;
+	event.type = E_InputEventType::KEY_UP;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -62,7 +62,7 @@ bool InputSystem::GetKeyState(unsigned char VK_KEY) const
 void InputSystem::OnMouseMove(int curX, int curY)
 {
 	InputEvent event;
-	event.type = InputEventType::MOUSE_MOVE;
+	event.type = E_InputEventType::MOUSE_MOVE;
 	event.mouseDeltaX = curX - (m_ChkPosFirst ? curX : m_OldMousePos.x);
 	event.mouseDeltaY = curY - (m_ChkPosFirst ? curY : m_OldMousePos.y);
 	if (m_ChkPosFirst) m_ChkPosFirst = false;
@@ -74,7 +74,7 @@ void InputSystem::OnMouseMove(int curX, int curY)
 void InputSystem::OnMouseMoveCenter(HWND hWnd, int curX, int curY)
 {
 	InputEvent event;
-	event.type = InputEventType::MOUSE_MOVE;
+	event.type = E_InputEventType::MOUSE_MOVE;
 
 	// 1. 게임 창의 클라이언트 영역 크기를 가져옵니다. (넘겨받은 hWnd 사용)
 	RECT clientRect;

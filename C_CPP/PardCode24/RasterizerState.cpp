@@ -35,18 +35,18 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CW");
 	m_pStates.push_back(pState);
 
-	//WIREFRAME, CULLBACK, CW
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
-	m_pStates.push_back(pState);
-
 	//SOLID, CULLFRONT, CW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
 	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
 	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CW");
+	m_pStates.push_back(pState);
+
+	//WIREFRAME, CULLBACK, CW
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
+	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
 	m_pStates.push_back(pState);
 
 	//필요시 추가
@@ -62,7 +62,7 @@ RasterizerState::~RasterizerState()
 	}
 }
 
-void RasterizerState::SetRS(ID3D11DeviceContext* pDeviceContext, UINT idx)
+void RasterizerState::SetRS(ID3D11DeviceContext* pDeviceContext, E_Rasterizers rasterizer)
 {
-	pDeviceContext->RSSetState(m_pStates[idx]);
+	pDeviceContext->RSSetState(m_pStates[(UINT)rasterizer]);
 }

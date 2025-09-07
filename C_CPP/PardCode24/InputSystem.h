@@ -16,8 +16,8 @@ public:
 	void Frame();
 	void Release();
 
-	size_t AddListner(InputEventType type, EventCallBack callback);
-	void RemoveListner(InputEventType type, size_t id);
+	size_t AddListner(E_InputEventType type, EventCallBack callback);
+	void RemoveListner(E_InputEventType type, size_t id);
 	void Notify(const InputEvent& event);
 
 	void OnKeyDown(unsigned char VK_KEY);
@@ -29,7 +29,7 @@ public:
 	void SetMouseCenter(HWND hWnd);
 	
 private:
-	std::unordered_map<InputEventType, std::unordered_map<size_t, EventCallBack>> m_Listners;
+	std::unordered_map<E_InputEventType, std::unordered_map<size_t, EventCallBack>> m_Listners;
 	size_t m_CallbackID = 1;	//0은 오류체크
 	bool m_CurKeystate[256];
 	bool m_OldKeystate[256];

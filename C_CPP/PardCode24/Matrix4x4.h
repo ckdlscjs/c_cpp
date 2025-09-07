@@ -338,8 +338,8 @@ inline Matrix4x4 GetMat_ViewMatrix(const Vector3 posCamera, const Vector3 posTar
 	mat[2] = Vector4(u.GetZ(), v.GetZ(), w.GetZ(), 0.0f);
 	//-(Q dot u), -(Q dot v), -(Q dot w), 1.0f
 	//dot내적의 결과가 x요소에있음
-	Vector3 camPos = posCamera;
-	mat[3] = Vector4(-DotProduct(u, camPos), -DotProduct(v, camPos), -DotProduct(w, camPos), 1.0f);
+	Vector3 vPosition = posCamera;
+	mat[3] = Vector4(-DotProduct(u, vPosition), -DotProduct(v, vPosition), -DotProduct(w, vPosition), 1.0f);
 	return mat;
 }
 

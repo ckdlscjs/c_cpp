@@ -18,7 +18,7 @@ public:
 	void Release();
 
 	template<typename T, typename... Types>
-	T* CreateResourceFromFile(const std::wstring& szFilePath, Types... args);
+	T* CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args);
 	template<typename T>
 	T* GetResource(size_t hash);
 	
@@ -28,7 +28,7 @@ private:
 #define _ResourceSystem ResourceSystem::GetInstance()
 
 template<typename T, typename... Types>
-T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types... args)
+T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args)
 {					
 	size_t hash = HashingFile(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<T*>(m_Resources[hash]);
@@ -42,7 +42,7 @@ T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types.
 template<typename T>
 T* ResourceSystem::GetResource(size_t hash)
 {
-	if (m_Resources.find(hash) == m_Resources.end()) return nullptr;
+	_ASEERTION_NULCHK(m_Resources.find(hash) != m_Resources.end(), "hash is null");
 	return static_cast<T*>(m_Resources[hash]);
 }
 
