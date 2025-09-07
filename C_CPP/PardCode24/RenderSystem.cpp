@@ -149,13 +149,13 @@ void RenderSystem::Render(float deltatime)
 			m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 			m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 
-			const std::vector<size_t>* texs = pMaterial->GetTXs();
+			const std::vector<size_t>* texs = pMaterial->GetTextures();
 			int cnt = 0;
 			for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 			{
 				for(const auto& hashTx : texs[idxTex])
 				{
-					m_pCTXs[hashTx]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+					m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 				}
 			}
 
@@ -215,13 +215,14 @@ void RenderSystem::Render(float deltatime)
 				m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 				m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
 
-				const std::vector<size_t>* texs = pMaterial->GetTXs();
+				const std::vector<size_t>* texs = pMaterial->GetTextures();
 				int cnt = 0;
 				for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 				{
 					for (const auto& hashTx : texs[idxTex])
 					{
-						m_pCTXs[hashTx]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						
+						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
 
@@ -417,7 +418,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 {
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
-	pTexture->SetTX(CreateTexture2D(szFilePath, pTexture->GetImage()));
+	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
 	return HashingFile(szFilePath);
 }
 
@@ -443,7 +444,7 @@ void RenderSystem::Material_SetTextures(size_t hash_material, std::vector<pTX_HA
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	for (const auto& iter : *textures)
-		pMaterial->SetTX(iter);
+		pMaterial->SetTexture(iter);
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)

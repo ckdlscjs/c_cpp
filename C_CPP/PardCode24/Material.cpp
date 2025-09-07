@@ -41,22 +41,22 @@ size_t Material::GetIL() const
 	return m_lIL;
 }
 
-void Material::SetCB(size_t hashCB)
-{
-	m_lCBs.push_back(hashCB);
-}
+//void Material::SetCB(size_t hashCB)
+//{
+//	m_lCBs.push_back(hashCB);
+//}
+//
+//size_t Material::GetCB(int idx) const
+//{
+//	return m_lCBs[idx];
+//}
 
-size_t Material::GetCB(int idx) const
-{
-	return m_lCBs[idx];
-}
-
-void Material::SetTX(pTX_HASH t_hash)
+void Material::SetTexture(pTX_HASH t_hash)
 {
 	m_lTXs[(UINT)t_hash.first].push_back(t_hash.second);
 }
 
-const std::vector<size_t>* Material::GetTXs() const
+const std::vector<size_t>* Material::GetTextures() const
 {
 	return m_lTXs;
 }

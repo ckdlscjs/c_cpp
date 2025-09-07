@@ -22,8 +22,6 @@ public:
 	size_t GetVB() const;
 	void SetIB(size_t hashIB);
 	size_t GetIB() const;
-	void SetIL(size_t hashIL);
-	size_t GetIL() const;
 	void SetCL(size_t hashCL);
 	size_t GetCL() const;
 private:
@@ -32,7 +30,6 @@ private:
 	std::vector<UINT> m_Indices;
 	size_t m_lVB;
 	size_t m_lIB;
-	size_t m_lIL;
 	size_t m_lCL;
 };
 

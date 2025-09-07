@@ -113,7 +113,7 @@ void AppWindow::OnCreate()
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
 	std::uniform_int_distribution<int> dis(-100, 100);
 
-	/*for (int i = 0; i < 50; i++)
+	for (int i = 0; i < 50; i++)
 	{
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
@@ -121,19 +121,13 @@ void AppWindow::OnCreate()
 		obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
 		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
 
-		obj->m_hashMeshes.push_back(_RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", Colliders::SPHERE));
-		obj->m_hashTextures.push_back(_RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter3.webp", WIC_FLAGS_NONE));
-		obj->m_IdxVS = hash_vs_0;
-		obj->m_IdxPS = hash_ps_1;
-
-		obj->m_IdxCBs.push_back(hash_cb_dl);
-		obj->m_IdxCBs.push_back(hash_cb_pl);
-		obj->m_IdxCBs.push_back(hash_cb_sl);
-
-		obj->m_IdxCBs.push_back(hash_cb_wvpitmat);
-		obj->m_IdxCBs.push_back(hash_cb_cbtime);
-		obj->m_IdxCBs.push_back(hash_cb_campos);
-	}*/
+		size_t hash_mesh_rand = _RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", E_Colliders::SPHERE);
+		size_t hash_meterial_rand = _RenderSystem.CreateMaterial(i % 3 ? L"Mat_Rand0" : L"Mat_Rand1", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
+		std::vector<pTX_HASH> txs_objRand;
+		txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter3.webp", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_meterial_rand, &txs_objRand);
+		obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
+	}
 	
 	//Pard22
 	_RenderSystem.objs.push_back(new TempObj());

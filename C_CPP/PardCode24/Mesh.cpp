@@ -107,16 +107,6 @@ size_t Mesh::GetIB() const
 	return m_lIB;
 }
 
-void Mesh::SetIL(size_t hashIL)
-{
-	m_lIL = hashIL;
-}
-
-size_t Mesh::GetIL() const
-{
-	return m_lIL;
-}
-
 void Mesh::SetCL(size_t hashCL)
 {
 	m_lCL = hashCL;

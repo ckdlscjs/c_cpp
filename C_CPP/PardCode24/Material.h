@@ -18,14 +18,14 @@ public:
 	size_t GetPS() const;
 	void SetIL(size_t hashIL);
 	size_t GetIL() const;
-	void SetCB(size_t hashCB);
-	size_t GetCB(int idx) const;
-	void SetTX(pTX_HASH t_hash);
-	const std::vector<size_t>* GetTXs() const;
+	/*void SetCB(size_t hashCB);
+	size_t GetCB(int idx) const;*/
+	void SetTexture(pTX_HASH t_hash);
+	const std::vector<size_t>* GetTextures() const;
 private:
 	size_t m_lVS;
 	size_t m_lPS;
 	size_t m_lIL;
-	std::vector<size_t> m_lCBs;
+	//std::vector<size_t> m_lCBs;
 	std::vector<size_t> m_lTXs[(UINT)E_Textures::count];
 };
