@@ -337,7 +337,7 @@
     <FxCompile Include="PSSkySphere.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="PS_Lights.hlsl">
+    <FxCompile Include="PS_Lights.hlsli">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_TextureFlow.hlsl">

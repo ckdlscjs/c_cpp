@@ -118,7 +118,7 @@ void AppWindow::OnCreate()
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
 		obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
-		obj->m_vRotate = Vector3(0.0f, 180.0f, 0.0f);
+		obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
 
 		size_t hash_mesh_rand = _RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", E_Colliders::SPHERE);
