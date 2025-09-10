@@ -94,7 +94,7 @@ void AppWindow::OnCreate()
 
 	size_t hash_material_skysphere = _RenderSystem.CreateMaterial(L"Mat_SkySphere", L"VertexShaderPTN.hlsl", L"PSSkySphere.hlsl");
 	std::vector<pTX_HASH> txs_skysphere;
-	txs_skysphere.push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter4.webp", WIC_FLAGS_NONE)});
+	txs_skysphere.push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE)});
 	_RenderSystem.Material_SetTextures(hash_material_skysphere, &txs_skysphere);
 	size_t hash_mesh_skysphere = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj");
 	SkySphere->m_Mesh_Material.push_back({ hash_mesh_skysphere , hash_material_skysphere });
@@ -113,7 +113,7 @@ void AppWindow::OnCreate()
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
 	std::uniform_int_distribution<int> dis(-100, 100);
 
-	for (int i = 0; i < 50; i++)
+	/*for (int i = 0; i < 50; i++)
 	{
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
@@ -124,10 +124,10 @@ void AppWindow::OnCreate()
 		size_t hash_mesh_rand = _RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", E_Colliders::SPHERE);
 		size_t hash_meterial_rand = _RenderSystem.CreateMaterial(i % 3 ? L"Mat_Rand0" : L"Mat_Rand1", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
 		std::vector<pTX_HASH> txs_objRand;
-		txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter3.webp", WIC_FLAGS_NONE) });
+		txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE) });
 		_RenderSystem.Material_SetTextures(hash_meterial_rand, &txs_objRand);
 		obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
-	}
+	}*/
 	
 	//Pard22
 	_RenderSystem.objs.push_back(new TempObj());
@@ -153,8 +153,8 @@ void AppWindow::OnCreate()
 	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
 	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
 
-	size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/scene.obj");
-	size_t hash_material_1 = _RenderSystem.CreateMaterial(L"Mat_PointLight", L"VertexShaderPTN.hlsl", L"PS_RotatePointLight.hlsl");
+	size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/house.obj");
+	size_t hash_material_1 = _RenderSystem.CreateMaterial(L"../Assets/Meshes/house.mtl", L"VertexShaderPTN.hlsl", L"PS_RotatePointLight.hlsl");
 	std::vector<pTX_HASH> txs_obj1;
 	txs_obj1.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE) });
 	_RenderSystem.Material_SetTextures(hash_material_1, &txs_obj1);

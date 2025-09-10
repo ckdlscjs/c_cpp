@@ -1,6 +1,8 @@
 #pragma once
 #include "BaseSystem.h"
 
+class Mesh;
+class Material;
 class Resource;
 class ResourceSystem : public BaseSystem<ResourceSystem>
 {
@@ -16,7 +18,6 @@ private:
 public:
 	void Init();
 	void Release();
-
 	template<typename T, typename... Types>
 	T* CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args);
 	template<typename T>
@@ -29,7 +30,7 @@ private:
 
 template<typename T, typename... Types>
 T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args)
-{					
+{
 	size_t hash = HashingFile(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<T*>(m_Resources[hash]);
 	//객체생성후 컨테이너에 등록
@@ -46,3 +47,9 @@ T* ResourceSystem::GetResource(size_t hash)
 	return static_cast<T*>(m_Resources[hash]);
 }
 
+//템플릿특수화
+template<>
+Mesh* ResourceSystem::CreateResourceFromFile<Mesh>(const std::wstring& szFilePath);
+
+template<>
+Material* ResourceSystem::CreateResourceFromFile<Material>(const std::wstring& szFilePath);

@@ -47,11 +47,11 @@ public:
 
 private:
 	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
+	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
-	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateTexture2D(const std::wstring& szName, const ScratchImage* resource);
 	//template<typename... Types>
 	//size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName, Types... args);

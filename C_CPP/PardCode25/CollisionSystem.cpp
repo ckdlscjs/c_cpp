@@ -29,6 +29,7 @@ void CollisionSystem::Frame(float deltatime)
 	UINT count = 0;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
+	
 	for (const auto& obj : _RenderSystem.objs)
 	{
 		obj->bRenderable = false;
@@ -36,14 +37,18 @@ void CollisionSystem::Frame(float deltatime)
 		for (const auto& MeshMat : obj->m_Mesh_Material)
 		{
 			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(MeshMat.first);
-			if (CheckBound(frustum, pMesh->GetCL(), matWorld))
+			for (const auto& iter : pMesh->GetCL())
 			{
-				obj->bRenderable = true;
-				count++;
-				break;
+				if (CheckBound(frustum, iter, matWorld))
+				{
+					obj->bRenderable = true;
+					count++;
+					break;
+				}
 			}
 		}
 	}
+	
 	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << _RenderSystem.objs.size() - count << '\n';
 }
 

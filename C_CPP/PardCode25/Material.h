@@ -1,6 +1,7 @@
 #pragma once
 #include "Resource.h"
-
+//추후에 확장시 참고
+//https://mvje.tistory.com/83
 class Material : public BaseResource<Material>
 {
 	friend class BaseResource<Material>;
@@ -12,7 +13,7 @@ public:
 	Material(Material&&) = delete;
 	Material& operator=(Material&&) = delete;
 
-	void SetVS(size_t hashVB);
+	void SetVS(size_t hashVS);
 	size_t GetVS() const;
 	void SetPS(size_t hashPS);
 	size_t GetPS() const;

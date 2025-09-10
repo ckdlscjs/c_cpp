@@ -99,7 +99,7 @@ void RenderSystem::Render(float deltatime)
 	//프레임에따른 변환
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
-
+	
 	//skyobj
 	{
 		{
@@ -158,7 +158,6 @@ void RenderSystem::Render(float deltatime)
 					m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 				}
 			}
-
 			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[pMesh->GetIB()]->GetCountIndices(), 0, 0);
 		}
 	}
@@ -221,11 +220,9 @@ void RenderSystem::Render(float deltatime)
 				{
 					for (const auto& hashTx : texs[idxTex])
 					{
-						
 						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
-
 				m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[pMesh->GetIB()]->GetCountIndices(), 0, 0);
 			}
 		}
@@ -427,7 +424,8 @@ size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders coll
 	Mesh* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
 	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath, pMesh->GetPoints(), collider));
+	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
+		pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
 	return HashingFile(szFilePath);
 }
 
