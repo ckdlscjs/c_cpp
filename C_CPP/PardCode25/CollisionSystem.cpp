@@ -26,7 +26,8 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	UINT count = 0;
+	UINT count_all = 1;
+	UINT count = 1;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
 	
@@ -34,6 +35,7 @@ void CollisionSystem::Frame(float deltatime)
 	{
 		obj->bRenderable = false;
 		Matrix4x4 matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+		count_all += _ResourceSystem.GetResource<Mesh>(obj->m_Mesh_Material[0].first)->GetCL().size();
 		for (const auto& MeshMat : obj->m_Mesh_Material)
 		{
 			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(MeshMat.first);
@@ -48,8 +50,7 @@ void CollisionSystem::Frame(float deltatime)
 			}
 		}
 	}
-	
-	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << _RenderSystem.objs.size() - count << '\n';
+	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << count_all - count << '\n';
 }
 
 void CollisionSystem::Release()

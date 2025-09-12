@@ -29,6 +29,7 @@ AppWindow::~AppWindow()
 	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
 }
 
+//#define _TESTBLOCK
 void AppWindow::OnCreate()
 {
 	std::cout << "OnCreate" << '\n';
@@ -45,7 +46,7 @@ void AppWindow::OnCreate()
 
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
-	_CameraSystem.GetCamera(0)->SetPosition({ 100, 200.0f, -1000.0f });
+	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 200.0f, -500.0f });
 	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth / (float)m_iHeight);
 	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
 	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 50000.0f);
@@ -64,101 +65,254 @@ void AppWindow::OnCreate()
 	pLight_Point->m_mAmbient = Vector4(0.2f, 0.2f, 0.2f, 1.0f);
 	pLight_Point->m_mDiffuse = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
 	pLight_Point->m_mSpecular = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	pLight_Point->m_vPosition = Vector3(0.0f, 400.0f, 400.0f);
+	pLight_Point->m_vPosition = Vector3(0.0f, 30.0f, 150.0f);
 	pLight_Point->m_fShiness = 100.0f;
-	pLight_Point->m_fAtt_a0 = 0.0f;
+	pLight_Point->m_fAtt_a0 = 0.49f;
 	pLight_Point->m_fAtt_a1 = 0.5f;
-	pLight_Point->m_fAtt_a2 = 0.5f;
-	pLight_Point->m_fRange = 1000.0f;
+	pLight_Point->m_fAtt_a2 = 0.01f;
+	pLight_Point->m_fRange = 500.0f;
 	_LightSystem.AddLight(pLight_Point);
 	
 	SpotLight* pLight_Spot = new SpotLight();
 	pLight_Spot->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
-	pLight_Spot->m_mDiffuse = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-	pLight_Spot->m_mSpecular = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	pLight_Spot->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
+	pLight_Spot->m_mSpecular = Vector4(0.7f, 0.7f, 0.7f, 1.0f);
 	pLight_Spot->m_vDirection = (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize();
 	pLight_Spot->m_vPosition = Vector3(-250.0f, 500.0f, -5.0f);
 	pLight_Spot->m_fShiness = 100.0f;
-	pLight_Spot->m_fAtt_a0 = 0.0f;
-	pLight_Spot->m_fAtt_a1 = 0.0f;
-	pLight_Spot->m_fAtt_a2 = 1.0f;
+	pLight_Spot->m_fAtt_a0 = 0.5f;
+	pLight_Spot->m_fAtt_a1 = 0.5f;
+	pLight_Spot->m_fAtt_a2 = 0.0f;
 	pLight_Spot->m_fRange = 5000.0f;
-	pLight_Spot->m_fSpot = 95.0f;
+	pLight_Spot->m_fSpot = 50.0f;
 	pLight_Spot->m_fCos_OuterCone = cosf(_DEGTORAD(130.0f));
 	pLight_Spot->m_fCos_InnerCone = cosf(_DEGTORAD(10.0f));
 	_LightSystem.AddLight(pLight_Spot);
-	
-	//SkySphere
-	TempObj* SkySphere = new TempObj();
-	SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f, _CameraSystem.GetCamera(0)->GetFarZ()*0.9f);
-
-	size_t hash_material_skysphere = _RenderSystem.CreateMaterial(L"Mat_SkySphere", L"VertexShaderPTN.hlsl", L"PSSkySphere.hlsl");
-	std::vector<pTX_HASH> txs_skysphere;
-	txs_skysphere.push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE)});
-	_RenderSystem.Material_SetTextures(hash_material_skysphere, &txs_skysphere);
-	size_t hash_mesh_skysphere = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj");
-	SkySphere->m_Mesh_Material.push_back({ hash_mesh_skysphere , hash_material_skysphere });
-	_RenderSystem.SkyObj = SkySphere;
-
-	// 1. 난수 시드(seed)를 설정합니다.
-	// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
-	// 매번 다른 시드를 얻을 수 있습니다.
-	std::random_device rd;
-
-	// 2. mt19937 난수 생성 엔진을 초기화합니다.
-	// rd()를 시드로 사용하여 매번 다른 난수 시퀀스를 생성하도록 합니다.
-	std::mt19937 gen(rd());
-
-	// 3. 난수 분포(distribution)를 정의합니다.
-	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
-	std::uniform_int_distribution<int> dis(-100, 100);
-
-	/*for (int i = 0; i < 50; i++)
+#ifdef _TESTBLOCK
+	//textblock
 	{
+		//SkySphere
+		TempObj* SkySphere = new TempObj();
+		SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ() * 0.9f, _CameraSystem.GetCamera(0)->GetFarZ() * 0.9f, _CameraSystem.GetCamera(0)->GetFarZ() * 0.9f);
+
+		size_t hash_material_skysphere = _RenderSystem.CreateMaterial(L"Mat_SkySphere", L"VertexShaderPTN.hlsl", L"PSSkySphere.hlsl");
+		std::vector<TX_HASH> txs_skysphere;
+		txs_skysphere.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material_skysphere, txs_skysphere);
+		size_t hash_mesh_skysphere = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
+		SkySphere->m_Mesh_Material.push_back({ hash_mesh_skysphere , hash_material_skysphere });
+		_RenderSystem.SkyObj = SkySphere;
+
+		// 1. 난수 시드(seed)를 설정합니다.
+		// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
+		// 매번 다른 시드를 얻을 수 있습니다.
+		std::random_device rd;
+
+		// 2. mt19937 난수 생성 엔진을 초기화합니다.
+		// rd()를 시드로 사용하여 매번 다른 난수 시퀀스를 생성하도록 합니다.
+		std::mt19937 gen(rd());
+
+		// 3. 난수 분포(distribution)를 정의합니다.
+		// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
+		std::uniform_int_distribution<int> dis(-100, 100);
+
+		/*for (int i = 0; i < 50; i++)
+		{
+			_RenderSystem.objs.push_back(new TempObj());
+			TempObj* obj = _RenderSystem.objs.back();
+			obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
+			obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+			obj->m_vPosition = Vector3(dis(gen) * 30.0f, dis(gen) * 30.0f, dis(gen) * 30.0f);
+
+			size_t hash_mesh_rand = _RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", i % 3 ? E_Colliders::SPHERE : E_Colliders::AABB);
+			size_t hash_meterial_rand = _RenderSystem.CreateMaterial(i % 3 ? L"Mat_Rand0" : L"Mat_Rand1", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
+			std::vector<TX_HASH> txs_objRand;
+			txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE) });
+			_RenderSystem.Material_SetTextures(hash_meterial_rand, txs_objRand);
+			obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
+		}*/
+
+		////Pard22
+		//_RenderSystem.objs.push_back(new TempObj());
+		//TempObj* obj = _RenderSystem.objs.back();
+		//obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
+		//obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+		//obj->m_vPosition = Vector3(700, 600.0f, -200);
+
+		//size_t hash_mesh_obj0 = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
+		//size_t hash_material_0 = _RenderSystem.CreateMaterial(L"Mat_Earth", L"VertexShaderPTN.hlsl", L"PS_TextureFlow.hlsl");
+		//std::vector<TX_HASH> txs_obj0;
+		//txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE)});
+		//txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE) });
+		//txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE) });
+		//txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_material_0, txs_obj0);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_obj0 , hash_material_0 });
+
+		////Pard25
+		//_RenderSystem.objs.push_back(new TempObj());
+		//obj = _RenderSystem.objs.back();
+		//obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
+		//obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+		//obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
+
+		//size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/house.obj");
+		//std::vector<std::wstring> VSs, PSs;
+		//VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl");
+		//PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl");
+		//std::vector<size_t> house_materials = _RenderSystem.CreateMaterials(L"../Assets/Meshes/house.mtl", VSs, PSs);
+		//std::vector<TX_HASH> txs_obj1_0;
+		//txs_obj1_0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_barrel.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(house_materials[0], txs_obj1_0);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[0]});
+		//std::vector<TX_HASH> txs_obj1_1;
+		//txs_obj1_1.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_brick.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(house_materials[1], txs_obj1_1);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[1] });
+		//std::vector<TX_HASH> txs_obj1_2;
+		//txs_obj1_2.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_windows.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(house_materials[2], txs_obj1_2);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[2] });
+		//std::vector<TX_HASH> txs_obj1_3;
+		//txs_obj1_3.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_wood.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(house_materials[3], txs_obj1_3);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[3] });
+
+		////nene
+		//_RenderSystem.objs.push_back(new TempObj());
+		//obj = _RenderSystem.objs.back();
+		//obj->m_vScale = Vector3(50.0f, 50.0f, 50.0f);
+		//obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+		//obj->m_vPosition = Vector3(0.0f, 600.0f, 0.0f);
+
+		//size_t hash_mesh_nene = _RenderSystem.CreateMesh(L"../Assets/Meshes/nene.obj", E_Colliders::SPHERE);
+		//std::vector<std::wstring> neneVSs, nenePSs;
+		//neneVSs.push_back(L"VertexShaderPTN.hlsl"); neneVSs.push_back(L"VertexShaderPTN.hlsl"); neneVSs.push_back(L"VertexShaderPTN.hlsl");
+		//nenePSs.push_back(L"PixelShaderPTN.hlsl"); nenePSs.push_back(L"PixelShaderPTN.hlsl"); nenePSs.push_back(L"PixelShaderPTN.hlsl");
+		//std::vector<size_t> hash_materials_nene = _RenderSystem.CreateMaterials(L"../Assets/Meshes/nene.mtl", neneVSs, nenePSs);
+		//std::vector<TX_HASH> txs_nene_face;
+		//txs_nene_face.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/face.dds", WIC_FLAGS_NONE)});
+		//_RenderSystem.Material_SetTextures(hash_materials_nene[0], txs_nene_face);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_nene , hash_materials_nene[0] });
+		//std::vector<TX_HASH> txs_nene_body;
+		//txs_nene_body.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/body.dds", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_nene[1], txs_nene_body);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_nene , hash_materials_nene[1] });
+		//std::vector<TX_HASH> txs_nene_hair;
+		//txs_nene_hair.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/hair.dds", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_nene[2], txs_nene_hair);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_nene , hash_materials_nene[2] });
+
+		////girltest
+		//_RenderSystem.objs.push_back(new TempObj());
+		//obj = _RenderSystem.objs.back();
+		//obj->m_vScale = Vector3(500.0f, 500.0f, 500.0f);
+		//obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+		//obj->m_vPosition = Vector3(1500.0f, 600.0f, 0.0f);
+
+		//size_t hash_girl = _RenderSystem.CreateMesh(L"../Assets/girl.obj", E_Colliders::SPHERE);
+		//std::vector<std::wstring> girlVSs, girlPSs;
+		//girlVSs.push_back(L"VertexShaderPTN.hlsl"); girlVSs.push_back(L"VertexShaderPTN.hlsl"); girlVSs.push_back(L"VertexShaderPTN.hlsl");
+		//girlVSs.push_back(L"VertexShaderPTN.hlsl"); girlVSs.push_back(L"VertexShaderPTN.hlsl"); girlVSs.push_back(L"VertexShaderPTN.hlsl"); girlVSs.push_back(L"VertexShaderPTN.hlsl");
+		//girlPSs.push_back(L"PixelShaderPTN.hlsl"); girlPSs.push_back(L"PixelShaderPTN.hlsl"); girlPSs.push_back(L"PixelShaderPTN.hlsl");
+		//girlPSs.push_back(L"PixelShaderPTN.hlsl"); girlPSs.push_back(L"PixelShaderPTN.hlsl"); girlPSs.push_back(L"PixelShaderPTN.hlsl"); girlPSs.push_back(L"PixelShaderPTN.hlsl");
+		//std::vector<size_t> hash_materials_girl = _RenderSystem.CreateMaterials(L"../Assets/girl.mtl", girlVSs, girlPSs);
+
+		//std::vector<TX_HASH> txs_bot[7];
+		//txs_bot[0].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/bot color.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[0], txs_bot[0]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[0] });
+
+		//txs_bot[1].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[1], txs_bot[1]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[1] });
+
+		//txs_bot[2].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/FACE Base Color apha.png", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[2], txs_bot[2]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[2] });
+
+		//txs_bot[3].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/COLORS.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[3], txs_bot[3]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[3] });
+
+		//txs_bot[4].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[4], txs_bot[4]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[4] });
+
+		//txs_bot[5].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/COLORS.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[5], txs_bot[5]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[5] });
+
+		//txs_bot[6].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/tEXTURE/top color.png", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_materials_girl[6], txs_bot[6]);
+		//obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[6] });
+	}
+#endif // DEBUG
+
+#ifndef _TESTBLOCK
+	{
+		//SkySphere
+		TempObj* SkySphere = new TempObj();
+		SkySphere->m_vScale = Vector3(_CameraSystem.GetCamera(0)->GetFarZ() * 0.9f, _CameraSystem.GetCamera(0)->GetFarZ() * 0.9f, _CameraSystem.GetCamera(0)->GetFarZ() * 0.9f);
+
+		size_t hash_mesh_skysphere = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
+		size_t hash_material_skysphere = _RenderSystem.CreateMaterial(L"Mat_SkySphere", L"VertexShaderPTN.hlsl", L"PSSkySphere.hlsl");
+		std::vector<TX_HASH> txs_skysphere;
+		txs_skysphere.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/sky.jpg", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material_skysphere, txs_skysphere);
+		SkySphere->m_Mesh_Material.push_back({ hash_mesh_skysphere , hash_material_skysphere });
+		_RenderSystem.SkyObj = SkySphere;
+
+		////Scene
+		//_RenderSystem.objs.push_back(new TempObj());
+		//TempObj* obj = _RenderSystem.objs.back();
+		//obj->m_vScale = Vector3(100.0f, 100.0f, 100.0f);
+		//size_t hash_mesh_terrain = _RenderSystem.CreateMesh(L"../Assets/Meshes/scene.obj", E_Colliders::SPHERE);
+		//size_t hash_material_terrain = _RenderSystem.CreateMaterial(L"../Assets/Meshes/scene.mtl", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
+		//std::vector<TX_HASH> txs_terrain;
+		//txs_terrain.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE) });
+		//_RenderSystem.Material_SetTextures(hash_material_terrain, txs_terrain);
+		//obj->m_Mesh_Material.push_back({ hash_mesh_terrain , hash_material_terrain });
+
+		//Terrain
 		_RenderSystem.objs.push_back(new TempObj());
 		TempObj* obj = _RenderSystem.objs.back();
-		obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
-		obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
-		obj->m_vPosition = Vector3(dis(gen)*30.0f, dis(gen)*30.0f, dis(gen)*30.0f);
+		obj->m_vScale = Vector3(30.0f, 30.0f, 30.0f);
+		size_t hash_mesh_terrain = _RenderSystem.CreateMesh(L"../Assets/Meshes/terrain.obj", E_Colliders::SPHERE);
+		size_t hash_material_terrain = _RenderSystem.CreateMaterial(L"../Assets/Meshes/terrain.mtl", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
+		std::vector<TX_HASH> txs_terrain;
+		txs_terrain.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/sand.jpg", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material_terrain, txs_terrain);
+		obj->m_Mesh_Material.push_back({ hash_mesh_terrain , hash_material_terrain });
 
-		size_t hash_mesh_rand = _RenderSystem.CreateMesh(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", E_Colliders::SPHERE);
-		size_t hash_meterial_rand = _RenderSystem.CreateMaterial(i % 3 ? L"Mat_Rand0" : L"Mat_Rand1", L"VertexShaderPTN.hlsl", L"PixelShaderPTN.hlsl");
-		std::vector<pTX_HASH> txs_objRand;
-		txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE) });
-		_RenderSystem.Material_SetTextures(hash_meterial_rand, &txs_objRand);
-		obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
-	}*/
-	
-	//Pard22
-	_RenderSystem.objs.push_back(new TempObj());
-	TempObj* obj = _RenderSystem.objs.back();
-	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
-	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
-	obj->m_vPosition = Vector3(0.0f, 600.0f, 0.0f);
+		//House
+		_RenderSystem.objs.push_back(new TempObj());
+		obj = _RenderSystem.objs.back();
+		obj->m_vScale = Vector3(30.0f, 30.0f, 30.0f);
+		size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/house.obj");
+		std::vector<std::wstring> VSs, PSs;
+		VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl"); VSs.push_back(L"VertexShaderPTN.hlsl");
+		PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl"); PSs.push_back(L"PixelShaderPTN.hlsl");
+		std::vector<size_t> house_materials = _RenderSystem.CreateMaterials(L"../Assets/Meshes/house.mtl", VSs, PSs);
 
-	size_t hash_mesh_obj0 = _RenderSystem.CreateMesh(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
-	size_t hash_material_0 = _RenderSystem.CreateMaterial(L"Mat_Earth", L"VertexShaderPTN.hlsl", L"PS_TextureFlow.hlsl");
-	std::vector<pTX_HASH> txs_obj0;
-	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_color.jpg", WIC_FLAGS_NONE)});
-	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_night.jpg", WIC_FLAGS_NONE) });
-	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_clouds.jpg", WIC_FLAGS_NONE) });
-	txs_obj0.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/PardCode22/earth_spec.jpg", WIC_FLAGS_NONE) });
-	_RenderSystem.Material_SetTextures(hash_material_0, &txs_obj0);
-	obj->m_Mesh_Material.push_back({ hash_mesh_obj0 , hash_material_0 });
+		std::vector<TX_HASH> txs_house[4];
+		txs_house[0].push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_barrel.jpg", WIC_FLAGS_NONE)});
+		_RenderSystem.Material_SetTextures(house_materials[0], txs_house[0]);
+		obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[0]});
 
-	//Pard23
-	_RenderSystem.objs.push_back(new TempObj());
-	obj = _RenderSystem.objs.back();
-	obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
-	obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
-	obj->m_vPosition = Vector3(0.0f, 0.0f, 0.0f);
+		txs_house[1].push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_brick.jpg", WIC_FLAGS_NONE)});
+		_RenderSystem.Material_SetTextures(house_materials[1], txs_house[1]);
+		obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[1] });
 
-	size_t hash_mesh_obj1 = _RenderSystem.CreateMesh(L"../Assets/Meshes/house.obj");
-	size_t hash_material_1 = _RenderSystem.CreateMaterial(L"../Assets/Meshes/house.mtl", L"VertexShaderPTN.hlsl", L"PS_RotatePointLight.hlsl");
-	std::vector<pTX_HASH> txs_obj1;
-	txs_obj1.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/wall.jpg", WIC_FLAGS_NONE) });
-	_RenderSystem.Material_SetTextures(hash_material_1, &txs_obj1);
-	obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , hash_material_1 });
+		txs_house[2].push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_windows.jpg", WIC_FLAGS_NONE)});
+		_RenderSystem.Material_SetTextures(house_materials[2], txs_house[2]);
+		obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[2] });
+
+		txs_house[3].push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_wood.jpg", WIC_FLAGS_NONE)});
+		_RenderSystem.Material_SetTextures(house_materials[3], txs_house[3]);
+		obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[3] });
+	}
+#endif _TESTBLOCK
 }
 
 void AppWindow::OnUpdate()
@@ -169,9 +323,9 @@ void AppWindow::OnUpdate()
 	std::cout << "FPS : " << _TimerSystem.GetFps() << '\n';
 	_InputSystem.Frame();
 	_CameraSystem.Frame(_TimerSystem.GetDeltaTime());
-	_CollisionSystem.Frame(_TimerSystem.GetDeltaTime());
 	_ImguiSystem.Frame();
 	_RenderSystem.Frame(_TimerSystem.GetDeltaTime());
+	_CollisionSystem.Frame(_TimerSystem.GetDeltaTime());
 
 	_RenderSystem.PreRender();
 	_RenderSystem.Render(_TimerSystem.GetElapsedTime());

@@ -28,6 +28,7 @@ protected:
 protected:
 	void SetHash(size_t hash) override;
 	void SetFilePath(const std::wstring& szFilepath) override;
+public:
 	const size_t GetHash() const override;
 	const std::wstring& GetPath() const override;
 private:

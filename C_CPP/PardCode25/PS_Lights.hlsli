@@ -30,7 +30,7 @@ float4 DirectionalLight(float3 L, float3 N, float3 R, float3 V)
     D_A = ld_ambient;
     
     //diffuse
-    float Kd = max(dot(L, N), 0.0f); //max(L dot N, 0)  //일치도내적결과
+    float Kd = max(dot(L, N), 0.0f);                    //max(L dot N, 0)  //일치도내적결과
     D_D = Kd * ld_diffuse;
 
     //specular
@@ -74,7 +74,7 @@ float4 PointLight(float3 L, float D, float3 N, float3 R, float3 V)
     float4 P_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 P_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float normalizeD = D / lp_range;
+    float ratioD = D / lp_range;
     //ambient
     P_A = lp_ambient;
     
@@ -86,7 +86,7 @@ float4 PointLight(float3 L, float D, float3 N, float3 R, float3 V)
     float Ks = pow(max(dot(R, V), 0.0f), lp_shiness);
     P_S = Kd * Ks * lp_specular;
     
-    float att = 1.0f / dot(float3(lp_att_a0, lp_att_a1, lp_att_a2), float3(1.0f, D, D * D)); //감쇠계산, a0 + a1d + a2d^2
+    float att = 1.0f / dot(float3(lp_att_a0, lp_att_a1, lp_att_a2), float3(1.0f, ratioD, ratioD * ratioD)); //감쇠계산, a0 + a1d + a2d^2
     return P_A + (P_D + P_S) * att; //Ambient는 그냥 발산된다
 }
 
@@ -135,7 +135,7 @@ float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
     float4 S_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float4 S_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float normalizeD = D / ls_range;
+    float ratioD = D / ls_range;
     //ambient
     S_A = ls_ambient;
     
@@ -160,6 +160,6 @@ float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
     */
     val = saturate((match - ls_cosOuter) / (ls_cosInner - ls_cosOuter)); //saturate, 0~1, same
     float spot = pow(val, ls_spot); //일치도를 기반으로 스팟값을 지수승화
-    float att = 1.0f / dot(float3(ls_att_a0, ls_att_a1, ls_att_a2), float3(1.0f, D, D * D));
+    float att = 1.0f / dot(float3(ls_att_a0, ls_att_a1, ls_att_a2), float3(1.0f, ratioD, ratioD * ratioD));
     return (S_A + (S_D + S_S) * att) * spot;
 }

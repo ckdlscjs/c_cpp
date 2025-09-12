@@ -84,6 +84,18 @@ inline size_t HashingFile(const std::wstring& path)
 	}
 	return hash;
 }
+inline size_t HashingFloat(const float& value)
+{
+	// FNV-1a (64비트) 구현 예시
+	size_t hash = 14695981039346656037ULL; // FNV_PRIME_64
+	hash ^= std::hash<float>{}(value);
+	hash *= 1099511628211ULL; // FNV_OFFSET_64
+	return hash;
+}
+
+inline void hash_combine(std::size_t& seed, std::size_t hashValue) {
+	seed ^= hashValue + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
 
 
 

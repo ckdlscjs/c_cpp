@@ -73,10 +73,10 @@ void RenderSystem::Frame(float deltatime)
 	std::cout << "deltatime : " << deltatime << '\n';
 
 	Vector3& dir = static_cast<DirectionalLight*>(_LightSystem.GetLight(0))->m_vDirection;
-	dir = dir * GetMat_RotYaw(deltatime * 100.0f);
+	dir = dir * GetMat_RotYaw(deltatime * 30.0f);
 
 	Vector3& pos = static_cast<PointLight*>(_LightSystem.GetLight(1))->m_vPosition;
-	pos = pos * GetMat_RotYaw(deltatime * 200.0f);
+	pos = pos * GetMat_RotYaw(deltatime * 50.0f);
 
 	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
 	for (const auto& iter : objs)
@@ -138,13 +138,14 @@ void RenderSystem::Render(float deltatime)
 			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_Rasterizers::SOLID_CULLFRONT_CW);
 		}
 
-		for (const auto& iter : SkyObj->m_Mesh_Material)
+		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
 		{
+			auto& iter = SkyObj->m_Mesh_Material[i];
 			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(iter.first);
-			Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.second);
 			m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
+			Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.second);
 			m_pCILs[pMaterial->GetIL()]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
 			m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 			m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
@@ -153,12 +154,12 @@ void RenderSystem::Render(float deltatime)
 			int cnt = 0;
 			for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 			{
-				for(const auto& hashTx : texs[idxTex])
+				for (const auto& hashTx : texs[idxTex])
 				{
 					m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 				}
 			}
-			m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[pMesh->GetIB()]->GetCountIndices(), 0, 0);
+			m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].size, pMesh->GetRendIndices()[i].idx, 0);
 		}
 	}
 
@@ -203,13 +204,14 @@ void RenderSystem::Render(float deltatime)
 			m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
 			m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-			for (const auto& iter : obj->m_Mesh_Material)
+			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 			{
+				auto& iter = obj->m_Mesh_Material[i];
 				Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(iter.first);
-				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.second);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
+				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.second);
 				m_pCILs[pMaterial->GetIL()]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
 				m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
 				m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
@@ -223,7 +225,7 @@ void RenderSystem::Render(float deltatime)
 						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(m_pCIBs[pMesh->GetIB()]->GetCountIndices(), 0, 0);
+				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].size, pMesh->GetRendIndices()[i].idx, 0);
 			}
 		}
 	}
@@ -419,7 +421,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 	return HashingFile(szFilePath);
 }
 
-size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)//, size_t hashvs
+size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {
 	Mesh* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
 	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize()));
@@ -429,7 +431,7 @@ size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders coll
 	return HashingFile(szFilePath);
 }
 
-size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)// , const std::vector<TexturesHash>* textures)
+size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
 {
 	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
 	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
@@ -438,10 +440,25 @@ size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::w
 	return HashingFile(szFilePath);
 }
 
-void RenderSystem::Material_SetTextures(size_t hash_material, std::vector<pTX_HASH>* textures)
+std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& VSs, const std::vector<std::wstring>& PSs)
+{
+	std::vector<size_t> rets;
+	std::vector<Material*> materials = _ResourceSystem.CreateResourcesFromFile<Material>(szFilePath);
+	_ASEERTION_NULCHK(materials.size() == VSs.size(), "material and shader counts not equal");
+	for (UINT i = 0; i < materials.size(); i++)
+	{
+		materials[i]->SetVS(CreateVertexShader(VSs[i], "vsmain", "vs_5_0"));
+		materials[i]->SetPS(CreatePixelShader(PSs[i], "psmain", "ps_5_0"));
+		materials[i]->SetIL(CreateInputLayout(VSs[i] + L"IL", InputLayout_VertexPTN, size_InputLayout_VertexPTN, m_pCVSs[CreateVertexShader(VSs[i], "vsmain", "vs_5_0")]->GetBlob()));
+		rets.push_back(materials[i]->GetHash());
+	}
+	return rets;
+}
+
+void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	for (const auto& iter : *textures)
+	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
 }
 

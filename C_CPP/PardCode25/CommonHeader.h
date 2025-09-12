@@ -54,7 +54,12 @@ enum class E_Textures
 	Emissive,
 	count,
 };
-using pTX_HASH = std::pair<E_Textures, size_t>;
+
+struct TX_HASH
+{
+	E_Textures tex;
+	size_t hash;
+};
 
 //Resources data struct
 struct InputEvent
@@ -75,6 +80,11 @@ struct PointXY
 	int y = 0;
 	PointXY(int _x = 0, int _y = 0) : x(_x), y(_y) {}
 };
+struct CountRender
+{
+	size_t size;
+	size_t idx;
+};
 
 struct Vertex_PC
 {
@@ -89,12 +99,69 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
 	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 };
 static UINT size_InputLayout_VertexPC = ARRAYSIZE(InputLayout_VertexPC);
+
 struct Vertex_PTN
 {
 	Vector3 pos0;
 	Vector2 tex0;
 	Vector3 normal0;
+	bool operator==(const Vertex_PTN& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0);
+	}
 };
+struct Vertex_PTN_Hash
+{
+	size_t operator()(const Vertex_PTN& v) const
+	{
+		size_t hash = 0;
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+		return hash;
+
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+		return hash;
+	}
+};
+
+//struct Vertex_PTN_Hash
+//{
+//	std::size_t operator()(const Vertex_PTN& v) const
+//	{
+//		std::size_t seed = 0;
+//
+//		// pos0 해시
+//		hash_combine(seed, std::hash<float>{}(v.pos0.x));
+//		hash_combine(seed, std::hash<float>{}(v.pos0.y));
+//		hash_combine(seed, std::hash<float>{}(v.pos0.z));
+//
+//		// tex0 해시
+//		hash_combine(seed, std::hash<float>{}(v.tex0.x));
+//		hash_combine(seed, std::hash<float>{}(v.tex0.y));
+//
+//		// normal0 해시
+//		hash_combine(seed, std::hash<float>{}(v.normal0.x));
+//		hash_combine(seed, std::hash<float>{}(v.normal0.y));
+//		hash_combine(seed, std::hash<float>{}(v.normal0.z));
+//
+//		return seed;
+//	}
+//};
 static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTN[] =
 {
 	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 

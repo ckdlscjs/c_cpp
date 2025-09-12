@@ -43,7 +43,8 @@ public:
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE);
 	size_t CreateMesh(const std::wstring& szFilePath, E_Colliders collider = E_Colliders::AABB);
 	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-	void Material_SetTextures(size_t hash_material, std::vector<pTX_HASH>* textures);
+	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
+	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
 private:
 	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
@@ -53,8 +54,6 @@ private:
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
 	size_t CreateTexture2D(const std::wstring& szName, const ScratchImage* resource);
-	//template<typename... Types>
-	//size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName, Types... args);
 	
 private:
 	UINT m_iWidth = 800;
@@ -81,15 +80,3 @@ public:
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()
-//
-//template<typename... Types>
-//inline size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName, Types... args)
-//{
-//	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
-//	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
-//	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
-//	pMaterial->SetTX(args...);
-//	return HashingFile(szFilePath);
-//}
-//
-

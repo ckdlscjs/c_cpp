@@ -20,6 +20,8 @@ public:
 	void Release();
 	template<typename T, typename... Types>
 	T* CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args);
+	template<typename T, typename... Types>
+	std::vector<T*> CreateResourcesFromFile(const std::wstring& szFilePath, Types&&... args);
 	template<typename T>
 	T* GetResource(size_t hash);
 	
@@ -40,6 +42,12 @@ T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types&
 	return newResource;
 }
 
+template<typename T, typename ...Types>
+inline std::vector<T*> ResourceSystem::CreateResourcesFromFile(const std::wstring& szFilePath, Types && ...args)
+{
+	return std::vector<T*>();
+}
+
 template<typename T>
 T* ResourceSystem::GetResource(size_t hash)
 {
@@ -52,4 +60,4 @@ template<>
 Mesh* ResourceSystem::CreateResourceFromFile<Mesh>(const std::wstring& szFilePath);
 
 template<>
-Material* ResourceSystem::CreateResourceFromFile<Material>(const std::wstring& szFilePath);
+std::vector<Material*> ResourceSystem::CreateResourcesFromFile<Material>(const std::wstring& szFilePath);
