@@ -311,6 +311,10 @@ void AppWindow::OnCreate()
 		txs_house[3].push_back({E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/house_wood.jpg", WIC_FLAGS_NONE)});
 		_RenderSystem.Material_SetTextures(house_materials[3], txs_house[3]);
 		obj->m_Mesh_Material.push_back({ hash_mesh_obj1 , house_materials[3] });
+
+		_RenderSystem.objs.push_back(new TempObj(*_RenderSystem.objs.back()));
+		obj = _RenderSystem.objs.back();
+		obj->m_vPosition = Vector3(200.0f, 0.0f, 300.0f);
 	}
 #endif _TESTBLOCK
 }

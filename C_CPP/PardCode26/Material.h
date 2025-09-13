@@ -1,0 +1,32 @@
+#pragma once
+#include "Resource.h"
+//추후에 확장시 참고
+//https://mvje.tistory.com/83
+class Material : public BaseResource<Material>
+{
+	friend class BaseResource<Material>;
+public:
+	Material(size_t hash, const std::wstring& szFilePath);
+	~Material();
+	Material(const Material&) = delete;
+	Material& operator=(const Material&) = delete;
+	Material(Material&&) = delete;
+	Material& operator=(Material&&) = delete;
+
+	void SetVS(size_t hashVS);
+	size_t GetVS() const;
+	void SetPS(size_t hashPS);
+	size_t GetPS() const;
+	void SetIL(size_t hashIL);
+	size_t GetIL() const;
+	void SetTexture(TX_HASH tx_hash);
+	const std::vector<size_t>* GetTextures() const;
+	void SetTexturePath(TX_PATH tx_path);
+	const std::vector<std::string>* GetTexturesPaths() const;
+private:
+	size_t m_lVS;
+	size_t m_lPS;
+	size_t m_lIL;
+	std::vector<std::string> m_szTXPaths[(UINT)E_Textures::count];
+	std::vector<size_t> m_lTXs[(UINT)E_Textures::count];
+};
