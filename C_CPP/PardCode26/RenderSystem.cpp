@@ -243,7 +243,7 @@ void RenderSystem::Render(float deltatime)
 			objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
 			Matrix4x4 objMat = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 			matWorld[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-			matWorld *= GetMat_Scale(Vector3(30.0f, 30.0f, 30.0f));
+			matWorld *= GetMat_Scale(objs[0]->m_vScale);
 			matWorld[3] = objMat[3];
 			cc0.matWorld = i == 0 ? matWorld : objMat;
 			cc0.matView = matView;

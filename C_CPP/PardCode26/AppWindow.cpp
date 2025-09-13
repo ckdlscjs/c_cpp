@@ -231,11 +231,13 @@ void AppWindow::OnCreate()
 
 		pMat = _ResourceSystem.GetResource<Material>(hash_materials_girl[1]);
 		txs_bot[1].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/" +_tomw(pMat->GetTexturesPaths()[0][0]), WIC_FLAGS_NONE) });
+		//txs_bot[1].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
 		_RenderSystem.Material_SetTextures(hash_materials_girl[1], txs_bot[1]);
 		obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[1] });
 
 		pMat = _ResourceSystem.GetResource<Material>(hash_materials_girl[2]);
-		txs_bot[2].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/" + _tomw(pMat->GetTexturesPaths()[0][0]) , WIC_FLAGS_NONE) });
+		//txs_bot[2].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/" + _tomw(pMat->GetTexturesPaths()[0][0]) , WIC_FLAGS_NONE) });
+		txs_bot[2].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/FACE Base Color alpha.png", WIC_FLAGS_NONE) });
 		_RenderSystem.Material_SetTextures(hash_materials_girl[2], txs_bot[2]);
 		obj->m_Mesh_Material.push_back({ hash_girl , hash_materials_girl[2] });
 
@@ -301,7 +303,7 @@ void AppWindow::OnCreate()
 			TX_HASHS[0].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/stars_asteroid.jpg", WIC_FLAGS_IGNORE_SRGB) });
 			_RenderSystem.Material_SetTextures(hash_mats[0], TX_HASHS[0]);
 
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 300; i++)
 			{
 				_RenderSystem.objs.push_back(new TempObj());
 				TempObj* obj = _RenderSystem.objs.back();
@@ -311,7 +313,6 @@ void AppWindow::OnCreate()
 				obj->m_Mesh_Material.push_back({ hash_mesh , hash_mats[0] });
 			}
 		}
-		
 	}
 #endif _TESTBLOCK
 }
