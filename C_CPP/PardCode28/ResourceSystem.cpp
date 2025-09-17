@@ -119,7 +119,7 @@ Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const
 			}
 		}
 
-		newResource = new Mesh<Vertex_PTN>(hash, szFilePath, pointsByMaterial, verticesByMaterial, indicesByMaterial);
+		newResource = new Mesh<Vertex_PTN>(hash, szFilePath, std::move(pointsByMaterial), std::move(verticesByMaterial), std::move(indicesByMaterial));
 		_ASEERTION_NULCHK(newResource, typeid(Mesh<Vertex_PTN>).name());
 		m_Resources[hash] = newResource;
 		return newResource;
@@ -212,7 +212,7 @@ Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(c
 			}
 		}
 
-		newResource = new Mesh<Vertex_PTNTB>(hash, szFilePath, pointsByMaterial, verticesByMaterial, indicesByMaterial);
+		newResource = new Mesh<Vertex_PTNTB>(hash, szFilePath, std::move(pointsByMaterial), std::move(verticesByMaterial), std::move(indicesByMaterial));
 		_ASEERTION_NULCHK(newResource, typeid(Mesh<Vertex_PTNTB>).name());
 		m_Resources[hash] = newResource;
 		return newResource;

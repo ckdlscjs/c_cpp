@@ -210,7 +210,7 @@ void RenderSystem::Render(float deltatime)
 			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 			{
 				auto& iter = obj->m_Mesh_Material[i];
-				Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(iter.hash_mesh);
+				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 

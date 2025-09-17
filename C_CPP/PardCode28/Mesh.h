@@ -6,7 +6,7 @@ class Mesh : public BaseResource<Mesh<T>>
 {
 	friend class BaseResource<Mesh<T>>;
 public:
-	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>& points, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices);
+	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<std::vector<T>>&& vertices, std::vector<std::vector<UINT>>&& indices);
 	~Mesh();
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -39,31 +39,26 @@ private:
 };
 
 template<typename T>
-inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>& points, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices)
+inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<std::vector<T>>&& vertices, std::vector<std::vector<UINT>>&& indices)
 {
 	this->SetHash(hash);
 	this->SetFilePath(szFilePath);
-	m_Points = points;
-	UINT idx = 0;
-	for (int i = 0; i < vertices.size(); i++)
+	m_Points = std::move(points);
+	UINT psum = 0, idx = 0;
+	for (UINT vidx = 0; vidx < vertices.size(); vidx++)
 	{
-		m_RenderVertices.push_back({ (UINT)vertices[i].size(), idx });
-		idx += (UINT)vertices[i].size();
+		m_RenderVertices.push_back({ (UINT)vertices[vidx].size(), idx});
+		idx = (UINT)vertices[vidx].size();
+		m_Vertices.insert(m_Vertices.end(), std::make_move_iterator(vertices[vidx].begin()), std::make_move_iterator(vertices[vidx].end()));
 	}
+		
 	idx = 0;
-	for (int i = 0; i < indices.size(); i++)
+	for (UINT iidx = 0; iidx < indices.size(); iidx++)
 	{
-		m_RenderIndices.push_back({ (UINT)indices[i].size(), idx });
-		idx += (UINT)indices[i].size();
-	}
-	for (const auto& iter : vertices)
-		m_Vertices.insert(m_Vertices.end(), iter.begin(), iter.end());
-	UINT psum = 0;
-	for (int i = 0; i < indices.size(); i++)
-	{
-		for (int j = 0; j < indices[i].size(); j++)
-			m_Indices.push_back(psum + indices[i][j]);
-		psum += vertices[i].size();
+		m_RenderIndices.push_back({ (UINT)indices[iidx].size(), idx});
+		idx += (UINT)indices[iidx].size();
+		for (auto& iter : indices[iidx]) m_Indices.push_back(psum + std::move(iter));
+		psum += vertices[iidx].size();
 	}
 }
 
