@@ -294,9 +294,6 @@
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp">
       <Filter>ImGui</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Engine\ResourceSystem</Filter>
-    </ClCompile>
     <ClCompile Include="LightSystem.cpp">
       <Filter>Engine\LightSystem</Filter>
     </ClCompile>

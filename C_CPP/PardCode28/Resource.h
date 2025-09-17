@@ -15,6 +15,7 @@ public:
 	virtual const size_t GetHash() const = 0;
 	virtual const std::wstring& GetPath() const = 0;
 };
+
 template<typename T>
 class BaseResource : public Resource
 {
@@ -25,7 +26,6 @@ protected:
 	BaseResource& operator=(const BaseResource&) = delete;
 	BaseResource(BaseResource&&) = delete;
 	BaseResource& operator=(BaseResource&&) = delete;
-protected:
 	void SetHash(size_t hash) override;
 	void SetFilePath(const std::wstring& szFilepath) override;
 public:

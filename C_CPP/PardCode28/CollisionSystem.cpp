@@ -35,10 +35,10 @@ void CollisionSystem::Frame(float deltatime)
 	{
 		obj->bRenderable = false;
 		Matrix4x4 matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
-		count_all += _ResourceSystem.GetResource<Mesh>(obj->m_Mesh_Material[0].hash_mesh)->GetCL().size();
+		count_all += _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(obj->m_Mesh_Material[0].hash_mesh)->GetCL().size();
 		for (const auto& MeshMat : obj->m_Mesh_Material)
 		{
-			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(MeshMat.hash_mesh);
+			Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(MeshMat.hash_mesh);
 			for (const auto& iter : pMesh->GetCL())
 			{
 				if (CheckBound(frustum, iter, matWorld))

@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseSystem.h"
+#include "Mesh.h"
 
-class Mesh;
 class Material;
 class Resource;
 class ResourceSystem : public BaseSystem<ResourceSystem>
@@ -57,7 +57,10 @@ T* ResourceSystem::GetResource(size_t hash)
 
 //템플릿특수화
 template<>
-Mesh* ResourceSystem::CreateResourceFromFile<Mesh>(const std::wstring& szFilePath);
+Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath);
+
+template<>
+Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath);
 
 template<>
 std::vector<Material*> ResourceSystem::CreateResourcesFromFile<Material>(const std::wstring& szFilePath);

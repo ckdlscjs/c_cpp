@@ -144,7 +144,7 @@ void RenderSystem::Render(float deltatime)
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
 		{
 			auto& iter = SkyObj->m_Mesh_Material[i];
-			Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(iter.hash_mesh);
+			Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 			m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -255,7 +255,7 @@ void RenderSystem::Render(float deltatime)
 			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 			{
 				auto& iter = obj->m_Mesh_Material[i];
-				Mesh* pMesh = _ResourceSystem.GetResource<Mesh>(iter.hash_mesh);
+				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -472,7 +472,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {
-	Mesh* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh>(szFilePath);
+	Mesh<Vertex_PTN>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<Vertex_PTN>>(szFilePath);
 	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
