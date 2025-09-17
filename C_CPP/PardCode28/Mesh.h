@@ -6,7 +6,7 @@ class Mesh : public BaseResource<Mesh<T>>
 {
 	friend class BaseResource<Mesh<T>>;
 public:
-	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<std::vector<T>>&& vertices, std::vector<std::vector<UINT>>&& indices);
+	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<RenderCounts>&& c_vertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& c_indices);
 	~Mesh();
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
@@ -20,8 +20,8 @@ public:
 	size_t GetIndicesSize();
 	void SetCL(size_t hashCL);
 	const std::unordered_set<size_t>& GetCL() const;
-	const std::vector<CountRender>& GetRendVertices() const;
-	const std::vector<CountRender>& GetRendIndices() const;
+	const std::vector<RenderCounts>& GetRendVertices() const;
+	const std::vector<RenderCounts>& GetRendIndices() const;
 	void SetVB(size_t hashVB);
 	size_t GetVB() const;
 	void SetIB(size_t hashIB);
@@ -29,8 +29,8 @@ public:
 	
 private:
 	std::vector<std::vector<Vector3>> m_Points;
-	std::vector<CountRender> m_RenderVertices;
-	std::vector<CountRender> m_RenderIndices;
+	std::vector<RenderCounts> m_RenderVertices;
+	std::vector<RenderCounts> m_RenderIndices;
 	std::vector<T> m_Vertices;
 	std::vector<UINT> m_Indices;
 	std::unordered_set<size_t> m_lCL;
@@ -38,28 +38,18 @@ private:
 	size_t m_lIB;
 };
 
+//정점 재계산후 우측값참조를 통해 Mesh쪽으로 넘겨받아 전달로 빠르게 값을 이동시킨다
 template<typename T>
-inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<std::vector<T>>&& vertices, std::vector<std::vector<UINT>>&& indices)
+inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countsIndices)
+	: m_Points(std::move(points)),
+	m_Vertices(std::move(vertices)),
+	m_RenderVertices(std::move(countsVertices)),
+	m_Indices(std::move(indices)),
+	m_RenderIndices(std::move(countsIndices))
 {
+	// BaseResource의 멤버 초기화
 	this->SetHash(hash);
 	this->SetFilePath(szFilePath);
-	m_Points = std::move(points);
-	UINT psum = 0, idx = 0;
-	for (UINT vidx = 0; vidx < vertices.size(); vidx++)
-	{
-		m_RenderVertices.push_back({ (UINT)vertices[vidx].size(), idx});
-		idx = (UINT)vertices[vidx].size();
-		m_Vertices.insert(m_Vertices.end(), std::make_move_iterator(vertices[vidx].begin()), std::make_move_iterator(vertices[vidx].end()));
-	}
-		
-	idx = 0;
-	for (UINT iidx = 0; iidx < indices.size(); iidx++)
-	{
-		m_RenderIndices.push_back({ (UINT)indices[iidx].size(), idx});
-		idx += (UINT)indices[iidx].size();
-		for (auto& iter : indices[iidx]) m_Indices.push_back(psum + std::move(iter));
-		psum += vertices[iidx].size();
-	}
 }
 
 template<typename T>
@@ -123,12 +113,12 @@ inline const std::unordered_set<size_t>& Mesh<T>::GetCL() const
 	return m_lCL;
 }
 template<typename T>
-inline const std::vector<CountRender>& Mesh<T>::GetRendVertices() const
+inline const std::vector<RenderCounts>& Mesh<T>::GetRendVertices() const
 {
 	return m_RenderVertices;
 }
 template<typename T>
-inline const std::vector<CountRender>& Mesh<T>::GetRendIndices() const
+inline const std::vector<RenderCounts>& Mesh<T>::GetRendIndices() const
 {
 	return m_RenderIndices;
 }

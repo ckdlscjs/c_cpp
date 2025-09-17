@@ -101,12 +101,11 @@ struct PointXY
 	PointXY(int _x = 0, int _y = 0) : x(_x), y(_y) {}
 };
 
-struct CountRender
+struct RenderCounts
 {
-	size_t size;
+	size_t count;
 	size_t idx;
 };
-
 
 struct Vertex_PC
 {

@@ -162,7 +162,7 @@ void RenderSystem::Render(float deltatime)
 					m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 				}
 			}
-			m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].size, pMesh->GetRendIndices()[i].idx, 0);
+			m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
 		}
 	}
 
@@ -228,7 +228,7 @@ void RenderSystem::Render(float deltatime)
 						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].size, pMesh->GetRendIndices()[i].idx, 0);
+				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
 			}
 		}
 #endif 
@@ -273,7 +273,7 @@ void RenderSystem::Render(float deltatime)
 						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].size, pMesh->GetRendIndices()[i].idx, 0);
+				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
 			}
 		}
 #endif 
