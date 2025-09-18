@@ -40,9 +40,13 @@ public:
 	void OnResize(UINT width, UINT height);
 	
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
+	size_t CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag = DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE);
+	template<typename T>
 	size_t CreateMesh(const std::wstring& szFilePath, E_Colliders collider = E_Colliders::AABB);
+	template<typename T>
 	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
+	template<typename T>
 	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
@@ -80,3 +84,5 @@ public:
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()
+
+

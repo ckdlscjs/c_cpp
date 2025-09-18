@@ -1,7 +1,7 @@
 #pragma once
 #include "BaseSystem.h"
 #include "Mesh.h"
-#include <tiny_obj_loader.h>
+
 class Material;
 class Resource;
 class ResourceSystem : public BaseSystem<ResourceSystem>

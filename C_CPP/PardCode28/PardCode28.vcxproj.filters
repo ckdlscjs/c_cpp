@@ -320,19 +320,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="VertexShader.hlsl">
+    <FxCompile Include="VS_PCT.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="VertexShaderPTN.hlsl">
+    <FxCompile Include="VS_PTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="PixelShaderPTN.hlsl">
+    <FxCompile Include="PS_PTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="PSSkySphere.hlsl">
+    <FxCompile Include="PS_.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_Lights.hlsli">
@@ -342,6 +342,12 @@
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_RotatePointLight.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PTNTB.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

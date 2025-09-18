@@ -240,12 +240,13 @@ void RenderSystem::Render(float deltatime)
 			if (!obj->bRenderable) continue;
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 			CB_WVPITMatrix cc0;
-			objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
+			/*objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
 			Matrix4x4 objMat = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 			matWorld[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
 			matWorld *= GetMat_Scale(objs[0]->m_vScale);
 			matWorld[3] = objMat[3];
-			cc0.matWorld = i == 0 ? matWorld : objMat;
+			cc0.matWorld = i == 0 ? matWorld : objMat;*/
+			cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 			cc0.matView = matView;
 			cc0.matProj = matProj;
 			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
@@ -469,26 +470,42 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
 	return HashingFile(szFilePath);
 }
+size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
+{
+	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
+	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
+	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
+	return HashingFile(szFilePath);
+}
 
+
+
+//추론명시
+template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Colliders collider);
+template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Colliders collider);
+template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
+template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
+
+template<typename T>
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {
-	Mesh<Vertex_PTN>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<Vertex_PTN>>(szFilePath);
-	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(Vertex_PTN), (UINT)pMesh->GetVerticesSize()));
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szFilePath);
+	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
 		pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
 	return HashingFile(szFilePath);
 }
-
+template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
 {
 	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
 	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
 	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
-	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", InputLayout_VertexPTN, (UINT)ARRAYSIZE(InputLayout_VertexPTN), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
+	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
 	return HashingFile(szFilePath);
 }
-
+template<typename T>
 std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& VSs, const std::vector<std::wstring>& PSs)
 {
 	std::vector<size_t> rets;
@@ -498,7 +515,7 @@ std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath
 	{
 		materials[i]->SetVS(CreateVertexShader(VSs[i], "vsmain", "vs_5_0"));
 		materials[i]->SetPS(CreatePixelShader(PSs[i], "psmain", "ps_5_0"));
-		materials[i]->SetIL(CreateInputLayout(VSs[i] + L"IL", InputLayout_VertexPTN, (UINT)ARRAYSIZE(InputLayout_VertexPTN), m_pCVSs[CreateVertexShader(VSs[i], "vsmain", "vs_5_0")]->GetBlob()));
+		materials[i]->SetIL(CreateInputLayout(VSs[i] + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(VSs[i], "vsmain", "vs_5_0")]->GetBlob()));
 		rets.push_back(materials[i]->GetHash());
 	}
 	return rets;

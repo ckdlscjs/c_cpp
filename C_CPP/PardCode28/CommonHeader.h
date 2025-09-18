@@ -287,6 +287,31 @@ static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
 	{InputLayout_VertexPTNTB,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB)},
 };
 
+//TMP를 이용한 추론
+template <typename T>
+struct Traits_InputLayout;
+
+template <>
+struct Traits_InputLayout<Vertex_PTN> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].first;
+	}
+	static constexpr size_t GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTNTB> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].first;
+	}
+	static constexpr size_t GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].second;
+	}
+};
+
+
 
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다, 최대 16바이트 * 4096 이 가능하다(하나의레지스터), 최대14레지스터까지가능(0~13)
 __declspec(align(16))

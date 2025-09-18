@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+
+
 Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag)
 {
 	SetHash(hash);
@@ -23,6 +25,12 @@ Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS
 	*/
 	// 라이브러리의 함수에 파일주소만을 넘겨 객체포인터를 받아와 이를 이용한다
 	_ASEERTION_CREATE(DirectX::LoadFromWICFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage), "LoadTexture not successfully");
+}
+Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
+{
+	SetHash(hash);
+	SetFilePath(szFilePath);
+	_ASEERTION_CREATE(DirectX::LoadFromDDSFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage), "LoadTexture not successfully");
 }
 
 Texture::~Texture()
