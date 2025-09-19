@@ -269,7 +269,7 @@ void AppWindow::OnCreate()
 	{
 		//SkySphere
 		{
-			size_t hash_mesh_skysphere = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
+			size_t hash_mesh_skysphere = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj", E_Colliders::SPHERE);
 			size_t hash_material_skysphere = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_SkySphere", L"VS_PTN.hlsl", L"PS_.hlsl");
 			std::vector<TX_HASH> txs_skysphere;
 			txs_skysphere.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/stars_map.jpg", WIC_FLAGS_IGNORE_SRGB) });
@@ -282,26 +282,26 @@ void AppWindow::OnCreate()
 		}
 
 		{
-			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/cube.obj", E_Colliders::AABB);
+			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/sphere.obj", E_Colliders::AABB);
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_NormalMapping", L"VS_PTNTB.hlsl", L"PS_PTNTB.hlsl");
 			std::vector<TX_HASH> tx_hash;
-			tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/stone01.dds", DDS_FLAGS_NONE) });
-			tx_hash.push_back({ E_Textures::Normal, _RenderSystem.CreateTexture(L"../Assets/Textures/bump01.dds", DDS_FLAGS_NONE) });
+			tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/brick_d.jpg", WIC_FLAGS_IGNORE_SRGB) });
+			tx_hash.push_back({ E_Textures::Normal, _RenderSystem.CreateTexture(L"../Assets/Textures/brick_n.jpg", WIC_FLAGS_IGNORE_SRGB) });
 			_RenderSystem.Material_SetTextures(hash_material, tx_hash);
 
 			_RenderSystem.objs.push_back(new TempObj());
 			TempObj* obj = _RenderSystem.objs.back();
-			obj->m_vScale = Vector3(100.0f, 100.0f, 100.0f);
+			obj->m_vScale = Vector3(300, 300, 300);
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material});
 		}
 
 		////SpaceShip
 		//{
-		//	size_t hash_mesh = _RenderSystem.CreateMesh(L"../Assets/Meshes/spaceship.obj", E_Colliders::SPHERE);
+		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/spaceship.obj", E_Colliders::SPHERE);
 		//	std::vector<std::wstring> VSs, PSs;
 		//	VSs.push_back(L"VS_PTN.hlsl"); PSs.push_back(L"PS_PTN.hlsl");
 
-		//	std::vector<size_t> hash_mats = _RenderSystem.CreateMaterials(L"../Assets/Meshes/spaceship.mtl", VSs, PSs);
+		//	std::vector<size_t> hash_mats = _RenderSystem.CreateMaterials<Vertex_PTN>(L"../Assets/Meshes/spaceship.mtl", VSs, PSs);
 		//	std::vector<TX_HASH> TX_HASHS[1];
 		//	TX_HASHS[0].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/stars_spaceship.jpg", WIC_FLAGS_IGNORE_SRGB) });
 		//	_RenderSystem.Material_SetTextures(hash_mats[0], TX_HASHS[0]);
@@ -311,14 +311,14 @@ void AppWindow::OnCreate()
 		//	obj->m_vScale = Vector3(25.0f, 25.0f, 25.0f);
 		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_mats[0]});
 		//}
-		
+		//
 		////Asteroid
 		//{
-		//	size_t hash_mesh = _RenderSystem.CreateMesh(L"../Assets/Meshes/asteroid.obj", E_Colliders::SPHERE);
+		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/asteroid.obj", E_Colliders::SPHERE);
 		//	std::vector<std::wstring> VSs, PSs;
 		//	VSs.push_back(L"VS_PTN.hlsl"); PSs.push_back(L"PS_PTN.hlsl");
 
-		//	std::vector<size_t> hash_mats = _RenderSystem.CreateMaterials(L"../Assets/Meshes/asteroid.mtl", VSs, PSs);
+		//	std::vector<size_t> hash_mats = _RenderSystem.CreateMaterials<Vertex_PTN>(L"../Assets/Meshes/asteroid.mtl", VSs, PSs);
 		//	std::vector<TX_HASH> TX_HASHS[1];
 		//	TX_HASHS[0].push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/stars_asteroid.jpg", WIC_FLAGS_IGNORE_SRGB) });
 		//	_RenderSystem.Material_SetTextures(hash_mats[0], TX_HASHS[0]);

@@ -485,7 +485,8 @@ template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFileP
 template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Colliders collider);
 template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-
+template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTN>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
+template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTNTB>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 template<typename T>
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {

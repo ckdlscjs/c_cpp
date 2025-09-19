@@ -1,6 +1,7 @@
 #include "PS_Lights.hlsli"
 
-Texture2D Texture[2];
+Texture2D TextureDiffuse : register(t0);
+Texture2D TextureNormal : register(t1);
 sampler TextureSampler : register(s0); //세팅하지않아도 기본샘플러가 레지스터0에 세팅된다
 
 struct PS_INPUT
@@ -20,8 +21,8 @@ cbuffer CB_Campos : register(b5)
 
 float4 psmain(PS_INPUT input) : SV_Target
 {
-    float4 M_Diffuse = Texture[0].Sample(TextureSampler, input.tex0.xy); //텍스쳐값
-    float4 M_Normal = Texture[1].Sample(TextureSampler, input.tex0.xy); //텍스쳐값
+    float4 M_Diffuse = TextureDiffuse.Sample(TextureSampler, input.tex0.xy); //텍스쳐값
+    float4 M_Normal = TextureNormal.Sample(TextureSampler, input.tex0.xy); //텍스쳐값
     M_Normal = (2.0f * M_Normal) - 1.0f; //(0 ~ 1) -> (-1 ~ 1) 정규화
     float4 P = input.pos1; //변환된 월드의정점
     clip(M_Diffuse.a - 0.5f);
@@ -36,7 +37,7 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 N = normalize(convert_normal); //정점법선벡터 정규화
     float3 R = reflect(ld_dir, N); //반사벡터(입사벡터, 법선을 인자로사용)
     float3 V = normalize(campos.xyz - P.xyz); //시점을향하는벡터
-    return DirectionalLight(L, N, R, V);// * M_Diffuse; //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
+    return DirectionalLight(L, N, R, V) * M_Diffuse; //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
     
     
     ////PointLight
