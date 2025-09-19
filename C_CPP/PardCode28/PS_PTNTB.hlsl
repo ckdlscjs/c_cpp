@@ -37,7 +37,7 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 N = normalize(convert_normal); //정점법선벡터 정규화
     float3 R = reflect(ld_dir, N); //반사벡터(입사벡터, 법선을 인자로사용)
     float3 V = normalize(campos.xyz - P.xyz); //시점을향하는벡터
-    return DirectionalLight(L, N, R, V) * M_Diffuse; //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
+    return DirectionalLight(L, N, R, V);// * M_Diffuse; //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
     
     
     ////PointLight

@@ -256,7 +256,8 @@ void RenderSystem::Render(float deltatime)
 			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 			{
 				auto& iter = obj->m_Mesh_Material[i];
-				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+				//지정핸들링필요
+				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);	
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -477,8 +478,6 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_
 	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
 	return HashingFile(szFilePath);
 }
-
-
 
 //추론명시
 template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Colliders collider);
