@@ -144,7 +144,7 @@ void RenderSystem::Render(float deltatime)
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
 		{
 			auto& iter = SkyObj->m_Mesh_Material[i];
-			Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+			BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 			m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 			m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -210,7 +210,7 @@ void RenderSystem::Render(float deltatime)
 			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 			{
 				auto& iter = obj->m_Mesh_Material[i];
-				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -257,7 +257,7 @@ void RenderSystem::Render(float deltatime)
 			{
 				auto& iter = obj->m_Mesh_Material[i];
 				//지정핸들링필요
-				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);	
+				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 

@@ -48,6 +48,7 @@ enum class E_Textures
 {
 	Diffuse,
 	Normal,
+	Specular,
 	Roughness,
 	Metalic,
 	AmbientOcclusion,
