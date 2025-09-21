@@ -1,0 +1,4 @@
+RenderTextureClass
+-Initialize
+렌더타겟으로 사용할 Texture2D->RenderTargetView->ShaderResourceView를 생성
+이를 SetRenderTarget으로 지정하고사용
