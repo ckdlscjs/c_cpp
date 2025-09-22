@@ -1,5 +1,4 @@
 #pragma once
-#include "CommonHeader.h"
 #include "BaseState.h"
 
 class DepthStencilState : public BaseState<ID3D11DepthStencilState>

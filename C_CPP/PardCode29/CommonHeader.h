@@ -111,8 +111,8 @@ struct PointXY
 
 struct RenderCounts
 {
-	size_t count;
-	size_t idx;
+	UINT count;
+	UINT idx;
 };
 
 struct Vertex_PC

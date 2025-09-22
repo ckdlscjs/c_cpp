@@ -92,8 +92,8 @@ void SwapChain::CreateDepthStencilView(ID3D11Device* pDevice, UINT width, UINT h
 	hResult = pDevice->CreateTexture2D(&tex_desc, nullptr, &backBuffer);
 	_ASEERTION_CREATE(hResult, "BackBuffer");
 	hResult = pDevice->CreateDepthStencilView(backBuffer, NULL, &m_pDepthStencilView);	//해당버퍼를 이용하여 깊이스텐실 뷰를 생성
-	backBuffer->Release();																//임의의 사용한 버퍼를 제거
 	_ASEERTION_CREATE(hResult, "DSV");
+	backBuffer->Release();																//임의의 사용한 버퍼를 제거
 }
 
 //백버퍼를 재설정한다, flags는 필요에따라 설정, 기본 = 0

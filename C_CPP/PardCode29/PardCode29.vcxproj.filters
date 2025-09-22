@@ -109,7 +109,7 @@
     <ClInclude Include="Texture.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
-    <ClInclude Include="Texture2D.h">
+    <ClInclude Include="ShaderResourceView.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="SamplerState.h">
@@ -214,6 +214,15 @@
     <ClInclude Include="BaseState.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="BaseView.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="DepthStencilView.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderTargetView.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -267,7 +276,7 @@
     <ClCompile Include="Texture.cpp">
       <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Texture2D.cpp">
+    <ClCompile Include="ShaderResourceView.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -325,6 +334,12 @@
       <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
     <ClCompile Include="DepthStencilState.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderTargetView.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthStencilView.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>

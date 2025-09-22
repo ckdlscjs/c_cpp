@@ -37,14 +37,14 @@ Texture::~Texture()
 {
 }
 
-void Texture::SetTX(size_t hashTX)
+void Texture::SetVW(size_t hashVW)
 {
-	m_lTX = hashTX;
+	m_lVW = hashVW;
 }
 
-size_t Texture::GetTX() const
+size_t Texture::GetVW() const
 {
-	return m_lTX;
+	return m_lVW;
 }
 
 const ScratchImage* Texture::GetImage() const

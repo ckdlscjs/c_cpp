@@ -13,11 +13,11 @@ public:
 	Texture(Texture&&) = delete;
 	Texture& operator=(Texture&&) = delete;
 
-	void SetTX(size_t hashTX);
-	size_t GetTX() const;
+	void SetVW(size_t hashVW);
+	size_t GetVW() const;
 	const ScratchImage* GetImage() const;
 private:
-	size_t m_lTX;
+	size_t m_lVW;
 	ScratchImage m_ScratchImage;
 };
 

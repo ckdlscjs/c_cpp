@@ -10,7 +10,7 @@
 #include "TempObj.h"
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
-#include "Texture2D.h"
+#include "ShaderResourceView.h"
 #include "ResourceSystem.h"
 #include "Texture.h"
 #include "SamplerState.h"
@@ -161,9 +161,9 @@ void RenderSystem::Render(float deltatime)
 			int cnt = 0;
 			for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 			{
-				for (const auto& hashTx : texs[idxTex])
+				for (const auto& hashVW : texs[idxTex])
 				{
-					m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+					static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 				}
 			}
 			m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
@@ -228,7 +228,7 @@ void RenderSystem::Render(float deltatime)
 				{
 					for (const auto& hashTx : texs[idxTex])
 					{
-						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashTx)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
 				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
@@ -273,9 +273,9 @@ void RenderSystem::Render(float deltatime)
 				int cnt = 0;
 				for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 				{
-					for (const auto& hashTx : texs[idxTex])
+					for (const auto& hashVW : texs[idxTex])
 					{
-						m_pCTXs[_ResourceSystem.GetResource<Texture>(hashTx)->GetTX()]->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
 				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
@@ -331,10 +331,10 @@ void RenderSystem::Release()
 		iter = m_pCCBs.erase(iter);
 	}
 
-	for (auto iter = m_pCTXs.begin(); iter != m_pCTXs.end();)
+	for (auto iter = m_pCVWs.begin(); iter != m_pCVWs.end();)
 	{
 		delete iter->second;
-		iter = m_pCTXs.erase(iter);
+		iter = m_pCVWs.erase(iter);
 	}
 
 	if (SkyObj)
@@ -430,14 +430,14 @@ size_t RenderSystem::CreateIndexBuffer(const std::wstring& szName, void* indices
 	return hash;
 }
 
-size_t RenderSystem::CreateTexture2D(const std::wstring& szName, const ScratchImage* resource)
+size_t RenderSystem::CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource)
 {
 	size_t hash = HashingFile(szName);
-	if (m_pCTXs.find(hash) != m_pCTXs.end()) return hash;
+	if (m_pCVWs.find(hash) != m_pCVWs.end()) return hash;
 	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
-	Texture2D* pTexture2D = new Texture2D(m_pCDirect3D->GetDevice(), resource);
-	_ASEERTION_NULCHK(pTexture2D, "TX is nullptr");
-	m_pCTXs[hash] = pTexture2D;
+	ShaderResourceView* pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), resource);
+	_ASEERTION_NULCHK(pSRV, "TX is nullptr");
+	m_pCVWs[hash] = pSRV;
 	return hash;
 }
 
@@ -477,14 +477,14 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 {
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
-	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
+	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return HashingFile(szFilePath);
 }
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
 {
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
-	pTexture->SetTX(CreateTexture2D(szFilePath + L"TX", pTexture->GetImage()));
+	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return HashingFile(szFilePath);
 }
 

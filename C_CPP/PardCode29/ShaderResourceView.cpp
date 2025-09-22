@@ -1,11 +1,11 @@
-#include "Texture2D.h"
+#include "ShaderResourceView.h"
 
-Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
+ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, const ScratchImage* resource)
 {
-	std::cout << "Initialize : " << "Texture2D" << " Class" << '\n';
+	std::cout << "Initialize : " << "ShaderResourceView" << " Class" << '\n';
 	HRESULT result;
-
-	result = CreateTexture(pDevice, resource->GetImages(), resource->GetImageCount(), resource->GetMetadata(), &m_pTexture);
+	ID3D11Resource* pBuffer;
+	result = CreateTexture(pDevice, resource->GetImages(), resource->GetImageCount(), resource->GetMetadata(), &pBuffer);
 	_ASEERTION_CREATE(result, "Texture not create successfully");
 	// Resource를 사용하기위한 ResourceView를 생성한다
 	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
@@ -15,25 +15,25 @@ Texture2D::Texture2D(ID3D11Device* pDevice, const ScratchImage* resource)
 	desc.Texture2D.MipLevels = (UINT)resource->GetMetadata().mipLevels;
 	desc.Texture2D.MostDetailedMip = 0;
 
-	result = pDevice->CreateShaderResourceView(m_pTexture, &desc, &m_pSRV);
+	result = pDevice->CreateShaderResourceView(pBuffer, &desc, &m_pSRV);
 	_ASEERTION_CREATE(result, "SRV not create successfully");
+	pBuffer->Release();
 }
 
-Texture2D::~Texture2D()
+ShaderResourceView::~ShaderResourceView()
 {
-	std::cout << "Release : " << "Texture2D" << " Class" << '\n';
-	m_pTexture->Release();
+	std::cout << "Release : " << "ShaderResourceView" << " Class" << '\n';
 	m_pSRV->Release();
 }
 
 //정점에서의 텍스쳐사용시
-void Texture2D::SetVS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
+void ShaderResourceView::SetVS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 {
 	pDeviceContext->VSSetShaderResources(startIdx, 1, &m_pSRV);
 }
 
 //일반적인 픽셀세이더에서의 사용
-void Texture2D::SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
+void ShaderResourceView::SetPS(ID3D11DeviceContext* pDeviceContext, UINT startIdx)
 {
 	pDeviceContext->PSSetShaderResources(startIdx, 1, &m_pSRV);
 }
