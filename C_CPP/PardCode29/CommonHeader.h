@@ -28,11 +28,18 @@ enum class E_Samplers
 	//ANISOTROPIC_CLAMP,
 };
 
-enum class E_Rasterizers
+enum class E_RSStates
 {
 	SOLID_CULLBACK_CW,
 	SOLID_CULLFRONT_CW,
 	WIRE_CULLBACK_CW,
+};
+
+enum class E_DSStates
+{
+	DEFAULT,
+	SKYBOX,
+	UI,
 };
 
 enum class E_Colliders

@@ -14,6 +14,7 @@ class IndexBuffer;
 class Texture2D;
 class SamplerState;
 class RasterizerState;
+class DepthStencilState;
 class TempObj;
 
 class RenderSystem : public BaseSystem<RenderSystem>
@@ -65,17 +66,18 @@ private:
 
 	//사용을위해 분할한 클래스객체들
 private:
-	Direct3D* m_pCDirect3D;
-	SwapChain* m_pCSwapChain;
-	SamplerState* m_pCSamplers;
-	RasterizerState* m_pCRSStaets;
-	std::unordered_map<size_t, VertexBuffer*> m_pCVBs;
-	std::unordered_map<size_t, IndexBuffer*> m_pCIBs;
-	std::unordered_map<size_t, InputLayout*> m_pCILs;
-	std::unordered_map<size_t, VertexShader*> m_pCVSs;
-	std::unordered_map<size_t, PixelShader*> m_pCPSs;
-	std::unordered_map<size_t, ConstantBuffer*> m_pCCBs;
-	std::unordered_map<size_t, Texture2D*> m_pCTXs;
+	Direct3D*										m_pCDirect3D;
+	SwapChain*										m_pCSwapChain;
+	SamplerState*									m_pCSamplers;
+	RasterizerState*								m_pCRSStaets;
+	DepthStencilState*								m_pCDSStates;
+	std::unordered_map<size_t, VertexBuffer*>		m_pCVBs;
+	std::unordered_map<size_t, IndexBuffer*>		m_pCIBs;
+	std::unordered_map<size_t, InputLayout*>		m_pCILs;
+	std::unordered_map<size_t, VertexShader*>		m_pCVSs;
+	std::unordered_map<size_t, PixelShader*>		m_pCPSs;
+	std::unordered_map<size_t, ConstantBuffer*>		m_pCCBs;
+	std::unordered_map<size_t, Texture2D*>			m_pCTXs;
 
 public:
 	//추후 오브젝트시스템으로분리

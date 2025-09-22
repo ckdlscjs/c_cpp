@@ -159,6 +159,8 @@
     <ClInclude Include="CommonMath.h" />
     <ClInclude Include="Components.h" />
     <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="BaseState.h" />
+    <ClInclude Include="DepthStencilState.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="LightSystem.h" />
@@ -209,6 +211,7 @@
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="DepthStencilState.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />

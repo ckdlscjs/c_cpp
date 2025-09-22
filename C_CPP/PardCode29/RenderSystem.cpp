@@ -15,6 +15,7 @@
 #include "Texture.h"
 #include "SamplerState.h"
 #include "RasterizerState.h"
+#include "DepthStencilState.h"
 #include "Mesh.h"
 #include "LightSystem.h"
 #include "Light.h"
@@ -55,8 +56,10 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_ASEERTION_NULCHK(m_pCSamplers, "Samplers is nullptr");
 
 	m_pCRSStaets = new RasterizerState(m_pCDirect3D->GetDevice());
-	_ASEERTION_NULCHK(m_pCRSStaets, "Samplers is nullptr");
+	_ASEERTION_NULCHK(m_pCRSStaets, "Rasterizer is nullptr");
 
+	m_pCDSStates = new DepthStencilState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCDSStates, "DepthStencil is nullptr");
 
 	//상수버퍼 기본세팅
 	_RenderSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
@@ -106,6 +109,7 @@ void RenderSystem::Render(float deltatime)
 	{
 		//SKYOBJ
 		{
+			m_pCDSStates->SetDS(m_pCDirect3D->GetDeviceContext(), E_DSStates::SKYBOX);
 			//DirectionalLight
 			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 			m_pCCBs[g_hash_cbdirectionalLight]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
@@ -138,7 +142,7 @@ void RenderSystem::Render(float deltatime)
 			m_pCCBs[g_hash_cbcampos]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
 			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::WRAP_LINEAR);
-			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_Rasterizers::SOLID_CULLFRONT_CW);
+			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_RSStates::SOLID_CULLFRONT_CW);
 		}
 
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
@@ -168,32 +172,31 @@ void RenderSystem::Render(float deltatime)
 
 	//OBJS
 	{
-		{
-			//DirectionalLight
-			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-			m_pCCBs[g_hash_cbdirectionalLight]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
+		m_pCDSStates->SetDS(m_pCDirect3D->GetDeviceContext(), E_DSStates::DEFAULT);
+		//DirectionalLight
+		m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
+		m_pCCBs[g_hash_cbdirectionalLight]->SetPS(m_pCDirect3D->GetDeviceContext(), 0);
 
-			//PointLight
-			m_pCCBs[g_hash_cbpointlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-			m_pCCBs[g_hash_cbpointlight]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
+		//PointLight
+		m_pCCBs[g_hash_cbpointlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
+		m_pCCBs[g_hash_cbpointlight]->SetPS(m_pCDirect3D->GetDeviceContext(), 1);
 
-			//SpotLight
-			m_pCCBs[g_hash_cbspotlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-			m_pCCBs[g_hash_cbspotlight]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
+		//SpotLight
+		m_pCCBs[g_hash_cbspotlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
+		m_pCCBs[g_hash_cbspotlight]->SetPS(m_pCDirect3D->GetDeviceContext(), 2);
 
-			CB_Time cc1;
-			cc1.fTime = deltatime;
-			m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-			m_pCCBs[g_hash_cbtime]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
+		CB_Time cc1;
+		cc1.fTime = deltatime;
+		m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
+		m_pCCBs[g_hash_cbtime]->SetPS(m_pCDirect3D->GetDeviceContext(), 4);
 
-			CB_Campos cc2;
-			cc2.vPosition = _CameraSystem.GetCamera(0)->GetPosition();
-			m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
-			m_pCCBs[g_hash_cbcampos]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
+		CB_Campos cc2;
+		cc2.vPosition = _CameraSystem.GetCamera(0)->GetPosition();
+		m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
+		m_pCCBs[g_hash_cbcampos]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
-			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::WRAP_LINEAR);
-			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_Rasterizers::SOLID_CULLBACK_CW);
-		}
+		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::WRAP_LINEAR);
+		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_RSStates::SOLID_CULLBACK_CW);
 #ifndef _TESTBLOCK
 		for (const auto& obj : objs)
 		{
@@ -353,6 +356,12 @@ void RenderSystem::Release()
 	{
 		delete m_pCRSStaets;
 		m_pCRSStaets = nullptr;
+	}
+
+	if (m_pCDSStates)
+	{
+		delete m_pCDSStates;
+		m_pCDSStates = nullptr;
 	}
 
 	if (m_pCSwapChain)

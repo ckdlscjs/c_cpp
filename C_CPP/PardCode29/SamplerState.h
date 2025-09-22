@@ -1,7 +1,7 @@
 #pragma once
-#include "CommonHeader.h"
+#include "BaseState.h"
 
-class SamplerState
+class SamplerState : public BaseState<ID3D11SamplerState>
 {
 public:
 	SamplerState(ID3D11Device* pDevice);
@@ -12,6 +12,4 @@ public:
 	SamplerState& operator=(SamplerState&&) = delete;
 	void SetVS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx = 0);
 	void SetPS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx = 0);
-private:
-	std::vector<ID3D11SamplerState*> m_pSamplers;
 };

@@ -5,7 +5,7 @@ class BaseMesh : public BaseResource<BaseMesh>
 	friend class BaseResource<BaseMesh>;
 public:
 	BaseMesh(size_t hash, const std::wstring& szFilePath);
-	~BaseMesh();
+	virtual ~BaseMesh();
 	BaseMesh(const BaseMesh&) = delete;
 	BaseMesh& operator=(const BaseMesh&) = delete;
 	BaseMesh(BaseMesh&&) = delete;

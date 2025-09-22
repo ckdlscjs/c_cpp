@@ -208,6 +208,12 @@
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
     <ClInclude Include="TestBlockMacro.h" />
+    <ClInclude Include="DepthStencilState.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseState.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -317,6 +323,9 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Engine\ResourceSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="DepthStencilState.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -25,12 +25,13 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	ID3D11RasterizerState* pState;
 	ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
 
+	rasterizer_desc.FrontCounterClockwise = FALSE;
+	rasterizer_desc.DepthClipEnable = TRUE;
+	rasterizer_desc.MultisampleEnable = TRUE;
+
 	//SOLID, CULLBACK, CW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	rasterizer_desc.FrontCounterClockwise = FALSE;
-	rasterizer_desc.DepthClipEnable = TRUE;                
-	rasterizer_desc.MultisampleEnable = TRUE;              
 	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
 	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CW");
 	m_pStates.push_back(pState);
@@ -54,15 +55,10 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 
 RasterizerState::~RasterizerState()
 {
-	std::cout << "Release : " << "SamplerState" << " Class" << '\n';
-	for (auto iter = m_pStates.begin(); iter != m_pStates.end();)
-	{
-		(*iter)->Release();
-		iter = m_pStates.erase(iter);
-	}
+	std::cout << "Release : " << "RasterizerState" << " Class" << '\n';
 }
 
-void RasterizerState::SetRS(ID3D11DeviceContext* pDeviceContext, E_Rasterizers rasterizer)
+void RasterizerState::SetRS(ID3D11DeviceContext* pDeviceContext, E_RSStates rasterizer)
 {
 	pDeviceContext->RSSetState(m_pStates[(UINT)rasterizer]);
 }

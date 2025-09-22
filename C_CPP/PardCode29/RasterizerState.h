@@ -1,7 +1,7 @@
 #pragma once
-#include "CommonHeader.h"
+#include "BaseState.h"
 
-class RasterizerState
+class RasterizerState : public BaseState<ID3D11RasterizerState>
 {
 public:
 	RasterizerState(ID3D11Device* pDevice);
@@ -10,7 +10,5 @@ public:
 	RasterizerState& operator=(const RasterizerState&) = delete;
 	RasterizerState(RasterizerState&&) = delete;
 	RasterizerState& operator=(RasterizerState&&) = delete;
-	void SetRS(ID3D11DeviceContext* pDeviceContext, E_Rasterizers rasterizer);
-private:
-	std::vector<ID3D11RasterizerState*> m_pStates;
+	void SetRS(ID3D11DeviceContext* pDeviceContext, E_RSStates rasterizer);
 };

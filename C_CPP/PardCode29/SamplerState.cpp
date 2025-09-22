@@ -16,7 +16,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
 	_ASEERTION_NULCHK(pSamplers, "Wrap_Linear");
-	m_pSamplers.push_back(pSamplers);
+	m_pStates.push_back(pSamplers);
 
 	//Wrap_Anisotrpic
 	sampler_desc.Filter = D3D11_FILTER_ANISOTROPIC;
@@ -25,7 +25,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
 	_ASEERTION_NULCHK(pSamplers, "Wrap_Anisotropic");
-	m_pSamplers.push_back(pSamplers);
+	m_pStates.push_back(pSamplers);
 
 	//필요시 추가
 	/*
@@ -62,11 +62,6 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 SamplerState::~SamplerState()
 {
 	std::cout << "Release : " << "SamplerState" << " Class" << '\n';
-	for (auto iter = m_pSamplers.begin(); iter != m_pSamplers.end();)
-	{
-		(*iter)->Release();
-		iter = m_pSamplers.erase(iter);
-	}
 }
 /*
 //void ID3D11DeviceContext::PSSetSamplers(
@@ -80,10 +75,10 @@ SamplerState::~SamplerState()
 */
 void SamplerState::SetVS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx)
 {
-	pDeviceContext->VSSetSamplers(startIdx, 1, &m_pSamplers[(UINT)sampler]);
+	pDeviceContext->VSSetSamplers(startIdx, 1, &m_pStates[(UINT)sampler]);
 }
 
 void SamplerState::SetPS(ID3D11DeviceContext* pDeviceContext, E_Samplers sampler, UINT startIdx)
 {
-	pDeviceContext->PSSetSamplers(startIdx, 1, &m_pSamplers[(UINT)sampler]);
+	pDeviceContext->PSSetSamplers(startIdx, 1, &m_pStates[(UINT)sampler]);
 }
