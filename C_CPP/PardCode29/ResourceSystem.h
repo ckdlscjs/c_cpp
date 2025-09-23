@@ -33,7 +33,7 @@ private:
 template<typename T, typename... Types>
 T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args)
 {
-	size_t hash = HashingFile(szFilePath);
+	size_t hash = Hasing_wstring(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<T*>(m_Resources[hash]);
 	//객체생성후 컨테이너에 등록
 	T* newResource = new T(hash, szFilePath, std::forward<Types>(args)...);

@@ -11,7 +11,9 @@ class VertexShader;
 class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
-class BaseView;
+class ShaderResourceView;
+class RenderTargetView;
+class DepthStencilView;
 class SamplerState;
 class RasterizerState;
 class DepthStencilState;
@@ -59,6 +61,10 @@ private:
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
 	size_t CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource);
+	size_t CreateRenderTargetView(const std::wstring& szName);
+	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
+	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
+	void ClearRenderViews(float red, float green, float blue, float alpha);
 	
 private:
 	UINT m_iWidth = 800;
@@ -66,19 +72,20 @@ private:
 
 	//사용을위해 분할한 클래스객체들
 private:
-	Direct3D*										m_pCDirect3D = nullptr;
-	SwapChain*										m_pCSwapChain = nullptr;
-	SamplerState*									m_pCSamplers = nullptr;
-	RasterizerState*								m_pCRSStaets = nullptr;
-	DepthStencilState*								m_pCDSStates = nullptr;
-	std::unordered_map<size_t, VertexBuffer*>		m_pCVBs;
-	std::unordered_map<size_t, IndexBuffer*>		m_pCIBs;
-	std::unordered_map<size_t, InputLayout*>		m_pCILs;
-	std::unordered_map<size_t, VertexShader*>		m_pCVSs;
-	std::unordered_map<size_t, PixelShader*>		m_pCPSs;
-	std::unordered_map<size_t, ConstantBuffer*>		m_pCCBs;
-	std::unordered_map<size_t, BaseView*>			m_pCVWs;
-
+	Direct3D*											m_pCDirect3D = nullptr;
+	SwapChain*											m_pCSwapChain = nullptr;
+	SamplerState*										m_pCSamplers = nullptr;
+	RasterizerState*									m_pCRSStaets = nullptr;
+	DepthStencilState*									m_pCDSStates = nullptr;
+	RenderTargetView*									m_pCRTV = nullptr;
+	DepthStencilView*									m_pCDSV = nullptr;
+	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
+	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
+	std::unordered_map<size_t, InputLayout*>			m_pCILs;
+	std::unordered_map<size_t, VertexShader*>			m_pCVSs;
+	std::unordered_map<size_t, PixelShader*>			m_pCPSs;
+	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;
+	std::unordered_map<size_t, ShaderResourceView*>		m_pCVWs;
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;

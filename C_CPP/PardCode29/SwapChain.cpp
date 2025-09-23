@@ -20,17 +20,17 @@ SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT width, UINT height)
 
 	DXGI_SWAP_CHAIN_DESC desc_swapchain;
 	ZeroMemory(&desc_swapchain, sizeof(desc_swapchain));
-	desc_swapchain.BufferCount = 1;										//백버퍼의갯수, 일반적으로는 1개
-	desc_swapchain.BufferDesc.Width = width;							//백버퍼의 해상도
+	desc_swapchain.BufferCount = 1;																//백버퍼의갯수, 일반적으로는 1개
+	desc_swapchain.BufferDesc.Width = width;													//백버퍼의 해상도
 	desc_swapchain.BufferDesc.Height = height;
-	desc_swapchain.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;		//픽셀포맷, rgba각 8비트씩 32비트해상도를 일반적으로사용
-	desc_swapchain.BufferDesc.RefreshRate.Numerator = 60;				//60hz를의미, 리프레시레이트
+	desc_swapchain.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;								//픽셀포맷, rgba각 8비트씩 32비트해상도를 일반적으로사용
+	desc_swapchain.BufferDesc.RefreshRate.Numerator = 60;										//60hz를의미, 리프레시레이트
 	desc_swapchain.BufferDesc.RefreshRate.Denominator = 1;
-	desc_swapchain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;		//버퍼의사용처, 렌더타겟출력용
-	desc_swapchain.OutputWindow = hwnd;									//렌더링할 대상 윈도우핸들
-	desc_swapchain.SampleDesc.Count = 1;								//멀티샘플링 설정, 1이면 사용안함 4이상이면 MSAA적용
-	desc_swapchain.SampleDesc.Quality = 0;								//샘플링품질, 0이면 보통값
-	desc_swapchain.Windowed = TRUE;										//TRUE:창모드 FALSE:전체화면
+	desc_swapchain.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT;		//버퍼의사용처, 렌더타겟출력용, SRV바인딩추가
+	desc_swapchain.OutputWindow = hwnd;															//렌더링할 대상 윈도우핸들
+	desc_swapchain.SampleDesc.Count = 1;														//멀티샘플링 설정, 1이면 사용안함 4이상이면 MSAA적용
+	desc_swapchain.SampleDesc.Quality = 0;														//샘플링품질, 0이면 보통값
+	desc_swapchain.Windowed = TRUE;																//TRUE:창모드 FALSE:전체화면
 
 	hResult = pDXGIFactory->CreateSwapChain(pDevice, &desc_swapchain, &m_pSwapChain);
 	_ASEERTION_CREATE(hResult, "SwapChain");
@@ -40,21 +40,21 @@ SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT width, UINT height)
 	pDXGIAdapter->Release();
 	pDXGIFactory->Release();
 
-	CreateRenderTargetView(pDevice);
-	CreateDepthStencilView(pDevice, width, height);
+	//CreateRenderTargetView(pDevice);
+	//CreateDepthStencilView(pDevice, width, height);
 }
 
 SwapChain::~SwapChain()
 {
 	std::cout << "Release : " << "SwapChain" << " Class" << '\n';
-	if(m_pRenderTargetView)
+	if (m_pSwapChain)
+		m_pSwapChain->Release();
+	/*if(m_pRenderTargetView)
 		m_pRenderTargetView->Release();
 	if(m_pDepthStencilView)
-		m_pDepthStencilView->Release();
-	if(m_pSwapChain)
-		m_pSwapChain->Release();
+		m_pDepthStencilView->Release();*/
 }
-
+/*
 void SwapChain::CreateRenderTargetView(ID3D11Device* pDevice)
 {
 	HRESULT hResult;
@@ -115,6 +115,11 @@ void SwapChain::ClearRenderTargetColor(ID3D11DeviceContext* pDeviceContext, floa
 	pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clearColor);
 	pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
+}
+*/
+IDXGISwapChain* SwapChain::GetSwapChain()
+{
+	return m_pSwapChain;
 }
 
 //더블버퍼링

@@ -175,7 +175,6 @@
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="RasterizerState.h" />
-    <ClInclude Include="BaseView.h" />
     <ClInclude Include="RenderTargetView.h" />
     <ClInclude Include="SamplerState.h" />
     <ClInclude Include="Sphere.h" />

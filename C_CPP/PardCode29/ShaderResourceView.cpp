@@ -1,11 +1,15 @@
 #include "ShaderResourceView.h"
 
+ShaderResourceView::ShaderResourceView()
+{
+}
+
 ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, const ScratchImage* resource)
 {
 	std::cout << "Initialize : " << "ShaderResourceView" << " Class" << '\n';
 	HRESULT result;
 	ID3D11Resource* pBuffer;
-	result = CreateTexture(pDevice, resource->GetImages(), resource->GetImageCount(), resource->GetMetadata(), &pBuffer);
+	result = CreateTexture(pDevice, resource->GetImages(), resource->GetImageCount(), resource->GetMetadata(), &pBuffer); //RC1
 	_ASEERTION_CREATE(result, "Texture not create successfully");
 	// Resource를 사용하기위한 ResourceView를 생성한다
 	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
@@ -15,15 +19,21 @@ ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, const ScratchImage
 	desc.Texture2D.MipLevels = (UINT)resource->GetMetadata().mipLevels;
 	desc.Texture2D.MostDetailedMip = 0;
 
-	result = pDevice->CreateShaderResourceView(pBuffer, &desc, &m_pSRV);
+	result = pDevice->CreateShaderResourceView(pBuffer, &desc, &m_pSRV); //RC2
 	_ASEERTION_CREATE(result, "SRV not create successfully");
-	pBuffer->Release();
+	pBuffer->Release();	//CreateTexture의 참조카운팅 감산
 }
 
 ShaderResourceView::~ShaderResourceView()
 {
 	std::cout << "Release : " << "ShaderResourceView" << " Class" << '\n';
-	m_pSRV->Release();
+	if (m_pSRV)
+		m_pSRV->Release();
+}
+
+ID3D11ShaderResourceView* ShaderResourceView::GetSRV()
+{
+	return m_pSRV;
 }
 
 //정점에서의 텍스쳐사용시

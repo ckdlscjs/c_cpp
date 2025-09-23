@@ -214,9 +214,6 @@
     <ClInclude Include="BaseState.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
-    <ClInclude Include="BaseView.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
     <ClInclude Include="DepthStencilView.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>

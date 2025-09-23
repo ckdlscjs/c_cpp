@@ -74,17 +74,17 @@ inline static std::string _towm(std::wstring wstr)
 	return myconv.to_bytes(wstr);
 }
 
-inline size_t HashingFile(const std::wstring& path)
+inline size_t Hasing_wstring(const std::wstring& str)
 {
 	// FNV-1a (64비트) 구현 예시
 	size_t hash = 14695981039346656037ULL; // FNV_PRIME_64
-	for (wchar_t c : path) {
+	for (wchar_t c : str) {
 		hash ^= static_cast<size_t>(c);
 		hash *= 1099511628211ULL; // FNV_OFFSET_64
 	}
 	return hash;
 }
-inline size_t HashingFloat(const float& value)
+inline size_t Hasing_float(const float& value)
 {
 	// FNV-1a (64비트) 구현 예시
 	size_t hash = 14695981039346656037ULL; // FNV_PRIME_64

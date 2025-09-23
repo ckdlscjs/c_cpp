@@ -37,7 +37,7 @@ private:
 template<typename T, typename... Types>
 inline size_t CollisionSystem::AddCollider(const std::wstring& szName, Types&& ...args)
 {
-	size_t hash = HashingFile(szName);
+	size_t hash = Hasing_wstring(szName);
 	if (m_Colliders.find(hash) != m_Colliders.end()) return hash;
 	//객체생성후 컨테이너에 등록
 	T* newCollider = new T(std::forward<Types>(args)...);

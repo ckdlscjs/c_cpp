@@ -21,6 +21,8 @@
 #include "Light.h"
 #include "CollisionSystem.h"
 #include "Material.h"
+#include "RenderTargetView.h"
+#include "DepthStencilView.h"
 
 #include "TestBlockMacro.h"
 
@@ -95,7 +97,7 @@ void RenderSystem::PreRender()
 {
 	std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
 	//RTV초기화
-	m_pCSwapChain->ClearRenderTargetColor(m_pCDirect3D->GetDeviceContext(), 0, 0.3f, 0.4f, 1);
+	ClearRenderViews(0, 0.3f, 0.4f, 1);
 }
 
 void RenderSystem::Render(float deltatime)
@@ -393,15 +395,27 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	if (width == 0 || height == 0) return;
 	m_iWidth = width;
 	m_iHeight = height;
-
-	m_pCSwapChain->ResizeBuffers(1, width, height, DXGI_FORMAT_UNKNOWN, 0);
-	m_pCSwapChain->CreateRenderTargetView(m_pCDirect3D->GetDevice());
-	m_pCSwapChain->CreateDepthStencilView(m_pCDirect3D->GetDevice(), width, height);
-	m_pCDirect3D->SetViewportSize(width, height);
+	//refCount를 전부 해제시켜야한다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 스마트포인터에서 해제된다
+	if (m_pCRTV)
+	{
+		m_pCRTV->GetSRV()->Release();
+		m_pCRTV->GetRTV()->Release();
+	}
+	if (m_pCDSV)
+	{
+		m_pCDSV->GetSRV()->Release();
+		m_pCDSV->GetDSV()->Release();
+	}
+	m_pCSwapChain->GetSwapChain()->ResizeBuffers(1, m_iWidth, m_iHeight, DXGI_FORMAT_UNKNOWN, 0);
+	m_pCRTV = static_cast<RenderTargetView*>(m_pCVWs[CreateRenderTargetView(L"BackBufferRTV")]);
+	m_pCDSV = static_cast<DepthStencilView*>(m_pCVWs[CreateDepthStencilView(L"BackBufferDSV", m_iWidth, m_iHeight)]);
+	/*m_pCSwapChain->CreateRenderTargetView(m_pCDirect3D->GetDevice());
+	m_pCSwapChain->CreateDepthStencilView(m_pCDirect3D->GetDevice(), width, height);*/
+	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
 }
 size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
 {
-	size_t hash = HashingFile(szName);
+	size_t hash = Hasing_wstring(szName);
 	if (m_pCVBs.find(hash) != m_pCVBs.end()) return hash;
 	VertexBuffer* pVertexBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), vertices, size_vertex, size_vertices);
 	_ASEERTION_NULCHK(pVertexBuffer, "VB is nullptr");
@@ -411,7 +425,7 @@ size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertic
 
 size_t RenderSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob)
 {
-	size_t hash = HashingFile(szName);
+	size_t hash = Hasing_wstring(szName);
 	if (m_pCILs.find(hash) != m_pCILs.end()) return hash;
 	_ASEERTION_NULCHK(vsBlob, "Blob is nullptr");
 	InputLayout* pInputLayout = new InputLayout(m_pCDirect3D->GetDevice(), pInputElementDescs, size_layout, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize());
@@ -422,7 +436,7 @@ size_t RenderSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_E
 
 size_t RenderSystem::CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices)
 {
-	size_t hash = HashingFile(szName);
+	size_t hash = Hasing_wstring(szName);
 	if (m_pCIBs.find(hash) != m_pCIBs.end()) return hash;
 	IndexBuffer* pIndexBuffer = new IndexBuffer(m_pCDirect3D->GetDevice(), indices, size_indices);
 	_ASEERTION_NULCHK(pIndexBuffer, "IB is nullptr");
@@ -432,13 +446,76 @@ size_t RenderSystem::CreateIndexBuffer(const std::wstring& szName, void* indices
 
 size_t RenderSystem::CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource)
 {
-	size_t hash = HashingFile(szName);
+	size_t hash = Hasing_wstring(szName);
 	if (m_pCVWs.find(hash) != m_pCVWs.end()) return hash;
 	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
 	ShaderResourceView* pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), resource);
 	_ASEERTION_NULCHK(pSRV, "TX is nullptr");
 	m_pCVWs[hash] = pSRV;
 	return hash;
+}
+
+size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName)
+{
+	size_t hash = Hasing_wstring(szName);
+	RenderTargetView* pRTV;
+	if (m_pCVWs.find(hash) != m_pCVWs.end())
+	{
+		pRTV = static_cast<RenderTargetView*>(m_pCVWs[hash]);
+		pRTV->Resize(m_pCDirect3D->GetDevice(), m_pCSwapChain->GetSwapChain());
+	}
+	else
+	{
+		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), m_pCSwapChain->GetSwapChain());
+		m_pCVWs[hash] = pRTV;
+	}
+	return hash;
+}
+
+size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height)
+{
+	size_t hash = Hasing_wstring(szName);
+	RenderTargetView* pRTV;
+	if (m_pCVWs.find(hash) != m_pCVWs.end())
+	{
+		pRTV = static_cast<RenderTargetView*>(m_pCVWs[hash]);
+		pRTV->Resize(m_pCDirect3D->GetDevice(), width, height);
+	}
+	else
+	{
+		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), width, height);
+		m_pCVWs[hash] = pRTV;
+	}
+	return hash;
+}
+
+size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height)
+{
+	size_t hash = Hasing_wstring(szName);
+	DepthStencilView* pDSV;
+	if (m_pCVWs.find(hash) != m_pCVWs.end())
+	{
+		pDSV = static_cast<DepthStencilView*>(m_pCVWs[hash]);
+		pDSV->Resize(m_pCDirect3D->GetDevice(), width, height);
+	}
+	else
+	{
+		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), width, height);
+		m_pCVWs[hash] = pDSV;
+	}
+	return hash;
+}
+
+void RenderSystem::ClearRenderViews(float red, float green, float blue, float alpha)
+{
+	FLOAT clearColor[] = { red, green, blue, alpha };
+	m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTV->GetRTV(), clearColor);
+	m_pCDirect3D->GetDeviceContext()->ClearDepthStencilView(m_pCDSV->GetDSV(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	ID3D11RenderTargetView* RTVS[] =
+	{
+		m_pCRTV->GetRTV(),
+	};
+	m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(RTVS), RTVS, m_pCDSV->GetDSV());
 }
 
 size_t RenderSystem::CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data)
@@ -453,7 +530,7 @@ size_t RenderSystem::CreateConstantBuffer(const type_info& typeinfo, UINT size_b
 
 size_t RenderSystem::CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	size_t hash = HashingFile(shaderName);
+	size_t hash = Hasing_wstring(shaderName);
 	if (m_pCVSs.find(hash) != m_pCVSs.end()) return hash;
 
 	VertexShader* pVertexShader = new VertexShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
@@ -464,7 +541,7 @@ size_t RenderSystem::CreateVertexShader(std::wstring shaderName, std::string ent
 
 size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	size_t hash = HashingFile(shaderName);
+	size_t hash = Hasing_wstring(shaderName);
 	if (m_pCPSs.find(hash) != m_pCPSs.end()) return hash;
 
 	PixelShader* pPixelShader = new PixelShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
@@ -478,14 +555,14 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
-	return HashingFile(szFilePath);
+	return Hasing_wstring(szFilePath);
 }
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
 {
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
-	return HashingFile(szFilePath);
+	return Hasing_wstring(szFilePath);
 }
 
 //추론명시
@@ -503,7 +580,7 @@ size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders coll
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
 		pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
-	return HashingFile(szFilePath);
+	return Hasing_wstring(szFilePath);
 }
 template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
@@ -512,7 +589,7 @@ size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::w
 	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
 	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
 	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
-	return HashingFile(szFilePath);
+	return Hasing_wstring(szFilePath);
 }
 template<typename T>
 std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& VSs, const std::vector<std::wstring>& PSs)

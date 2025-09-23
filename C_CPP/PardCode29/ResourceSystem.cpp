@@ -108,7 +108,7 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 template<>
 Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
 {
-	size_t hash = HashingFile(szFilePath);
+	size_t hash = Hasing_wstring(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
 
 	std::string szFullPath = _towm(szFilePath);
@@ -220,7 +220,7 @@ void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Verte
 template<>
 Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath)
 {
-	size_t hash = HashingFile(szFilePath);
+	size_t hash = Hasing_wstring(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTNTB>*>(m_Resources[hash]);
 
 	std::string szFullPath = _towm(szFilePath);
