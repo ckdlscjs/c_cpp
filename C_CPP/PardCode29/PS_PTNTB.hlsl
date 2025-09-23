@@ -2,6 +2,8 @@
 
 Texture2D TextureDiffuse : register(t0);
 Texture2D TextureNormal : register(t1);
+Texture2D TextureSpecular : register(t2);
+
 sampler TextureSampler : register(s0); //세팅하지않아도 기본샘플러가 레지스터0에 세팅된다
 
 struct PS_INPUT

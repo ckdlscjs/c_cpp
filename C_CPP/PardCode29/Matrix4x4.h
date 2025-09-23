@@ -388,13 +388,30 @@ inline Matrix4x4 GetMat_Perspective(float aspectRatio, float fov, float dist_nea
 * 0.0f			0.0f		1.0f/(f-n)		0.0f
 * 0.0f			0.0f		-n/(f-n)		1.0f
 */
-inline Matrix4x4 GetMat_Ortho(float width, float height, float dist_near, float dist_far)
+inline Matrix4x4 GetMat_Orthographic(float width, float height, float dist_near, float dist_far)
 {
 	Matrix4x4 mat;
 	mat[0] = Vector4(2.0f / width, 0.0f, 0.0f, 0.0f);
 	mat[1] = Vector4(0.0f, 2.0f / height, 0.0f, 0.0f);
 	mat[2] = Vector4(0.0f, 0.0f, 1.0f / (dist_far - dist_near), 0.0f);
 	mat[3] = Vector4(0.0f, 0.0f, -dist_near / (dist_far - dist_near), 1.0f);
+	return mat;
+}
+
+/*
+* 스크린좌표행렬
+* w/2.0f			0.0f			0.0f				0.0f
+* 0.0f				-h/2.0f			0.0f				0.0f
+* 0.0f				0.0f			MaxDepth-MinDepth	0.0f
+* w/2.0f+Left		h/2.0f+Top		MinDepth			1.0f
+*/
+inline Matrix4x4 GetMat_ScreenSpace(float width, float height, float left, float top, float depth_min, float depth_max)
+{
+	Matrix4x4 mat;
+	mat[0] = Vector4(width / 2.0f,	0.0f,	0.0f,	0.0f);
+	mat[1] = Vector4(0.0f, -height / 2.0f,	0.0f,	0.0f);
+	mat[2] = Vector4(0.0f, 0.0f, depth_max - depth_min, 0.0f);
+	mat[3] = Vector4(width / 2.0f + left, height / 2.0f + top, depth_min, 1.0f);
 	return mat;
 }
 

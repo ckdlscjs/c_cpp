@@ -163,6 +163,7 @@
     <ClInclude Include="DepthStencilState.h" />
     <ClInclude Include="DepthStencilView.h" />
     <ClInclude Include="Frustum.h" />
+    <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="LightSystem.h" />
     <ClInclude Include="Light.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DepthStencilState.cpp" />
     <ClCompile Include="DepthStencilView.cpp" />
+    <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />
