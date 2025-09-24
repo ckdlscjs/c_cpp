@@ -405,7 +405,7 @@ inline Matrix4x4 GetMat_Orthographic(float width, float height, float dist_near,
 * 0.0f				0.0f			MaxDepth-MinDepth	0.0f
 * w/2.0f+Left		h/2.0f+Top		MinDepth			1.0f
 */
-inline Matrix4x4 GetMat_ScreenSpace(float width, float height, float left, float top, float depth_min, float depth_max)
+inline Matrix4x4 GetMat_ScreenSpace(float width, float height, float left = 0.0f, float top = 0.0f, float depth_min = 0.0f, float depth_max = 1.0f)
 {
 	Matrix4x4 mat;
 	mat[0] = Vector4(width / 2.0f,	0.0f,	0.0f,	0.0f);

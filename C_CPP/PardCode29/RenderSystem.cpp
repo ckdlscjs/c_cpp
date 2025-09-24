@@ -23,7 +23,6 @@
 #include "Material.h"
 #include "RenderTargetView.h"
 #include "DepthStencilView.h"
-
 #include "TestBlockMacro.h"
 
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
@@ -85,7 +84,7 @@ void RenderSystem::Frame(float deltatime)
 	Vector3& pos = static_cast<PointLight*>(_LightSystem.GetLight(1))->m_vPosition;
 	pos = pos * GetMat_RotYaw(deltatime * 50.0f);
 
-	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
+	//SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
 	
 	for (const auto& iter : objs)
 	{
@@ -108,9 +107,10 @@ void RenderSystem::Render(float deltatime)
 	Matrix4x4 matWorld = _CameraSystem.GetCamera(0)->GetWorldMatrix();
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
+	if (SkyObj)//SKYOBJ
 	{
-		//SKYOBJ
 		{
+			
 			m_pCDSStates->SetDS(m_pCDirect3D->GetDeviceContext(), E_DSStates::SKYBOX);
 			//DirectionalLight
 			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
@@ -239,48 +239,93 @@ void RenderSystem::Render(float deltatime)
 #endif 
 
 #ifdef _TESTBLOCK
-		for (int i = 0; i < objs.size(); i++)
 		{
-			const auto& obj = objs[i];
-			if (!obj->bRenderable) continue;
-			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-			CB_WVPITMatrix cc0;
-			/*objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
-			Matrix4x4 objMat = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
-			matWorld[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-			matWorld *= GetMat_Scale(objs[0]->m_vScale);
-			matWorld[3] = objMat[3];
-			cc0.matWorld = i == 0 ? matWorld : objMat;*/
-			cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
-			cc0.matView = matView;
-			cc0.matProj = matProj;
-			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-			m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-			m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
-
-			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
+			//objs
+			for (int i = 0; i < objs.size(); i++)
 			{
-				auto& iter = obj->m_Mesh_Material[i];
-				//지정핸들링필요
-				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
-				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+				const auto& obj = objs[i];
+				if (!obj->bRenderable) continue;
+				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+				CB_WVPITMatrix cc0;
+				/*objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
+				Matrix4x4 objMat = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+				matWorld[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+				matWorld *= GetMat_Scale(objs[0]->m_vScale);
+				matWorld[3] = objMat[3];
+				cc0.matWorld = i == 0 ? matWorld : objMat;*/
+				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+				cc0.matView = matView;
+				cc0.matProj = matProj;
+				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+				m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-				m_pCILs[pMaterial->GetIL()]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
-				m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
-				m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
-
-				const std::vector<size_t>* texs = pMaterial->GetTextures();
-				int cnt = 0;
-				for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+				for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
 				{
-					for (const auto& hashVW : texs[idxTex])
+					auto& iter = obj->m_Mesh_Material[i];
+					//지정핸들링필요
+					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+					m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+					m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+
+					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+					m_pCILs[pMaterial->GetIL()]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+					m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
+					m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
+
+					const std::vector<size_t>* texs = pMaterial->GetTextures();
+					int cnt = 0;
+					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 					{
-						static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						for (const auto& hashVW : texs[idxTex])
+						{
+							static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						}
 					}
+					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+			}
+		}
+		
+		Matrix4x4 matOrtho = _CameraSystem.GetCamera(0)->GetOrthoMatrix();
+		{
+			//ortho_objs
+			for (int i = 0; i < ortho_objs.size(); i++)
+			{
+				const auto& obj = ortho_objs[i];
+				//if (!obj->bRenderable) continue;
+				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+				CB_WVPITMatrix cc0;
+				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+				cc0.matView = GetMat_Identity();
+				cc0.matProj = matOrtho;
+				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+				m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
+
+				for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
+				{
+					auto& iter = obj->m_Mesh_Material[i];
+					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+					m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
+					m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
+
+					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+					m_pCILs[pMaterial->GetIL()]->SetInputLayout(m_pCDirect3D->GetDeviceContext());
+					m_pCVSs[pMaterial->GetVS()]->SetVertexShader(m_pCDirect3D->GetDeviceContext());
+					m_pCPSs[pMaterial->GetPS()]->SetPixelShader(m_pCDirect3D->GetDeviceContext());
+
+					const std::vector<size_t>* texs = pMaterial->GetTextures();
+					int cnt = 0;
+					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+					{
+						for (const auto& hashVW : texs[idxTex])
+						{
+							static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+						}
+					}
+					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+				}
 			}
 		}
 #endif 
@@ -348,6 +393,12 @@ void RenderSystem::Release()
 		iter = objs.erase(iter);
 	}
 
+	for (auto iter = ortho_objs.begin(); iter != ortho_objs.end();)
+	{
+		delete* iter;
+		iter = ortho_objs.erase(iter);
+	}
+
 	if (m_pCSamplers)
 	{
 		delete m_pCSamplers;
@@ -395,7 +446,7 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	if (width == 0 || height == 0) return;
 	m_iWidth = width;
 	m_iHeight = height;
-	//refCount를 전부 해제시켜야한다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 스마트포인터에서 해제된다
+	//refCount를 전부 해제시켜야한다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 Comptr객체에서 해제된다
 	if (m_pCRTV)
 	{
 		m_pCRTV->GetSRV()->Release();
@@ -557,6 +608,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return Hasing_wstring(szFilePath);
 }
+
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
 {
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
@@ -572,6 +624,22 @@ template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szF
 template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTN>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTNTB>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
+
+template<typename T>
+size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Colliders collider)
+{
+	std::vector<RenderCounts> countsVertices;
+	countsVertices.push_back({ (UINT)vertices.size(), 0 });
+	std::vector<RenderCounts> countsIndices;
+	countsIndices.push_back({ (UINT)indices.size(), 0 });
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szName, std::move(points), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
+	pMesh->SetVB(CreateVertexBuffer(szName + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szName + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
+		pMesh->SetCL(_CollisionSystem.CreateCollider(szName + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
+	return Hasing_wstring(szName);
+}
 template<typename T>
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {

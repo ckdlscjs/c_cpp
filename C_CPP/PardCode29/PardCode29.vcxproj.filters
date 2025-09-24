@@ -220,9 +220,7 @@
     <ClInclude Include="RenderTargetView.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
-    <ClInclude Include="GeometryGenerator.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
+    <ClInclude Include="GeometryGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -340,9 +338,6 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="DepthStencilView.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="GeometryGenerator.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>

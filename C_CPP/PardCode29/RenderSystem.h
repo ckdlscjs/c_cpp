@@ -46,6 +46,8 @@ public:
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag = DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE);
 	template<typename T>
+	size_t CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Colliders collider = E_Colliders::AABB);
+	template<typename T>
 	size_t CreateMesh(const std::wstring& szFilePath, E_Colliders collider = E_Colliders::AABB);
 	template<typename T>
 	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
@@ -90,8 +92,10 @@ public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;
 	std::vector<TempObj*> objs;
+	std::vector<TempObj*> ortho_objs;
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()
+
 
 

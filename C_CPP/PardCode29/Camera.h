@@ -16,7 +16,9 @@ struct CameraProperties
 	float m_fYaw;
 
 	float m_fFov;					//FieldOfView, 시야각(기준점이되는 Vertical)
-	float m_fAspectRatio;			//화면비, (화면너비 / 높이), fov와같이사용되어 투영행렬에 이용됨
+	float m_fScreenWidth;			//화면너비
+	float m_fScreenHeight;			//화면높이
+	//float m_fAspectRatio;			//화면비, (화면너비 / 높이), fov와같이사용되어 투영행렬에 이용됨
 	float m_fNearZ;					//근단면
 	float m_fFarZ;					//원단면
 
@@ -32,7 +34,9 @@ struct CameraProperties
 		m_fPitch(0.0f),
 		m_fYaw(0.0f),
 		m_fFov(60.0f),
-		m_fAspectRatio(800.0f / 600.0f),
+		m_fScreenWidth(800.0f),
+		m_fScreenHeight(600.0f),
+		//m_fAspectRatio(800.0f / 600.0f),
 		m_fNearZ(0.1f),
 		m_fFarZ(4000.0f),
 		m_fSpeedMove(500.0f),
@@ -51,6 +55,8 @@ protected:
 	Matrix4x4 m_MatWorld = GetMat_Identity();
 	Matrix4x4 m_MatView = GetMat_Identity();
 	Matrix4x4 m_MatProj = GetMat_Identity();
+	Matrix4x4 m_MatOrtho = GetMat_Identity();
+	Matrix4x4 m_MatScreenSpace = GetMat_Identity();
 	bool m_bDirtyFlag_View = true;
 	bool m_bDirtyFlag_Proj = true;
 public:
@@ -58,6 +64,8 @@ public:
 	const Matrix4x4& GetWorldMatrix();
 	const Matrix4x4& GetViewMatrix();
 	const Matrix4x4& GetProjMatrix();
+	const Matrix4x4& GetOrthoMatrix();
+	const Matrix4x4& GetScreenSpaceMatrix();
 
 	//카메라속성
 	const Vector3& GetPosition();
@@ -70,7 +78,9 @@ public:
 
 	//투영속성
 	void SetFOV(float Fov);
-	void SetAsepectRatio(float aspectRatio);
+	void SetScreenWidth(float width);
+	void SetScreenHeight(float height);
+	//void SetAsepectRatio(float aspectRatio);
 	void SetClipPlanes(float nearZ, float farZ);
 	float GetNearZ();
 	float GetFarZ();
@@ -112,10 +122,14 @@ inline const Matrix4x4& BaseCamera::GetProjMatrix()
 {
 	if (m_bDirtyFlag_Proj)
 	{
-		m_MatProj = GetMat_Perspective(m_Properties.m_fAspectRatio, m_Properties.m_fFov, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
+		m_MatProj = GetMat_Perspective(m_Properties.m_fScreenWidth / m_Properties.m_fScreenHeight, m_Properties.m_fFov, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
 		m_bDirtyFlag_Proj = false;
 	}
 	return m_MatProj;
+}
+inline const Matrix4x4& BaseCamera::GetOrthoMatrix()
+{
+	return GetMat_Orthographic(m_Properties.m_fScreenWidth, m_Properties.m_fScreenHeight, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
 }
 inline const Vector3& BaseCamera::GetPosition()
 {
@@ -193,11 +207,21 @@ inline void BaseCamera::SetFOV(float Fov)
 	m_Properties.m_fFov = Fov;
 	m_bDirtyFlag_Proj = true;
 }
-inline void BaseCamera::SetAsepectRatio(float aspectRatio)
+inline void BaseCamera::SetScreenWidth(float width)
 {
-	m_Properties.m_fAspectRatio = aspectRatio;
+	m_Properties.m_fScreenWidth = width;
 	m_bDirtyFlag_Proj = true;
 }
+inline void BaseCamera::SetScreenHeight(float height)
+{
+	m_Properties.m_fScreenHeight = height;
+	m_bDirtyFlag_Proj = true;
+}
+//inline void BaseCamera::SetAsepectRatio(float aspectRatio)
+//{
+//	m_Properties.m_fAspectRatio = aspectRatio;
+//	m_bDirtyFlag_Proj = true;
+//}
 inline void BaseCamera::SetClipPlanes(float nearZ, float farZ)
 {
 	m_Properties.m_fNearZ = nearZ;

@@ -155,68 +155,6 @@ Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const
 	return newResource;
 }
 
-//TBN구성에 사용할 tangent(접벡터), binormal(종벡터)를 계산한다
-/*
-		MatE = deltaUV * MatTB
-		MatTB = deltaUV^-1 * MatE
-		* 역행렬
-		* AdjMat(A*) = C(A)^T , 여인수행렬의 전치를 의미, 수반행렬
-		* InvMat = AdjMat * 1.0f/detA
-		deltaUV^-1 = 1/(ad-bc) * AdjMat
-
-		deltaUV = du0 dv0 (a, b)
-				  du1 dv1 (c, d)
-
-		adjMat = d -b
-				-c  a
-
-		invMat = denominator * adjMat
-*/
-void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB>& vertices)
-{
-	//메쉬(세 정점)을 기준으로 tangent, binormal의 누적을 계산한다
-	for (UINT idx = 0; idx < indicies.size(); idx += 3)
-	{
-		UINT i0 = indicies[idx];
-		UINT i1 = indicies[idx + 1];
-		UINT i2 = indicies[idx + 2];
-		Vector3 e0 = vertices[i1].pos0 - vertices[i0].pos0;	
-		Vector3 e1 = vertices[i2].pos0 - vertices[i0].pos0;
-		Vector2 uv_e0 = vertices[i1].tex0 - vertices[i0].tex0;	//a, b
-		Vector2 uv_e1 = vertices[i2].tex0 - vertices[i0].tex0;	//c, d
-		float det = uv_e0.GetX() * uv_e1.GetY() - uv_e0.GetY() * uv_e1.GetX();	//ad - bc
-		if (std::fabs(det) <= _EPSILON) continue;
-		det = 1.0f / det;
-		float tx, ty, tz;
-		tx = (uv_e1.GetY() * e0.GetX() - uv_e0.GetY() * e1.GetX()) * det;
-		ty = (uv_e1.GetY() * e0.GetY() - uv_e0.GetY() * e1.GetY()) * det;
-		tz = (uv_e1.GetY() * e0.GetZ() - uv_e0.GetY() * e1.GetZ()) * det;
-
-		Vector3 tangent(tx, ty, tz);
-		vertices[i0].tangent0 += tangent;
-		vertices[i1].tangent0 += tangent;
-		vertices[i2].tangent0 += tangent;
-
-		//float bx, by, bz;
-		//bx = (-uv_e1.GetX() * e0.GetX() + uv_e0.GetX() * e1.GetX()) * det;
-		//by = (-uv_e1.GetX() * e0.GetY() + uv_e0.GetX() * e1.GetY()) * det;
-		//bz = (-uv_e1.GetX() * e0.GetZ() + uv_e0.GetX() * e1.GetZ()) * det;
-		//Vector3 binormal(bx, by, bz);
-		////binormal = binormal.Normalize();
-		//vertices[i0].binormal0 += binormal;
-		//vertices[i1].binormal0 += binormal;
-		//vertices[i2].binormal0 += binormal;
-	}
-
-	//그람슈미트직교화를이용
-	for (auto& vertex : vertices)
-	{
-		vertex.normal0 = vertex.normal0.Normalize();
-		vertex.tangent0 = (vertex.tangent0 - (vertex.normal0 * vertex.normal0.DotProduct(vertex.tangent0))).Normalize();
-		vertex.binormal0 = vertex.normal0.CrossProduct(vertex.tangent0);
-	}
-}
-
 template<>
 Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath)
 {

@@ -12,6 +12,7 @@
 #include "CollisionSystem.h"
 #include "TestBlockMacro.h"
 #include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
+#include "GeometryGenerator.h"
 
 AppWindow::AppWindow()
 {
@@ -61,7 +62,8 @@ void AppWindow::OnCreate()
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 200.0f, -500.0f });
-	_CameraSystem.GetCamera(0)->SetAsepectRatio((float)m_iWidth / (float)m_iHeight);
+	_CameraSystem.GetCamera(0)->SetScreenWidth(m_iWidth);
+	_CameraSystem.GetCamera(0)->SetScreenHeight(m_iHeight);
 	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
 	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 50000.0f);
 	_CameraSystem.GetCamera(0)->SetTarget(Vector3(0, 0, 0));
@@ -281,6 +283,7 @@ void AppWindow::OnCreate()
 			_RenderSystem.SkyObj = obj;
 		}
 
+		//normalmap
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/sphere.obj", E_Colliders::SPHERE);
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_NormalMapping", L"VS_PTNTB.hlsl", L"PS_PTNTB.hlsl");
@@ -293,6 +296,42 @@ void AppWindow::OnCreate()
 			TempObj* obj = _RenderSystem.objs.back();
 			obj->m_vScale = Vector3(300, 300, 300);
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material});
+		}
+		
+		{
+			std::vector<std::vector<Vector3>> points;
+			std::vector<Vertex_PTN> vertices;
+			std::vector<UINT> indices;
+			GeometryGenerate_Plane(points, vertices, indices);
+			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane", std::move(points), std::move(vertices), std::move(indices), E_Colliders::AABB);
+			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_UI", L"VS_PTN.hlsl", L"PS_.hlsl");
+			std::vector<TX_HASH> tx_hash;
+			tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter5.webp", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hash);
+
+			_RenderSystem.ortho_objs.push_back(new TempObj());
+			TempObj* obj = _RenderSystem.ortho_objs.back();
+			obj->m_vScale = Vector3(100, 100, 1.0f);
+			obj->m_vPosition = Vector3(0.0f, 0.0f, 1.0f);
+			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
+		}
+
+		{
+			std::vector<std::vector<Vector3>> points;
+			std::vector<Vertex_PTN> vertices;
+			std::vector<UINT> indices;
+			GeometryGenerate_Plane(points, vertices, indices);
+			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane", std::move(points), std::move(vertices), std::move(indices), E_Colliders::AABB);
+			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_UI2", L"VS_PTN.hlsl", L"PS_.hlsl");
+			std::vector<TX_HASH> tx_hash;
+			tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hash);
+
+			_RenderSystem.ortho_objs.push_back(new TempObj());
+			TempObj* obj = _RenderSystem.ortho_objs.back();
+			obj->m_vScale = Vector3(200, 200, 1.0f);
+			obj->m_vPosition = Vector3(-150.0f, 50.0f, 0.5f);
+			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
 		}
 
 		////SpaceShip
