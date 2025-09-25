@@ -295,28 +295,61 @@ void AppWindow::OnCreate()
 			_RenderSystem.objs.push_back(new TempObj());
 			TempObj* obj = _RenderSystem.objs.back();
 			obj->m_vScale = Vector3(300, 300, 300);
-			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material});
+			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
 		}
-		
+		//rand obj
+		{
+			for (int i = 0; i < 50; i++)
+			{
+				_RenderSystem.objs.push_back(new TempObj());
+				TempObj* obj = _RenderSystem.objs.back();
+				obj->m_vScale = Vector3(300.0f, 300.0f, 300.0f);
+				obj->m_vRotate = Vector3(0.0f, 0.0f, 0.0f);
+				obj->m_vPosition = Vector3(dis(gen) * 30.0f, dis(gen) * 30.0f, dis(gen) * 30.0f);
+
+				size_t hash_mesh_rand = _RenderSystem.CreateMesh<Vertex_PTN>(i % 3 ? L"../Assets/Meshes/sphere.obj" : L"../Assets/Meshes/cube.obj", i % 3 ? E_Colliders::SPHERE : E_Colliders::AABB);
+				size_t hash_meterial_rand = _RenderSystem.CreateMaterial<Vertex_PTN>(i % 3 ? L"Mat_Rand0" : L"Mat_Rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
+				std::vector<TX_HASH> txs_objRand;
+				txs_objRand.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(i % 2 ? L"../Assets/Textures/butter.dds" : L"../Assets/Textures/butter8.png", WIC_FLAGS_NONE) });
+				_RenderSystem.Material_SetTextures(hash_meterial_rand, txs_objRand);
+				obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
+			}
+		}
+
 		{
 			std::vector<std::vector<Vector3>> points;
 			std::vector<Vertex_PTN> vertices;
 			std::vector<UINT> indices;
 			GeometryGenerate_Plane(points, vertices, indices);
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane", std::move(points), std::move(vertices), std::move(indices), E_Colliders::AABB);
-			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_UI", L"VS_PTN.hlsl", L"PS_.hlsl");
-			std::vector<TX_HASH> tx_hash;
-			tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter5.webp", WIC_FLAGS_IGNORE_SRGB) });
-			_RenderSystem.Material_SetTextures(hash_material, tx_hash);
+			{
+				size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_srv", L"VS_PTN.hlsl", L"PS_.hlsl");
+				std::vector<TX_HASH> tx_hash;
+				tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter5.webp", WIC_FLAGS_IGNORE_SRGB) });
+				_RenderSystem.Material_SetTextures(hash_material, tx_hash);
 
-			_RenderSystem.ortho_objs.push_back(new TempObj());
-			TempObj* obj = _RenderSystem.ortho_objs.back();
-			obj->m_vScale = Vector3(100, 100, 1.0f);
-			obj->m_vPosition = Vector3(0.0f, 0.0f, 1.0f);
-			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
+				_RenderSystem.ortho_objs.push_back(new TempObj());
+				TempObj* obj = _RenderSystem.ortho_objs.back();
+				obj->m_vScale = Vector3(m_iWidth, m_iHeight, 1.0f);
+				obj->m_vPosition = Vector3(0.0f, 0.0f, 1.0f);
+				obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
+			}
+
+			{
+				size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_depth", L"VS_PTN.hlsl", L"PS_DepthDebug.hlsl");
+				std::vector<TX_HASH> tx_hash;
+				tx_hash.push_back({ E_Textures::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter5.webp", WIC_FLAGS_IGNORE_SRGB) });
+				_RenderSystem.Material_SetTextures(hash_material, tx_hash);
+
+				_RenderSystem.ortho_objs.push_back(new TempObj());
+				TempObj* obj = _RenderSystem.ortho_objs.back();
+				obj->m_vScale = Vector3(300, 300, 1.0f);
+				obj->m_vPosition = Vector3(-150.0f, 0.0f, 1.0f);
+				obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
+			}
 		}
-
-		{
+		
+		/*{
 			std::vector<std::vector<Vector3>> points;
 			std::vector<Vertex_PTN> vertices;
 			std::vector<UINT> indices;
@@ -332,7 +365,7 @@ void AppWindow::OnCreate()
 			obj->m_vScale = Vector3(200, 200, 1.0f);
 			obj->m_vPosition = Vector3(-150.0f, 50.0f, 0.5f);
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
-		}
+		}*/
 
 		////SpaceShip
 		//{

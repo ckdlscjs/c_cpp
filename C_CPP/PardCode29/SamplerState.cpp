@@ -9,35 +9,37 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	ID3D11SamplerState* pSamplers;
 	ZeroMemory(&sampler_desc, sizeof(D3D11_SAMPLER_DESC));
 
-	//Wrap_Linear
+	//Linear_Wrap
 	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Wrap_Linear");
+	_ASEERTION_NULCHK(pSamplers, "Linear_Wrap");
 	m_pStates.push_back(pSamplers);
 
-	//Wrap_Anisotrpic
+	//Anisotrpic_Wrap
 	sampler_desc.Filter = D3D11_FILTER_ANISOTROPIC;
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
 	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Wrap_Anisotropic");
+	_ASEERTION_NULCHK(pSamplers, "Anisotropic_Wrap");
 	m_pStates.push_back(pSamplers);
 
-	//필요시 추가
-	/*
-	// Point_Clamp: 픽셀 아트, 스프라이트, UI 등에 사용
-	D3D11_SAMPLER_DESC pointClampDesc = DefaultSamplerDesc();
-	pointClampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	pointClampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	pointClampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	pointClampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	pDevice->CreateSamplerState(&pointClampDesc, &m_pSamplers[static_cast<size_t>(Samplers::POINT_CLAMP)]);
-	assert(m_pSamplers[static_cast<size_t>(Samplers::POINT_CLAMP)]);
 
+	//Point_Clamp, 픽셀 아트, 스프라이트, UI 등에 사용
+	sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT; // 깊이 버퍼 샘플링에는 Point 필터가 적합합니다.
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
+	_ASEERTION_NULCHK(pSamplers, "Point_Clamp");
+	m_pStates.push_back(pSamplers);
+
+
+	/*
+	//필요시 추가
 	// Linear_Clamp: 그림자 맵, 라이트 맵, 데칼 등에 사용
 	D3D11_SAMPLER_DESC linearClampDesc = DefaultSamplerDesc();
 	linearClampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;

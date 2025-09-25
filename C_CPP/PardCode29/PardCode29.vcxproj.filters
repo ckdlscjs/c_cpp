@@ -372,6 +372,9 @@
     <FxCompile Include="PS_PTNTB.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="PS_DepthDebug.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Include\ImGui\LICENSE.txt">

@@ -79,6 +79,7 @@ private:
 	SamplerState*										m_pCSamplers = nullptr;
 	RasterizerState*									m_pCRSStaets = nullptr;
 	DepthStencilState*									m_pCDSStates = nullptr;
+	RenderTargetView*									m_pCBackBufferRTV = nullptr;
 	RenderTargetView*									m_pCRTV = nullptr;
 	DepthStencilView*									m_pCDSV = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
@@ -91,6 +92,7 @@ private:
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;
+	TempObj* BackBufferObj;
 	std::vector<TempObj*> objs;
 	std::vector<TempObj*> ortho_objs;
 };

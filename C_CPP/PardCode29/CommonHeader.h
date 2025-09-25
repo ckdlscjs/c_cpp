@@ -19,11 +19,10 @@ enum class E_InputEventType
 
 enum class E_Samplers
 {
-	WRAP_LINEAR,
-	WRAP_ANISOTROPIC,
-
+	LINEAR_WRAP,
+	ANISOTROPIC_WRAP,
+	POINT_CLAMP,
 	// 새롭게 추가된 샘플러 상태들
-	//POINT_CLAMP,
 	//LINEAR_CLAMP,
 	//ANISOTROPIC_CLAMP,
 };

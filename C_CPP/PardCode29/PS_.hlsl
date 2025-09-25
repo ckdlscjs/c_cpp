@@ -9,7 +9,7 @@ struct PS_INPUT
     float4 pos1 : WORLDP0;
 };
 
-float4 psmain(PS_INPUT input) : SV_Target
+float4 psmain(PS_INPUT input) : SV_TARGET
 {
     float4 M = Texture.Sample(TextureSampler, input.tex0.xy); //텍스쳐값
     return M;

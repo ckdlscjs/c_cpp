@@ -84,7 +84,7 @@ void RenderSystem::Frame(float deltatime)
 	Vector3& pos = static_cast<PointLight*>(_LightSystem.GetLight(1))->m_vPosition;
 	pos = pos * GetMat_RotYaw(deltatime * 50.0f);
 
-	//SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
+	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
 	
 	for (const auto& iter : objs)
 	{
@@ -143,7 +143,7 @@ void RenderSystem::Render(float deltatime)
 			m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 			m_pCCBs[g_hash_cbcampos]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
-			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::WRAP_LINEAR);
+			m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::LINEAR_WRAP);
 			m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_RSStates::SOLID_CULLFRONT_CW);
 		}
 
@@ -197,7 +197,7 @@ void RenderSystem::Render(float deltatime)
 		m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 		m_pCCBs[g_hash_cbcampos]->SetPS(m_pCDirect3D->GetDeviceContext(), 5);
 
-		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::WRAP_LINEAR);
+		m_pCSamplers->SetPS(m_pCDirect3D->GetDeviceContext(), E_Samplers::LINEAR_WRAP);
 		m_pCRSStaets->SetRS(m_pCDirect3D->GetDeviceContext(), E_RSStates::SOLID_CULLBACK_CW);
 #ifndef _TESTBLOCK
 		for (const auto& obj : objs)
@@ -212,9 +212,9 @@ void RenderSystem::Render(float deltatime)
 			m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
 			m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-			for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
+			for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 			{
-				auto& iter = obj->m_Mesh_Material[i];
+				auto& iter = obj->m_Mesh_Material[j];
 				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
@@ -233,7 +233,7 @@ void RenderSystem::Render(float deltatime)
 						static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashTx)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 					}
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 		}
 #endif 
@@ -260,9 +260,9 @@ void RenderSystem::Render(float deltatime)
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
 				m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-				for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
+				for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 				{
-					auto& iter = obj->m_Mesh_Material[i];
+					auto& iter = obj->m_Mesh_Material[j];
 					//지정핸들링필요
 					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 					m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
@@ -282,11 +282,21 @@ void RenderSystem::Render(float deltatime)
 							static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 						}
 					}
-					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
 		
+		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
+		//ID3D11ShaderResourceView* nullSRV = nullptr;
+		//m_pCDirect3D->GetDeviceContext()->PSSetShaderResources(0, 1, &nullSRV);
+		ID3D11RenderTargetView* RTVS[]
+		{
+			m_pCBackBufferRTV->GetRTV(),
+		};
+		FLOAT clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f };
+		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(1, RTVS, NULL);
+		m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCBackBufferRTV->GetRTV(), clearColor);
 		Matrix4x4 matOrtho = _CameraSystem.GetCamera(0)->GetOrthoMatrix();
 		{
 			//ortho_objs
@@ -296,16 +306,16 @@ void RenderSystem::Render(float deltatime)
 				//if (!obj->bRenderable) continue;
 				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 				CB_WVPITMatrix cc0;
-				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
 				cc0.matView = GetMat_Identity();
 				cc0.matProj = matOrtho;
 				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
 				m_pCCBs[g_hash_cbwvpitmat]->SetVS(m_pCDirect3D->GetDeviceContext(), 3);
 
-				for (UINT i = 0; i < obj->m_Mesh_Material.size(); i++)
+				for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 				{
-					auto& iter = obj->m_Mesh_Material[i];
+					auto& iter = obj->m_Mesh_Material[j];
 					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 					m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 					m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
@@ -321,10 +331,14 @@ void RenderSystem::Render(float deltatime)
 					{
 						for (const auto& hashVW : texs[idxTex])
 						{
-							static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+							if(i == 0)
+								m_pCRTV->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+							else
+								m_pCDSV->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+							//static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 						}
 					}
-					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
@@ -447,6 +461,10 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	m_iWidth = width;
 	m_iHeight = height;
 	//refCount를 전부 해제시켜야한다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 Comptr객체에서 해제된다
+	if (m_pCBackBufferRTV)
+	{
+		m_pCBackBufferRTV->GetRTV()->Release();
+	}
 	if (m_pCRTV)
 	{
 		m_pCRTV->GetSRV()->Release();
@@ -458,10 +476,9 @@ void RenderSystem::OnResize(UINT width, UINT height)
 		m_pCDSV->GetDSV()->Release();
 	}
 	m_pCSwapChain->GetSwapChain()->ResizeBuffers(1, m_iWidth, m_iHeight, DXGI_FORMAT_UNKNOWN, 0);
-	m_pCRTV = static_cast<RenderTargetView*>(m_pCVWs[CreateRenderTargetView(L"BackBufferRTV")]);
-	m_pCDSV = static_cast<DepthStencilView*>(m_pCVWs[CreateDepthStencilView(L"BackBufferDSV", m_iWidth, m_iHeight)]);
-	/*m_pCSwapChain->CreateRenderTargetView(m_pCDirect3D->GetDevice());
-	m_pCSwapChain->CreateDepthStencilView(m_pCDirect3D->GetDevice(), width, height);*/
+	m_pCBackBufferRTV = static_cast<RenderTargetView*>(m_pCVWs[CreateRenderTargetView(L"BackBufferRTV")]);
+	m_pCRTV = static_cast<RenderTargetView*>(m_pCVWs[CreateRenderTargetView(L"RTV0", m_iWidth, m_iHeight)]);
+	m_pCDSV = static_cast<DepthStencilView*>(m_pCVWs[CreateDepthStencilView(L"DSV0", m_iWidth, m_iHeight)]);
 	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
 }
 size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
@@ -687,7 +704,7 @@ ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entry
 	ID3DBlob* pBlob;
 	ID3DBlob* errBlob;
 	HRESULT hResult;
-	DWORD dwShaderFlags = D3DCOMPILE_DEBUG;
+	DWORD dwShaderFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 	//compile Shader
 	//D3D_COMPILE_STANDARD_FILE_INCLUDE, include를 위해 추가
 	hResult = D3DCompileFromFile(shaderName.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, entryName.c_str(), target.c_str(), dwShaderFlags, NULL, &pBlob, &errBlob);

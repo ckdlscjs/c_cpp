@@ -28,7 +28,7 @@ float4 psmain(PS_INPUT input) : SV_Target
     M_Normal = (2.0f * M_Normal) - 1.0f; //(0 ~ 1) -> (-1 ~ 1) 정규화
     float4 P = input.pos1; //변환된 월드의정점
     clip(M_Diffuse.a - 0.5f);
-    //float nx = M_Normal.x * input.tangent0.x + M_Normal.y * input.binormal0.x + M_Normal.z * input.normal0.x;
+    //float nx = M_Normal.x * input.tangent0.x + M_Normal.y * input.binormal0.x + M_Normal.z * input.normal0.x;                    
     //float ny = M_Normal.x * input.tangent0.y + M_Normal.y * input.binormal0.y + M_Normal.z * input.normal0.y;
     //float nz = M_Normal.x * input.tangent0.z + M_Normal.y * input.binormal0.z + M_Normal.z * input.normal0.z;
     float3 convert_normal = (M_Normal.x * input.tangent0) + (M_Normal.y * input.binormal0) + (M_Normal.z * input.normal0);

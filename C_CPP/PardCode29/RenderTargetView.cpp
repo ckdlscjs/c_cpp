@@ -30,6 +30,8 @@ void RenderTargetView::Resize(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
 	hResult = pDevice->CreateRenderTargetView(pBuffer, NULL, &m_pRTV);
 	_ASEERTION_CREATE(hResult, "RTV");
 
+	//백버퍼는 SRV를 생성하지않는다
+	/*
 	//RTV와 같은 백버퍼를 기반으로 하는 SRV를 생성
 	D3D11_RENDER_TARGET_VIEW_DESC desc_rtv;
 	m_pRTV->GetDesc(&desc_rtv);
@@ -42,7 +44,7 @@ void RenderTargetView::Resize(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
 	desc_srv.Texture2D.MipLevels = 1;
 	hResult = pDevice->CreateShaderResourceView(pBuffer, &desc_srv, &m_pSRV);
 	_ASEERTION_CREATE(hResult, "SRV");
-
+	*/
 	pBuffer->Release();
 }
 

@@ -222,6 +222,9 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectSystem.cpp" />
+    <FxCompile Include="PS_DepthDebug.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="PS_PTNTB.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
