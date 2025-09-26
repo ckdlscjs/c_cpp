@@ -264,7 +264,7 @@ void RenderSystem::Render(float deltatime)
 				{
 					auto& iter = obj->m_Mesh_Material[j];
 					//지정핸들링필요
-					Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+					Mesh<Vertex_PTNTB>* pMesh = (Mesh<Vertex_PTNTB>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
 					m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 					m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -624,7 +624,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
-	return Hasing_wstring(szFilePath);
+	return pTexture->GetHash();
 }
 
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
@@ -632,7 +632,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_
 	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetVW(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
-	return Hasing_wstring(szFilePath);
+	return pTexture->GetHash();
 }
 
 template<typename T>
@@ -643,21 +643,29 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vect
 	std::vector<RenderCounts> countsIndices;
 	countsIndices.push_back({ (UINT)indices.size(), 0 });
 	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szName, std::move(points), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-	pMesh->SetVB(CreateVertexBuffer(szName + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szName + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
-		pMesh->SetCL(_CollisionSystem.CreateCollider(szName + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
-	return Hasing_wstring(szName);
+	std::wstring szTypename = _tomw(typeid(T).name());
+	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	if (pMesh->GetCL().empty())//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
+	{
+		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
+			pMesh->SetCL(_CollisionSystem.CreateCollider(szName + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
+	}
+	return pMesh->GetHash();
 }
 template<typename T>
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
 {
 	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szFilePath);
-	pMesh->SetVB(CreateVertexBuffer(szFilePath + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szFilePath + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
-		pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
-	return Hasing_wstring(szFilePath);
+	std::wstring szTypename = _tomw(typeid(T).name());
+	pMesh->SetVB(CreateVertexBuffer(szFilePath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szFilePath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	if (pMesh->GetCL().empty())//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
+	{
+		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
+			pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
+	}
+	return pMesh->GetHash();
 }
 template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
@@ -666,7 +674,7 @@ size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::w
 	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
 	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
 	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
-	return Hasing_wstring(szFilePath);
+	return pMaterial->GetHash();
 }
 template<typename T>
 std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& VSs, const std::vector<std::wstring>& PSs)

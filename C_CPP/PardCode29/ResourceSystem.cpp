@@ -153,11 +153,12 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 	}
 	return newResource;
 }
-
+std::wstring szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
+std::wstring szMesh_PTNTB = _tomw(typeid(Mesh<Vertex_PTNTB>).name());
 template<>
 Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
 {
-	size_t hash = Hasing_wstring(szFilePath);
+	size_t hash = Hasing_wstring(szFilePath + szMesh_PTN);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
 	Mesh<Vertex_PTN>* newResource = CreateMeshFromFile<Vertex_PTN>(hash, szFilePath);
 	m_Resources[hash] = newResource;
@@ -167,7 +168,7 @@ Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const
 template<>
 Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath)
 {
-	size_t hash = Hasing_wstring(szFilePath);
+	size_t hash = Hasing_wstring(szFilePath + szMesh_PTNTB);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTNTB>*>(m_Resources[hash]);
 	Mesh<Vertex_PTNTB>* newResource = CreateMeshFromFile<Vertex_PTNTB>(hash, szFilePath);
 	m_Resources[hash] = newResource;
