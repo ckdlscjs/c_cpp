@@ -18,13 +18,13 @@ protected:
 template<typename T>
 inline BaseState<T>::BaseState()
 {
-	std::cout << "Initialize : " << "BaseResource <" << typeid(T).name() << "> Class" << '\n';
+	std::cout << "Initialize : " << "BaseState <" << typeid(T).name() << "> Class" << '\n';
 }
 
 template<typename T>
 inline BaseState<T>::~BaseState()
 {
-	std::cout << "Release : " << "BaseResource <" << typeid(T).name() << "> Class" << '\n';
+	std::cout << "Release : " << "BaseState <" << typeid(T).name() << "> Class" << '\n';
 	for (auto iter = m_pStates.begin(); iter != m_pStates.end();)
 	{
 		(*iter)->Release();

@@ -104,28 +104,26 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 		}
 	}
 }
-
-template<>
-Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
+template<typename T> 
+Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 {
-	size_t hash = Hasing_wstring(szFilePath);
-	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
-
 	std::string szFullPath = _towm(szFilePath);
 	std::string szMtlBasePath = szFullPath.substr(0, szFullPath.find_last_of('/'));
 	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
 
-	Mesh<Vertex_PTN>* newResource = nullptr;
-	std::vector<std::vector<Vertex_PTN>> verticesByMaterial;
+	Mesh<T>* newResource = nullptr;
+	std::vector<std::vector<T>> verticesByMaterial;
 	std::vector<std::vector<UINT>> indicesByMaterial;
 	std::vector<std::vector<Vector3>> pointsByMaterial;
 	if (extension == ".obj")
 	{
-		ParseObj<Vertex_PTN, Vertex_PTN_Hash>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-		std::vector<Vertex_PTN> vertices;
+		using HASH_TYPE = std::conditional_t<std::is_same_v<T, Vertex_PTN>, Vertex_PTN_Hash, Vertex_PTNTB_Hash>;
+		ParseObj<T, HASH_TYPE>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
+		std::vector<T> vertices;
 		std::vector<UINT> indices;
 		std::vector<RenderCounts> countsVertices;
 		std::vector<RenderCounts> countsIndices;
+
 		UINT psum = 0, idx = 0;
 		for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
 		{
@@ -140,18 +138,29 @@ Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const
 			countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
 			idx += (UINT)indicesByMaterial[iidx].size();
 			for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
-			psum += verticesByMaterial[iidx].size();
+			psum += (UINT)verticesByMaterial[iidx].size();
 		}
+		if constexpr(std::is_same_v<T, Vertex_PTNTB>)
+			ComputeTangentBinormal(indices, vertices);
 
-		newResource = new Mesh<Vertex_PTN>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-		_ASEERTION_NULCHK(newResource, typeid(Mesh<Vertex_PTN>).name());
-		m_Resources[hash] = newResource;
+		newResource = new Mesh<T>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
+		_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
 		return newResource;
 	}
 	else if (extension == ".fbx")
 	{
-
+		return newResource;
 	}
+	return newResource;
+}
+
+template<>
+Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
+{
+	size_t hash = Hasing_wstring(szFilePath);
+	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
+	Mesh<Vertex_PTN>* newResource = CreateMeshFromFile<Vertex_PTN>(hash, szFilePath);
+	m_Resources[hash] = newResource;
 	return newResource;
 }
 
@@ -160,51 +169,8 @@ Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(c
 {
 	size_t hash = Hasing_wstring(szFilePath);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTNTB>*>(m_Resources[hash]);
-
-	std::string szFullPath = _towm(szFilePath);
-	std::string szMtlBasePath = szFullPath.substr(0, szFullPath.find_last_of('/'));
-	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
-
-	Mesh<Vertex_PTNTB>* newResource = nullptr;
-	std::vector<std::vector<Vertex_PTNTB>> verticesByMaterial;
-	std::vector<std::vector<UINT>> indicesByMaterial;
-	std::vector<std::vector<Vector3>> pointsByMaterial;
-	if (extension == ".obj")
-	{
-		ParseObj<Vertex_PTNTB, Vertex_PTNTB_Hash>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-		std::vector<Vertex_PTNTB> vertices;
-		std::vector<UINT> indices;
-		std::vector<RenderCounts> countsVertices;
-		std::vector<RenderCounts> countsIndices;
-		
-		UINT psum = 0, idx = 0;
-		for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
-		{
-			countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
-			idx = (UINT)verticesByMaterial[vidx].size();
-			vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
-		}
-
-		idx = 0;
-		for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
-		{
-			countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
-			idx += (UINT)indicesByMaterial[iidx].size();
-			for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
-			psum += verticesByMaterial[iidx].size();
-		}
-
-		ComputeTangentBinormal(indices, vertices);
-
-		newResource = new Mesh<Vertex_PTNTB>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-		_ASEERTION_NULCHK(newResource, typeid(Mesh<Vertex_PTNTB>).name());
-		m_Resources[hash] = newResource;
-		return newResource;
-	}
-	else if (extension == ".fbx")
-	{
-
-	}
+	Mesh<Vertex_PTNTB>* newResource = CreateMeshFromFile<Vertex_PTNTB>(hash, szFilePath);
+	m_Resources[hash] = newResource;
 	return newResource;
 }
 

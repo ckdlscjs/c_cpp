@@ -61,14 +61,14 @@ inline const T& Clamp(const T& val, const T& low, const T& high)
 	else return val;
 }
 
-inline static std::wstring _tomw(std::string str)
+inline std::wstring _tomw(std::string str)
 {
 	std::wstring content;
 	content.assign(str.begin(), str.end());
 	return content;
 }
 
-inline static std::string _towm(std::wstring wstr)
+inline std::string _towm(std::wstring wstr)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
 	return myconv.to_bytes(wstr);

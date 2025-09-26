@@ -1,8 +1,16 @@
 ﻿#pragma once
 //#define _FNV1A
 #include "std.h"
-
 //enum classes
+//enum class E_RenderPass
+//{
+//	FORWARD_PASS,
+//	DEFERRED_PASS,
+//	UI_PASS,
+//	SHADOW_PASS,
+//	COUNT
+//};
+
 enum class E_InputEventType
 
 {
@@ -303,7 +311,7 @@ struct Traits_InputLayout<Vertex_PTN> {
 	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].first;
 	}
-	static constexpr size_t GetSize() {
+	static constexpr UINT GetSize() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].second;
 	}
 };
@@ -313,7 +321,7 @@ struct Traits_InputLayout<Vertex_PTNTB> {
 	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].first;
 	}
-	static constexpr size_t GetSize() {
+	static constexpr UINT GetSize() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].second;
 	}
 };
@@ -335,7 +343,7 @@ struct Traits_InputLayout<Vertex_PTNTB> {
 
 		invMat = denominator * adjMat
 */
-inline static void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB>& vertices)
+inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB>& vertices)
 {
 	//메쉬(세 정점)을 기준으로 tangent, binormal의 누적을 계산한다
 	for (UINT idx = 0; idx < indicies.size(); idx += 3)
@@ -416,7 +424,7 @@ struct CB_DirectionalLight
 	Vector4 mAmbient;
 	Vector4 mDiffuse;
 	Vector4 mSpecular;
-	Vector4 vDirection;	//w is shiness
+	Vector4 vDirection;		//w is shiness
 };
 
 __declspec(align(16))

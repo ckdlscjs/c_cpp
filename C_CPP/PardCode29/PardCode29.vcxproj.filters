@@ -271,9 +271,6 @@
     <ClCompile Include="ResourceSystem.cpp">
       <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
-      <Filter>Engine\ResourceSystem</Filter>
-    </ClCompile>
     <ClCompile Include="ShaderResourceView.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
@@ -327,9 +324,6 @@
     </ClCompile>
     <ClCompile Include="RasterizerState.cpp">
       <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
     <ClCompile Include="DepthStencilState.cpp">
       <Filter>Engine\GraphicSystem</Filter>
