@@ -399,6 +399,37 @@ inline Matrix4x4 GetMat_Orthographic(float width, float height, float dist_near,
 }
 
 /*
+* -0.5~0.5 ->0.0~1.0
+*/
+inline Matrix4x4 GetMat_ConvertGeometryOrtho()
+{
+	Matrix4x4 mat;
+	mat[0] = Vector4(1.0f, 0.0f, 0.0f, 0.0f);
+	mat[1] = Vector4(0.0f, -1.0f, 0.0f, 0.0f);
+	mat[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+	mat[3] = Vector4(0.5f, 0.5f, 0.0f, 1.0f);
+	return mat;
+}
+/*
+* 직교투영행렬
+* 2.0f/(r-l)		0.0f			0.0f			0.0f
+* 0.0f				2.0f/(t-b)		0.0f			0.0f
+* 0.0f				0.0f			1.0f/(f-n)		0.0f
+* -(r+l)/(r-l)		(b+t)/(t-b)		-n/(f-n)		1.0f
+*/
+inline Matrix4x4 GetMat_Orthographic_OffCenter(float left, float right, float top, float bottom, float dist_near, float dist_far)
+{
+	Matrix4x4 mat;
+	float range_x = right - left; //양수값
+	float range_y = top - bottom; //음수값
+	mat[0] = Vector4(2.0f / range_x, 0.0f, 0.0f, 0.0f);
+	mat[1] = Vector4(0.0f, 2.0f / range_y, 0.0f, 0.0f);
+	mat[2] = Vector4(0.0f, 0.0f, 1.0f / (dist_far - dist_near), 0.0f);
+	mat[3] = Vector4(-(right+left)/range_x, -(top+bottom)/range_y, -dist_near / (dist_far - dist_near), 1.0f);
+	return mat;
+}
+
+/*
 * 스크린좌표행렬
 * w/2.0f			0.0f			0.0f				0.0f
 * 0.0f				-h/2.0f			0.0f				0.0f

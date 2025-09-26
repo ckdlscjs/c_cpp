@@ -129,7 +129,8 @@ inline const Matrix4x4& BaseCamera::GetProjMatrix()
 }
 inline const Matrix4x4& BaseCamera::GetOrthoMatrix()
 {
-	return GetMat_Orthographic(m_Properties.m_fScreenWidth, m_Properties.m_fScreenHeight, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
+	return GetMat_Orthographic_OffCenter(0.0f, m_Properties.m_fScreenWidth, 0.0f, m_Properties.m_fScreenHeight, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
+	//return GetMat_Orthographic(m_Properties.m_fScreenWidth, m_Properties.m_fScreenHeight, m_Properties.m_fNearZ, m_Properties.m_fFarZ);
 }
 inline const Vector3& BaseCamera::GetPosition()
 {

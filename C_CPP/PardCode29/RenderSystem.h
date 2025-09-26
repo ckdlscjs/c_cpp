@@ -80,6 +80,7 @@ private:
 	RasterizerState*									m_pCRSStaets = nullptr;
 	DepthStencilState*									m_pCDSStates = nullptr;
 	RenderTargetView*									m_pCBackBufferRTV = nullptr;
+	//GBUFFER화필요
 	RenderTargetView*									m_pCRTV = nullptr;
 	DepthStencilView*									m_pCDSV = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
@@ -99,7 +100,7 @@ public:
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()
 
-//추론명시
+//템플릿 추론 명시
 template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Colliders collider);
 template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Colliders collider);
 template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);

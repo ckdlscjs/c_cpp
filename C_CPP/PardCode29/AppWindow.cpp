@@ -65,7 +65,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.GetCamera(0)->SetScreenWidth(m_iWidth);
 	_CameraSystem.GetCamera(0)->SetScreenHeight(m_iHeight);
 	_CameraSystem.GetCamera(0)->SetFOV(75.0f);
-	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 50000.0f);
+	_CameraSystem.GetCamera(0)->SetClipPlanes(0.1f, 10000.0f);
 	_CameraSystem.GetCamera(0)->SetTarget(Vector3(0, 0, 0));
 
 	//라이팅 기본세팅
@@ -344,7 +344,7 @@ void AppWindow::OnCreate()
 				_RenderSystem.ortho_objs.push_back(new TempObj());
 				TempObj* obj = _RenderSystem.ortho_objs.back();
 				obj->m_vScale = Vector3(300, 300, 1.0f);
-				obj->m_vPosition = Vector3(-150.0f, 0.0f, 1.0f);
+				obj->m_vPosition = Vector3(100.0f, 0.0f, 1.0f);
 				obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
 			}
 		}

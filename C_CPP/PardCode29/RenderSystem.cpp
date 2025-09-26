@@ -307,7 +307,7 @@ void RenderSystem::Render(float deltatime)
 				//if (!obj->bRenderable) continue;
 				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 				CB_WVPITMatrix cc0;
-				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
+				cc0.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
 				cc0.matView = GetMat_Identity();
 				cc0.matProj = matOrtho;
 				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
