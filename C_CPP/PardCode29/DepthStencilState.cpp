@@ -79,7 +79,6 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	depthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 	*/
 
-
 	/*
 	//스텐실버퍼를이용해 외곽선 그리기
 	depthDesc.DepthEnable = TRUE;
@@ -101,7 +100,6 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	depthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
 	depthDesc.BackFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
 	*/
-
 	//필요시 추가
 }
 

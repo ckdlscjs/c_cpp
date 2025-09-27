@@ -518,7 +518,7 @@ size_t RenderSystem::CreateShaderResourceView(const std::wstring& szName, const 
 	if (m_pCVWs.find(hash) != m_pCVWs.end()) return hash;
 	_ASEERTION_NULCHK(resource, "scratchImage is nullptr");
 	ShaderResourceView* pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), resource);
-	_ASEERTION_NULCHK(pSRV, "TX is nullptr");
+	_ASEERTION_NULCHK(pSRV, "VW is nullptr");
 	m_pCVWs[hash] = pSRV;
 	return hash;
 }

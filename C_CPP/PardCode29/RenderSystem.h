@@ -93,7 +93,6 @@ private:
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;
-	TempObj* BackBufferObj;
 	std::vector<TempObj*> objs;
 	std::vector<TempObj*> ortho_objs;
 };
