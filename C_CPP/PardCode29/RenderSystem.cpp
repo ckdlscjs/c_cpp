@@ -215,7 +215,7 @@ void RenderSystem::Render(float deltatime)
 			for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 			{
 				auto& iter = obj->m_Mesh_Material[j];
-				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+				Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
 				m_pCVBs[pMesh->GetVB()]->SetVertexBuffer(m_pCDirect3D->GetDeviceContext());
 				m_pCIBs[pMesh->GetIB()]->SetIndexBuffer(m_pCDirect3D->GetDeviceContext());
 
@@ -286,7 +286,7 @@ void RenderSystem::Render(float deltatime)
 				}
 			}
 		}
-		
+#endif	
 		//2D객체로 SRV임시체크
 		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
 		//ID3D11ShaderResourceView* nullSRV = nullptr;
@@ -343,7 +343,6 @@ void RenderSystem::Render(float deltatime)
 				}
 			}
 		}
-#endif 
 	}
 }
 

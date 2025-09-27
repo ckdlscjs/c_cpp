@@ -67,13 +67,14 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 
 			for (size_t v = 0; v < face_vertices; v++)
 			{
-				tinyobj::index_t index = shape.mesh.indices[offset_shape + v];
+				//obj의 일반적인 포맷 리드를 수정, 역순으로읽는다
+				tinyobj::index_t index = shape.mesh.indices[offset_shape + (face_vertices - 1) - v];
 
 				float vx, vy, vz, tx, ty, nx, ny, nz;
 				vx = vy = vz = tx = ty = nx = ny = nz = 0.0f;
-				vx = attributes.vertices[index.vertex_index * 3 + 0];
+				vx = attributes.vertices[index.vertex_index * 3 + 2];
 				vy = attributes.vertices[index.vertex_index * 3 + 1];
-				vz = attributes.vertices[index.vertex_index * 3 + 2];
+				vz = attributes.vertices[index.vertex_index * 3 + 0];
 				if (index.texcoord_index >= 0)
 				{
 					// V 텍스처 좌표를 왼손 시스템으로 반전시킵니다.
@@ -86,9 +87,9 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 
 				if (index.normal_index >= 0)
 				{
-					nx = attributes.normals[index.normal_index * 3 + 0];
+					nx = attributes.normals[index.normal_index * 3 + 2];
 					ny = attributes.normals[index.normal_index * 3 + 1];
-					nz = attributes.normals[index.normal_index * 3 + 2];
+					nz = attributes.normals[index.normal_index * 3 + 0];
 				}
 				T vertex{ {vx, vy, vz}, {tx, ty}, {nx, ny, nz} };
 				if (vertexMaps[midx].find(vertex) == vertexMaps[midx].end())
