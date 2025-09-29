@@ -5,10 +5,6 @@ InputSystem::InputSystem()
 {
 }
 
-InputSystem::~InputSystem()
-{
-}
-
 size_t InputSystem::AddListner(E_InputEventType type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)

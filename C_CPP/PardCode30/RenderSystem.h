@@ -24,7 +24,6 @@ class RenderSystem : public BaseSystem<RenderSystem>
 	friend class BaseSystem<RenderSystem>;
 private:
 	RenderSystem();
-	~RenderSystem();
 	RenderSystem(const RenderSystem&) = delete;
 	RenderSystem& operator=(const RenderSystem&) = delete;
 	RenderSystem(RenderSystem&&) = delete;
@@ -36,13 +35,11 @@ public:
 	void Render(float deltatime);
 	void PostRender();
 	void Release();
-	
+	void OnResize(UINT width, UINT height);
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 
-	void OnResize(UINT width, UINT height);
-	
-	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
+	//응용프로그램부 접근
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag = DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE);
 	template<typename T>
@@ -56,6 +53,8 @@ public:
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
 private:
+	//API리소스 생성
+	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
 	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
@@ -66,8 +65,30 @@ private:
 	size_t CreateRenderTargetView(const std::wstring& szName);
 	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
+
+private:
+	//API 파이프라인
 	void ClearRenderViews(float red, float green, float blue, float alpha);
+
+	void SetIA_InputLayout(ID3D11InputLayout* pInputLayout);
+	void SetIA_VertexBuffer(ID3D11Buffer* pBuffer, UINT iSizeVertex, UINT offset = 0);
+	void SetIA_IndexBuffer(ID3D11Buffer* pBuffer, UINT offset = 0);
+
+	void SetVS(ID3D11VertexShader* pVS);
+	void SetVS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
+	void SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
+	void SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
+
+	void SetPS(ID3D11PixelShader* pPS);
+	void SetPS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
+	void SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
+	void SetPS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
+
+	void SetRS_RasterizerState(ID3D11RasterizerState* pState);
+	void SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef = 1);
+	void SetOM_BlendState();
 	
+	void SwapchainPresent(bool vsync);
 private:
 	UINT m_iWidth = 800;
 	UINT m_iHeight = 600;
@@ -79,17 +100,18 @@ private:
 	SamplerState*										m_pCSamplers = nullptr;
 	RasterizerState*									m_pCRSStaets = nullptr;
 	DepthStencilState*									m_pCDSStates = nullptr;
-	RenderTargetView*									m_pCBackBufferRTV = nullptr;
-	//GBUFFER화필요
-	RenderTargetView*									m_pCRTV = nullptr;
-	DepthStencilView*									m_pCDSV = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;
 	std::unordered_map<size_t, VertexShader*>			m_pCVSs;
 	std::unordered_map<size_t, PixelShader*>			m_pCPSs;
 	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;
-	std::unordered_map<size_t, ShaderResourceView*>		m_pCVWs;
+	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
+	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
+	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
+	size_t												m_hash_RTV_BB;
+	size_t												m_hash_RTV_0;
+	size_t												m_hash_DSV_0;
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;

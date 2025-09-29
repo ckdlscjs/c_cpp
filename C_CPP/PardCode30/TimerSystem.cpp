@@ -3,10 +3,6 @@ TimerSystem::TimerSystem()
 {
 }
 
-TimerSystem::~TimerSystem()
-{
-}
-
 void TimerSystem::Init()
 {
 	//FPS를 체크하기위한 프로그램의 시작타임

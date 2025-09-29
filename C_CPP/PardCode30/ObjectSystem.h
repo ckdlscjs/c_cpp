@@ -7,7 +7,6 @@ class ObjectSystem : public BaseSystem<ObjectSystem>
 	friend class BaseSystem<ObjectSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	ObjectSystem();
-	~ObjectSystem();
 	ObjectSystem(const ObjectSystem&) = delete;
 	ObjectSystem& operator=(const ObjectSystem&) = delete;
 	ObjectSystem(ObjectSystem&&) = delete;

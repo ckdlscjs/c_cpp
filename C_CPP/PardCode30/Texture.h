@@ -7,17 +7,16 @@ class Texture : public BaseResource<Texture>
 public:
 	Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = WIC_FLAGS_NONE);
 	Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag);
-	~Texture();
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
 	Texture(Texture&&) = delete;
 	Texture& operator=(Texture&&) = delete;
 
-	void SetVW(size_t hashVW);
-	size_t GetVW() const;
+	void SetSRV(size_t hashSRV);
+	size_t GetSRV() const;
 	const ScratchImage* GetImage() const;
 private:
-	size_t m_lVW;
+	size_t m_lSRV;
 	ScratchImage m_ScratchImage;
 };
 
@@ -52,18 +51,14 @@ inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::DD
 	_ASEERTION_CREATE(DirectX::LoadFromDDSFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage), "LoadTexture not successfully");
 }
 
-inline Texture::~Texture()
+inline void Texture::SetSRV(size_t hashSRV)
 {
+	m_lSRV = hashSRV;
 }
 
-inline void Texture::SetVW(size_t hashVW)
+inline size_t Texture::GetSRV() const
 {
-	m_lVW = hashVW;
-}
-
-inline size_t Texture::GetVW() const
-{
-	return m_lVW;
+	return m_lSRV;
 }
 
 inline const ScratchImage* Texture::GetImage() const

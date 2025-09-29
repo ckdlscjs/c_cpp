@@ -7,10 +7,6 @@ CameraSystem::CameraSystem()
 
 }
 
-CameraSystem::~CameraSystem()
-{
-}
-
 BaseCamera* CameraSystem::GetCamera(size_t idx)
 {
 	return  m_Cameras[idx];

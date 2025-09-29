@@ -21,7 +21,7 @@ class BaseResource : public Resource
 {
 protected:
 	BaseResource();
-	virtual ~BaseResource();
+	~BaseResource();
 	BaseResource(const BaseResource&) = delete;
 	BaseResource& operator=(const BaseResource&) = delete;
 	BaseResource(BaseResource&&) = delete;

@@ -157,6 +157,7 @@ class Box : public Collider
 {
 public:
 	inline Box() = default;
+    inline ~Box() { std::cout << "Release : " << "Collider <" << "Box" << "> Class" << '\n'; }
 	inline Box(const std::vector<Vector3>* vertices)
 	{
         SetType(E_Colliders::AABB);

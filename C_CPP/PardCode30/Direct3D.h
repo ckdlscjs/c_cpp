@@ -1,6 +1,6 @@
 #pragma once
 #include "CommonHeader.h"
-class SwapChain;
+
 class Direct3D
 {
 public:

@@ -17,10 +17,6 @@ ResourceSystem::ResourceSystem()
 {
 }
 
-ResourceSystem::~ResourceSystem()
-{
-}
-
 void ResourceSystem::Init()
 {
 

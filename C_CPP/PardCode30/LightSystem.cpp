@@ -6,10 +6,6 @@ LightSystem::LightSystem()
 {
 }
 
-LightSystem::~LightSystem()
-{
-}
-
 bool LightSystem::CheckMask(int VK_KEY)
 {
 	return false;

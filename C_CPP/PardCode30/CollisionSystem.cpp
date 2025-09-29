@@ -15,10 +15,6 @@ CollisionSystem::CollisionSystem()
 {
 }
 
-CollisionSystem::~CollisionSystem()
-{
-}
-
 void CollisionSystem::Init()
 {
 

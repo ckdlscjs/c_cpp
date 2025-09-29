@@ -11,7 +11,6 @@ class CollisionSystem : public BaseSystem<CollisionSystem>
 	friend class BaseSystem<CollisionSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	CollisionSystem();
-	~CollisionSystem();
 	CollisionSystem(const CollisionSystem&) = delete;
 	CollisionSystem& operator=(const CollisionSystem&) = delete;
 	CollisionSystem(CollisionSystem&&) = delete;

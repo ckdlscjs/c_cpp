@@ -23,7 +23,6 @@ public:
 class DirectionalLight : public BaseLight
 {
 public:
-	~DirectionalLight() override;
 	void* GetConstant() override;
 public:
 	Vector3 m_vDirection;
@@ -34,7 +33,6 @@ public:
 class PointLight : public BaseLight
 {
 public:
-	~PointLight() override;
 	void* GetConstant() override;
 public:
 	Vector3 m_vPosition;
@@ -49,7 +47,6 @@ public:
 class SpotLight : public BaseLight
 {
 public:
-	~SpotLight() override;
 	void* GetConstant() override;
 public:
 	Vector3 m_vDirection;

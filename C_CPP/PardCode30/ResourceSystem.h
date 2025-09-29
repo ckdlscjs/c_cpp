@@ -9,7 +9,6 @@ class ResourceSystem : public BaseSystem<ResourceSystem>
 	friend class BaseSystem<ResourceSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	ResourceSystem();
-	~ResourceSystem();
 	ResourceSystem(const ResourceSystem&) = delete;
 	ResourceSystem& operator=(const ResourceSystem&) = delete;
 	ResourceSystem(ResourceSystem&&) = delete;

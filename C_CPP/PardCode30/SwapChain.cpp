@@ -39,9 +39,6 @@ SwapChain::SwapChain(ID3D11Device* pDevice, HWND hwnd, UINT width, UINT height)
 	pDXGIDevice->Release();
 	pDXGIAdapter->Release();
 	pDXGIFactory->Release();
-
-	//CreateRenderTargetView(pDevice);
-	//CreateDepthStencilView(pDevice, width, height);
 }
 
 SwapChain::~SwapChain()
@@ -49,83 +46,10 @@ SwapChain::~SwapChain()
 	std::cout << "Release : " << "SwapChain" << " Class" << '\n';
 	if (m_pSwapChain)
 		m_pSwapChain->Release();
-	/*if(m_pRenderTargetView)
-		m_pRenderTargetView->Release();
-	if(m_pDepthStencilView)
-		m_pDepthStencilView->Release();*/
 }
-/*
-void SwapChain::CreateRenderTargetView(ID3D11Device* pDevice)
-{
-	HRESULT hResult;
-	ID3D11Texture2D* backBuffer;	//백버퍼사용을 위한 자원리소스뷰(렌더타겟뷰생성)
-
-	hResult = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backBuffer);
-	_ASEERTION_CREATE(hResult, "BackBuffer");
-
-	hResult = pDevice->CreateRenderTargetView(backBuffer, NULL, &m_pRenderTargetView);
-	_ASEERTION_CREATE(hResult, "RTV");
-
-	//사용한 백버퍼의 레퍼런스 카운팅을 낮춘다
-	backBuffer->Release();
-}
-
-void SwapChain::CreateDepthStencilView(ID3D11Device* pDevice, UINT width, UINT height)
-{
-	HRESULT hResult;
-	ID3D11Texture2D* backBuffer; //백버퍼사용을 위한 자원리소스뷰(뎁스스텐실뷰 생성)	
-
-	//임시, 뎁스스텐실사용 추후 클래스화필요(10장, 깊이스텐실부분)
-	D3D11_TEXTURE2D_DESC tex_desc;
-	ZeroMemory(&tex_desc, sizeof(D3D11_TEXTURE2D_DESC));
-	tex_desc.Width = width;
-	tex_desc.Height = height;
-	tex_desc.MipLevels = 1;
-	tex_desc.ArraySize = 1;
-	tex_desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	tex_desc.SampleDesc.Count = 1;
-	tex_desc.Usage = D3D11_USAGE_DEFAULT;
-	tex_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	tex_desc.CPUAccessFlags = 0;					// AccessFlag 값의 조합
-	tex_desc.MiscFlags = 0;							// 텍스처의 다양한 속성(큐브맵, 배열 등을 제어하는 기타플래그)
-
-	hResult = pDevice->CreateTexture2D(&tex_desc, nullptr, &backBuffer);
-	_ASEERTION_CREATE(hResult, "BackBuffer");
-	hResult = pDevice->CreateDepthStencilView(backBuffer, NULL, &m_pDepthStencilView);	//해당버퍼를 이용하여 깊이스텐실 뷰를 생성
-	_ASEERTION_CREATE(hResult, "DSV");
-	backBuffer->Release();																//임의의 사용한 버퍼를 제거
-}
-
-//백버퍼를 재설정한다, flags는 필요에따라 설정, 기본 = 0
-void SwapChain::ResizeBuffers(UINT bufferCount, UINT width, UINT height, DXGI_FORMAT format, UINT flags)
-{
-	//기존에 사용하던 렌더타겟뷰가 있을때 초기화
-	if (m_pRenderTargetView)
-		m_pRenderTargetView->Release();
-	//기존에 사용하던 뎁스 스텐실뷰가 있을때 초기화
-	if (m_pDepthStencilView)
-		m_pDepthStencilView->Release();
-	m_pSwapChain->ResizeBuffers(bufferCount, width, height, format, flags);
-}
-
-//렌더타겟 초기화
-void SwapChain::ClearRenderTargetColor(ID3D11DeviceContext* pDeviceContext, float red, float green, float blue, float alpha)
-{
-	FLOAT clearColor[] = { red, green, blue, alpha };
-	pDeviceContext->ClearRenderTargetView(m_pRenderTargetView, clearColor);
-	pDeviceContext->ClearDepthStencilView(m_pDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
-	pDeviceContext->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
-}
-*/
 IDXGISwapChain* SwapChain::GetSwapChain()
 {
 	return m_pSwapChain;
 }
 
-//더블버퍼링
-void SwapChain::Present(bool vsync)
-{
-	std::cout << "SwapchainPreset, 백버퍼교체" << '\n';
-	m_pSwapChain->Present(vsync, NULL);
-}
 

@@ -64,22 +64,7 @@
     <ClInclude Include="Direct3D.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
-    <ClInclude Include="VertexBuffer.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
     <ClInclude Include="InputLayout.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="VertexShader.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="PixelShader.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="ConstantBuffer.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="IndexBuffer.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="InputSystem.h">
@@ -108,12 +93,6 @@
     </ClInclude>
     <ClInclude Include="Texture.h">
       <Filter>Engine\ResourceSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderResourceView.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="SamplerState.h">
-      <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="ImguiSystem.h">
       <Filter>Engine\ImguiSystem</Filter>
@@ -201,26 +180,23 @@
     <ClInclude Include="Box.h">
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
-    <ClInclude Include="RasterizerState.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
     <ClInclude Include="TestBlockMacro.h" />
-    <ClInclude Include="DepthStencilState.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="BaseState.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="DepthStencilView.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderTargetView.h">
+    <ClInclude Include="States.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="Views.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffers.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -238,22 +214,7 @@
     <ClCompile Include="Direct3D.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
-    <ClCompile Include="VertexBuffer.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
     <ClCompile Include="InputLayout.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="VertexShader.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="PixelShader.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="ConstantBuffer.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="IndexBuffer.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="InputSystem.cpp">
@@ -271,14 +232,8 @@
     <ClCompile Include="ResourceSystem.cpp">
       <Filter>Engine\ResourceSystem</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderResourceView.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>App</Filter>
-    </ClCompile>
-    <ClCompile Include="SamplerState.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="ImguiSystem.cpp">
       <Filter>Engine\ImguiSystem</Filter>
@@ -322,16 +277,16 @@
     <ClCompile Include="Object.cpp">
       <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
-    <ClCompile Include="RasterizerState.cpp">
+    <ClCompile Include="States.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
-    <ClCompile Include="DepthStencilState.cpp">
+    <ClCompile Include="Views.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
-    <ClCompile Include="RenderTargetView.cpp">
+    <ClCompile Include="Shaders.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
-    <ClCompile Include="DepthStencilView.cpp">
+    <ClCompile Include="Buffers.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>

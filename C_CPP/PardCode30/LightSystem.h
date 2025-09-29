@@ -8,7 +8,6 @@ class LightSystem : public BaseSystem<LightSystem>
 	friend class BaseSystem<LightSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	LightSystem();
-	~LightSystem();
 	LightSystem(const LightSystem&) = delete;
 	LightSystem& operator=(const LightSystem&) = delete;
 	LightSystem(LightSystem&&) = delete;

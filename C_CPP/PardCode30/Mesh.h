@@ -6,7 +6,6 @@ class Mesh : public BaseResource<Mesh<T>>
 	friend class BaseResource<Mesh<T>>;
 public:
 	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countIndices);
-	~Mesh();
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 	Mesh(Mesh&&) = delete;
@@ -50,10 +49,6 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<st
 {
 	this->SetHash(hash);
 	this->SetFilePath(szFilePath);
-}
-template<typename T>
-inline Mesh<T>::~Mesh()
-{
 }
 
 template<typename T>

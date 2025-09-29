@@ -6,7 +6,6 @@ class ImguiSystem : public BaseSystem<ImguiSystem>
 	friend class BaseSystem<ImguiSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	ImguiSystem();
-	~ImguiSystem();
 	ImguiSystem(const ImguiSystem&) = delete;
 	ImguiSystem& operator=(const ImguiSystem&) = delete;
 	ImguiSystem(ImguiSystem&&) = delete;

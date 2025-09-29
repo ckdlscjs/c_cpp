@@ -8,7 +8,6 @@ class CameraSystem : public BaseSystem<CameraSystem>
 	friend class BaseSystem<CameraSystem>;
 private:
 	CameraSystem();
-	~CameraSystem();
 	CameraSystem(CameraSystem& CameraSystem) = delete;
 	CameraSystem& operator=(const CameraSystem& CameraSystem) = delete;
 	CameraSystem(CameraSystem&&) = delete;

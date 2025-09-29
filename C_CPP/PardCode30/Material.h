@@ -7,7 +7,6 @@ class Material : public BaseResource<Material>
 	friend class BaseResource<Material>;
 public:
 	Material(size_t hash, const std::wstring& szFilePath);
-	~Material();
 	Material(const Material&) = delete;
 	Material& operator=(const Material&) = delete;
 	Material(Material&&) = delete;
@@ -81,10 +80,6 @@ inline Material::Material(size_t hash, const std::wstring& szFilePath)
 {
 	SetHash(hash);
 	SetFilePath(szFilePath);
-}
-
-inline Material::~Material()
-{
 }
 
 inline void Material::SetVS(size_t hashVS)

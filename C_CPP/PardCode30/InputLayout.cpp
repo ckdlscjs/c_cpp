@@ -13,7 +13,7 @@ InputLayout::~InputLayout()
 	m_pInputLayout->Release();
 }
 
-void InputLayout::SetInputLayout(ID3D11DeviceContext* pDeviceContext)
+ID3D11InputLayout* InputLayout::GetInputLayout()
 {
-	pDeviceContext->IASetInputLayout(m_pInputLayout);
+	return m_pInputLayout;
 }

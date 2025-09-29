@@ -10,7 +10,7 @@ public:
 	InputLayout& operator=(const InputLayout&) = delete;
 	InputLayout(InputLayout&&) = delete;
 	InputLayout& operator=(InputLayout&&) = delete;
-	void SetInputLayout(ID3D11DeviceContext* pDeviceContext);
+	ID3D11InputLayout* GetInputLayout();
 private:
 	ID3D11InputLayout* m_pInputLayout;
 };

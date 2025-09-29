@@ -4,6 +4,6 @@ class FirstPersonCamera : public BaseCamera
 {
 public:
 	FirstPersonCamera();
-	~FirstPersonCamera() override;
+	~FirstPersonCamera();
 };
 

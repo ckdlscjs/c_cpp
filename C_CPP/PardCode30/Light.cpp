@@ -16,10 +16,6 @@ BaseLight::~BaseLight()
 {
 }
 
-DirectionalLight::~DirectionalLight()
-{
-}
-
 void* DirectionalLight::GetConstant()
 {
 	m_CBData.mAmbient = m_mAmbient;
@@ -27,10 +23,6 @@ void* DirectionalLight::GetConstant()
 	m_CBData.mSpecular = m_mSpecular;
 	m_CBData.vDirection = Vector4(m_vDirection, m_fShiness);
 	return &m_CBData;
-}
-
-PointLight::~PointLight()
-{
 }
 
 void* PointLight::GetConstant()
@@ -41,10 +33,6 @@ void* PointLight::GetConstant()
 	m_CBData.vPosition = Vector4(m_vPosition,m_fShiness);
 	m_CBData.fAttenuations = Vector4(m_fAtt_a0, m_fAtt_a1, m_fAtt_a2, m_fRange);
 	return &m_CBData;
-}
-
-SpotLight::~SpotLight()
-{
 }
 
 void* SpotLight::GetConstant()

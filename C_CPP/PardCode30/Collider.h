@@ -5,8 +5,9 @@
 */
 class Collider
 {
-public:
+protected:
 	inline Collider() {}
+public:
 	inline virtual ~Collider() {}
 	inline void SetType(E_Colliders type) { m_type = type; }
 	inline E_Colliders GetType() const { return m_type; }

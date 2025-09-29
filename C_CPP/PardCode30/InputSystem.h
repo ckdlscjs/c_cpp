@@ -6,7 +6,6 @@ class InputSystem : public BaseSystem<InputSystem>
 	friend class BaseSystem<InputSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	InputSystem();
-	~InputSystem();
 	InputSystem(const InputSystem&) = delete;
 	InputSystem& operator=(const InputSystem&) = delete;
 	InputSystem(InputSystem&&) = delete;

@@ -5,10 +5,6 @@ ObjectSystem::ObjectSystem()
 {
 }
 
-ObjectSystem::~ObjectSystem()
-{
-}
-
 Object* ObjectSystem::CreateObject(const std::wstring& szNameObj)
 {
 	return m_Objects[m_lObjectID++] = new Object(szNameObj);

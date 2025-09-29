@@ -72,12 +72,12 @@ enum class E_Textures
 
 enum class E_InputLayout
 {
-	IL_PC,
-	IL_PCT,
-	IL_PT,
-	IL_PPCC,
-	IL_PTN,
-	IL_PTNTB,
+	PC,
+	PCT,
+	PT,
+	PPCC,
+	PTN,
+	PTNTB,
 };
 
 struct TX_HASH
@@ -309,20 +309,20 @@ struct Traits_InputLayout;
 template <>
 struct Traits_InputLayout<Vertex_PTN> {
 	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
-		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].first;
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN].first;
 	}
 	static constexpr UINT GetSize() {
-		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTN].second;
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN].second;
 	}
 };
 
 template <>
 struct Traits_InputLayout<Vertex_PTNTB> {
 	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
-		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].first;
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB].first;
 	}
 	static constexpr UINT GetSize() {
-		return INPUT_ELMENTS[(UINT)E_InputLayout::IL_PTNTB].second;
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB].second;
 	}
 };
 

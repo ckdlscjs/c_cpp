@@ -6,7 +6,6 @@ class TimerSystem : public BaseSystem<TimerSystem>
 	friend class BaseSystem<TimerSystem>;	//CRTP패턴을 위한 friend선언
 private:
 	TimerSystem();
-	~TimerSystem();
 	TimerSystem(const TimerSystem&) = delete;
 	TimerSystem& operator=(const TimerSystem&) = delete;
 	TimerSystem(TimerSystem&&) = delete;
