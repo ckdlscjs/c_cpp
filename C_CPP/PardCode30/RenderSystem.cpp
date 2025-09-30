@@ -93,10 +93,13 @@ void RenderSystem::Render(float deltatime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 
+	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	//프레임에따른 변환
 	Matrix4x4 matWorld = _CameraSystem.GetCamera(0)->GetWorldMatrix();
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
+
 	if (SkyObj)//SKYOBJ
 	{
 		{
@@ -158,7 +161,7 @@ void RenderSystem::Render(float deltatime)
 					SetPS_ShaderResourceView(pSrv, cnt++);
 				}
 			}
-			m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
+			Draw_Indices(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
 		}
 	}
 
@@ -224,7 +227,7 @@ void RenderSystem::Render(float deltatime)
 						SetPS_ShaderResourceView(pSrv, cnt++);
 					}
 				}
-				m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 		}
 #endif 
@@ -274,7 +277,7 @@ void RenderSystem::Render(float deltatime)
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
-					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
@@ -331,7 +334,7 @@ void RenderSystem::Render(float deltatime)
 							//static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
 						}
 					}
-					m_pCDirect3D->DrawIndex_TriagleList(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
@@ -476,7 +479,17 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	m_hash_RTV_BB = CreateRenderTargetView(L"BackBufferRTV");
 	m_hash_RTV_0 = CreateRenderTargetView(L"RTV0", m_iWidth, m_iHeight);
 	m_hash_DSV_0 = CreateDepthStencilView(L"DSV0", m_iWidth, m_iHeight);
-	m_pCDirect3D->SetViewportSize(m_iWidth, m_iHeight);
+	SetViewportSize(m_iWidth, m_iHeight);
+}
+
+void RenderSystem::SetViewportSize(UINT iWidth, UINT iHeight)
+{
+	D3D11_VIEWPORT vp = {};
+	vp.Width = (float)iWidth;
+	vp.Height = (float)iHeight;
+	vp.MinDepth = 0.0f;
+	vp.MaxDepth = 1.0f;
+	m_pCDirect3D->GetDeviceContext()->RSSetViewports(1, &vp);
 }
 
 size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
@@ -653,6 +666,11 @@ void RenderSystem::ClearRenderViews(float red, float green, float blue, float al
 	m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(RTVS), RTVS, m_pCDSVs[m_hash_DSV_0]->GetView());
 }
 
+void RenderSystem::SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology)
+{
+	m_pCDirect3D->GetDeviceContext()->IASetPrimitiveTopology(topology);
+}
+
 void RenderSystem::SetIA_InputLayout(ID3D11InputLayout* pInputLayout)
 {
 	m_pCDirect3D->GetDeviceContext()->IASetInputLayout(pInputLayout);
@@ -721,6 +739,16 @@ void RenderSystem::SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 void RenderSystem::SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef)
 {
 	m_pCDirect3D->GetDeviceContext()->OMSetDepthStencilState(pState, stencilRef);
+}
+
+void RenderSystem::Draw_Vertices(UINT vertexCount, UINT startIdx)
+{
+	m_pCDirect3D->GetDeviceContext()->Draw(vertexCount, startIdx);
+}
+
+void RenderSystem::Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset)
+{
+	m_pCDirect3D->GetDeviceContext()->DrawIndexed(indexCount, startIdx, vertexOffset);
 }
 
 void RenderSystem::SwapchainPresent(bool vsync)

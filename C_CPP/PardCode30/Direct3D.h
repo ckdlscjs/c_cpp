@@ -10,11 +10,6 @@ public:
 	Direct3D& operator=(const Direct3D&) = delete;
 	Direct3D(Direct3D&&) = delete;
 	Direct3D& operator=(Direct3D&&) = delete;
-	void SetViewportSize(UINT iWidth, UINT iHeight);
-	void DrawVertex_TriangleList(UINT vertexCount, UINT startIdx);
-	void DrawVertex_TriangleStrip(UINT vertexCount, UINT startIdx);
-	void DrawIndex_TriagleList(UINT indexCount, UINT startIdx, INT vertexOffset);
-	void DrawIndex_TriangleStrip(UINT indexCount, UINT startIdx, INT vertexOffset);
 
 	ID3D11Device* GetDevice();
 	ID3D11DeviceContext* GetDeviceContext();

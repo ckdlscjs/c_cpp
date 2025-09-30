@@ -49,40 +49,6 @@ Direct3D::~Direct3D()
 	m_pD3D_DeviceContext->Release();
 }
 
-void Direct3D::SetViewportSize(UINT iWidth, UINT iHeight)
-{
-	D3D11_VIEWPORT vp = {};
-	vp.Width = (float)iWidth;
-	vp.Height = (float)iHeight;
-	vp.MinDepth = 0.0f;
-	vp.MaxDepth = 1.0f;
-	m_pD3D_DeviceContext->RSSetViewports(1, &vp);
-}
-
-void Direct3D::DrawVertex_TriangleList(UINT vertexCount, UINT startIdx)
-{
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	//Vertex를 TrangleList로그린다
-	m_pD3D_DeviceContext->Draw(vertexCount, startIdx);										//입력받은 vertex_count, 시작번호
-}
-
-void Direct3D::DrawVertex_TriangleStrip(UINT vertexCount, UINT startIdx)
-{
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	//Vertex를 TrangleStrip
-	m_pD3D_DeviceContext->Draw(vertexCount, startIdx);
-}
-
-void Direct3D::DrawIndex_TriagleList(UINT indexCount, UINT startIdx, INT vertexOffset)
-{
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);	//Index를 TrangleList로그린다
-	m_pD3D_DeviceContext->DrawIndexed(indexCount, startIdx, vertexOffset);					//시작인덱스, 인덱스버퍼의 시작번호, 버텍스버퍼의 오프셋값
-}
-
-void Direct3D::DrawIndex_TriangleStrip(UINT indexCount, UINT startIdx, INT vertexOffset)
-{
-	m_pD3D_DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);	//Index를 TrangleStrip
-	m_pD3D_DeviceContext->DrawIndexed(indexCount, startIdx, vertexOffset);					//시작인덱스, 인덱스버퍼의 시작번호, 버텍스버퍼의 오프셋값
-}
-
 ID3D11Device* Direct3D::GetDevice()
 {
 	return m_pD3D_Device;

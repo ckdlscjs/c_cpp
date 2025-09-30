@@ -36,6 +36,7 @@ public:
 	void PostRender();
 	void Release();
 	void OnResize(UINT width, UINT height);
+	void SetViewportSize(UINT iWidth, UINT iHeight);
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 
@@ -70,6 +71,7 @@ private:
 	//API 파이프라인
 	void ClearRenderViews(float red, float green, float blue, float alpha);
 
+	void SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology);
 	void SetIA_InputLayout(ID3D11InputLayout* pInputLayout);
 	void SetIA_VertexBuffer(ID3D11Buffer* pBuffer, UINT iSizeVertex, UINT offset = 0);
 	void SetIA_IndexBuffer(ID3D11Buffer* pBuffer, UINT offset = 0);
@@ -87,7 +89,10 @@ private:
 	void SetRS_RasterizerState(ID3D11RasterizerState* pState);
 	void SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef = 1);
 	void SetOM_BlendState();
+
 	
+	void Draw_Vertices(UINT vertexCount, UINT startIdx);
+	void Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset);
 	void SwapchainPresent(bool vsync);
 private:
 	UINT m_iWidth = 800;
