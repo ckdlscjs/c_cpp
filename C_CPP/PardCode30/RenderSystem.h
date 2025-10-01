@@ -17,6 +17,7 @@ class DepthStencilView;
 class SamplerState;
 class RasterizerState;
 class DepthStencilState;
+class BlendState;
 class TempObj;
 
 class RenderSystem : public BaseSystem<RenderSystem>
@@ -88,9 +89,8 @@ private:
 
 	void SetRS_RasterizerState(ID3D11RasterizerState* pState);
 	void SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef = 1);
-	void SetOM_BlendState();
+	void SetOM_BlendState(ID3D11BlendState* pState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
 
-	
 	void Draw_Vertices(UINT vertexCount, UINT startIdx);
 	void Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset);
 	void SwapchainPresent(bool vsync);
@@ -103,8 +103,9 @@ private:
 	Direct3D*											m_pCDirect3D = nullptr;
 	SwapChain*											m_pCSwapChain = nullptr;
 	SamplerState*										m_pCSamplers = nullptr;
-	RasterizerState*									m_pCRSStaets = nullptr;
-	DepthStencilState*									m_pCDSStates = nullptr;
+	RasterizerState*									m_pCRasterizers = nullptr;
+	DepthStencilState*									m_pCDepthStencils = nullptr;
+	BlendState*											m_pCBlends = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;

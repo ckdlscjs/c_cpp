@@ -83,4 +83,5 @@ public:
 	BlendState& operator=(const BlendState&) = delete;
 	BlendState(BlendState&&) = delete;
 	BlendState& operator=(BlendState&&) = delete;
+	ID3D11BlendState* GetState(E_BSStates stateIdx);
 };

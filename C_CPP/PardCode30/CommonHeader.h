@@ -49,6 +49,13 @@ enum class E_DSStates
 	UI,
 };
 
+enum class E_BSStates
+{
+	Opaque,
+	Transparent,
+	Additive
+};
+
 enum class E_Colliders
 {
 	NONE,

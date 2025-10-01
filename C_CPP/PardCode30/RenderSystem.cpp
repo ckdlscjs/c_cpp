@@ -46,11 +46,14 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	m_pCSamplers = new SamplerState(m_pCDirect3D->GetDevice());
 	_ASEERTION_NULCHK(m_pCSamplers, "Samplers is nullptr");
 
-	m_pCRSStaets = new RasterizerState(m_pCDirect3D->GetDevice());
-	_ASEERTION_NULCHK(m_pCRSStaets, "Rasterizer is nullptr");
+	m_pCRasterizers = new RasterizerState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCRasterizers, "Rasterizer is nullptr");
 
-	m_pCDSStates = new DepthStencilState(m_pCDirect3D->GetDevice());
-	_ASEERTION_NULCHK(m_pCDSStates, "DepthStencil is nullptr");
+	m_pCDepthStencils = new DepthStencilState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCDepthStencils, "DepthStencil is nullptr");
+
+	m_pCBlends = new BlendState(m_pCDirect3D->GetDevice());
+	_ASEERTION_NULCHK(m_pCDepthStencils, "DepthStencil is nullptr");
 
 	//상수버퍼 기본세팅
 	_RenderSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
@@ -100,10 +103,12 @@ void RenderSystem::Render(float deltatime)
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
 
+	SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+
 	if (SkyObj)//SKYOBJ
 	{
 		{
-			SetOM_DepthStenilState(m_pCDSStates->GetState(E_DSStates::SKYBOX));
+			SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSStates::SKYBOX));
 			//DirectionalLight
 			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
@@ -136,7 +141,7 @@ void RenderSystem::Render(float deltatime)
 			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
 
 			SetPS_SamplerState(m_pCSamplers->GetState(E_Samplers::LINEAR_WRAP));
-			SetRS_RasterizerState(m_pCRSStaets->GetState(E_RSStates::SOLID_CULLFRONT_CW));
+			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLFRONT_CW));
 		}
 
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
@@ -167,7 +172,7 @@ void RenderSystem::Render(float deltatime)
 
 	//OBJS
 	{
-		SetOM_DepthStenilState(m_pCDSStates->GetState(E_DSStates::DEFAULT));
+		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSStates::DEFAULT));
 		//DirectionalLight
 		m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
@@ -191,7 +196,7 @@ void RenderSystem::Render(float deltatime)
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
 
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Samplers::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRSStaets->GetState(E_RSStates::SOLID_CULLBACK_CW));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CW));
 #ifndef _TESTBLOCK
 		for (const auto& obj : objs)
 		{
@@ -426,16 +431,22 @@ void RenderSystem::Release()
 		m_pCSamplers = nullptr;
 	}
 
-	if (m_pCRSStaets)
+	if (m_pCRasterizers)
 	{
-		delete m_pCRSStaets;
-		m_pCRSStaets = nullptr;
+		delete m_pCRasterizers;
+		m_pCRasterizers = nullptr;
 	}
 
-	if (m_pCDSStates)
+	if (m_pCDepthStencils)
 	{
-		delete m_pCDSStates;
-		m_pCDSStates = nullptr;
+		delete m_pCDepthStencils;
+		m_pCDepthStencils = nullptr;
+	}
+
+	if (m_pCBlends)
+	{
+		delete m_pCBlends;
+		m_pCBlends = nullptr;
 	}
 
 	if (m_pCSwapChain)
@@ -629,7 +640,7 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 	DepthStencilView* pDSV;
 	if (m_pCDSVs.find(hash) != m_pCDSVs.end())
 	{
-		pDSV = static_cast<DepthStencilView*>(m_pCDSVs[hash]);
+		pDSV = m_pCDSVs[hash];
 		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
 	}
 	else
@@ -701,16 +712,6 @@ void RenderSystem::SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 	m_pCDirect3D->GetDeviceContext()->VSSetConstantBuffers(startIdx, 1, &pBuffer);
 }
 
-/*
-//void ID3D11DeviceContext::PSSetSamplers(
-//	[in] UINT                   StartSlot,
-//	[in] UINT                   NumSamplers,
-//	[in] ID3D11SamplerState* const* ppSamplerStates
-//);
-//StartSlot: 셰이더 코드에서 샘플러가 바인딩될 레지스터 슬롯 번호입니다.HLSL 셰이더에서 sampler s0, sampler s1 등으로 선언된 경우, 이 sX의 X에 해당하는 번호입니다.
-//NumSamplers : 바인딩할 샘플러 스테이트의 개수입니다(보통 1개).
-//ppSamplerStates : 바인딩할 ID3D11SamplerState 포인터들의 배열입니다.
-*/
 void RenderSystem::SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx)
 {
 	m_pCDirect3D->GetDeviceContext()->VSGetSamplers(startIdx, 1, &pState);
@@ -736,9 +737,19 @@ void RenderSystem::SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 	m_pCDirect3D->GetDeviceContext()->PSSetConstantBuffers(startIdx, 1, &pBuffer);
 }
 
+void RenderSystem::SetRS_RasterizerState(ID3D11RasterizerState* pState)
+{
+	m_pCDirect3D->GetDeviceContext()->RSSetState(pState);
+}
+
 void RenderSystem::SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef)
 {
 	m_pCDirect3D->GetDeviceContext()->OMSetDepthStencilState(pState, stencilRef);
+}
+
+void RenderSystem::SetOM_BlendState(ID3D11BlendState* pState, const FLOAT* blendFactor, UINT sampleMask)
+{
+	m_pCDirect3D->GetDeviceContext()->OMSetBlendState(pState, blendFactor, sampleMask);
 }
 
 void RenderSystem::Draw_Vertices(UINT vertexCount, UINT startIdx)
@@ -755,11 +766,6 @@ void RenderSystem::SwapchainPresent(bool vsync)
 {
 	std::cout << "SwapchainPreset, 백버퍼교체" << '\n';
 	m_pCSwapChain->GetSwapChain()->Present(vsync, NULL);
-}
-
-void RenderSystem::SetRS_RasterizerState(ID3D11RasterizerState* pState)
-{
-	m_pCDirect3D->GetDeviceContext()->RSSetState(pState);
 }
 
 size_t RenderSystem::CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data)
