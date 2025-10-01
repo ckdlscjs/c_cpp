@@ -1,0 +1,27 @@
+알파블렌딩을 위해서 셰이더에 알파블렌딩 기능을 켜고 블렌딩공식을 설정해야한다
+D3DClass에서 블렌딩을 설정한다
+blendStateDescription.RenderTarget[0].BlendEnable = TRUE;
+blendStateDescription.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+blendStateDescription.RenderTarget[0].BlendEnable = D3D_BLEND_INV_SRC_ALPHA;
+
+DestBlend는 이미 그자리에 그려져있는 기존 픽셀의 색상, 여기에 소스텍스처의 알파를 역전시키는 INV_SRC_ALPHA를 사용한다 고로
+SrcAlpha가 0.3이면 기존텍스처의 알파는 0.7이 사용되는것 -> 합쳐서1
+
+D3D11_BLEND_DESC는 Direct3D 11에서 사용되는 블렌드 상태를 설정하는 구조체입니다. 이 구조체는 ID3D11Device::CreateBlendState 함수를 사용하여 블렌드 상태 개체를 만들 때 사용됩니다.
+
+D3D11_BLEND_DESC 구조체는 다음과 같은 멤버를 가지고 있습니다.
+
+AlphaToCoverageEnable: 불리언 값으로, 알파 커버리지 계산을 사용할지 여부를 나타냅니다.
+BlendEnable: 불리언 값으로, 블렌딩을 사용할지 여부를 나타냅니다.
+RenderTarget: D3D11_RENDER_TARGET_BLEND_DESC 구조체를 담은 배열로, 렌더 타겟마다 다른 블렌딩 옵션을 설정할 수 있습니다.
+D3D11_RENDER_TARGET_BLEND_DESC 구조체는 다음과 같은 멤버를 가지고 있습니다.
+
+BlendEnable: 불리언 값으로, 블렌딩을 사용할지 여부를 나타냅니다.
+SrcBlend: D3D11_BLEND 열거형 값으로, 소스 컬러의 블렌딩 방법을 나타냅니다.
+DestBlend: D3D11_BLEND 열거형 값으로, 대상 컬러의 블렌딩 방법을 나타냅니다.
+BlendOp: D3D11_BLEND_OP 열거형 값으로, 블렌딩 연산 방법을 나타냅니다.
+SrcBlendAlpha: D3D11_BLEND 열거형 값으로, 소스 알파의 블렌딩 방법을 나타냅니다.
+DestBlendAlpha: D3D11_BLEND 열거형 값으로, 대상 알파의 블렌딩 방법을 나타냅니다.
+BlendOpAlpha: D3D11_BLEND_OP 열거형 값으로, 알파 블렌딩 연산 방법을 나타냅니다.
+RenderTargetWriteMask: D3D11_COLOR_WRITE_ENABLE 열거형 값으로, 렌더 타겟의 컬러 채널 중 어떤 것을 쓸 것인지 나타냅니다.
+D3D11_BLEND 열거형은 블렌딩에서 사용할 소스 컬러나 대상 컬러의 값을 지정합니다. D3D11_BLEND_OP 열거형은 블렌딩 연산 방법을 지정합니다. D3D11_COLOR_WRITE_ENABLE 열거형은 렌더 타겟의 어떤 컬러 채널을 사용할 것인지 지정합니다.

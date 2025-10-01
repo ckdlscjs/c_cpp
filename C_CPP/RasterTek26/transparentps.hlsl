@@ -1,0 +1,43 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: transparent.ps
+////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////
+// GLOBALS //
+/////////////
+Texture2D shaderTexture;
+SamplerState SampleType;
+
+cbuffer TransparentBuffer
+{
+	float blendAmount;
+};
+
+
+//////////////
+// TYPEDEFS //
+//////////////
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Pixel Shader
+////////////////////////////////////////////////////////////////////////////////
+float4 TransparentPixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 color;
+	
+	
+	// 이 위치에서 텍스처 픽셀을 샘플링합니다.
+    color = shaderTexture.Sample(SampleType, input.tex);
+
+	// 이 픽셀의 알파 값을 혼합 양으로 설정하여 알파 블렌딩 효과를 만듭니다.
+    color.a = blendAmount;
+
+	return color;
+}
