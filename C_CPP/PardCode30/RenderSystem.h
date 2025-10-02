@@ -121,6 +121,7 @@ private:
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;
+	TempObj* Gizmo;
 	std::vector<TempObj*> objs;
 	std::vector<TempObj*> ortho_objs;
 };
@@ -130,10 +131,11 @@ public:
 //템플릿 추론 명시
 template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Colliders collider);
 template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Colliders collider);
+template size_t RenderSystem::CreateMaterial<Vertex_PC>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTN>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTNTB>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
-
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PC>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PC>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
 

@@ -737,3 +737,33 @@ inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& poi
 
 	indices = { 0, 1, 2, 2, 1, 3 };
 }
+
+inline static void GeometryGenerate_Gizmo(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PC>& vertices, std::vector<UINT>& indices)
+{
+	/*
+	* x 0 1
+	* y 2 3
+	* z 4 5
+	*/
+	points.resize(1, std::vector<Vector3>(6));
+	vertices.resize(6);
+	vertices[0].pos0 = points[0][0] = Vector3(0.0f, 0.0f, 0.0f);
+	vertices[0].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	vertices[1].pos0 = points[0][1] = Vector3(1.0f, 0.0f, 0.0f);
+	vertices[1].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+	vertices[2].pos0 = points[0][2] = Vector3(0.0f, 0.0f, 0.0f);
+	vertices[2].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+
+	vertices[3].pos0 = points[0][3] = Vector3(0.0f, 1.0f, 0.0f);
+	vertices[3].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+
+	vertices[4].pos0 = points[0][4] = Vector3(0.0f, 0.0f, 0.0f);
+	vertices[4].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+
+	vertices[5].pos0 = points[0][5] = Vector3(0.0f, 0.0f, 1.0f);
+	vertices[5].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+
+	indices = {0, 1, 2, 3, 4, 5};
+}

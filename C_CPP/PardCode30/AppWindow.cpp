@@ -264,6 +264,23 @@ void AppWindow::OnCreate()
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_materials[5] });
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_materials[6] });
 		}
+
+		//gizmo
+		{
+			std::vector<std::vector<Vector3>> points;
+			std::vector<Vertex_PC> vertices;
+			std::vector<UINT> indices;
+			GeometryGenerate_Gizmo(points, vertices, indices);
+			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(vertices), std::move(indices), E_Colliders::AABB);
+			{
+				size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PC>(L"Mat_Gizmo", L"VS_PC.hlsl", L"PS_PC.hlsl");
+				_RenderSystem.Gizmo = new TempObj();
+				TempObj* obj = _RenderSystem.Gizmo;
+				obj->m_vScale = Vector3(100.0f, 100.0f, 100.0f);
+				obj->m_vPosition = Vector3(100.0f, 0.0f, 0.0f);
+				obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
+			}
+		}
 	}
 #endif // DEBUG
 

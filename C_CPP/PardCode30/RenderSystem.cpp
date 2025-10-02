@@ -22,6 +22,7 @@
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
 size_t g_hash_cbpointlight = typeid(CB_PointLight).hash_code();
 size_t g_hash_cbspotlight = typeid(CB_SpotLight).hash_code();
+size_t g_hash_cbwvpmat = typeid(CB_WVPMatrix).hash_code();
 size_t g_hash_cbwvpitmat = typeid(CB_WVPITMatrix).hash_code();
 size_t g_hash_cbtime = typeid(CB_Time).hash_code();
 size_t g_hash_cbcampos = typeid(CB_Campos).hash_code();
@@ -59,10 +60,11 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_RenderSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_PointLight), sizeof(CB_PointLight));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_SpotLight), sizeof(CB_SpotLight));
+	_RenderSystem.CreateConstantBuffer(typeid(CB_WVPMatrix), sizeof(CB_WVPMatrix));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_WVPITMatrix), sizeof(CB_WVPITMatrix));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
-
+	_RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
 	OnResize(m_iWidth, m_iHeight);
 }
 
@@ -95,7 +97,6 @@ void RenderSystem::PreRender()
 void RenderSystem::Render(float deltatime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
-
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//프레임에따른 변환
@@ -104,6 +105,35 @@ void RenderSystem::Render(float deltatime)
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
 
 	SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+
+	//gizmo
+	std::function<void(Vector3 scale, const Vector3& rotate, const Vector3& position)> drawgizmo = [&](Vector3 scale, const Vector3& rotate, const Vector3& position)->void
+		{
+			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+			TempObj* obj = Gizmo;
+			CB_WVPMatrix cc0;
+			cc0.matWorld = GetMat_WorldMatrix(scale*1.5f, rotate, position);
+			cc0.matView = matView;
+			cc0.matProj = matProj;
+			m_pCCBs[g_hash_cbwvpmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+			SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpmat]->GetBuffer(), 3);
+
+			for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
+			{
+				auto& iter = obj->m_Mesh_Material[j];
+				Mesh<Vertex_PC>* pMesh = (Mesh<Vertex_PC>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+				SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+				SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+				SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+			}
+			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		};
 
 	if (SkyObj)//SKYOBJ
 	{
@@ -202,6 +232,7 @@ void RenderSystem::Render(float deltatime)
 		{
 			if (!obj->bRenderable) continue;
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+			drawgizmo(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 			CB_WVPITMatrix cc0;
 			cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 			cc0.matView = matView;
@@ -233,8 +264,10 @@ void RenderSystem::Render(float deltatime)
 					}
 				}
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				
 			}
 		}
+		
 #endif 
 
 #ifdef _TESTBLOCK
@@ -412,6 +445,9 @@ void RenderSystem::Release()
 
 	if (SkyObj)
 		delete SkyObj;
+
+	if (Gizmo)
+		delete Gizmo;
 
 	for (auto iter = objs.begin(); iter != objs.end();)
 	{

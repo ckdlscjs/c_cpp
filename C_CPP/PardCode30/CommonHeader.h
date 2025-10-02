@@ -314,6 +314,16 @@ template <typename T>
 struct Traits_InputLayout;
 
 template <>
+struct Traits_InputLayout<Vertex_PC> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PC].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PC].second;
+	}
+};
+
+template <>
 struct Traits_InputLayout<Vertex_PTN> {
 	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN].first;
@@ -454,4 +464,14 @@ struct CB_SpotLight
 	Vector4 vPosition;		//w is shiness
 	Vector4 fAttenuations;	//a0, a1, a2, range
 	Vector4 fSpots;			//spot, cosOuter, cosInner, padd2
+};
+
+__declspec(align(16))
+struct CB_Fog
+{
+	float fFogNear;
+	float fFogFar;
+	float fFogDensity;
+	float padding;
+	Vector4 vFogColor;
 };
