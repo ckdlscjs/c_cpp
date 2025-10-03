@@ -306,6 +306,15 @@ inline Vector3 GetTranslationFromWorld(const Matrix4x4& matWorld)
 {
 	return matWorld[3].ToVector3();
 }
+inline Matrix4x4 GetMat_RotFromMatrix(const Matrix4x4& matSource)
+{
+	Matrix4x4 mat;
+	mat[0] = Vector4(matSource[0].ToVector3(), 0.0f);
+	mat[1] = Vector4(matSource[1].ToVector3(), 0.0f);
+	mat[2] = Vector4(matSource[2].ToVector3(), 0.0f);
+	mat[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
+	return mat;
+}
 
 //사원수 추가후 추가예정
 //inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Vector3* rotate, Vector3* translation)

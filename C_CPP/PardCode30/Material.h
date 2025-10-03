@@ -12,9 +12,9 @@ public:
 	Material(Material&&) = delete;
 	Material& operator=(Material&&) = delete;
 
-	void SetVS(size_t hashVS);
+	void SetVS_Shader(size_t hashVS);
 	size_t GetVS() const;
-	void SetPS(size_t hashPS);
+	void SetPS_Shader(size_t hashPS);
 	size_t GetPS() const;
 	void SetIL(size_t hashIL);
 	size_t GetIL() const;
@@ -82,7 +82,7 @@ inline Material::Material(size_t hash, const std::wstring& szFilePath)
 	SetFilePath(szFilePath);
 }
 
-inline void Material::SetVS(size_t hashVS)
+inline void Material::SetVS_Shader(size_t hashVS)
 {
 	m_lVS = hashVS;
 }
@@ -92,7 +92,7 @@ inline size_t Material::GetVS() const
 	return m_lVS;
 }
 
-inline void Material::SetPS(size_t hashPS)
+inline void Material::SetPS_Shader(size_t hashPS)
 {
 	m_lPS = hashPS;
 }

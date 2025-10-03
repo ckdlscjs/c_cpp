@@ -31,9 +31,9 @@ private:
 	RenderSystem& operator=(RenderSystem&&) = delete;
 public:
 	void Init(HWND hWnd, UINT width, UINT height);
-	void Frame(float deltatime);
-	void PreRender();
-	void Render(float deltatime);
+	void Frame(float deltatime, float elapsedtime);
+	void PreRender(float deltatime, float elapsedtime);
+	void Render(float deltatime, float elapsedtime);
 	void PostRender();
 	void Release();
 	void OnResize(UINT width, UINT height);
@@ -77,12 +77,12 @@ private:
 	void SetIA_VertexBuffer(ID3D11Buffer* pBuffer, UINT iSizeVertex, UINT offset = 0);
 	void SetIA_IndexBuffer(ID3D11Buffer* pBuffer, UINT offset = 0);
 
-	void SetVS(ID3D11VertexShader* pVS);
+	void SetVS_Shader(ID3D11VertexShader* pVS);
 	void SetVS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
 	void SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 	void SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
 
-	void SetPS(ID3D11PixelShader* pPS);
+	void SetPS_Shader(ID3D11PixelShader* pPS);
 	void SetPS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
 	void SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 	void SetPS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
@@ -122,6 +122,7 @@ public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;
 	TempObj* Gizmo;
+	TempObj* SpaceShip;
 	std::vector<TempObj*> objs;
 	std::vector<TempObj*> ortho_objs;
 };

@@ -68,7 +68,7 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	OnResize(m_iWidth, m_iHeight);
 }
 
-void RenderSystem::Frame(float deltatime)
+void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "deltatime : " << deltatime << '\n';
@@ -87,14 +87,14 @@ void RenderSystem::Frame(float deltatime)
 	}
 }
 
-void RenderSystem::PreRender()
+void RenderSystem::PreRender(float deltatime, float elapsedtime)
 {
 	std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
 	//RTV초기화
 	ClearRenderViews(0, 0.3f, 0.4f, 1);
 }
 
-void RenderSystem::Render(float deltatime)
+void RenderSystem::Render(float deltatime, float elapsedtime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -107,12 +107,13 @@ void RenderSystem::Render(float deltatime)
 	SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
 
 	//gizmo
-	std::function<void(Vector3 scale, const Vector3& rotate, const Vector3& position)> drawgizmo = [&](Vector3 scale, const Vector3& rotate, const Vector3& position)->void
+	std::function<void(const Matrix4x4& matWorld)> drawgizmo = [&](const Matrix4x4& matWorld)->void
 		{
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Transparent), NULL);
 			TempObj* obj = Gizmo;
 			CB_WVPMatrix cc0;
-			cc0.matWorld = GetMat_WorldMatrix(scale*1.5f, rotate, position);
+			cc0.matWorld = matWorld;
 			cc0.matView = matView;
 			cc0.matProj = matProj;
 			m_pCCBs[g_hash_cbwvpmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
@@ -127,12 +128,13 @@ void RenderSystem::Render(float deltatime)
 
 				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 				SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
+				SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+				SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
 		};
 
 	if (SkyObj)//SKYOBJ
@@ -161,7 +163,7 @@ void RenderSystem::Render(float deltatime)
 			SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
 
 			CB_Time cc1;
-			cc1.fTime = deltatime;
+			cc1.fTime = elapsedtime;
 			m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbtime]->GetBuffer(), 4);
 
@@ -183,16 +185,16 @@ void RenderSystem::Render(float deltatime)
 
 			Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 			SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-			SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-			SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
+			SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+			SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 			const std::vector<size_t>* texs = pMaterial->GetTextures();
 			int cnt = 0;
 			for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 			{
-				for (const auto& hashVW : texs[idxTex])
+				for (const auto& hashTX : texs[idxTex])
 				{
-					auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashVW)->GetSRV()]->GetView();
+					auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTX)->GetSRV()]->GetView();
 					SetPS_ShaderResourceView(pSrv, cnt++);
 				}
 			}
@@ -216,7 +218,7 @@ void RenderSystem::Render(float deltatime)
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbspotlight]->GetBuffer(), 2);
 
 		CB_Time cc1;
-		cc1.fTime = deltatime;
+		cc1.fTime = elapsedtime;
 		m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbtime]->GetBuffer(), 4);
 
@@ -250,8 +252,8 @@ void RenderSystem::Render(float deltatime)
 
 				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 				SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
+				SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+				SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 				const std::vector<size_t>* texs = pMaterial->GetTextures();
 				int cnt = 0;
@@ -272,20 +274,65 @@ void RenderSystem::Render(float deltatime)
 
 #ifdef _TESTBLOCK
 		{
+#ifdef _SPACESHIP
+			{
+				auto& obj = SpaceShip;
+				if (!obj->bRenderable)
+				{
+					//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+					CB_WVPITMatrix cc0;
+					obj->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
+					Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
+					Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate) * GetMat_RotFromMatrix(matWorld);
+					Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
+					cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
+					cc0.matView = matView;
+					cc0.matProj = matProj;
+					cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
+
+					for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
+					{
+						auto& iter = obj->m_Mesh_Material[j];
+						//지정핸들링필요
+						Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+						{
+							for (const auto& hashTX : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTX)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
+						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * GetMat_RotFromMatrix(matWorld) * mat_translation_obj);
+					}
+				}
+			}
+#endif // _SPACESHIP
+
 			//objs
 			for (int i = 0; i < objs.size(); i++)
 			{
 				const auto& obj = objs[i];
 				if (!obj->bRenderable) continue;
-				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+	
 				CB_WVPITMatrix cc0;
-				/*objs[0]->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
-				Matrix4x4 objMat = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
-				matWorld[3] = Vector4(0.0f, 0.0f, 0.0f, 1.0f);
-				matWorld *= GetMat_Scale(objs[0]->m_vScale);
-				matWorld[3] = objMat[3];
-				cc0.matWorld = i == 0 ? matWorld : objMat;*/
-				cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+				Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
+				Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+				Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
+				cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
 				cc0.matView = matView;
 				cc0.matProj = matProj;
 				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
@@ -302,77 +349,81 @@ void RenderSystem::Render(float deltatime)
 
 					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-					SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-					SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
+					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 					const std::vector<size_t>* texs = pMaterial->GetTextures();
 					int cnt = 0;
 					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 					{
-						for (const auto& hashTx : texs[idxTex])
+						for (const auto& hashTX : texs[idxTex])
 						{
-							auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+							auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTX)->GetSRV()]->GetView();
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
 					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f)* mat_rotate_obj* mat_translation_obj);
 				}
 			}
 		}
 #endif	
-		//2D객체로 SRV임시체크
-		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
-		//ID3D11ShaderResourceView* nullSRV = nullptr;
-		//m_pCDirect3D->GetDeviceContext()->PSSetShaderResources(0, 1, &nullSRV);
-		ID3D11RenderTargetView* RTVS[]
+		//UIRender
 		{
-			m_pCRTVs[m_hash_RTV_BB]->GetView(),
-		};
-		FLOAT clearColor[] = {0.0f, 0.0f, 0.0f, 1.0f };
-		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(1, RTVS, NULL);
-		m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[m_hash_RTV_BB]->GetView(), clearColor);
-		Matrix4x4 matOrtho = _CameraSystem.GetCamera(0)->GetOrthoMatrix();
-		{
-			//ortho_objs
-			for (int i = 0; i < ortho_objs.size(); i++)
+			//2D객체로 SRV임시체크
+			m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
+			//ID3D11ShaderResourceView* nullSRV = nullptr;
+			//m_pCDirect3D->GetDeviceContext()->PSSetShaderResources(0, 1, &nullSRV);
+			ID3D11RenderTargetView* RTVS[]
 			{
-				const auto& obj = ortho_objs[i];
-				//if (!obj->bRenderable) continue;
-				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-				CB_WVPITMatrix cc0;
-				cc0.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
-				cc0.matView = GetMat_Identity();
-				cc0.matProj = matOrtho;
-				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
-
-				for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
+				m_pCRTVs[m_hash_RTV_BB]->GetView(),
+			};
+			FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(1, RTVS, NULL);
+			m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[m_hash_RTV_BB]->GetView(), clearColor);
+			Matrix4x4 matOrtho = _CameraSystem.GetCamera(0)->GetOrthoMatrix();
+			{
+				//ortho_objs
+				for (int i = 0; i < ortho_objs.size(); i++)
 				{
-					auto& iter = obj->m_Mesh_Material[j];
-					Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
-					SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
-					SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+					const auto& obj = ortho_objs[i];
+					//if (!obj->bRenderable) continue;
+					//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+					CB_WVPITMatrix cc0;
+					cc0.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
+					cc0.matView = GetMat_Identity();
+					cc0.matProj = matOrtho;
+					cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
 
-					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-					SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-					SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
-
-					const std::vector<size_t>* texs = pMaterial->GetTextures();
-					int cnt = 0;
-					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+					for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 					{
-						for (const auto& hashVW : texs[idxTex])
+						auto& iter = obj->m_Mesh_Material[j];
+						Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
 						{
-							if (i == 0)
-								SetPS_ShaderResourceView(m_pCSRVs[m_hash_RTV_0]->GetView(), cnt++);
-							else
-								SetPS_ShaderResourceView(m_pCSRVs[m_hash_DSV_0]->GetView(), cnt++);
-							//static_cast<ShaderResourceView*>(m_pCVWs[_ResourceSystem.GetResource<Texture>(hashVW)->GetVW()])->SetPS(m_pCDirect3D->GetDeviceContext(), cnt++);
+							for (const auto& hashTX : texs[idxTex])
+							{
+								size_t hash_srv = _ResourceSystem.GetResource<Texture>(hashTX)->GetSRV();
+								if (i == 0)
+									SetPS_ShaderResourceView(m_pCSRVs[m_hash_RTV_0]->GetView(), cnt++);
+								else
+									SetPS_ShaderResourceView(m_pCSRVs[m_hash_DSV_0]->GetView(), cnt++);
+							}
 						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
@@ -448,6 +499,9 @@ void RenderSystem::Release()
 
 	if (Gizmo)
 		delete Gizmo;
+
+	if (SpaceShip)
+		delete SpaceShip;
 
 	for (auto iter = objs.begin(); iter != objs.end();)
 	{
@@ -733,7 +787,7 @@ void RenderSystem::SetIA_IndexBuffer(ID3D11Buffer* pBuffer, UINT offset)
 	m_pCDirect3D->GetDeviceContext()->IASetIndexBuffer(pBuffer, DXGI_FORMAT_R32_UINT, offset); //4바이트, 32비트를의미
 }
 
-void RenderSystem::SetVS(ID3D11VertexShader* pVS)
+void RenderSystem::SetVS_Shader(ID3D11VertexShader* pVS)
 {
 	m_pCDirect3D->GetDeviceContext()->VSSetShader(pVS, nullptr, 0);
 }
@@ -758,7 +812,7 @@ void RenderSystem::SetPS_SamplerState(ID3D11SamplerState* pState, UINT startIdx)
 	m_pCDirect3D->GetDeviceContext()->PSSetSamplers(startIdx, 1, &pState);
 }
 
-void RenderSystem::SetPS(ID3D11PixelShader* pPS)
+void RenderSystem::SetPS_Shader(ID3D11PixelShader* pPS)
 {
 	m_pCDirect3D->GetDeviceContext()->PSSetShader(pPS, nullptr, 0);
 }
@@ -888,8 +942,8 @@ template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
 {
 	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
-	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
-	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
+	pMaterial->SetVS_Shader(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
+	pMaterial->SetPS_Shader(CreatePixelShader(psName, "psmain", "ps_5_0"));
 	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
 	return pMaterial->GetHash();
 }
@@ -901,8 +955,8 @@ std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath
 	_ASEERTION_NULCHK(materials.size() == VSs.size(), "material and shader counts not equal");
 	for (UINT i = 0; i < materials.size(); i++)
 	{
-		materials[i]->SetVS(CreateVertexShader(VSs[i], "vsmain", "vs_5_0"));
-		materials[i]->SetPS(CreatePixelShader(PSs[i], "psmain", "ps_5_0"));
+		materials[i]->SetVS_Shader(CreateVertexShader(VSs[i], "vsmain", "vs_5_0"));
+		materials[i]->SetPS_Shader(CreatePixelShader(PSs[i], "psmain", "ps_5_0"));
 		materials[i]->SetIL(CreateInputLayout(VSs[i] + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(VSs[i], "vsmain", "vs_5_0")]->GetBlob()));
 		rets.push_back(materials[i]->GetHash());
 	}
