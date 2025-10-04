@@ -523,8 +523,7 @@ std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath
 
 void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
 {
-	Material* pMaterial = _ResourceSystem.
-		<Material>(hash_material);
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
 }

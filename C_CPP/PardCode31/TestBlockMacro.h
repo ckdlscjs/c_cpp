@@ -1,3 +1,3 @@
 #pragma once
-#define _TESTBLOCK
 #define _SPACESHIP
+#define _TESTBLOCK

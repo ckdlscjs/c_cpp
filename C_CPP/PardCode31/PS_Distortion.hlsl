@@ -5,7 +5,6 @@ struct PS_INPUT
 {
     float4 pos0 : SV_POSITION;
     float4 tex0 : TEXCOORD0;
-    float4 normal0 : NORMAL0;
     float4 pos1 : WORLDP0;
 };
 
@@ -20,7 +19,7 @@ float2 distortion(float2 xy)
     float theta = atan2(xy.y, xy.x);
     float radius = length(xy);
 
-    radius = pow(radius, 0.5f);
+    radius = pow(radius, 1.0f);
 
     xy.x = radius * cos(theta);
     xy.y = radius * sin(theta);

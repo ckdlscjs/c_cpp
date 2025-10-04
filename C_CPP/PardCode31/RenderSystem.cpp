@@ -122,7 +122,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 			{
 				auto& iter = obj->m_Mesh_Material[j];
-				Mesh<Vertex_PC>* pMesh = (Mesh<Vertex_PC>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+				Mesh<Vertex_PC>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PC>>(iter.hash_mesh);
 				SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 				SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -179,7 +179,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
 		{
 			auto& iter = SkyObj->m_Mesh_Material[i];
-			Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+			Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 			SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 			SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -234,9 +234,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		{
 			if (!obj->bRenderable) continue;
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-			drawgizmo(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+			Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
+			Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+			Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 			CB_WVPITMatrix cc0;
-			cc0.matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+			cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
 			cc0.matView = matView;
 			cc0.matProj = matProj;
 			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
@@ -246,7 +248,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 			{
 				auto& iter = obj->m_Mesh_Material[j];
-				Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+				Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 				SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 				SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -266,8 +268,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					}
 				}
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-				
 			}
+			drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f)* mat_rotate_obj* mat_translation_obj);
 		}
 		
 #endif 
@@ -296,7 +298,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					{
 						auto& iter = obj->m_Mesh_Material[j];
 						//지정핸들링필요
-						Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -316,8 +318,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 							}
 						}
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-						drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * GetMat_RotFromMatrix(matWorld) * mat_translation_obj);
 					}
+					drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * GetMat_RotFromMatrix(matWorld) * mat_translation_obj);
 				}
 			}
 #endif // _SPACESHIP
@@ -343,7 +345,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				{
 					auto& iter = obj->m_Mesh_Material[j];
 					//지정핸들링필요
-					Mesh<Vertex_PTNTB>* pMesh = (Mesh<Vertex_PTNTB>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+					Mesh<Vertex_PTNTB>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTNTB>>(iter.hash_mesh);
 					SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 					SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -363,8 +365,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						}
 					}
 					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-					drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f)* mat_rotate_obj* mat_translation_obj);
 				}
+				drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f)* mat_rotate_obj* mat_translation_obj);
 			}
 		}
 #endif	
@@ -400,7 +402,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
 					{
 						auto& iter = obj->m_Mesh_Material[j];
-						Mesh<Vertex_PTN>* pMesh = (Mesh<Vertex_PTN>*)_ResourceSystem.GetResource<Resource>(iter.hash_mesh);
+						Mesh<Vertex_PT>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PT>>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -416,10 +418,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 							for (const auto& hashTX : texs[idxTex])
 							{
 								size_t hash_srv = _ResourceSystem.GetResource<Texture>(hashTX)->GetSRV();
-								if (i == 0)
-									SetPS_ShaderResourceView(m_pCSRVs[m_hash_RTV_0]->GetView(), cnt++);
-								else
-									SetPS_ShaderResourceView(m_pCSRVs[m_hash_DSV_0]->GetView(), cnt++);
+								if (i == 0) SetPS_ShaderResourceView(m_pCSRVs[m_hash_RTV_0]->GetView(), cnt++);
+								else SetPS_ShaderResourceView(m_pCSRVs[m_hash_DSV_0]->GetView(), cnt++);
 							}
 						}
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);

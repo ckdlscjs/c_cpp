@@ -80,8 +80,8 @@ enum class E_Textures
 enum class E_InputLayout
 {
 	PC,
-	PCT,
 	PT,
+	PCT,
 	PPCC,
 	PTN,
 	PTNTB,
@@ -141,6 +141,20 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
 	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
 	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PT
+{
+	Vector3 pos0;
+	Vector2 tex0;
+};
+
+//align offset 을 D3D11_APPEND_ALIGNED_ELEMENT 로 대체 할 수 있다
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPT[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 };
 
 struct Vertex_PCT
@@ -302,7 +316,7 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB[] =
 static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
 {
 	{InputLayout_VertexPC,		(UINT)ARRAYSIZE(InputLayout_VertexPC)},
-	{InputLayout_VertexPCT,		(UINT)ARRAYSIZE(InputLayout_VertexPCT)},
+	{InputLayout_VertexPT,		(UINT)ARRAYSIZE(InputLayout_VertexPT)},
 	{InputLayout_VertexPCT,		(UINT)ARRAYSIZE(InputLayout_VertexPCT)},
 	{InputLayout_VertexPPCC,	(UINT)ARRAYSIZE(InputLayout_VertexPPCC)},
 	{InputLayout_VertexPTN,		(UINT)ARRAYSIZE(InputLayout_VertexPTN)},
@@ -320,6 +334,16 @@ struct Traits_InputLayout<Vertex_PC> {
 	}
 	static constexpr UINT GetSize() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::PC].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PT> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PT].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PT].second;
 	}
 };
 
