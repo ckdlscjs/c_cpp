@@ -16,7 +16,7 @@ public:
 		float nlength = n.Length();
 		m_vec.Set(n.GetX() / nlength, n.GetY() / nlength, n.GetZ() / nlength, d / nlength);
 	}
-	inline Plane(const Vector3& n, const Vector3& p) : Plane(n, DotProduct(n, p)) {}
+	inline Plane(const Vector3& n, const Vector3& p) : Plane(n, -DotProduct(n, p)) {}
 	inline Plane(float a, float b, float c, float d) : Plane(Vector3(a, b, c), d) {}
 	inline Plane(const Vector4& v) : Plane(v.ToVector3(), v.GetW()) {}
 	inline Plane(const Vector3& p0, const Vector3& p1, const Vector3& p2)
@@ -28,6 +28,10 @@ public:
 		n = n.Normalize();
 		float d = -DotProduct(n, p0);
 		m_vec.Set(n.GetX(), n.GetY(), n.GetZ(), d);
+	}
+	inline Vector4 ToVector4() const
+	{
+		return m_vec;
 	}
 	inline Vector3 GetNormal() const
 	{

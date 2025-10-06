@@ -439,6 +439,26 @@ inline Matrix4x4 GetMat_Orthographic_OffCenter(float left, float right, float to
 }
 
 /*
+* 반사행렬
+* D = n dot v + d -> 평면의방정식(ax + by + cz + d)
+* 반사벡터 v' = v - 2*D*n, 이를 v * M 형태로 연산시킨다, 행렬의 한 열이 반사벡터식의 분해요소곱을 의미한다
+* 1-2a^2			-2ab			-2ac				0.0f
+* -2ab				1-2b^2			-2bc				0.0f
+* -2ac				-2bc			1-2c^2				0.0f
+* -2ad				-2bd			-2cd				1.0f
+*/
+inline Matrix4x4 GetMat_Reflect(const Vector4& plane)
+{
+	float a = plane.GetX(); float b = plane.GetY(); float c = plane.GetZ(); float d = plane.GetW();
+	Matrix4x4 mat;
+	mat[0] = Vector4(1.0f - 2.0f * a * a, -2.0f * a * b, -2.0f * a * c, 0.0f);
+	mat[1] = Vector4(-2.0f * a * b, 1.0f - 2.0f * b * b, -2.0f * b * c, 0.0f);
+	mat[2] = Vector4(-2.0f * a * c, -2.0f * b * c, 1.0f - 2.0f * c * c, 0.0f);
+	mat[3] = Vector4(-2.0f * a * d, -2.0f * b * d, -2.0f * c * d, 1.0f);
+	return mat;
+}
+
+/*
 * 스크린좌표행렬
 * w/2.0f			0.0f			0.0f				0.0f
 * 0.0f				-h/2.0f			0.0f				0.0f
