@@ -50,7 +50,7 @@ float4 ReflectionPixelShader(PixelInputType input) : SV_TARGET
     reflectionColor = reflectionTexture.Sample(SampleType, reflectTexCoord);
 
 	// 블렌드 효과를 위해 두 텍스처간에 선형 보간을 수행합니다.
-    color = lerp(textureColor, reflectionColor, 1.0f);
+    color = lerp(textureColor, reflectionColor, 0.5f);
 
     return color;
 }

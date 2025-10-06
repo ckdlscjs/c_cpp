@@ -181,7 +181,7 @@ void GraphicsClass::Shutdown()
 bool GraphicsClass::Frame()
 {
 	// 카메라 위치 설정
-	m_Camera->SetPosition(0.0f, 0.0f, -15.0f);
+	m_Camera->SetPosition(0.0f, 4.0f, -15.0f);
 
 	return true;
 }
@@ -217,7 +217,7 @@ bool GraphicsClass::RenderToTexture()
 	m_RenderTexture->ClearRenderTarget(m_Direct3D->GetDeviceContext(), m_Direct3D->GetDepthStencilView(), 0.0f, 0.0f, 0.0f, 1.0f);
 
 	// Use the camera to calculate the reflection matrix.
-	m_Camera->RenderReflection(-1.5f);
+	m_Camera->RenderReflection(0.0f);
 
 	// Get the camera reflection view matrix instead of the normal view matrix.
 	reflectionViewMatrix = m_Camera->GetReflectionViewMatrix();
@@ -290,7 +290,7 @@ bool GraphicsClass::RenderScene()
 
 	// Get the world matrix again and translate down for the floor model to render underneath the cube.
 	m_Direct3D->GetWorldMatrix(worldMatrix);
-	worldMatrix = XMMatrixTranslation(0.0f, -1.5f, 0.0f); 
+	worldMatrix = XMMatrixTranslation(0.0f, 0.0f, 0.0f); 
 
 	// Get the camera reflection view matrix.
 	XMMATRIX reflectionMatrix = m_Camera->GetReflectionViewMatrix();
