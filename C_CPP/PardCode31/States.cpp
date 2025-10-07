@@ -228,6 +228,13 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
 	m_pStates.push_back(pState);
 
+	//SOLID, CULLBACK, CCW
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.FrontCounterClockwise = TRUE;
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
+	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CCW");
+	m_pStates.push_back(pState);
 	//필요시 추가
 }
 

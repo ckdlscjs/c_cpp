@@ -40,6 +40,7 @@ enum class E_RSStates
 	SOLID_CULLBACK_CW,
 	SOLID_CULLFRONT_CW,
 	WIRE_CULLBACK_CW,
+	SOLID_CULLBACK_CCW,
 };
 
 enum class E_DSStates

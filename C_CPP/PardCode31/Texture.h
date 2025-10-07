@@ -5,7 +5,7 @@ class Texture : public BaseResource<Texture>
 {
 	friend class BaseResource<Texture>;
 public:
-	Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = WIC_FLAGS_NONE);
+	Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag);
 	Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag);
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;

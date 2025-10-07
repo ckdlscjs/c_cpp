@@ -229,6 +229,109 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Samplers::LINEAR_WRAP));
 		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CW));
+
+#ifdef _REFLECT
+#include "Plane.h"
+		{
+			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CCW));
+			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+			Plane plane(Vector3(0.0f, 1.0f, 0.0f), ReflectPlane->m_vPosition);
+			for (const auto& obj : objs)
+			{
+				//if (!obj->bRenderable) continue;
+				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+				Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
+				Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+				Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
+				Matrix4x4 mat_reflect = GetMat_Reflect(plane.ToVector4());
+				CB_WVPITMatrix cc0;
+				cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
+				cc0.matView = mat_reflect * matView;
+				cc0.matProj = matProj;
+				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
+
+				for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
+				{
+					auto& iter = obj->m_Mesh_Material[j];
+					Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+					SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+					SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+					const std::vector<size_t>* texs = pMaterial->GetTextures();
+					int cnt = 0;
+					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+					{
+						for (const auto& hashTx : texs[idxTex])
+						{
+							auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+							SetPS_ShaderResourceView(pSrv, cnt++);
+						}
+					}
+					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				}
+				//drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
+			}
+
+
+			//reflect plane
+			{
+				SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CW));
+				SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Transparent), NULL);
+				TempObj* obj = ReflectPlane;
+				ReflectPlane->bRenderable = true;
+				if (obj->bRenderable)
+				{
+					//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
+					Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
+					Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+					Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
+					CB_WVPITMatrix cc0;
+					cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
+					cc0.matView = matView;
+					cc0.matProj = matProj;
+					cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
+
+					for (UINT j = 0; j < obj->m_Mesh_Material.size(); j++)
+					{
+						auto& iter = obj->m_Mesh_Material[j];
+						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+						{
+							for (const auto& hashTx : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
+						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					}
+					//drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
+				}
+				SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+			}
+
+		}
+#endif // _REFLECT
+
 #ifndef _TESTBLOCK
 		for (const auto& obj : objs)
 		{
@@ -271,7 +374,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			}
 			drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f)* mat_rotate_obj* mat_translation_obj);
 		}
-		
 #endif 
 
 #ifdef _TESTBLOCK
@@ -374,8 +476,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		{
 			//2D객체로 SRV임시체크
 			m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
-			//ID3D11ShaderResourceView* nullSRV = nullptr;
-			//m_pCDirect3D->GetDeviceContext()->PSSetShaderResources(0, 1, &nullSRV);
 			ID3D11RenderTargetView* RTVS[]
 			{
 				m_pCRTVs[m_hash_RTV_BB]->GetView(),
@@ -502,6 +602,9 @@ void RenderSystem::Release()
 
 	if (SpaceShip)
 		delete SpaceShip;
+
+	if (ReflectPlane)
+		delete ReflectPlane;
 
 	for (auto iter = objs.begin(); iter != objs.end();)
 	{

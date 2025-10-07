@@ -123,6 +123,7 @@ public:
 	TempObj* SkyObj;
 	TempObj* Gizmo;
 	TempObj* SpaceShip;
+	TempObj* ReflectPlane;
 	std::vector<TempObj*> objs;
 	std::vector<TempObj*> ortho_objs;
 };
