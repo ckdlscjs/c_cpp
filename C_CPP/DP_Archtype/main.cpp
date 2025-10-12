@@ -1,7 +1,8 @@
 #pragma once
-#include "arch.h"
+//#include "arch.h"
+#include "arch2.h"
 int main()
 {
-	Arch02::Run();
+	Run();
 	return 0;
 }
