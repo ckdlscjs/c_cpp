@@ -105,7 +105,7 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	//필요시 추가
 }
 
-ID3D11DepthStencilState* DepthStencilState::GetState(E_DSStates stateIdx)
+ID3D11DepthStencilState* DepthStencilState::GetState(E_DSState stateIdx)
 {
 	return BaseState::GetState(static_cast<UINT>(stateIdx));
 }
@@ -172,7 +172,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	*/
 }
 
-ID3D11SamplerState* SamplerState::GetState(E_Samplers stateIdx)
+ID3D11SamplerState* SamplerState::GetState(E_Sampler stateIdx)
 {
 	return BaseState::GetState(static_cast<UINT>(stateIdx));
 }
@@ -238,7 +238,7 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	//필요시 추가
 }
 
-ID3D11RasterizerState* RasterizerState::GetState(E_RSStates stateIdx)
+ID3D11RasterizerState* RasterizerState::GetState(E_RSState stateIdx)
 {
 	return BaseState::GetState(static_cast<UINT>(stateIdx));;
 }
@@ -336,7 +336,7 @@ BlendState::BlendState(ID3D11Device* pDevice)
 	m_pStates.push_back(pState);
 }
 
-ID3D11BlendState* BlendState::GetState(E_BSStates stateIdx)
+ID3D11BlendState* BlendState::GetState(E_BSState stateIdx)
 {
 	return BaseState::GetState(static_cast<UINT>(stateIdx));
 }

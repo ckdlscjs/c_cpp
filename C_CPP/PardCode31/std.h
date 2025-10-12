@@ -1,7 +1,7 @@
 #pragma once
 //Macro
-#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용은 Windows 헤더에서 제외합니다.
-#define NOMINMAX						//	window의 min,max가 아닌 std의 min,max사용을위한 매크로
+#define WIN32_LEAN_AND_MEAN             //거의 사용되지 않는 내용은 Windows 헤더에서 제외합니다.
+#define NOMINMAX						//window의 min,max가 아닌 std의 min,max사용을위한 매크로
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
 #define _ASEERTION_NULCHK(result, message) assert(result && message)
@@ -30,6 +30,7 @@
 #include <typeindex>						//std::type_index
 #include <array>
 #include <fstream>
+#include <bitset>
 
 //d3d Header
 #include <d3d11.h>

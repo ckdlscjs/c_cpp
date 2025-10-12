@@ -33,7 +33,7 @@ void TimerSystem::Frame()
 	m_fElpasedTime += m_fDeltaTime;
 }
 
-void TimerSystem::Release()
+TimerSystem::~TimerSystem()
 {
 }
 

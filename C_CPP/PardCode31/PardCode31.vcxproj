@@ -150,6 +150,7 @@
     <ClInclude Include="..\Include\ImGui\imstb_textedit.h" />
     <ClInclude Include="..\Include\ImGui\imstb_truetype.h" />
     <ClInclude Include="AppWindow.h" />
+    <ClInclude Include="Archetype.h" />
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Buffers.h" />
@@ -160,6 +161,8 @@
     <ClInclude Include="CommonHeader.h" />
     <ClInclude Include="CommonMath.h" />
     <ClInclude Include="Components.h" />
+    <ClInclude Include="ECSSystem.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="States.h" />
     <ClInclude Include="Frustum.h" />
@@ -207,6 +210,7 @@
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="CollisionSystem.cpp" />
+    <ClCompile Include="ECSSystem.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />

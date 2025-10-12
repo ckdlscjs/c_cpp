@@ -15,8 +15,8 @@ private:
 	ResourceSystem& operator=(ResourceSystem&&) = delete;
 	
 public:
+	~ResourceSystem();
 	void Init();
-	void Release();
 	template<typename T, typename... Types>
 	T* CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args);
 	template<typename T, typename... Types>

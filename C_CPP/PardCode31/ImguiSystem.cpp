@@ -119,7 +119,7 @@ void ImguiSystem::Render()
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }
 
-void ImguiSystem::Release()
+ImguiSystem::~ImguiSystem()
 {
     // Cleanup
     ImGui_ImplDX11_Shutdown();

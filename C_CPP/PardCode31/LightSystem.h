@@ -19,16 +19,11 @@ public:
 	void AddLight(BaseLight* light);
 	void Init();
 	void Frame();
-	void Release();
+	~LightSystem();
 
 private:
-	//카메라들
+	//빛객체들
 	std::unordered_map<size_t, BaseLight*> m_Lights;
 	size_t m_lLightID;
-
-	//입력관련, 추후 컴포넌트로 분리필요
-	std::unordered_map<E_InputEventType, std::vector<size_t>> m_IdxCallbacks;
-	std::unordered_map<int, int> VK_MASK;
-	size_t m_lVKMask;
 };
 #define _LightSystem LightSystem::GetInstance()

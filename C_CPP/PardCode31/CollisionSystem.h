@@ -16,10 +16,10 @@ private:
 	CollisionSystem(CollisionSystem&&) = delete;
 	CollisionSystem& operator=(CollisionSystem&&) = delete;
 public:
+	~CollisionSystem();
 	void Init();
 	void Frame(float deltatime);
-	void Release();
-	size_t CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Colliders collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
+	size_t CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Collider collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
 	
 private:
 	template<typename T, typename... Types>

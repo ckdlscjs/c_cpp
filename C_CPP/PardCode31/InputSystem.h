@@ -11,14 +11,11 @@ private:
 	InputSystem(InputSystem&&) = delete;
 	InputSystem& operator=(InputSystem&&) = delete;
 public:
+	~InputSystem();
 	void Init();
-	void Frame();
-	void Release();
-
-	size_t AddListner(E_InputEventType type, EventCallBack callback);
-	void RemoveListner(E_InputEventType type, size_t id);
+	size_t AddListner(E_InputEvent type, EventCallBack callback);
+	void RemoveListner(E_InputEvent type, size_t id);
 	void Notify(const InputEvent& event);
-
 	void OnKeyDown(unsigned char VK_KEY);
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
@@ -28,14 +25,12 @@ public:
 	void SetMouseCenter(HWND hWnd);
 	
 private:
-	std::unordered_map<E_InputEventType, std::unordered_map<size_t, EventCallBack>> m_Listners;
+	std::unordered_map<E_InputEvent, std::unordered_map<size_t, EventCallBack>> m_Listners;
 	size_t m_CallbackID = 1;	//0은 오류체크
-	bool m_CurKeystate[256];
-	bool m_OldKeystate[256];
-	
 	PointXY m_OldMousePos;
+	bool m_bKeyStates[256];
 	bool m_bCenterMouse = true;
-	bool m_ChkPosFirst = true;
+	bool m_bChkPosFirst = true;
 };
 #define _InputSystem InputSystem::GetInstance()
 

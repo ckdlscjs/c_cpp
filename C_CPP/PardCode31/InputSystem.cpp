@@ -5,14 +5,18 @@ InputSystem::InputSystem()
 {
 }
 
-size_t InputSystem::AddListner(E_InputEventType type, EventCallBack callback)
+InputSystem::~InputSystem()
+{
+	m_Listners.clear();
+}
+size_t InputSystem::AddListner(E_InputEvent type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)
 	m_Listners[type][m_CallbackID] = callback;
 	return m_CallbackID++;
 }
 
-void InputSystem::RemoveListner(E_InputEventType type, size_t id)
+void InputSystem::RemoveListner(E_InputEvent type, size_t id)
 {
 	if (m_Listners[type].empty()) return;
 	m_Listners[type].erase(id);
@@ -21,10 +25,10 @@ void InputSystem::RemoveListner(E_InputEventType type, size_t id)
 void InputSystem::OnKeyDown(unsigned char VK_KEY)
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return;
-	if (m_OldKeystate[VK_KEY]) return; 
-	m_CurKeystate[VK_KEY] = true;
+	if (m_bKeyStates[VK_KEY]) return;
+	m_bKeyStates[VK_KEY] = true;
 	InputEvent event;
-	event.type = E_InputEventType::KEY_DOWN;
+	event.type = E_InputEvent::KEY_DOWN;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -33,7 +37,7 @@ void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return;
 	InputEvent event;
-	event.type = E_InputEventType::KEY_PRESSED;
+	event.type = E_InputEvent::KEY_PRESSED;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -41,10 +45,10 @@ void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 void InputSystem::OnKeyUp(unsigned char VK_KEY)
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return;
-	if (!m_OldKeystate[VK_KEY]) return; 
-	m_CurKeystate[VK_KEY] = false;
+	if (!m_bKeyStates[VK_KEY]) return;
+	m_bKeyStates[VK_KEY] = false;
 	InputEvent event;
-	event.type = E_InputEventType::KEY_UP;
+	event.type = E_InputEvent::KEY_UP;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
@@ -52,16 +56,16 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 bool InputSystem::GetKeyState(unsigned char VK_KEY) const
 {
 	if (VK_KEY < 0 || VK_KEY > 255) return false;
-	return m_CurKeystate[VK_KEY];
+	return m_bKeyStates[VK_KEY];
 }
 
 void InputSystem::OnMouseMove(int curX, int curY)
 {
 	InputEvent event;
-	event.type = E_InputEventType::MOUSE_MOVE;
-	event.mouseDeltaX = curX - (m_ChkPosFirst ? curX : m_OldMousePos.x);
-	event.mouseDeltaY = curY - (m_ChkPosFirst ? curY : m_OldMousePos.y);
-	if (m_ChkPosFirst) m_ChkPosFirst = false;
+	event.type = E_InputEvent::MOUSE_MOVE;
+	event.mouseDeltaX = curX - (m_bChkPosFirst ? curX : m_OldMousePos.x);
+	event.mouseDeltaY = curY - (m_bChkPosFirst ? curY : m_OldMousePos.y);
+	if (m_bChkPosFirst) m_bChkPosFirst = false;
 	m_OldMousePos.x = event.mouseX = curX;
 	m_OldMousePos.y = event.mouseY = curY;
 	Notify(event);
@@ -70,7 +74,7 @@ void InputSystem::OnMouseMove(int curX, int curY)
 void InputSystem::OnMouseMoveCenter(HWND hWnd, int curX, int curY)
 {
 	InputEvent event;
-	event.type = E_InputEventType::MOUSE_MOVE;
+	event.type = E_InputEvent::MOUSE_MOVE;
 
 	// 1. 게임 창의 클라이언트 영역 크기를 가져옵니다. (넘겨받은 hWnd 사용)
 	RECT clientRect;
@@ -126,22 +130,7 @@ void InputSystem::Notify(const InputEvent& event)
 
 void InputSystem::Init()
 {
-	std::memset(m_CurKeystate, false, sizeof(m_CurKeystate));
-	std::memset(m_OldKeystate, false, sizeof(m_CurKeystate));
+	std::memset(m_bKeyStates, false, sizeof(m_bKeyStates));
 }
 
-void InputSystem::Frame()
-{
-	std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
-	for (int i = 0; i < 256; i++)
-	{
-		if (m_OldKeystate[i] && m_CurKeystate[i])
-			OnKeyPressed(i);
-	}
-	std::memcpy(m_OldKeystate, m_CurKeystate, sizeof(m_OldKeystate));
-}
 
-void InputSystem::Release()
-{
-	m_Listners.clear();
-}

@@ -47,7 +47,7 @@ public:
 	DepthStencilState& operator=(const DepthStencilState&) = delete;
 	DepthStencilState(DepthStencilState&&) = delete;
 	DepthStencilState& operator=(DepthStencilState&&) = delete;
-	ID3D11DepthStencilState* GetState(E_DSStates stateIdx);
+	ID3D11DepthStencilState* GetState(E_DSState stateIdx);
 };
 
 
@@ -59,7 +59,7 @@ public:
 	SamplerState& operator=(const SamplerState&) = delete;
 	SamplerState(SamplerState&&) = delete;
 	SamplerState& operator=(SamplerState&&) = delete;
-	ID3D11SamplerState* GetState(E_Samplers stateIdx);
+	ID3D11SamplerState* GetState(E_Sampler stateIdx);
 };
 
 
@@ -71,7 +71,7 @@ public:
 	RasterizerState& operator=(const RasterizerState&) = delete;
 	RasterizerState(RasterizerState&&) = delete;
 	RasterizerState& operator=(RasterizerState&&) = delete;
-	ID3D11RasterizerState* GetState(E_RSStates stateIdx);
+	ID3D11RasterizerState* GetState(E_RSState stateIdx);
 };
 
 
@@ -83,5 +83,5 @@ public:
 	BlendState& operator=(const BlendState&) = delete;
 	BlendState(BlendState&&) = delete;
 	BlendState& operator=(BlendState&&) = delete;
-	ID3D11BlendState* GetState(E_BSStates stateIdx);
+	ID3D11BlendState* GetState(E_BSState stateIdx);
 };

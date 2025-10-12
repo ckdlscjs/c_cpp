@@ -46,6 +46,9 @@
     <Filter Include="Math">
       <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\ECSSystem">
+      <UniqueIdentifier>{2786f152-fedd-4015-88e7-d229850ed246}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppWindow.h">
@@ -151,7 +154,6 @@
     <ClInclude Include="Light.h">
       <Filter>Engine\LightSystem</Filter>
     </ClInclude>
-    <ClInclude Include="Components.h" />
     <ClInclude Include="TimerSystem.h">
       <Filter>Engine\TimerSystem</Filter>
     </ClInclude>
@@ -196,6 +198,18 @@
     </ClInclude>
     <ClInclude Include="Buffers.h">
       <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Components.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ECSSystem.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Archetype.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -288,6 +302,9 @@
     </ClCompile>
     <ClCompile Include="Buffers.cpp">
       <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ECSSystem.cpp">
+      <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,18 +1,25 @@
 ﻿#pragma once
 //#define _FNV1A
 #include "std.h"
+
 //enum classes
-//enum class E_RenderPass
-//{
-//	FORWARD_PASS,
-//	DEFERRED_PASS,
-//	UI_PASS,
-//	SHADOW_PASS,
-//	COUNT
-//};
+constexpr size_t MAX_COMPONENTS = 256;
+using ArchetypeKey = std::bitset<MAX_COMPONENTS>;
+class ComponentType
+{
+public:
+	template<typename T>
+	static size_t GetMask()
+	{
+		_ASEERTION_NULCHK(m_lCount < MAX_COMPONENTS, "Component limit exceeded");
+		static size_t Mask = m_lCount++;
+		return Mask;
+	}
+private:
+	inline static size_t m_lCount = 0;
+};
 
-enum class E_InputEventType
-
+enum class E_InputEvent
 {
 	KEY_DOWN,
 	KEY_UP,
@@ -25,7 +32,7 @@ enum class E_InputEventType
 	MOUSE_WHEEL,
 };
 
-enum class E_Samplers
+enum class E_Sampler
 {
 	LINEAR_WRAP,
 	ANISOTROPIC_WRAP,
@@ -35,7 +42,7 @@ enum class E_Samplers
 	//ANISOTROPIC_CLAMP,
 };
 
-enum class E_RSStates
+enum class E_RSState
 {
 	SOLID_CULLBACK_CW,
 	SOLID_CULLFRONT_CW,
@@ -43,21 +50,21 @@ enum class E_RSStates
 	SOLID_CULLBACK_CCW,
 };
 
-enum class E_DSStates
+enum class E_DSState
 {
 	DEFAULT,
 	SKYBOX,
 	UI,
 };
 
-enum class E_BSStates
+enum class E_BSState
 {
 	Opaque,
 	Transparent,
 	Additive
 };
 
-enum class E_Colliders
+enum class E_Collider
 {
 	NONE,
 	SPHERE,
@@ -66,7 +73,7 @@ enum class E_Colliders
 	RAY,
 };
 
-enum class E_Textures
+enum class E_Texture
 {
 	Diffuse,
 	Normal,
@@ -88,15 +95,26 @@ enum class E_InputLayout
 	PTNTB,
 };
 
+//enum class E_RenderPass
+//{
+//	FORWARD_PASS,
+//	DEFERRED_PASS,
+//	UI_PASS,
+//	SHADOW_PASS,
+//	COUNT
+//};
+
+
+//Resources data struct
 struct TX_HASH
 {
-	E_Textures tex;
+	E_Texture tex;
 	size_t hash;
 };
 
 struct TX_PATH
 {
-	E_Textures tex;
+	E_Texture tex;
 	std::string szPath;
 };
 
@@ -105,10 +123,10 @@ struct Mesh_Material
 	size_t hash_mesh;
 	size_t hash_material;
 };
-//Resources data struct
-struct InputEvent
+
+struct InputEvent 
 {
-	E_InputEventType type;
+	E_InputEvent type;
 	int keyCode = 0;
 	int mouseX = 0;
 	int mouseY = 0;

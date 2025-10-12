@@ -11,12 +11,13 @@ private:
 	TimerSystem(TimerSystem&&) = delete;
 	TimerSystem& operator=(TimerSystem&&) = delete;
 public:
+	~TimerSystem();
 	void Init();
 	void Frame();
-	void Release();
 	UINT GetFps() const;
 	float GetDeltaTime() const;
 	float GetElapsedTime() const;
+	
 private:
 	UINT m_iCount;
 	UINT m_iFps;

@@ -30,24 +30,25 @@ private:
 	RenderSystem(RenderSystem&&) = delete;
 	RenderSystem& operator=(RenderSystem&&) = delete;
 public:
+	~RenderSystem();
 	void Init(HWND hWnd, UINT width, UINT height);
 	void Frame(float deltatime, float elapsedtime);
 	void PreRender(float deltatime, float elapsedtime);
 	void Render(float deltatime, float elapsedtime);
 	void PostRender();
-	void Release();
 	void OnResize(UINT width, UINT height);
 	void SetViewportSize(UINT iWidth, UINT iHeight);
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
+	
 
 	//응용프로그램부 접근
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag = DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	size_t CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag = DirectX::WIC_FLAGS::WIC_FLAGS_NONE);
 	template<typename T>
-	size_t CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Colliders collider = E_Colliders::AABB);
+	size_t CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Collider collider = E_Collider::AABB);
 	template<typename T>
-	size_t CreateMesh(const std::wstring& szFilePath, E_Colliders collider = E_Colliders::AABB);
+	size_t CreateMesh(const std::wstring& szFilePath, E_Collider collider = E_Collider::AABB);
 	template<typename T>
 	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 	template<typename T>
@@ -131,15 +132,15 @@ public:
 #define _RenderSystem RenderSystem::GetInstance()
 
 //템플릿 추론 명시
-template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Colliders collider);
-template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Colliders collider);
+template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath, E_Collider collider);
+template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath, E_Collider collider);
 template size_t RenderSystem::CreateMaterial<Vertex_PC>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PT>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTN>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTNTB>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
-template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PC>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PC>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
-template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PT>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PT>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
-template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices, E_Colliders collider);
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PC>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PC>&& vertices, std::vector<UINT>&& indices, E_Collider collider);
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PT>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PT>&& vertices, std::vector<UINT>&& indices, E_Collider collider);
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices, E_Collider collider);
 

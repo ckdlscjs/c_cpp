@@ -13,8 +13,16 @@
 
 CollisionSystem::CollisionSystem()
 {
-}
 
+}
+CollisionSystem::~CollisionSystem()
+{
+	for (auto iter = m_Colliders.begin(); iter != m_Colliders.end();)
+	{
+		delete iter->second;
+		iter = m_Colliders.erase(iter);
+	}
+}
 void CollisionSystem::Init()
 {
 
@@ -49,32 +57,25 @@ void CollisionSystem::Frame(float deltatime)
 	std::cout << "렌더링될 객체수 : " << count << ", 컬링된 객체수 : " << count_all - count << '\n';
 }
 
-void CollisionSystem::Release()
-{
-	for (auto iter = m_Colliders.begin(); iter != m_Colliders.end();)
-	{
-		delete iter->second;
-		iter = m_Colliders.erase(iter);
-	}
-}
 
-size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Colliders collider)
+
+size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Collider collider)
 {
 	switch (collider)
 	{
-		case E_Colliders::SPHERE:
+		case E_Collider::SPHERE:
 		{
 			return AddCollider<Sphere>(szName + L"Sphere", vertices);
 		}	break;
 			
-		case E_Colliders::AABB:
+		case E_Collider::AABB:
 		{
 			return AddCollider<Box>(szName + L"Box", vertices);
 		}break;
 			
-		case E_Colliders::OBB:
+		case E_Collider::OBB:
 			break;
-		case E_Colliders::RAY:
+		case E_Collider::RAY:
 			break;
 		default:
 			return size_t();
@@ -86,20 +87,20 @@ bool CollisionSystem::CheckBound(const Frustum& frustum, size_t hash, const Matr
 {
 	switch (m_Colliders[hash]->GetType())
 	{
-		case E_Colliders::SPHERE:
+		case E_Collider::SPHERE:
 		{
 			return (CheckBound(frustum, *static_cast<Sphere*>(m_Colliders[hash]), matWorld));
 		}break;
 
 		//추후 box로 통일후 type에 따른 분별형태로 변화필요
-		case E_Colliders::AABB:
+		case E_Collider::AABB:
 		{
 			return CheckBound(frustum, *static_cast<Box*>(m_Colliders[hash]), matWorld);
 		}break;
 
-		case E_Colliders::OBB:
+		case E_Collider::OBB:
 			break;
-		case E_Colliders::RAY:
+		case E_Collider::RAY:
 			break;
 		default:
 			return false;

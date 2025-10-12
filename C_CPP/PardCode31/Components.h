@@ -1,28 +1,45 @@
 #pragma once
 #include "CommonHeader.h"
 
-class Component
-{
-	
-};
-
-class Component_Transform : public Component
+struct Component_Transform
 {
 public:
 	Vector3 m_vScale;
 	Vector3 m_vRotate;
 	Vector3 m_vPosition;
-	float m_fSpeedScale;
-	float m_fSpeedRotate;
-	float m_fSpeedMove;
 };
 
-class Component_Render : public Component
+struct Component_Render
 {
 public:
 	bool bRenderable = false;
-	size_t m_hashCollider;
-	std::vector<size_t> m_IdxCBs;
-	std::vector<size_t> m_hashMeshes;
-	std::vector<size_t> m_hashTextures;
+	std::vector<Mesh_Material> m_MeshMaterials;
+};
+
+struct Component_Input
+{
+public:
+	std::unordered_map<E_InputEvent, std::vector<size_t>> m_IdxCallbacks;
+};
+
+struct Component_Camera
+{
+public:
+	float m_fFov;
+	float m_fScreenWidth;
+	float m_fScreenHeight;
+	float m_fNear;
+	float m_fFar;
+};
+
+struct Component_Light
+{
+public:
+
+};
+
+struct Component_Collider
+{
+public:
+
 };

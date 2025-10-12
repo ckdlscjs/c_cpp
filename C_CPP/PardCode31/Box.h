@@ -160,7 +160,7 @@ public:
     inline ~Box() { std::cout << "Release : " << "Collider <" << "Box" << "> Class" << '\n'; }
 	inline Box(const std::vector<Vector3>* vertices)
 	{
-        SetType(E_Colliders::AABB);
+        SetType(E_Collider::AABB);
 		if (vertices->size() <= 0) return;
 		float minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = FLT_MAX;

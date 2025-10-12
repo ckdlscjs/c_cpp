@@ -11,7 +11,7 @@ public:
 	void Render();
 	void Release();
 private:
-	bool CheckMask(int VK_KEY);
+
 public:
 	//Object Variables;
 	Vector3 m_vScale;
@@ -22,9 +22,7 @@ public:
 	float m_fSpeedMove;
 	bool bRenderable;
 
-	std::unordered_map<int, int> VK_MASK;
-	size_t m_lVKMask;
-	std::unordered_map<E_InputEventType, std::vector<size_t>> m_IdxCallbacks;
+	std::unordered_map<E_InputEvent, std::vector<size_t>> m_IdxCallbacks;
 public:
 	std::vector<Mesh_Material> m_Mesh_Material;
 };

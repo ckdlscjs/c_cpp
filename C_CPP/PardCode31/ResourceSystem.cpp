@@ -17,12 +17,7 @@ ResourceSystem::ResourceSystem()
 {
 }
 
-void ResourceSystem::Init()
-{
-
-}
-
-void ResourceSystem::Release()
+ResourceSystem::~ResourceSystem()
 {
 	for (auto iter = m_Resources.begin(); iter != m_Resources.end();)
 	{
@@ -30,6 +25,12 @@ void ResourceSystem::Release()
 		iter = m_Resources.erase(iter);
 	}
 }
+void ResourceSystem::Init()
+{
+
+}
+
+
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -189,7 +190,7 @@ std::vector<Material*> ResourceSystem::CreateResourcesFromFile<Material>(const s
 	{
 		std::wstring matName = szFilePath + _tomw(iter.name);
 		Material* pMaterial = CreateResourceFromFile<Material>(matName);
-		pMaterial->SetTexturePath({ E_Textures::Diffuse, iter.diffuse_texname });
+		pMaterial->SetTexturePath({ E_Texture::Diffuse, iter.diffuse_texname });
 		rets.push_back(pMaterial);
 	}
 	return rets;

@@ -26,8 +26,8 @@ private:
 	size_t m_lVS;
 	size_t m_lPS;
 	size_t m_lIL;
-	std::vector<std::string> m_szTXPaths[(UINT)E_Textures::count];
-	std::vector<size_t> m_lTXs[(UINT)E_Textures::count];
+	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
+	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
 };
 
 /*

@@ -14,11 +14,12 @@ private:
 	CameraSystem& operator=(CameraSystem&&) = delete;
 	bool CheckMask(UINT VK_KEY);
 public:
-	BaseCamera* GetCamera(size_t idx);
-	void AddCamera(BaseCamera* camera);
+	~CameraSystem();
 	void Init();
 	void Frame(float deltaTime);
-	void Release();
+	void AddCamera(BaseCamera* camera);
+	BaseCamera* GetCamera(size_t idx);
+	
 	
 private:
 	//카메라들
@@ -26,8 +27,6 @@ private:
 	size_t m_lCameraID;
 
 	//입력관련, 추후 컴포넌트로 분리필요
-	std::unordered_map<E_InputEventType, std::vector<size_t>> m_IdxCallbacks;
-	std::unordered_map<UINT, UINT> VK_MASK;
-	size_t m_lVKMask;
+	std::unordered_map<E_InputEvent, std::vector<size_t>> m_IdxCallbacks;
 };
 #define _CameraSystem CameraSystem::GetInstance()

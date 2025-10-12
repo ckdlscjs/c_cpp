@@ -104,13 +104,13 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
 	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
 
-	SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 
 	//gizmo
 	std::function<void(const Matrix4x4& matWorld)> drawgizmo = [&](const Matrix4x4& matWorld)->void
 		{
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Transparent), NULL);
+			SetOM_BlendState(m_pCBlends->GetState(E_BSState::Transparent), NULL);
 			TempObj* obj = Gizmo;
 			CB_WVPMatrix cc0;
 			cc0.matWorld = matWorld;
@@ -134,13 +134,13 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+			SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		};
 
 	if (SkyObj)//SKYOBJ
 	{
 		{
-			SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSStates::SKYBOX));
+			SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::SKYBOX));
 			//DirectionalLight
 			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
@@ -172,8 +172,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
 
-			SetPS_SamplerState(m_pCSamplers->GetState(E_Samplers::LINEAR_WRAP));
-			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLFRONT_CW));
+			SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLFRONT_CW));
 		}
 
 		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
@@ -190,7 +190,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 			const std::vector<size_t>* texs = pMaterial->GetTextures();
 			int cnt = 0;
-			for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+			for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 			{
 				for (const auto& hashTX : texs[idxTex])
 				{
@@ -204,7 +204,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	//OBJS
 	{
-		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSStates::DEFAULT));
+		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
 		//DirectionalLight
 		m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
@@ -227,14 +227,14 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
 		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
 
-		SetPS_SamplerState(m_pCSamplers->GetState(E_Samplers::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CW));
+		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 
 #ifdef _REFLECT
 #include "Plane.h"
 		{
-			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CCW));
-			SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CCW));
+			SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 			Plane plane(Vector3(0.0f, 1.0f, 0.0f), ReflectPlane->m_vPosition);
 			for (const auto& obj : objs)
 			{
@@ -266,7 +266,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 					const std::vector<size_t>* texs = pMaterial->GetTextures();
 					int cnt = 0;
-					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 					{
 						for (const auto& hashTx : texs[idxTex])
 						{
@@ -282,8 +282,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 			//reflect plane
 			{
-				SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSStates::SOLID_CULLBACK_CW));
-				SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Transparent), NULL);
+				SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
+				SetOM_BlendState(m_pCBlends->GetState(E_BSState::Transparent), NULL);
 				TempObj* obj = ReflectPlane;
 				ReflectPlane->bRenderable = true;
 				if (obj->bRenderable)
@@ -314,7 +314,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
-						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 						{
 							for (const auto& hashTx : texs[idxTex])
 							{
@@ -326,7 +326,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					}
 					//drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
 				}
-				SetOM_BlendState(m_pCBlends->GetState(E_BSStates::Opaque), NULL);
+				SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 			}
 
 		}
@@ -362,7 +362,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 				const std::vector<size_t>* texs = pMaterial->GetTextures();
 				int cnt = 0;
-				for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+				for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 				{
 					for (const auto& hashTx : texs[idxTex])
 					{
@@ -411,7 +411,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
-						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 						{
 							for (const auto& hashTX : texs[idxTex])
 							{
@@ -458,7 +458,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 					const std::vector<size_t>* texs = pMaterial->GetTextures();
 					int cnt = 0;
-					for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 					{
 						for (const auto& hashTX : texs[idxTex])
 						{
@@ -513,7 +513,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
-						for (int idxTex = 0; idxTex < (UINT)E_Textures::count; idxTex++)
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 						{
 							for (const auto& hashTX : texs[idxTex])
 							{
@@ -536,7 +536,7 @@ void RenderSystem::PostRender()
 	SwapchainPresent(false);
 }
 
-void RenderSystem::Release()
+RenderSystem::~RenderSystem()
 {
 	CoUninitialize();
 
@@ -1010,7 +1010,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_
 }
 
 template<typename T>
-size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Colliders collider)
+size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Collider collider)
 {
 	std::vector<RenderCounts> countsVertices;
 	countsVertices.push_back({ (UINT)vertices.size(), 0 });
@@ -1028,7 +1028,7 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vect
 	return pMesh->GetHash();
 }
 template<typename T>
-size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Colliders collider)
+size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Collider collider)
 {
 	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szFilePath);
 	std::wstring szTypename = _tomw(typeid(T).name());

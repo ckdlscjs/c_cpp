@@ -10,8 +10,6 @@ protected:
 	BaseSystem(const BaseSystem&) = delete;				//복사생성자삭제
 	BaseSystem& operator=(const BaseSystem&) = delete;	//복사대입연산자삭제
 	BaseSystem(BaseSystem&&) = delete;					//이동생성자삭제
-	BaseSystem& operator=(BaseSystem&&) = delete;		//이동대입연산자삭제
-	
 public:
 	static T& GetInstance();
 };

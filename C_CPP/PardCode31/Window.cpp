@@ -61,7 +61,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_KEYDOWN:
 		{
 			if (wParam == VK_ESCAPE) g_pWindow->OnDestroy();
-			else _InputSystem.OnKeyDown((unsigned char)wParam);
+			else
+			{
+				if (_InputSystem.GetKeyState((unsigned char)wParam))
+					_InputSystem.OnKeyPressed((unsigned char)wParam);
+				else _InputSystem.OnKeyDown((unsigned char)wParam);
+			}
 			return 0;
 		}
 
