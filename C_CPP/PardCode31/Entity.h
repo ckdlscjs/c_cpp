@@ -2,7 +2,8 @@
 #include "CommonHeader.h"
 class Entity
 {
-
-private:
-	size_t m_lArchetypeIdx;
+public:
+	std::wstring szName;
+	ArchetypeKey m_Key;
+	size_t m_lIdx;
 };

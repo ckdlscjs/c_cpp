@@ -14,6 +14,7 @@
 #include "TestBlockMacro.h"
 #include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
 #include "GeometryGenerator.h"
+#include "Components.h"			//ecstest
 
 AppWindow::AppWindow()
 {
@@ -480,6 +481,28 @@ void AppWindow::OnCreate()
 				obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
 			}
 		}
+	}
+
+	//TESTECS
+	{
+		size_t entity01_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test01");
+		_ECSSystem.AddComponent<Component_Transform>(entity01_idx, { {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} });
+
+		size_t entity02_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test02");
+		_ECSSystem.AddComponent<Component_Transform>(entity02_idx, { {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f} });
+
+		size_t entity03_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test03");
+		_ECSSystem.AddComponent<Component_Transform>(entity03_idx, { {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f} });
+		_ECSSystem.GetComponents<Component_Transform>(entity01_idx);
+		for (int i = 0; i < 3; i++)
+		{
+			std::cout << _ECSSystem.GetComponents<Component_Transform>(entity01_idx)[i].m_vPosition.GetX() << '\n';
+		}
+		_ECSSystem.DeleteEntity(entity02_idx);
+
+		size_t entity04_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test04");
+		_ECSSystem.AddComponent<Component_Transform>(entity04_idx, { {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f} });
+		std::cout << _ECSSystem.GetComponents<Component_Transform>(entity01_idx)[2].m_vPosition.GetX() << '\n';
 	}
 }
 

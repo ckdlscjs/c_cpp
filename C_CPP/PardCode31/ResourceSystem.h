@@ -42,7 +42,7 @@ T* ResourceSystem::CreateResourceFromFile(const std::wstring& szFilePath, Types&
 }
 
 template<typename T, typename ...Types>
-inline std::vector<T*> ResourceSystem::CreateResourcesFromFile(const std::wstring& szFilePath, Types && ...args)
+inline std::vector<T*> ResourceSystem::CreateResourcesFromFile(const std::wstring& szFilePath, Types&& ...args)
 {
 	return std::vector<T*>();
 }

@@ -25,13 +25,14 @@ public:
 	template<typename T>
 	void AddComponent(T&& component);
 	template<typename T>
-	void DeleteComponent(size_t idx);
-	template<typename T>
 	T* GetComponents();
+
+	void DeleteComponent(size_t idx);
 
 private:
 	std::unordered_map<std::type_index, ComponentChunk> m_Components;
 };
+
 
 inline Archetype::Archetype()
 {
@@ -55,7 +56,7 @@ inline void Archetype::RegisterComponent()
 	{
 		chunk.capacity = 16;
 		chunk.data = new T[chunk.capacity];
-		chunk.size = size * chunk.capacity;
+		chunk.size = size;
 		chunk.count = 0;
 	}
 	chunk.destructor = [](void* data)
@@ -75,32 +76,14 @@ inline void Archetype::AddComponent(T&& component)
 	{
 		chunk.capacity *= 2;
 		T* newChunk = new T[chunk.capacity];
-
 		std::memcpy(newChunk, chunk.data, chunk.size);
 		delete[] static_cast<T*>(chunk.data);
-
 		chunk.data = newChunk;
-		chunk.size = size * chunk.capacity;
 	}
 
 	T* data_ptr = static_cast<T*>(chunk.data);
 	data_ptr[chunk.count] = std::forward<T>(component);
 	chunk.count++;
-}
-
-template<typename T>
-inline void Archetype::DeleteComponent(size_t idx)
-{
-	std::type_index type = typeid(T);
-	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component chunk not initialized");
-	ComponentChunk& chunk = m_Components[type];
-	_ASEERTION_NULCHK(idx < chunk.count, "out of bound");
-	if (idx < chunk.count)
-	{
-		T* data_ptr = static_cast<T*>(chunk.data);
-		data_ptr[idx] = std::move(data_ptr[chunk.count - 1]);
-	}
-	chunk.count--;
 }
 
 template<typename T>
@@ -112,4 +95,23 @@ inline T* Archetype::GetComponents()
 	_ASEERTION_NULCHK(chunk.data, "Chunk is nullptr");
 	return static_cast<T*>(chunk.data);
 }
+
+inline void Archetype::DeleteComponent(size_t idx)
+{
+	for (const auto& iter : m_Components)
+	{
+		ComponentChunk& chunk = m_Components[iter.first];
+		//if (chunk.count < idx) continue; //ecsÅ×½ºÆ®
+		_ASEERTION_NULCHK(idx < chunk.count, "out of bound");
+		if (idx < chunk.count)
+		{
+			BYTE* data_ptr = static_cast<BYTE*>(chunk.data);
+			size_t size = chunk.size;
+			std::memcpy(data_ptr + (idx * size), data_ptr + (chunk.count - 1) * size, size);
+		}
+		chunk.count--;
+	}
+}
+
+
 	
