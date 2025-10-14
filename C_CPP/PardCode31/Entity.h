@@ -5,5 +5,5 @@ class Entity
 public:
 	std::wstring m_szName;
 	ArchetypeKey m_Key;
-	size_t m_lIdx;
+	size_t m_ChunkIdx;
 };

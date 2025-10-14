@@ -1,7 +1,7 @@
+
 #include "CameraSystem.h"
 #include "Camera.h"
 #include "InputSystem.h"
-
 CameraSystem::CameraSystem()
 {
 
@@ -89,3 +89,63 @@ CameraSystem::~CameraSystem()
 		for (const auto& iter : category.second)
 			_InputSystem.RemoveListner(category.first, iter);
 }
+
+
+//#include "CameraSystem.h"
+//#include "Components.h"
+//#include "ECSSystem.h"
+//
+//void CameraSystem::Init()
+//{
+//	m_Key = _ECSSystem.GetArchetypeKey<Component_Transform, Component_Input, Component_Camera>();
+//}
+//
+//void CameraSystem::Frame(float deltaTime)
+//{
+//	std::cout << "Frame : " << "CameraSystem" << " Class" << '\n';
+//	Component_Transform* transforms = _ECSSystem.GetComponents<Component_Transform>(m_Key);
+//	Component_Input* inputs = _ECSSystem.GetComponents<Component_Input>(m_Key);
+//	Component_Camera* cameras = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	
+//}
+//
+//void CameraSystem::SetPosition(int chunkIdx)
+//{
+//
+//}
+//
+//void CameraSystem::SetFOV(int chunkIdx, float FOV)
+//{
+//}
+//
+//void CameraSystem::SetScreenWidth(int chunkIdx, float width)
+//{
+//}
+//
+//void CameraSystem::SetScreenHeight(int chunkIdx, float height)
+//{
+//}
+//
+//void CameraSystem::SetClipPlanes(int chunkIdx, float nearZ, float farZ)
+//{
+//}
+//
+//const Vector3& CameraSystem::GetPosition(int chunkIdx)
+//{
+//	// TODO: 여기에 return 문을 삽입합니다.
+//}
+//
+//const Matrix4x4& CameraSystem::GetViewMatrix(int chunkIdx)
+//{
+//	return _ECSSystem.GetComponents<Component_Camera>(m_Key)[chunkIdx].m_MatView;
+//}
+//
+//const Matrix4x4& CameraSystem::GetProjMatrix(int chunkIdx)
+//{
+//	return _ECSSystem.GetComponents<Component_Camera>(m_Key)[chunkIdx].m_MatProj;
+//}
+//
+//const Matrix4x4& CameraSystem::GetOrthoMatrix(int chunkIdx)
+//{
+//	return _ECSSystem.GetComponents<Component_Camera>(m_Key)[chunkIdx].m_MatOrtho;
+//}
