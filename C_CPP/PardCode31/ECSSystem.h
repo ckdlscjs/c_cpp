@@ -58,7 +58,7 @@ inline size_t ECSSystem::CreateEntity(const std::wstring& szName)
 		newEntity = m_Entitys.back();
 	}
 	size_t idx = m_lEntitysCount++;
-	newEntity->szName = szName;
+	newEntity->m_szName = szName;
 	newEntity->m_Key = CreateArchetype<Comps...>();
 	newEntity->m_lIdx = idx;
 	return idx;

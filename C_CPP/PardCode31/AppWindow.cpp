@@ -485,24 +485,29 @@ void AppWindow::OnCreate()
 
 	//TESTECS
 	{
-		size_t entity01_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test01");
+		size_t entity01_idx = _ECSSystem.CreateEntity<Component_Transform, Component_Light>(L"test01");
 		_ECSSystem.AddComponent<Component_Transform>(entity01_idx, { {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f} });
-
-		size_t entity02_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test02");
+		_ECSSystem.AddComponent<Component_Light>(entity01_idx, {"ENTITY01"});
+		size_t entity02_idx = _ECSSystem.CreateEntity<Component_Transform, Component_Light>(L"test02");
 		_ECSSystem.AddComponent<Component_Transform>(entity02_idx, { {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f} });
+		_ECSSystem.AddComponent<Component_Light>(entity02_idx, { "ENTITY02" });
 
-		size_t entity03_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test03");
+		size_t entity03_idx = _ECSSystem.CreateEntity<Component_Transform, Component_Light>(L"test03");
 		_ECSSystem.AddComponent<Component_Transform>(entity03_idx, { {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f} });
-		_ECSSystem.GetComponents<Component_Transform>(entity01_idx);
+		_ECSSystem.AddComponent<Component_Light>(entity03_idx, { "ENTITY03" });
+
 		for (int i = 0; i < 3; i++)
 		{
 			std::cout << _ECSSystem.GetComponents<Component_Transform>(entity01_idx)[i].m_vPosition.GetX() << '\n';
+			std::cout << _ECSSystem.GetComponents<Component_Light>(entity01_idx)[i].test << '\n';
 		}
 		_ECSSystem.DeleteEntity(entity02_idx);
 
-		size_t entity04_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test04");
+		size_t entity04_idx = _ECSSystem.CreateEntity<Component_Transform, Component_Light>(L"test04");
 		_ECSSystem.AddComponent<Component_Transform>(entity04_idx, { {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f} });
+		_ECSSystem.AddComponent<Component_Light>(entity04_idx, { "ENTITY04" });
 		std::cout << _ECSSystem.GetComponents<Component_Transform>(entity01_idx)[2].m_vPosition.GetX() << '\n';
+		std::cout << _ECSSystem.GetComponents<Component_Light>(entity01_idx)[2].test << '\n';
 	}
 }
 

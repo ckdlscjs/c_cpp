@@ -35,7 +35,7 @@ public:
 struct Component_Light
 {
 public:
-
+	std::string test;
 };
 
 struct Component_Collider

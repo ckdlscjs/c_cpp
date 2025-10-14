@@ -38,7 +38,8 @@ void ECSSystem::DeleteEntity(size_t idx)
 {
 	if (idx >= m_lEntitysCount) return;
 	m_Archetypes[m_Entitys[idx]->m_Key].DeleteComponent(idx);
-	m_Entitys[idx] = m_Entitys.back();
+	m_Entitys[idx]->m_szName = m_Entitys.back()->m_szName;
+	m_Entitys[idx]->m_Key = m_Entitys.back()->m_Key;
 	m_Entitys[idx]->m_lIdx = idx;
 	m_lEntitysCount--;
 }

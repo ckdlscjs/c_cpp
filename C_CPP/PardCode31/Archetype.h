@@ -8,6 +8,8 @@ struct ComponentChunk
 	size_t capacity = 0;
 	size_t count = 0;
 	std::function<void(void*)> destructor;
+	std::function<void(void*)> destruct_only;
+	std::function<void(void*, void*)> swap_and_pop;
 };
 
 class Archetype
@@ -63,6 +65,29 @@ inline void Archetype::RegisterComponent()
 		{
 			delete[] static_cast<T*>(data);
 		};
+	chunk.destruct_only = [](void* ptr)
+		{
+			// **힙 메모리 릭 방지:** 객체의 소멸자만 명시적으로 호출합니다.
+			static_cast<T*>(ptr)->~T();
+		};
+
+	chunk.swap_and_pop = [](void* dest, void* src)
+		{
+			T* dest_ptr = static_cast<T*>(dest);
+			T* src_ptr = static_cast<T*>(src);
+
+			// 1. dest 위치에 있던 기존 객체 소멸 (삭제될 객체의 자원 해제)
+			dest_ptr->~T();
+
+			// 2. src 객체를 dest 위치로 이동 구성 (Placement New & Move)
+			// std::move를 통해 자원 소유권을 dest로 이전합니다.
+			//dest_ptr = new T(std::move(*src_ptr));
+			new (dest_ptr) T(std::move(*src_ptr));
+
+			// 3. src 위치에 있던 객체 소멸 (moved-from 상태 정리)
+			src_ptr->~T();
+			// 만약 T가 Trivial하다면, 컴파일러는 이 모든 과정을 memcpy 수준으로 최적화합니다.
+		};
 }
 
 template<typename T>
@@ -101,14 +126,32 @@ inline void Archetype::DeleteComponent(size_t idx)
 	for (const auto& iter : m_Components)
 	{
 		ComponentChunk& chunk = m_Components[iter.first];
-		//if (chunk.count < idx) continue; //ecs테스트
-		_ASEERTION_NULCHK(idx < chunk.count, "out of bound");
+		// _ASEERTION_NULCHK(idx < chunk.count, "out of bound");
+
+		size_t last_idx = chunk.count - 1;
+
 		if (idx < chunk.count)
 		{
+			// 모든 컴포넌트의 데이터는 T 타입의 배열 형태로 저장되어 있다고 가정
 			BYTE* data_ptr = static_cast<BYTE*>(chunk.data);
 			size_t size = chunk.size;
-			std::memcpy(data_ptr + (idx * size), data_ptr + (chunk.count - 1) * size, size);
+
+			if (idx != last_idx)
+			{
+				// 1. SWAP: 마지막 요소를 삭제할 위치로 안전하게 이동 및 소멸
+				void* dest_ptr = data_ptr + (idx * size);
+				void* src_ptr = data_ptr + (last_idx * size);
+
+				chunk.swap_and_pop(dest_ptr, src_ptr);
+			}
+			else
+			{
+				// 2. POP: 마지막 요소는 이동할 필요 없이 소멸만 시킵니다.
+				void* ptr = data_ptr + (idx * size);
+				chunk.destruct_only(ptr);
+			}
 		}
+
 		chunk.count--;
 	}
 }
