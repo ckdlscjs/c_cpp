@@ -195,7 +195,7 @@ public:
 	template<typename T>
 	void AddComponent(T&& component);
 	template<typename T>
-	T* GetComponents();
+	std::vector<T>& GetComponents();
 	void DeleteComponent(size_t chunkIdx);
 
 private:
@@ -236,12 +236,12 @@ inline void Archetype::AddComponent(T&& component)
 }
 
 template<typename T>
-inline T* Archetype::GetComponents()
+inline std::vector<T>& Archetype::GetComponents()
 {
 	std::type_index type = typeid(T);
 	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component nullptr");
 	ChunkData<T>* chunk = static_cast<ChunkData<T>*>(m_Components[type]);
-	return chunk->m_data.data();
+	return chunk->m_data;
 }
 
 inline void Archetype::DeleteComponent(size_t chunkIdx)

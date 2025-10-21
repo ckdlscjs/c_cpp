@@ -1,5 +1,5 @@
 #pragma once
-#include <DirectXMath.h>
+#include "std.h"
 
 __declspec(align(16))
 struct Vector2

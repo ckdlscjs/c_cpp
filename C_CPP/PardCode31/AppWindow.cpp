@@ -496,7 +496,7 @@ void AppWindow::OnCreate()
 
 		for (int i = 0; i < 3; i++)
 		{
-			std::cout << _ECSSystem.GetComponents<Component_Transform>(key)[i].m_vPosition.GetX() << '\n';
+			std::cout << _ECSSystem.GetComponents<Component_Transform>(key)[2].m_vPosition.GetX()) << '\n';
 		}
 		_ECSSystem.DeleteEntity(entity02_idx);
 

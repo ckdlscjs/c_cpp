@@ -1,6 +1,7 @@
 ﻿#pragma once
 //#define _FNV1A
 #include "std.h"
+#include "CommonMath.h"					
 
 //enum classes
 constexpr size_t MAX_COMPONENTS = 256;

@@ -25,13 +25,12 @@ public:
 	template<typename T>
 	void AddComponent(ArchetypeKey key, T&& component);
 	template<typename T>
-	T* GetComponents(ArchetypeKey key);
+	std::vector<T>& GetComponents(ArchetypeKey key);
 
 	void DeleteEntity(size_t entityIdx);
 private:
 	std::unordered_map<ArchetypeKey, Archetype> m_Archetypes;
 	std::vector<Entity> m_Entitys;
-	size_t m_lEntitysCount = 0;
 };
 #define _ECSSystem ECSSystem::GetInstance()
 
@@ -53,18 +52,14 @@ inline ArchetypeKey ECSSystem::CreateArchetype()
 	return key;
 }
 
-
-
 template<typename ...Comps>
 inline size_t ECSSystem::CreateEntity(const std::wstring& szName)
 {
-	
-	if (m_Entitys.size() <= m_lEntitysCount) m_Entitys.push_back(Entity());
-	size_t idx = m_lEntitysCount++;
-	m_Entitys[idx].m_szName = szName;
-	m_Entitys[idx].m_Key = CreateArchetype<Comps...>();
-	m_Entitys[idx].m_ChunkIdx = idx;
-	return idx;
+	m_Entitys.push_back(Entity());
+	m_Entitys.back().m_szName = szName;
+	m_Entitys.back().m_Key = CreateArchetype<Comps...>();
+	m_Entitys.back().m_ChunkIdx = m_Entitys.size() - 1;
+	return m_Entitys.size()-1;
 }
 
 template<typename T>
@@ -74,7 +69,8 @@ inline void ECSSystem::AddComponent(ArchetypeKey key, T&& component)
 }
 
 template<typename T>
-inline T* ECSSystem::GetComponents(ArchetypeKey key)
+inline std::vector<T>& ECSSystem::GetComponents(ArchetypeKey key)
 {
 	return m_Archetypes[key].GetComponents<T>();
 }
+

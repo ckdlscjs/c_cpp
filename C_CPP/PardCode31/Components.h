@@ -9,11 +9,12 @@ public:
 	Vector3 m_vPosition;
 };
 
-struct Component_Render
+struct Component_Move
 {
 public:
-	bool bRenderable = false;
-	std::vector<Mesh_Material> m_MeshMaterials;
+	float m_fSpeed_Scale;
+	float m_fSpeed_Rotate;
+	float m_fSpeed_Translation;
 };
 
 struct Component_Input
@@ -35,6 +36,13 @@ public:
 	Matrix4x4 m_MatView;
 	Matrix4x4 m_MatProj;
 	Matrix4x4 m_MatOrtho;
+};
+
+struct Component_Render
+{
+public:
+	bool bRenderable = false;
+	std::vector<Mesh_Material> m_MeshMaterials;
 };
 
 struct Component_Light

@@ -45,14 +45,8 @@
 using namespace DirectX;
 
 //#include "bits/stdc++.h"
-#include "CommonMath.h"
 
 //공용함수들
-//선형보간(vector3)
-inline Vector3 lerp(const Vector3& st, const Vector3& en, float t)
-{
-	return Vector3(st.GetX() * (1.0f - t) + en.GetX() * t, st.GetY() * (1.0f - t) + en.GetY()*t, st.GetZ() * (1.0f - t) + en.GetZ() * t);
-}
 template<typename T>
 inline const T& Clamp(const T& val, const T& low, const T& high)
 {
