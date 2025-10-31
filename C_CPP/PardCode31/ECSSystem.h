@@ -18,27 +18,31 @@ private:
 public:
 	~ECSSystem();
 	void Init();
+
 	template<typename... Comps>
 	ArchetypeKey GetArchetypeKey();
 	template<typename... Comps>
-	size_t CreateEntity(const std::wstring& szName);
+	size_t CreateEntity();
 	template<typename T>
 	void AddComponent(ArchetypeKey key, T&& component);
 	template<typename T>
-	std::vector<T>& GetComponents(ArchetypeKey key);
-
-	void DeleteEntity(size_t entityIdx);
+	std::vector<T>& GetComponents(ArchetypeKey key, size_t idxRow);
+	void DeleteEntity(size_t lookupIdx);
+private:
+	size_t FindEntity(size_t lookupIdx);
 private:
 	std::unordered_map<ArchetypeKey, Archetype> m_Archetypes;
 	std::vector<Entity> m_Entitys;
+	std::vector<size_t> m_LookupTable;
 };
 #define _ECSSystem ECSSystem::GetInstance()
 
+//폴드표현식을 이용해 component mask를 기반으로 ArchetypeKey를생성한다
 template<typename ...Comps>
 inline ArchetypeKey ECSSystem::GetArchetypeKey()
 {
 	ArchetypeKey key;
-	(key.set(ComponentType::GetMask<Comps>()), ...);
+	(key.set(ComponentType::GetMask<Comps>()), ...);	
 	return key;
 }
 
@@ -53,13 +57,20 @@ inline ArchetypeKey ECSSystem::CreateArchetype()
 }
 
 template<typename ...Comps>
-inline size_t ECSSystem::CreateEntity(const std::wstring& szName)
+inline size_t ECSSystem::CreateEntity()
 {
+	_ASEERTION_NULCHK(sizeof...(Comps) > 0, "Components zero");
+	size_t lookupIdx = m_LookupTable.size();
+	size_t entityIdx = m_Entitys.size();
+	m_LookupTable.push_back(entityIdx);
 	m_Entitys.push_back(Entity());
-	m_Entitys.back().m_szName = szName;
-	m_Entitys.back().m_Key = CreateArchetype<Comps...>();
-	m_Entitys.back().m_ChunkIdx = m_Entitys.size() - 1;
-	return m_Entitys.size()-1;
+	ArchetypeKey key = CreateArchetype<Comps...>();
+	m_Entitys.back().m_Key = key;
+	m_Entitys.back().m_IdxLookup = lookupIdx;
+	if (m_Archetypes[key].NeedNewChunk())
+		(m_Archetypes[key].CreateNewChunk<Comps>(), ...);
+	m_Archetypes[key].ReserveIndexes(m_Entitys.back().m_IdxLookup, m_Entitys.back().m_IdxRow, m_Entitys.back().m_IdxCol);
+	return lookupIdx;
 }
 
 template<typename T>
@@ -69,8 +80,8 @@ inline void ECSSystem::AddComponent(ArchetypeKey key, T&& component)
 }
 
 template<typename T>
-inline std::vector<T>& ECSSystem::GetComponents(ArchetypeKey key)
+inline std::vector<T>& ECSSystem::GetComponents(ArchetypeKey key, size_t idxRow)
 {
-	return m_Archetypes[key].GetComponents<T>();
+	return m_Archetypes[key].GetComponents<T>(idxRow);
 }
 

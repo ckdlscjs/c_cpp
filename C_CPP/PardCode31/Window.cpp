@@ -60,13 +60,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//키보드관련
 		case WM_KEYDOWN:
 		{
-			if (wParam == VK_ESCAPE) g_pWindow->OnDestroy();
-			else
+			if (wParam == VK_ESCAPE)
 			{
-				if (_InputSystem.GetKeyState((unsigned char)wParam))
-					_InputSystem.OnKeyPressed((unsigned char)wParam);
-				else _InputSystem.OnKeyDown((unsigned char)wParam);
+				g_pWindow->OnDestroy();
+				return 0;
 			}
+			_InputSystem.OnKeyDown((unsigned char)wParam);
 			return 0;
 		}
 
@@ -192,11 +191,8 @@ bool Window::BroadCast()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	else
-	{
-		OnUpdate();
-		Sleep(0);
-	}
+	OnUpdate();
+	//Sleep(0);
 	
 	return true;
 }

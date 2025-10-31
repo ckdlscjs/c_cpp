@@ -31,6 +31,7 @@ enum class E_InputEvent
 	MOUSE_R_DOWN,
 	MOUSE_R_UP,
 	MOUSE_WHEEL,
+	NOTHING,
 };
 
 enum class E_Sampler

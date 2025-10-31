@@ -187,11 +187,8 @@ bool Window::BroadCast()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	else
-	{
-		OnUpdate();
-		Sleep(0);
-	}
+	OnUpdate();
+	Sleep(0);
 	
 	return true;
 }

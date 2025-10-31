@@ -26,7 +26,8 @@ public:
 	//За·Д
 	const Matrix4x4& GetViewMatrix(int chunkIdx);
 	const Matrix4x4& GetProjMatrix(int chunkIdx);
-	const Matrix4x4& GetOrthoMatrix(int chunkIdx);
+	const Matrix4x4& GetOrthoMatrix_CT(int chunkIdx);
+	const Matrix4x4& GetOrthoMatrix_LT(int chunkIdx);
 
 private:
 	ArchetypeKey m_Key;

@@ -3,7 +3,8 @@
 class Entity
 {
 public:
-	std::wstring m_szName;
 	ArchetypeKey m_Key;
-	size_t m_ChunkIdx;
+	size_t m_IdxRow;
+	size_t m_IdxCol;
+	size_t m_IdxLookup;
 };

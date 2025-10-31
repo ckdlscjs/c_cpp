@@ -58,7 +58,7 @@ void ImguiSystem::Init(HWND hWnd, ID3D11Device* pDevice, ID3D11DeviceContext* pD
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
-void ImguiSystem::Frame()
+void ImguiSystem::Frame(float deltatime)
 {
     std::cout << "Frame : " << "ImguiSystem" << " Class" << '\n';
     // Our state, 수정필요

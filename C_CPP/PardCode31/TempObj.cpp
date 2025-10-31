@@ -108,7 +108,7 @@ void TempObj::Render()
 
 void TempObj::Release()
 {
-	for (const auto& category : m_IdxCallbacks)
+	/*for (const auto& category : m_IdxCallbacks)
 		for (const auto& iter : category.second)
-			_InputSystem.RemoveListner(category.first, iter);
+			_InputSystem.RemoveListner(category.first, iter);*/
 }

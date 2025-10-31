@@ -9,6 +9,25 @@ InputSystem::~InputSystem()
 {
 	m_Listners.clear();
 }
+
+
+void InputSystem::Init()
+{
+	std::memset(m_bOldKeyStates, false, sizeof(m_bOldKeyStates));
+	std::memset(m_bCurKeyStates, false, sizeof(m_bCurKeyStates));
+}
+
+void InputSystem::Frame()
+{
+	std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
+	for (int i = 0; i < 256; i++)
+	{
+		if (GetKeyState(i) == E_InputEvent::KEY_PRESSED)
+			OnKeyPressed(i);
+	}
+	std::memcpy(m_bOldKeyStates, m_bCurKeyStates, sizeof(m_bOldKeyStates));	//상태전이(다음프레임에반영)
+}
+
 size_t InputSystem::AddListner(E_InputEvent type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)
@@ -22,11 +41,20 @@ void InputSystem::RemoveListner(E_InputEvent type, size_t id)
 	m_Listners[type].erase(id);
 }
 
+void InputSystem::Notify(const InputEvent& event)
+{
+	if (m_Listners[event.type].size() <= 0) return;
+	for (const auto& iter : m_Listners[event.type])
+		if (iter.second)
+			iter.second(event);
+}
+
 void InputSystem::OnKeyDown(unsigned char VK_KEY)
 {
-	if (VK_KEY < 0 || VK_KEY > 255) return;
-	if (m_bKeyStates[VK_KEY]) return;
-	m_bKeyStates[VK_KEY] = true;
+	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
+	if (m_bOldKeyStates[VK_KEY]) return;
+	std::cout << "OnKeyDown " << VK_KEY << '\n';
+	m_bCurKeyStates[VK_KEY] = true;
 	InputEvent event;
 	event.type = E_InputEvent::KEY_DOWN;
 	event.keyCode = VK_KEY;
@@ -35,7 +63,8 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 
 void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
-	if (VK_KEY < 0 || VK_KEY > 255) return;
+	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
+	std::cout << "OnKeyPressed " << VK_KEY << '\n';
 	InputEvent event;
 	event.type = E_InputEvent::KEY_PRESSED;
 	event.keyCode = VK_KEY;
@@ -44,19 +73,23 @@ void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 
 void InputSystem::OnKeyUp(unsigned char VK_KEY)
 {
-	if (VK_KEY < 0 || VK_KEY > 255) return;
-	if (!m_bKeyStates[VK_KEY]) return;
-	m_bKeyStates[VK_KEY] = false;
+	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
+	if (!m_bOldKeyStates[VK_KEY]) return;
+	std::cout << "OnKeyUp " << VK_KEY << '\n';
+	m_bCurKeyStates[VK_KEY] = false;
 	InputEvent event;
 	event.type = E_InputEvent::KEY_UP;
 	event.keyCode = VK_KEY;
 	Notify(event);
 }
 
-bool InputSystem::GetKeyState(unsigned char VK_KEY) const
+E_InputEvent InputSystem::GetKeyState(unsigned char VK_KEY) const
 {
-	if (VK_KEY < 0 || VK_KEY > 255) return false;
-	return m_bKeyStates[VK_KEY];
+	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
+	if (m_bOldKeyStates[VK_KEY] && m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_PRESSED;
+	if (!m_bOldKeyStates[VK_KEY] && m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_DOWN;
+	if (m_bOldKeyStates[VK_KEY] && !m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_UP;
+	return E_InputEvent::NOTHING;
 }
 
 void InputSystem::OnMouseMove(int curX, int curY)
@@ -119,18 +152,4 @@ void InputSystem::SetMouseCenter(HWND hWnd)
 	// 5. 마우스 커서를 화면 중앙 (변환된 좌표)으로 재배치합니다.
 	SetCursorPos(screenCenterPos.x, screenCenterPos.y);
 }
-
-void InputSystem::Notify(const InputEvent& event)
-{
-	if (m_Listners[event.type].size() <= 0) return;
-	for (const auto& iter : m_Listners[event.type])
-		if (iter.second)
-			iter.second(event);
-}
-
-void InputSystem::Init()
-{
-	std::memset(m_bKeyStates, false, sizeof(m_bKeyStates));
-}
-
 

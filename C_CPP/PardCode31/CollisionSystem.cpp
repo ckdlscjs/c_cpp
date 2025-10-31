@@ -30,11 +30,12 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
+#ifdef _ECS
 	UINT count_all = 1;
 	UINT count = 1;
 	auto pCamera = _CameraSystem.GetCamera(0);
 	Frustum frustum(pCamera->GetFarZ(), pCamera->GetViewMatrix(), pCamera->GetProjMatrix());
-	
+
 	for (const auto& obj : _RenderSystem.objs)
 	{
 		obj->bRenderable = false;
@@ -55,6 +56,9 @@ void CollisionSystem::Frame(float deltatime)
 		}
 	}
 	std::cout << "·»´õ¸µµÉ °´Ã¼¼ö : " << count << ", ÄÃ¸µµÈ °´Ã¼¼ö : " << count_all - count << '\n';
+#endif // _ECS
+
+	
 }
 
 

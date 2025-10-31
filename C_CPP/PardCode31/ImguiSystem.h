@@ -15,7 +15,7 @@ public:
 	~ImguiSystem();
 	LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	void Init(HWND hWnd, ID3D11Device* pDevice, ID3D11DeviceContext* pDeviceContext);
-	void Frame();
+	void Frame(float deltatime);
 	void Render();
 	
 

@@ -72,7 +72,7 @@ void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	std::cout << "deltatime : " << deltatime << '\n';
-
+#ifdef _ECS
 	Vector3& dir = static_cast<DirectionalLight*>(_LightSystem.GetLight(0))->m_vDirection;
 	dir = dir * GetMat_RotYaw(deltatime * 30.0f);
 
@@ -80,11 +80,14 @@ void RenderSystem::Frame(float deltatime, float elapsedtime)
 	pos = pos * GetMat_RotYaw(deltatime * 50.0f);
 
 	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
-	
+
 	for (const auto& iter : objs)
 	{
 		iter->Frame(deltatime);
 	}
+#endif // _ECS
+
+	
 }
 
 void RenderSystem::PreRender(float deltatime, float elapsedtime)
@@ -99,6 +102,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+#ifdef _ECS
 	//프레임에따른 변환
 	Matrix4x4 matWorld = _CameraSystem.GetCamera(0)->GetWorldMatrix();
 	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
@@ -372,7 +376,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				}
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
-			drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f)* mat_rotate_obj* mat_translation_obj);
+			drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
 		}
 #endif 
 
@@ -431,7 +435,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			{
 				const auto& obj = objs[i];
 				if (!obj->bRenderable) continue;
-	
+
 				CB_WVPITMatrix cc0;
 				Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
 				Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
@@ -468,7 +472,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					}
 					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
-				drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f)* mat_rotate_obj* mat_translation_obj);
+				drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * mat_rotate_obj * mat_translation_obj);
 			}
 		}
 #endif	
@@ -528,6 +532,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			}
 		}
 	}
+#endif // _ECS
 }
 
 void RenderSystem::PostRender()

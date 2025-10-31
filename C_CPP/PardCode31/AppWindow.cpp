@@ -62,7 +62,16 @@ void AppWindow::OnCreate()
 	std::uniform_int_distribution<int> dis(-100, 100);
 
 	_InputSystem.SetMouseCenter(m_hWnd);
+	/*_InputSystem.AddListner(E_InputEvent::KEY_DOWN, 
+		[](const InputEvent& v) -> void 
+		{
+			
+		}
+	);*/
+		
 
+
+#ifdef _ECS
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
 	_CameraSystem.GetCamera(0)->SetPosition({ 0.0f, 200.0f, -500.0f });
@@ -92,7 +101,7 @@ void AppWindow::OnCreate()
 	pLight_Point->m_fAtt_a2 = 0.01f;
 	pLight_Point->m_fRange = 500.0f;
 	_LightSystem.AddLight(pLight_Point);
-	
+
 	SpotLight* pLight_Spot = new SpotLight();
 	pLight_Spot->m_mAmbient = Vector4(0.3f, 0.3f, 0.3f, 1.0f);
 	pLight_Spot->m_mDiffuse = Vector4(0.5f, 0.5f, 0.5f, 1.0f);
@@ -141,7 +150,7 @@ void AppWindow::OnCreate()
 			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
 			_RenderSystem.SkyObj = obj;
 		}
-		
+
 		////rand obj
 		//{
 		//	for (int i = 0; i < 50; i++)
@@ -160,7 +169,7 @@ void AppWindow::OnCreate()
 		//		obj->m_Mesh_Material.push_back({ hash_mesh_rand , hash_meterial_rand });
 		//	}
 		//}
-		
+
 		//PardCode22(earth)
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
@@ -203,7 +212,7 @@ void AppWindow::OnCreate()
 		}
 #endif // _REFLECT
 
-		
+
 		////PardCode25(house)
 		//{
 		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/house.obj", E_Collider::AABB);
@@ -231,7 +240,7 @@ void AppWindow::OnCreate()
 		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_materials[2] });
 		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_materials[3] });
 		//}
-		
+
 		////nene
 		//{
 		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/nene.obj", E_Collider::SPHERE);
@@ -256,7 +265,7 @@ void AppWindow::OnCreate()
 		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_materals[1] });
 		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_materals[2] });
 		//}
-		
+
 		////girlobj
 		//{
 		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/girl.obj", E_Collider::SPHERE);
@@ -285,7 +294,7 @@ void AppWindow::OnCreate()
 		//	
 		//	hash_tx_hash[3].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/COLORS.jpg", WIC_FLAGS_NONE) });
 		//	_RenderSystem.Material_SetTextures(hash_materials[3], hash_tx_hash[3]);
-	
+
 		//	hash_tx_hash[4].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
 		//	_RenderSystem.Material_SetTextures(hash_materials[4], hash_tx_hash[4]);
 
@@ -294,7 +303,7 @@ void AppWindow::OnCreate()
 
 		//	hash_tx_hash[6].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/top color.png", WIC_FLAGS_NONE) });
 		//	_RenderSystem.Material_SetTextures(hash_materials[6], hash_tx_hash[6]);
-	
+
 		//	_RenderSystem.objs.push_back(new TempObj());
 		//	TempObj* obj = _RenderSystem.objs.back();
 		//	obj->m_vScale = Vector3(500.0f, 500.0f, 500.0f);
@@ -482,28 +491,7 @@ void AppWindow::OnCreate()
 			}
 		}
 	}
-
-	//TESTECS
-	{
-		auto key = _ECSSystem.GetArchetypeKey<Component_Transform>();
-		size_t entity01_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test01");
-		_ECSSystem.AddComponent<Component_Transform>(key, {{1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}});
-		size_t entity02_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test02");
-		_ECSSystem.AddComponent<Component_Transform>(key, { {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f}, {2.0f, 2.0f, 2.0f} });
-
-		size_t entity03_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test03");
-		_ECSSystem.AddComponent<Component_Transform>(key, { {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f}, {3.0f, 3.0f, 3.0f} });
-
-		for (int i = 0; i < 3; i++)
-		{
-			std::cout << _ECSSystem.GetComponents<Component_Transform>(key)[2].m_vPosition.GetX()) << '\n';
-		}
-		_ECSSystem.DeleteEntity(entity02_idx);
-
-		size_t entity04_idx = _ECSSystem.CreateEntity<Component_Transform>(L"test04");
-		_ECSSystem.AddComponent<Component_Transform>(key, { {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f}, {4.0f, 4.0f, 4.0f} });
-		std::cout << _ECSSystem.GetComponents<Component_Transform>(key)[2].m_vPosition.GetX() << '\n';
-	}
+#endif // _ECS
 }
 
 void AppWindow::OnUpdate()
@@ -515,16 +503,24 @@ void AppWindow::OnUpdate()
 	float FPS = _TimerSystem.GetFps();
 	std::cout << "ElapsedTime : " << elpasedTime << '\n';
 	std::cout << "FPS : " << FPS << '\n';
-	//_InputSystem.Frame();
-	_CameraSystem.Frame(deltaTime);
-	_ImguiSystem.Frame();
-	_RenderSystem.Frame(deltaTime, elpasedTime);
-	_CollisionSystem.Frame(deltaTime);
 
-	_RenderSystem.PreRender(deltaTime, elpasedTime);
-	_RenderSystem.Render(deltaTime, elpasedTime);
-	_ImguiSystem.Render();
-	_RenderSystem.PostRender();
+	//FrameIntent
+	{
+		_CameraSystem.Frame(deltaTime);
+		_ImguiSystem.Frame(deltaTime);
+		_RenderSystem.Frame(deltaTime, elpasedTime);
+		_CollisionSystem.Frame(deltaTime);
+		_InputSystem.Frame();
+	}
+	
+	//RenderIntent
+	{
+		_RenderSystem.PreRender(deltaTime, elpasedTime);
+		_RenderSystem.Render(deltaTime, elpasedTime);
+		_ImguiSystem.Render();
+		_RenderSystem.PostRender();
+	}
+	
 	std::cout << '\n';
 }
 
