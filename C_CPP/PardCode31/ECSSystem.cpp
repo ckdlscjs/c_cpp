@@ -13,6 +13,25 @@ void ECSSystem::Init()
 {
 }
 
+std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
+{
+	std::vector<Archetype*> archetypes;
+	for (auto& iter : m_Archetypes)
+	{
+		if ((iter.first & key) == key)
+			archetypes.push_back(&iter.second);
+	}
+	return archetypes;
+}
+
+void ECSSystem::Swap(size_t srcIdx, size_t destIdx)
+{
+	size_t srcEntityIdx = FindEntity(srcIdx);
+	size_t destEntityIdx = FindEntity(destIdx);
+	std::swap(m_Entitys[srcEntityIdx], m_Entitys[destEntityIdx]);
+	std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
+}
+
 void ECSSystem::DeleteEntity(size_t lookupIdx)
 {
 	size_t delEntityIdx = FindEntity(lookupIdx);

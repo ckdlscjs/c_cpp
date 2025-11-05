@@ -27,6 +27,8 @@ public:
 	void AddComponent(ArchetypeKey key, T&& component);
 	template<typename T>
 	std::vector<T>& GetComponents(ArchetypeKey key, size_t idxRow);
+	std::vector<Archetype*> QueryArchetypes(ArchetypeKey key);
+	void Swap(size_t srcIdx, size_t destIdx);
 	void DeleteEntity(size_t lookupIdx);
 private:
 	size_t FindEntity(size_t lookupIdx);

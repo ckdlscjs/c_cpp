@@ -29,8 +29,8 @@ private:
 	std::unordered_map<E_InputEvent, std::unordered_map<size_t, EventCallBack>> m_Listners;
 	size_t m_CallbackID = 1;	//0은 오류체크
 	PointXY m_OldMousePos;
-	bool m_bOldKeyStates[256];
-	bool m_bCurKeyStates[256];
+	std::bitset<256> m_bOldKeyStates;
+	std::bitset<256> m_bCurKeyStates;
 	bool m_bCenterMouse = true;
 	bool m_bChkPosFirst = true;
 };

@@ -160,6 +160,7 @@ class ComponentChunk
 {
 public:
 	virtual ~ComponentChunk() = default;
+	virtual void Swap(size_t srcCol, ComponentChunk* destChunk, size_t destCol) = 0;
 	virtual void SwapAndPop(size_t chunkIdx, ComponentChunk* srcChunk) = 0;
 	virtual void AddChunk() = 0;
 	virtual size_t GetCount() const = 0;
@@ -173,13 +174,20 @@ public:
 	{
 		m_data.reserve(m_capacity);
 	}
+	void Swap(size_t srcCol, ComponentChunk* destChunk, size_t destCol) override
+	{
+		_ASEERTION_NULCHK(GetCount() && srcCol < GetCount(), "idx out of bound");
+		_ASEERTION_NULCHK(destChunk->GetCount() && srcCol < destChunk->GetCount(), "idx out of bound");
+		std::vector<T>& pChunks = static_cast<ChunkData<T>*>(destChunk)->m_data;
+		std::swap(m_data[srcCol], pChunks[destCol]);
+	}
 	void SwapAndPop(size_t chunkIdx, ComponentChunk* srcChunk) override
 	{
 		_ASEERTION_NULCHK(GetCount() && chunkIdx < GetCount(), "idx out of bound");
-		std::vector<T>* pChunks = static_cast<ChunkData<T>*>(srcChunk)->m_data;
-		if(chunkIdx < pChunks->size()-1)
-			m_data[chunkIdx] = std::move(pChunks->back());
-		pChunks->pop_back();
+		std::vector<T>& pChunks = static_cast<ChunkData<T>*>(srcChunk)->m_data;
+		if(chunkIdx < pChunks.size()-1)
+			m_data[chunkIdx] = std::move(pChunks.back());
+		pChunks.pop_back();
 	}
 	void AddChunk() override
 	{
@@ -219,10 +227,14 @@ public:
 	void AddComponent(T&& component);
 	template<typename T>
 	std::vector<T>& GetComponents(size_t idxRow);
+	std::pair<size_t, size_t> SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol);
 	size_t DeleteComponent(size_t idxRow, size_t idxCol);
+	size_t GetCapcity_Chunk() const;
 	size_t GetCount_Chunks() const;
-	size_t GetCount_Chunk() const;
+	size_t GetCount() const;
 
+	size_t m_transfer_row = 0;
+	size_t m_transfer_col = 0;
 private:
 	std::unordered_map<std::type_index, std::vector<ComponentChunk*>> m_Components;
 	std::vector<size_t> m_LookupIdxs;
@@ -290,6 +302,7 @@ inline void Archetype::AddComponent(T&& component)
 	dataChunk->m_data.back() = std::forward<T>(component);
 }
 
+
 template<typename T>
 inline std::vector<T>& Archetype::GetComponents(size_t idxRow)
 {
@@ -301,6 +314,22 @@ inline std::vector<T>& Archetype::GetComponents(size_t idxRow)
 	return chunk->m_data;
 }
 
+inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol)
+{
+	const auto& chunks = m_Components.begin()->second;
+	_ASEERTION_NULCHK(srcRow < chunks.size(), "Chunk row Out of Bound");
+	_ASEERTION_NULCHK(!m_LookupIdxs.empty(), "Entity Lookup empty");
+
+	//swap
+	for (auto& iter : m_Components)
+		iter.second[srcRow]->Swap(srcCol, iter.second[destRow], destCol);
+
+	//Lookup을 교체, 리턴
+	size_t srcIdx = srcRow * GetCapcity_Chunk() + srcCol;
+	size_t destIdx = destRow * GetCapcity_Chunk() + destCol;
+	return { m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx] };
+}
+
 inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
 {
 	const auto& chunks = m_Components.begin()->second;
@@ -308,7 +337,7 @@ inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
 	_ASEERTION_NULCHK(!m_LookupIdxs.empty(), "Entity Lookup empty");
 
 	//Archetype의 요소들중 끝 값을 앞으로 swap하고 맨뒷값 삭제
-	for (const auto& iter : m_Components)
+	for (auto& iter : m_Components)
 		iter.second[idxRow]->SwapAndPop(idxCol, iter.second.back());
 
 	//청크가 가진 삭제위치의 Lookup값을 맨 끝값으로 바꾼다
@@ -339,9 +368,16 @@ inline size_t Archetype::GetCount_Chunks() const
 	return chunks.size();
 }
 
-inline size_t Archetype::GetCount_Chunk() const
+inline size_t Archetype::GetCapcity_Chunk() const
 {
 	const auto& chunks = m_Components.begin()->second;
 	const auto& lastchunk = chunks.back();
-	return lastchunk->GetCount();
+	return lastchunk->GetCapacity();
+}
+
+inline size_t Archetype::GetCount() const
+{
+	const auto& chunks = m_Components.begin()->second;
+	const auto& lastchunk = chunks.back();
+	return (GetCount_Chunks()-1) * GetCapcity_Chunk() + lastchunk->GetCount();
 }

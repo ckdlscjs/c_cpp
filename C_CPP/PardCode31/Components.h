@@ -1,37 +1,37 @@
 #pragma once
 #include "CommonHeader.h"
 
-struct Component_Transform
+struct C_Transform
 {
 public:
-	Vector3 m_vScale;
-	Quarternion m_qRotate;
-	//Vector3 m_vRotate;
-	Vector3 m_vPosition;
+	Vector3 vScale;
+	Quarternion qRotate;
+	//Vector3 vRotate;
+	Vector3 vPosition;
 };
 
-struct Component_Move
+struct C_Movement
 {
 public:
-	float m_fSpeed_Scale;
-	float m_fSpeed_Rotate;
-	float m_fSpeed_Translation;
+	float fSpeed_Scale;
+	float fSpeed_Rotate;
+	float fSpeed_Translation;
 };
 
-struct Component_Input
+struct C_Input
 {
 public:
-	
+	std::bitset<256> vk_mask;
 };
 
-struct Component_Camera
+struct C_Camera
 {
 public:
-	float m_fFov;					//field of view, 시야각
-	float m_fScreenWidth;			//화면너비, aspectratio = 너비 / 높이
-	float m_fScreenHeight;			//화면높이
-	float m_fNear;					//근단면
-	float m_fFar;					//원단면
+	float fFov;					//field of view, 시야각
+	float fScreenWidth;			//화면너비, aspectratio = 너비 / 높이
+	float fScreenHeight;			//화면높이
+	float fNear;					//근단면
+	float fFar;					//원단면
 	/*Matrix4x4 m_matWorld;
 	Matrix4x4 m_MatView;
 	Matrix4x4 m_MatProj;
@@ -40,19 +40,19 @@ public:
 
 
 
-struct Component_Render
+struct C_Render
 {
 public:
 	bool bRenderable = false;
-	std::vector<Mesh_Material> m_MeshMaterials;
+	std::vector<Mesh_Material> MeshMaterials;
 };
 
-struct Component_Light
+struct C_Light
 {
 public:
 };
 
-struct Component_Collider
+struct C_Collider
 {
 public:
 

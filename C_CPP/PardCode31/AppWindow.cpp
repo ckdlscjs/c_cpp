@@ -68,9 +68,43 @@ void AppWindow::OnCreate()
 			
 		}
 	);*/
-		
 
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input>();
+	size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {0.0f, 0.0f, 0.0f}, {}, {} });
+	std::bitset<256> vkmask;
+	vkmask['A'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 0.0f, 0.0f}, {}, {} });
+	vkmask = 0;
+	vkmask['B'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {2.0f, 0.0f, 0.0f}, {}, {} });
+	vkmask = 0;
+	vkmask['A'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 0.0f, 0.0f}, {}, {} });
+	vkmask = 0;
+	vkmask['B'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {4.0f, 0.0f, 0.0f}, {}, {} });
+	vkmask = 0;
+	vkmask['B'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 0.0f, 0.0f}, {}, {} });
+	vkmask = 0;
+	vkmask['A'] = true;
+	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 #ifdef _ECS
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
@@ -506,11 +540,11 @@ void AppWindow::OnUpdate()
 
 	//FrameIntent
 	{
+		_InputSystem.Frame();
 		_CameraSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);
 		_CollisionSystem.Frame(deltaTime);
-		_InputSystem.Frame();
 	}
 	
 	//RenderIntent

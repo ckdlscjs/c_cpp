@@ -106,7 +106,7 @@ CameraSystem::~CameraSystem()
 
 void CameraSystem::Init()
 {
-	m_Key = _ECSSystem.GetArchetypeKey<Component_Transform, Component_Move, Component_Input, Component_Camera>();
+	m_Key = _ECSSystem.GetArchetypeKey<C_Transform, C_Movement, C_Input, C_Camera>();
 }
 
 void CameraSystem::Frame(float deltaTime)
@@ -117,21 +117,21 @@ void CameraSystem::Frame(float deltaTime)
 
 //void CameraSystem::SetPosition(int chunkIdx, const Vector3& position)
 //{
-//	std::vector<Component_Transform>& chunks = _ECSSystem.GetComponents<Component_Transform>(m_Key);
+//	std::vector<C_Transform>& chunks = _ECSSystem.GetComponents<C_Transform>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	chunks[chunkIdx].m_vPosition = position;
 //}
 //
 //void CameraSystem::SetFOV(int chunkIdx, float FOV)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	chunks[chunkIdx].m_fFov = FOV;
 //}
 //
 //void CameraSystem::SetScreenWidthHeight(int chunkIdx, float width, float height)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	chunks[chunkIdx].m_fScreenWidth = width;
 //	chunks[chunkIdx].m_fScreenHeight = height;
@@ -139,7 +139,7 @@ void CameraSystem::Frame(float deltaTime)
 //
 //void CameraSystem::SetClipPlanes(int chunkIdx, float nearZ, float farZ)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	chunks[chunkIdx].m_fNear = nearZ;
 //	chunks[chunkIdx].m_fFar = farZ;
@@ -147,35 +147,35 @@ void CameraSystem::Frame(float deltaTime)
 //
 //const Vector3& CameraSystem::GetPosition(int chunkIdx)
 //{
-//	std::vector<Component_Transform>& chunks = _ECSSystem.GetComponents<Component_Transform>(m_Key);
+//	std::vector<C_Transform>& chunks = _ECSSystem.GetComponents<C_Transform>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return chunks[chunkIdx].m_vPosition;
 //}
 //
 //const Matrix4x4& CameraSystem::GetViewMatrix(int chunkIdx)
 //{
-//	std::vector<Component_Transform>& chunks = _ECSSystem.GetComponents<Component_Transform>(m_Key);
+//	std::vector<C_Transform>& chunks = _ECSSystem.GetComponents<C_Transform>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return GetMat_View(chunks[chunkIdx].m_vPosition, chunks[chunkIdx].m_qRotate);
 //}
 //
 //const Matrix4x4& CameraSystem::GetProjMatrix(int chunkIdx)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return GetMat_Perspective(chunks[chunkIdx].m_fScreenWidth, chunks[chunkIdx].m_fScreenHeight, chunks[chunkIdx].m_fFov, chunks[chunkIdx].m_fNear, chunks[chunkIdx].m_fFar);
 //}
 //
 //const Matrix4x4& CameraSystem::GetOrthoMatrix_CT(int chunkIdx)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return GetMat_Orthographic(chunks[chunkIdx].m_fScreenWidth, chunks[chunkIdx].m_fScreenHeight, chunks[chunkIdx].m_fNear, chunks[chunkIdx].m_fFar);
 //}
 //
 //const Matrix4x4& CameraSystem::GetOrthoMatrix_LT(int chunkIdx)
 //{
-//	std::vector<Component_Camera>& chunks = _ECSSystem.GetComponents<Component_Camera>(m_Key);
+//	std::vector<C_Camera>& chunks = _ECSSystem.GetComponents<C_Camera>(m_Key);
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return GetMat_Orthographic_OffCenter(0.0f, chunks[chunkIdx].m_fScreenWidth, 0.0f, chunks[chunkIdx].m_fScreenHeight, chunks[chunkIdx].m_fNear, chunks[chunkIdx].m_fFar);
 //}
