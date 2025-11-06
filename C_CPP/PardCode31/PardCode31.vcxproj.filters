@@ -211,6 +211,9 @@
     <ClInclude Include="Entity.h">
       <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
+    <ClInclude Include="MovementSystem.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">
@@ -304,6 +307,9 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="ECSSystem.cpp">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="MovementSystem.cpp">
       <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
   </ItemGroup>

@@ -164,13 +164,12 @@ public:
 	virtual void SwapAndPop(size_t chunkIdx, ComponentChunk* srcChunk) = 0;
 	virtual void AddChunk() = 0;
 	virtual size_t GetCount() const = 0;
-	virtual size_t GetCapacity() const = 0;
 };
 template<typename T>
 class ChunkData : public ComponentChunk
 {
 public:
-	ChunkData() : m_capacity(std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T)))
+	ChunkData(size_t chunkCapacity) : m_capacity(chunkCapacity)
 	{
 		m_data.reserve(m_capacity);
 	}
@@ -191,20 +190,16 @@ public:
 	}
 	void AddChunk() override
 	{
-		_ASEERTION_NULCHK(GetCount() < GetCapacity(), "Size full");
+		_ASEERTION_NULCHK(GetCount() < m_capacity, "Size full");
 		m_data.emplace_back();
 	}
 	size_t GetCount() const override
 	{
 		return m_data.size();
 	}
-	size_t GetCapacity() const override
-	{
-		return m_capacity;
-	}
 public:
 	std::vector<T> m_data;
-	const size_t m_capacity;
+	size_t m_capacity;
 };
 
 class Archetype
@@ -229,13 +224,15 @@ public:
 	std::vector<T>& GetComponents(size_t idxRow);
 	std::pair<size_t, size_t> SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol);
 	size_t DeleteComponent(size_t idxRow, size_t idxCol);
-	size_t GetCapcity_Chunk() const;
+	size_t GetCapacity_Chunks() const;
 	size_t GetCount_Chunks() const;
-	size_t GetCount() const;
+	size_t GetCount_Chunk(size_t row) const;
+	size_t GetAllChunkCount() const;
 
 	size_t m_transfer_row = 0;
 	size_t m_transfer_col = 0;
 private:
+	size_t m_ChunksCapacity;
 	std::unordered_map<std::type_index, std::vector<ComponentChunk*>> m_Components;
 	std::vector<size_t> m_LookupIdxs;
 };
@@ -259,14 +256,16 @@ inline void Archetype::RegisterComponent()
 {
 	std::type_index type = typeid(T);
 	_ASEERTION_NULCHK(m_Components.find(type) == m_Components.end(), "Already Chunk exist");
+	if (m_Components.empty())
+		m_ChunksCapacity = std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T));
 	m_Components[type] = std::vector<ComponentChunk*>();
-	m_Components[type].push_back(new ChunkData<T>());
+	m_Components[type].push_back(new ChunkData<T>(m_ChunksCapacity));
 }
 
 inline bool Archetype::NeedNewChunk()
 {
 	ComponentChunk* lastChunk = m_Components.begin()->second.back();
-	return lastChunk->GetCount() >= lastChunk->GetCapacity();
+	return lastChunk->GetCount() >= m_ChunksCapacity;
 }
 
 inline void Archetype::ReserveIndexes(const size_t lookupIdx, size_t& out_idxRow, size_t& out_idxCol)
@@ -289,7 +288,7 @@ inline void Archetype::CreateNewChunk()
 {
 	std::type_index type = typeid(T);
 	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
-	m_Components[type].push_back(new ChunkData<T>());
+	m_Components[type].push_back(new ChunkData<T>(m_ChunksCapacity));
 }
 
 template<typename T>
@@ -325,8 +324,8 @@ inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t 
 		iter.second[srcRow]->Swap(srcCol, iter.second[destRow], destCol);
 
 	//Lookup을 교체, 리턴
-	size_t srcIdx = srcRow * GetCapcity_Chunk() + srcCol;
-	size_t destIdx = destRow * GetCapcity_Chunk() + destCol;
+	size_t srcIdx = srcRow * m_ChunksCapacity + srcCol;
+	size_t destIdx = destRow * m_ChunksCapacity + destCol;
 	return { m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx] };
 }
 
@@ -342,8 +341,7 @@ inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
 
 	//청크가 가진 삭제위치의 Lookup값을 맨 끝값으로 바꾼다
 	size_t movedIdx = m_LookupIdxs.back();
-	size_t capacity = (*m_Components.begin()->second.begin())->GetCapacity();
-	size_t deletedIdx = capacity * idxRow + idxCol;
+	size_t deletedIdx = m_ChunksCapacity * idxRow + idxCol;
 	if (deletedIdx < m_LookupIdxs.size() - 1)
 		m_LookupIdxs[deletedIdx] = movedIdx;
 	m_LookupIdxs.pop_back();
@@ -368,16 +366,20 @@ inline size_t Archetype::GetCount_Chunks() const
 	return chunks.size();
 }
 
-inline size_t Archetype::GetCapcity_Chunk() const
+inline size_t Archetype::GetCapacity_Chunks() const
 {
-	const auto& chunks = m_Components.begin()->second;
-	const auto& lastchunk = chunks.back();
-	return lastchunk->GetCapacity();
+	return m_ChunksCapacity;
 }
 
-inline size_t Archetype::GetCount() const
+inline size_t Archetype::GetCount_Chunk(size_t row) const
+{
+	const auto& chunks = m_Components.begin()->second;
+	return chunks[row]->GetCount();
+}
+
+inline size_t Archetype::GetAllChunkCount() const
 {
 	const auto& chunks = m_Components.begin()->second;
 	const auto& lastchunk = chunks.back();
-	return (GetCount_Chunks()-1) * GetCapcity_Chunk() + lastchunk->GetCount();
+	return (GetCount_Chunks() - 1) * m_ChunksCapacity + lastchunk->GetCount();
 }

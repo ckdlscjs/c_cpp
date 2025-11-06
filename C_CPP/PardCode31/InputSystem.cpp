@@ -28,33 +28,23 @@ void InputSystem::Frame()
 	//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
 	for (auto& archetype : queries)
 	{
-		std::vector<std::pair<size_t, size_t>> chks;
-		for (size_t row = 0; row < archetype->GetCount_Chunks(); row++)
+		archetype->m_transfer_row = archetype->m_transfer_col = 0;	//inputSys는 스타트시점이므로 transfer초기화
+		size_t st_row = archetype->m_transfer_row;
+		size_t st_col = archetype->m_transfer_col;
+		std::vector<std::pair<size_t, size_t>> swaps;
+		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 		{
 			auto& chunks = archetype->GetComponents<C_Input>(row);
-			for (size_t col = 0; col < chunks.size(); col++)
+			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
-				if ((chunks[col].vk_mask & m_bCurKeyStates) != 0) 
-					chks.push_back({ row, col });
+				if ((chunks[col].vk_mask & m_bCurKeyStates) != 0)
+				{
+					swaps.push_back({ row, col });
+				}
 			}
 		}
-		size_t startIdx = archetype->GetCount() - chks.size();
-		size_t curIdx = startIdx;
-		//청크의 뒤에 배치시킨다(Swap)
-		for (const auto& iter : chks)
-		{
-			size_t srcRow = iter.first;
-			size_t srcCol = iter.second;
-			size_t destRow = curIdx / archetype->GetCapcity_Chunk();
-			size_t destCol = curIdx % archetype->GetCapcity_Chunk();
-			auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
-			size_t lookupSrc = src_dest.first;
-			size_t lookupDest = src_dest.second;
-			_ECSSystem.Swap(lookupSrc, lookupDest);
-			curIdx++;
-		}
-		archetype->m_transfer_row = startIdx / archetype->GetCapcity_Chunk();
-		archetype->m_transfer_col = startIdx % archetype->GetCapcity_Chunk();
+		size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
+		_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
 	}
 	m_bOldKeyStates = m_bCurKeyStates; //상태전이(다음프레임에반영)
 }
@@ -83,7 +73,7 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 {
 	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
 	if (m_bOldKeyStates[VK_KEY]) return;
-	std::cout << "OnKeyDown " << VK_KEY << '\n';
+	//std::cout << "OnKeyDown " << VK_KEY << '\n';
 	m_bCurKeyStates[VK_KEY] = true;
 	InputEvent event;
 	event.type = E_InputEvent::KEY_DOWN;
@@ -94,7 +84,7 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
 	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
-	std::cout << "OnKeyPressed " << VK_KEY << '\n';
+	//std::cout << "OnKeyPressed " << VK_KEY << '\n';
 	InputEvent event;
 	event.type = E_InputEvent::KEY_PRESSED;
 	event.keyCode = VK_KEY;
@@ -105,7 +95,7 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 {
 	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
 	if (!m_bOldKeyStates[VK_KEY]) return;
-	std::cout << "OnKeyUp " << VK_KEY << '\n';
+	//std::cout << "OnKeyUp " << VK_KEY << '\n';
 	m_bCurKeyStates[VK_KEY] = false;
 	InputEvent event;
 	event.type = E_InputEvent::KEY_UP;

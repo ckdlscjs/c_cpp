@@ -22,6 +22,7 @@ struct C_Input
 {
 public:
 	std::bitset<256> vk_mask;
+
 };
 
 struct C_Camera

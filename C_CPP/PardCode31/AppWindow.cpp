@@ -15,6 +15,7 @@
 #include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
 #include "GeometryGenerator.h"
 #include "Components.h"			//ecstest
+#include "MovementSystem.h"
 
 AppWindow::AppWindow()
 {
@@ -28,6 +29,7 @@ AppWindow::AppWindow()
 	_RenderSystem;
 	_ImguiSystem;
 	_LightSystem;
+	_MovementSystem;
 }
 
 AppWindow::~AppWindow()
@@ -47,6 +49,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.Init();
 	_LightSystem.Init();
 	_ECSSystem.Init();
+	_MovementSystem.Init();
 
 	// 1. 난수 시드(seed)를 설정합니다.
 		// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
@@ -69,42 +72,48 @@ void AppWindow::OnCreate()
 		}
 	);*/
 
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input>();
-	size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Movement>();
+	size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {0.0f, 0.0f, 0.0f}, {}, {} });
 	std::bitset<256> vkmask;
 	vkmask['A'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 0.0f, 0.0f}, {}, {} });
 	vkmask = 0;
 	vkmask['B'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {2.0f, 0.0f, 0.0f}, {}, {} });
 	vkmask = 0;
 	vkmask['A'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 0.0f, 0.0f}, {}, {} });
 	vkmask = 0;
 	vkmask['B'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {4.0f, 0.0f, 0.0f}, {}, {} });
 	vkmask = 0;
 	vkmask['B'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input>();
+	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
 	_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 0.0f, 0.0f}, {}, {} });
 	vkmask = 0;
 	vkmask['A'] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+	_ECSSystem.AddComponent<C_Movement>(key, {});
 #ifdef _ECS
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
@@ -541,6 +550,7 @@ void AppWindow::OnUpdate()
 	//FrameIntent
 	{
 		_InputSystem.Frame();
+		_MovementSystem.Frame(deltaTime);
 		_CameraSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);

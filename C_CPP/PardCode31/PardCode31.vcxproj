@@ -163,6 +163,7 @@
     <ClInclude Include="Components.h" />
     <ClInclude Include="ECSSystem.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="MovementSystem.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="States.h" />
     <ClInclude Include="Frustum.h" />
@@ -214,6 +215,7 @@
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />
+    <ClCompile Include="MovementSystem.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="ObjectSystem.cpp" />
     <FxCompile Include="PS_DepthDebug.hlsl">
