@@ -173,12 +173,6 @@
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
     <ClInclude Include="CommonHeader.h" />
-    <ClInclude Include="ObjectSystem.h">
-      <Filter>Engine\ObjectSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>Engine\ObjectSystem</Filter>
-    </ClInclude>
     <ClInclude Include="Box.h">
       <Filter>Engine\CollisionSystem</Filter>
     </ClInclude>
@@ -211,8 +205,11 @@
     <ClInclude Include="Entity.h">
       <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
-    <ClInclude Include="MovementSystem.h">
+    <ClInclude Include="BehaviorSystem.h">
       <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderAsset.h">
+      <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -288,12 +285,6 @@
     <ClCompile Include="CollisionSystem.cpp">
       <Filter>Engine\CollisionSystem</Filter>
     </ClCompile>
-    <ClCompile Include="ObjectSystem.cpp">
-      <Filter>Engine\ObjectSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>Engine\ObjectSystem</Filter>
-    </ClCompile>
     <ClCompile Include="States.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
@@ -309,8 +300,11 @@
     <ClCompile Include="ECSSystem.cpp">
       <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
-    <ClCompile Include="MovementSystem.cpp">
+    <ClCompile Include="BehaviorSystem.cpp">
       <Filter>Engine\ECSSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderAsset.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

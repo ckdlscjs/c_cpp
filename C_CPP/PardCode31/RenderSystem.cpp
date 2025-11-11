@@ -19,6 +19,8 @@
 #include "TempObj.h"
 #include "TestBlockMacro.h"
 
+#include "RenderAsset.h"
+
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
 size_t g_hash_cbpointlight = typeid(CB_PointLight).hash_code();
 size_t g_hash_cbspotlight = typeid(CB_SpotLight).hash_code();
@@ -599,6 +601,12 @@ RenderSystem::~RenderSystem()
 		iter = m_pCRTVs.erase(iter);
 	}
 
+	for (auto iter = m_pCRAs.begin(); iter != m_pCRAs.end();)
+	{
+		delete iter->second;
+		iter = m_pCRAs.erase(iter);
+	}
+
 	if (SkyObj)
 		delete SkyObj;
 
@@ -1076,6 +1084,19 @@ void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
+}
+
+size_t RenderSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& MeshMats)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCRAs.find(hash) != m_pCRAs.end()) return hash;
+
+	RenderAsset* pRenderAsset = new RenderAsset(szName);
+	_ASEERTION_NULCHK(pRenderAsset, "RA is nullptr");
+	for (const auto& iter : MeshMats)
+		pRenderAsset->SetMeshMaterial(iter);
+	m_pCRAs[hash] = pRenderAsset;
+	return hash;
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)

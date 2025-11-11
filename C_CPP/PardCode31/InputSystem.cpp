@@ -18,11 +18,11 @@ void InputSystem::Init()
 void InputSystem::Frame()
 {
 	std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
-	for (int i = 0; i < 256; i++)
+	/*for (int i = 0; i < 256; i++)
 	{
 		if (GetKeyState(i) == E_InputEvent::KEY_PRESSED)
 			OnKeyPressed(i);
-	}
+	}*/
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 	//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
@@ -37,17 +37,29 @@ void InputSystem::Frame()
 			auto& chunks = archetype->GetComponents<C_Input>(row);
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
-				if ((chunks[col].vk_mask & m_bCurKeyStates) != 0)
+				if ((chunks[col].bVKMask & m_bCurKeyStates) != 0)
 				{
 					swaps.push_back({ row, col });
 				}
 			}
 		}
 		size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
+		//어떠한 Chunk가 Component우선순위에 따라 정렬을 할경우 중복된 컴포넌트(input, move, 등 동시우선순위에 의해 앞으로 돌리려면 예외처리가 힘들다)
 		_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
 	}
+	
+	for (unsigned char vk_key = 0; vk_key < 255; vk_key++)	//255번은 마우스체크(임시)
+	{
+		if (m_bOldKeyStates[vk_key] && m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_PRESSED;
+		else if (!m_bOldKeyStates[vk_key] && m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_DOWN;
+		else if (m_bOldKeyStates[vk_key] && !m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_UP;
+		else m_eKeyStates[vk_key] = E_InputEvent::NOTHING;
+	}
+
 	m_bOldKeyStates = m_bCurKeyStates; //상태전이(다음프레임에반영)
+	m_bCurKeyStates[255] = false;
 }
+
 size_t InputSystem::AddListner(E_InputEvent type, EventCallBack callback)
 {
 	if (!callback) return 0; //유효한 콜백이 아니면 (0, 오류)
@@ -103,24 +115,26 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 	Notify(event);
 }
 
-E_InputEvent InputSystem::GetKeyState(unsigned char VK_KEY) const
+const E_InputEvent* InputSystem::GetKeysState()
 {
-	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
-	if (m_bOldKeyStates[VK_KEY] && m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_PRESSED;
-	if (!m_bOldKeyStates[VK_KEY] && m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_DOWN;
-	if (m_bOldKeyStates[VK_KEY] && !m_bCurKeyStates[VK_KEY]) return E_InputEvent::KEY_UP;
-	return E_InputEvent::NOTHING;
+	return m_eKeyStates;
 }
+
 
 void InputSystem::OnMouseMove(int curX, int curY)
 {
 	InputEvent event;
 	event.type = E_InputEvent::MOUSE_MOVE;
-	event.mouseDeltaX = curX - (m_bChkPosFirst ? curX : m_OldMousePos.x);
-	event.mouseDeltaY = curY - (m_bChkPosFirst ? curY : m_OldMousePos.y);
+	event.mouseDeltaX = curX - (m_bChkPosFirst ? curX : m_OldMousePos.GetX());
+	event.mouseDeltaY = curY - (m_bChkPosFirst ? curY : m_OldMousePos.GetY());
 	if (m_bChkPosFirst) m_bChkPosFirst = false;
-	m_OldMousePos.x = event.mouseX = curX;
-	m_OldMousePos.y = event.mouseY = curY;
+	/*m_OldMousePos.x = event.mouseX = curX;
+	m_OldMousePos.y = event.mouseY = curY;*/
+	m_bCurKeyStates[255] = true;
+	m_OldMousePos = m_CurMousePos;
+	event.mouseX = curX;
+	event.mouseY = curY;
+	m_CurMousePos.Set(curX, curY);
 	Notify(event);
 }
 
@@ -138,6 +152,9 @@ void InputSystem::OnMouseMoveCenter(HWND hWnd, int curX, int curY)
 	int clientCenterY = (clientRect.bottom - clientRect.top) / 2;
 
 	// 3. 델타 계산
+	m_bCurKeyStates[255] = true;
+	m_OldMousePos = { (float)clientCenterX, (float)clientCenterY };
+	m_CurMousePos = { (float)curX, (float)curY };
 	event.mouseDeltaX = curX - clientCenterX;
 	event.mouseDeltaY = curY - clientCenterY;
 
@@ -171,5 +188,10 @@ void InputSystem::SetMouseCenter(HWND hWnd)
 
 	// 5. 마우스 커서를 화면 중앙 (변환된 좌표)으로 재배치합니다.
 	SetCursorPos(screenCenterPos.x, screenCenterPos.y);
+}
+
+Vector2 InputSystem::GetMouseDelta() const
+{
+	return m_CurMousePos - m_OldMousePos;
 }
 

@@ -1,6 +1,12 @@
 #pragma once
 #include "CommonHeader.h"
 
+struct C_Input
+{
+public:
+	std::bitset<256> bVKMask;
+};
+
 struct C_Transform
 {
 public:
@@ -9,20 +15,33 @@ public:
 	//Vector3 vRotate;
 	Vector3 vPosition;
 };
-
-struct C_Movement
+enum E_Behavior
 {
-public:
-	float fSpeed_Scale;
-	float fSpeed_Rotate;
-	float fSpeed_Translation;
+	NONE,
+	MOVE_FORWARD,
+	MOVE_BACKWARD,
+	MOVE_RIGHT,
+	MOVE_LEFT,
+	MOVE_UP,
+	MOVE_DOWN,
+	COUNT,
 };
 
-struct C_Input
+static const std::array<Vector3, E_Behavior::COUNT> MoveDirs =
+{
+	Vector3(0.0f, 0.0f, 0.0f),	  //NONE,
+	Vector3(0.0f, 0.0f, 1.0f),	  //MOVE_FORWARD,
+	Vector3(0.0f, 0.0f, -1.0f),   //MOVE_BACKWARD,
+	Vector3(1.0f, 0.0f, 0.0f),	  //MOVE_RIGHT,
+	Vector3(-1.0f, 0.0f, 0.0f),   //MOVE_LEFT,
+	Vector3(0.0f, 1.0f, 0.0f),	  //MOVE_UP,
+	Vector3(0.0f, -1.0f, 0.0f),   //MOVE_DOWN,
+};
+
+struct C_Behavior
 {
 public:
-	std::bitset<256> vk_mask;
-
+	std::array<unsigned char, E_Behavior::COUNT> BehaviorMap;
 };
 
 struct C_Camera
@@ -30,8 +49,8 @@ struct C_Camera
 public:
 	float fFov;					//field of view, 시야각
 	float fScreenWidth;			//화면너비, aspectratio = 너비 / 높이
-	float fScreenHeight;			//화면높이
-	float fNear;					//근단면
+	float fScreenHeight;		//화면높이
+	float fNear;				//근단면
 	float fFar;					//원단면
 	/*Matrix4x4 m_matWorld;
 	Matrix4x4 m_MatView;
@@ -39,13 +58,11 @@ public:
 	Matrix4x4 m_MatOrtho;*/
 };
 
-
-
 struct C_Render
 {
 public:
 	bool bRenderable = false;
-	std::vector<Mesh_Material> MeshMaterials;
+	size_t hash_ra = 0;
 };
 
 struct C_Light

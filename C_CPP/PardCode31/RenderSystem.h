@@ -19,7 +19,7 @@ class RasterizerState;
 class DepthStencilState;
 class BlendState;
 class TempObj;
-
+class RenderAsset;
 class RenderSystem : public BaseSystem<RenderSystem>
 {
 	friend class BaseSystem<RenderSystem>;
@@ -54,6 +54,8 @@ public:
 	template<typename T>
 	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
+
+	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& MeshMats);
 
 private:
 	//API리소스 생성
@@ -119,6 +121,8 @@ private:
 	size_t												m_hash_RTV_BB;
 	size_t												m_hash_RTV_0;
 	size_t												m_hash_DSV_0;
+
+	std::unordered_map<size_t, RenderAsset*>			m_pCRAs;
 public:
 	//추후 오브젝트시스템으로분리
 	TempObj* SkyObj;

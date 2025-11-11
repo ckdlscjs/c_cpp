@@ -106,7 +106,7 @@ CameraSystem::~CameraSystem()
 
 void CameraSystem::Init()
 {
-	m_Key = _ECSSystem.GetArchetypeKey<C_Transform, C_Movement, C_Input, C_Camera>();
+	m_Key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Input, C_Camera>();
 }
 
 void CameraSystem::Frame(float deltaTime)

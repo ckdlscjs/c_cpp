@@ -14,8 +14,9 @@
 #include "TestBlockMacro.h"
 #include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
 #include "GeometryGenerator.h"
+
 #include "Components.h"			//ecstest
-#include "MovementSystem.h"
+#include "BehaviorSystem.h"
 
 AppWindow::AppWindow()
 {
@@ -29,7 +30,7 @@ AppWindow::AppWindow()
 	_RenderSystem;
 	_ImguiSystem;
 	_LightSystem;
-	_MovementSystem;
+	_BehaviorSystem;
 }
 
 AppWindow::~AppWindow()
@@ -49,7 +50,7 @@ void AppWindow::OnCreate()
 	_CameraSystem.Init();
 	_LightSystem.Init();
 	_ECSSystem.Init();
-	_MovementSystem.Init();
+	_BehaviorSystem.Init();
 
 	// 1. 난수 시드(seed)를 설정합니다.
 		// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
@@ -65,6 +66,7 @@ void AppWindow::OnCreate()
 	std::uniform_int_distribution<int> dis(-100, 100);
 
 	_InputSystem.SetMouseCenter(m_hWnd);
+	//InputSystem Listner(event driven)
 	/*_InputSystem.AddListner(E_InputEvent::KEY_DOWN, 
 		[](const InputEvent& v) -> void 
 		{
@@ -72,48 +74,49 @@ void AppWindow::OnCreate()
 		}
 	);*/
 
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Movement>();
-	size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {0.0f, 0.0f, 0.0f}, {}, {} });
+	//Initialize RenderAsset
+	size_t hash_ra0;
+	{
+		std::vector<Mesh_Material> mesh_mats;
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj", E_Collider::AABB);
+		size_t hash_meterial = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand0", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
+		std::vector<TX_HASH> txs;
+		txs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_meterial, txs);
+		mesh_mats.push_back({ hash_mesh, hash_meterial });
+		hash_ra0 = _RenderSystem.CreateRenderAsset(L"ra0", mesh_mats);
+	}
+
+	{
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
+		size_t hash_meterial = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
+		std::vector<TX_HASH> txs;
+		txs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", DDS_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_meterial, txs);
+	}
+
+	//ECS Initialize(test, 251111)
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Render>();
+	size_t lookup = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Render>();
 	std::bitset<256> vkmask;
+	vkmask['W'] = true;
 	vkmask['A'] = true;
+	vkmask['S'] = true;
+	vkmask['D'] = true;
+	vkmask[255] = true;
 	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 0.0f, 0.0f}, {}, {} });
-	vkmask = 0;
-	vkmask['B'] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
+	_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {Vector3(0.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f}});
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {2.0f, 0.0f, 0.0f}, {}, {} });
-	vkmask = 0;
-	vkmask['A'] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
+	std::array<unsigned char, E_Behavior::COUNT> behavior;
+	behavior[E_Behavior::MOVE_FORWARD] =	'W';
+	behavior[E_Behavior::MOVE_LEFT] =		'A';
+	behavior[E_Behavior::MOVE_BACKWARD] =	'S';
+	behavior[E_Behavior::MOVE_RIGHT] =		'D';
+	_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 0.0f, 0.0f}, {}, {} });
-	vkmask = 0;
-	vkmask['B'] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
+	_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra0 });
 
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {4.0f, 0.0f, 0.0f}, {}, {} });
-	vkmask = 0;
-	vkmask['B'] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
-
-	lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Movement>();
-	_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 0.0f, 0.0f}, {}, {} });
-	vkmask = 0;
-	vkmask['A'] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-	_ECSSystem.AddComponent<C_Movement>(key, {});
 #ifdef _ECS
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
@@ -550,7 +553,7 @@ void AppWindow::OnUpdate()
 	//FrameIntent
 	{
 		_InputSystem.Frame();
-		_MovementSystem.Frame(deltaTime);
+		_BehaviorSystem.Frame(deltaTime);
 		_CameraSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);

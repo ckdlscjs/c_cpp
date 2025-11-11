@@ -42,6 +42,7 @@ void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& Ro
 		std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
 		idx++;
 	}
+	//다음 계층에서의 사용을 위한 row/col transfer 계산
 	archetype->m_transfer_row = startIdx / capacity;
 	archetype->m_transfer_col = startIdx % capacity;
 }

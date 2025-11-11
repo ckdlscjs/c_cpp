@@ -163,7 +163,7 @@
     <ClInclude Include="Components.h" />
     <ClInclude Include="ECSSystem.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="MovementSystem.h" />
+    <ClInclude Include="BehaviorSystem.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="States.h" />
     <ClInclude Include="Frustum.h" />
@@ -174,8 +174,7 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Object.h" />
-    <ClInclude Include="ObjectSystem.h" />
+    <ClInclude Include="RenderAsset.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
@@ -215,9 +214,7 @@
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />
-    <ClCompile Include="MovementSystem.cpp" />
-    <ClCompile Include="Object.cpp" />
-    <ClCompile Include="ObjectSystem.cpp" />
+    <ClCompile Include="BehaviorSystem.cpp" />
     <FxCompile Include="PS_DepthDebug.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
@@ -245,6 +242,7 @@
     </FxCompile>
     <ClCompile Include="Direct3D.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
+    <ClCompile Include="RenderAsset.cpp" />
     <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="InputSystem.cpp" />

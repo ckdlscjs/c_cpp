@@ -227,7 +227,7 @@ public:
 	inline Vector4 ToVector4() const { return m_quat; }
 	inline DirectX::XMVECTOR ToXMVECTOR() const { return m_quat.ToXMVECTOR(); }
 	inline DirectX::XMFLOAT4 ToXMFLOAT4() const { return m_quat.ToXMFLOAT4(); }
-	inline Vector3 GetRotate() const
+	inline Vector3 ToRotate() const
 	{
 		float pitch = 0.0f, yaw = 0.0f, roll = 0.0f;
 		float x = m_quat.GetX();
