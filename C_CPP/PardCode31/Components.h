@@ -52,10 +52,10 @@ public:
 	float fScreenHeight;		//화면높이
 	float fNear;				//근단면
 	float fFar;					//원단면
-	/*Matrix4x4 m_matWorld;
-	Matrix4x4 m_MatView;
-	Matrix4x4 m_MatProj;
-	Matrix4x4 m_MatOrtho;*/
+	Matrix4x4 m_MatWorld = GetMat_Identity();
+	Matrix4x4 m_MatView = GetMat_Identity();
+	Matrix4x4 m_MatProj = GetMat_Identity();
+	Matrix4x4 m_MatOrtho = GetMat_Identity();
 };
 
 struct C_Render

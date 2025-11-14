@@ -39,7 +39,7 @@ void CollisionSystem::Frame(float deltatime)
 	for (const auto& obj : _RenderSystem.objs)
 	{
 		obj->bRenderable = false;
-		Matrix4x4 matWorld = GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
+		Matrix4x4 matWorld = GetMat_World(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);
 		count_all += _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(obj->m_Mesh_Material[0].hash_mesh)->GetCL().size();
 		for (const auto& MeshMat : obj->m_Mesh_Material)
 		{

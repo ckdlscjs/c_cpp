@@ -74,49 +74,108 @@ void AppWindow::OnCreate()
 		}
 	);*/
 
+	//Initialize Cameras
+	{
+		//카메라 기본세팅
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Camera>();
+		_CameraSystem.lookup_maincam = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Camera>();
+		std::bitset<256> vkmask;
+		vkmask['W'] = true;
+		vkmask['A'] = true;
+		vkmask['S'] = true;
+		vkmask['D'] = true;
+		vkmask[255] = true;
+		_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+		Vector3 pos(0.0f, 20.0f, -50.0f);
+		Vector3 dir = (Vector3(0.0f, 0.0f, 0.0f) - pos).Normalize();
+		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, GetQuarternionFromDirection(dir), pos});
+
+		std::array<unsigned char, E_Behavior::COUNT> behavior;
+		behavior[E_Behavior::MOVE_FORWARD] = 'W';
+		behavior[E_Behavior::MOVE_LEFT] = 'A';
+		behavior[E_Behavior::MOVE_BACKWARD] = 'S';
+		behavior[E_Behavior::MOVE_RIGHT] = 'D';
+		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+		C_Camera camera;
+		camera.fScreenWidth = m_iWidth;
+		camera.fScreenHeight = m_iHeight;
+		camera.fFov = 75.0f;
+		camera.fNear = 0.1f;
+		camera.fFar = 10000.0f;
+		_ECSSystem.AddComponent<C_Camera>(key, std::move(camera));
+	}
+
 	//Initialize RenderAsset
-	size_t hash_ra0;
 	{
-		std::vector<Mesh_Material> mesh_mats;
+		 
 		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj", E_Collider::AABB);
-		size_t hash_meterial = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand0", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
-		std::vector<TX_HASH> txs;
-		txs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
-		_RenderSystem.Material_SetTextures(hash_meterial, txs);
-		mesh_mats.push_back({ hash_mesh, hash_meterial });
-		hash_ra0 = _RenderSystem.CreateRenderAsset(L"ra0", mesh_mats);
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_.hlsl");
+		std::vector<TX_HASH> tx_hashs;
+		tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_material });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra0", mesh_mats);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Render>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Behavior, C_Render>();
+		/*std::bitset<256> vkmask;
+		vkmask['W'] = true;
+		vkmask['A'] = true;
+		vkmask['S'] = true;
+		vkmask['D'] = true;
+		_ECSSystem.AddComponent<C_Input>(key, { vkmask });*/
+
+		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {Vector3(0.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
+
+		std::array<unsigned char, E_Behavior::COUNT> behavior;
+		behavior[E_Behavior::MOVE_FORWARD] = 'W';
+		behavior[E_Behavior::MOVE_LEFT] = 'A';
+		behavior[E_Behavior::MOVE_BACKWARD] = 'S';
+		behavior[E_Behavior::MOVE_RIGHT] = 'D';
+		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+
+		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 	}
 
+	//Initialize RTV, DSV
 	{
-		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
-		size_t hash_meterial = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
-		std::vector<TX_HASH> txs;
-		txs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", DDS_FLAGS_NONE) });
-		_RenderSystem.Material_SetTextures(hash_meterial, txs);
+		//Init TargetView geometry
+		std::vector<std::vector<Vector3>> points;
+		std::vector<Vertex_PT> vertices;
+		std::vector<UINT> indices;
+		GeometryGenerate_Plane(points, vertices, indices);
+		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", std::move(points), std::move(vertices), std::move(indices), E_Collider::AABB);
+		{
+			/*size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PT>(L"Mat_srv", L"VS_PT.hlsl", L"PS_Distortion.hlsl");
+			std::vector<TX_HASH> tx_hashs;
+			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter7.png", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+			std::vector<Mesh_Material> mesh_mats;
+			mesh_mats.push_back({ hash_mesh, hash_material });
+			size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_rtv", mesh_mats);
+
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render>();
+
+			_ECSSystem.AddComponent<C_Transform>(key, { {m_iWidth, m_iHeight, 1.0f}, {Vector3(0.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });*/
+		}
+
+		{
+			/*size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PT>(L"Mat_depth", L"VS_PT.hlsl", L"PS_DepthDebug.hlsl");
+			std::vector<TX_HASH> tx_hash;
+			tx_hash.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter5.webp", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hash);
+
+			_RenderSystem.ortho_objs.push_back(new TempObj());
+			TempObj* obj = _RenderSystem.ortho_objs.back();
+			obj->m_vScale = Vector3(300, 300, 1.0f);
+			obj->m_vPosition = Vector3(100.0f, 0.0f, 1.0f);
+			obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });*/
+		}
 	}
-
-	//ECS Initialize(test, 251111)
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Render>();
-	size_t lookup = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Render>();
-	std::bitset<256> vkmask;
-	vkmask['W'] = true;
-	vkmask['A'] = true;
-	vkmask['S'] = true;
-	vkmask['D'] = true;
-	vkmask[255] = true;
-	_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-
-	_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {Vector3(0.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f}});
-
-	std::array<unsigned char, E_Behavior::COUNT> behavior;
-	behavior[E_Behavior::MOVE_FORWARD] =	'W';
-	behavior[E_Behavior::MOVE_LEFT] =		'A';
-	behavior[E_Behavior::MOVE_BACKWARD] =	'S';
-	behavior[E_Behavior::MOVE_RIGHT] =		'D';
-	_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
-
-	_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra0 });
-
 #ifdef _ECS
 	//카메라 기본세팅
 	_CameraSystem.AddCamera(new FirstPersonCamera());
@@ -556,8 +615,8 @@ void AppWindow::OnUpdate()
 		_BehaviorSystem.Frame(deltaTime);
 		_CameraSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
-		_RenderSystem.Frame(deltaTime, elpasedTime);
 		_CollisionSystem.Frame(deltaTime);
+		_RenderSystem.Frame(deltaTime, elpasedTime);
 	}
 	
 	//RenderIntent

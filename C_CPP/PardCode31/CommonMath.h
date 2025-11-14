@@ -145,7 +145,7 @@ inline Matrix4x4 GetMat_Translation(const Vector3& translation)
 * Tx		Ty			Tz			1.0f
 */
 
-inline Matrix4x4 GetMat_WorldMatrix(const Vector3& scale, const Vector3& eulerDegrees, const Vector3& position)
+inline Matrix4x4 GetMat_World(const Vector3& scale, const Vector3& eulerDegrees, const Vector3& position)
 {
 	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position);
 }
@@ -510,6 +510,11 @@ inline Matrix4x4 GetMat_FromQuarternion(const Quarternion& q)
 	return mat;
 }
 
+inline Matrix4x4 GetMat_World(const Vector3& scale, const Quarternion& quarternion, const Vector3& position)
+{
+	return GetMat_Scale(scale) * GetMat_FromQuarternion(quarternion) * GetMat_Translation(position);
+}
+
 inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quarternion& q)
 {
 	Matrix4x4 matRotate = GetMat_FromQuarternion(q).Transpose();	//회전행렬의 역행렬
@@ -560,4 +565,40 @@ inline Quarternion Slerp(Quarternion q1, Quarternion q2, float t)
 		b = sinf(t * theta) / sin_theta;
 	}
 	return Quarternion(q1 * a + q2 * b);
+}
+
+/*
+* 방향으로부터 사원수를 생성한다, 임의의 방향을 기저벡터의 forward와 같은평면상에 있다고
+* 가정한다면 이 둘을 외적하면 사원수의 임의회전축을 얻을수 있고 이 두벡터의 사잇각을 이용해
+* (cos(t), sin(t) * n) 을 구성한다
+*/
+inline Quarternion GetQuarternionFromDirection(const Vector3& direction)
+{
+	//두 벡터를 구성한다
+	Vector3 vForward(0.0f, 0.0f, 1.0f);
+	Vector3 vDirection = direction.Normalize();
+	
+	//두 벡터의 각을 구한다
+	//n dot v = |n||v| cos t n v는 정규화되어있으므로 n dot v 는 cos t
+	//arccos의 범위는 -1~1이어야 하므로 오차방지를 위해 clamp시킨다
+	float cost = vForward.DotProduct(vDirection);
+	cost = Clamp(cost, -1.0f, 1.0f);
+	float angle = acosf(cost); //radian
+
+	//예외처리
+	//1. 같은방향일경우
+	if (cost > 1.0f - _EPSILON)
+		return Quarternion();
+	
+	//2. 반대방향일경우, yaw를 기준축으로 삼는다
+	if (cost < -1.0f + _EPSILON)
+		return Quarternion(0.0f, 0.0f, 1.0f, 0.0f);
+
+	//일반적인경우, 두벡터의 외적을통해 기준축을 구한다
+	Vector3 rotateAxis = vForward.CrossProduct(vDirection);	//forward to dir
+	rotateAxis = rotateAxis.Normalize();
+	angle *= 0.5f;	//q v q', theta/2를 사용한다
+	float cosTheta = cosf(angle);
+	float sinTheta = sinf(angle);
+	return Quarternion(cosTheta, rotateAxis * sinTheta);
 }

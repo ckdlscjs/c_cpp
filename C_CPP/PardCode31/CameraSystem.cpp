@@ -106,13 +106,38 @@ CameraSystem::~CameraSystem()
 
 void CameraSystem::Init()
 {
-	m_Key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Input, C_Camera>();
+	m_Key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera>();
 }
 
 void CameraSystem::Frame(float deltaTime)
 {
 	std::cout << "Frame : " << "CameraSystem" << " Class" << '\n';
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera>();
+	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 
+	//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
+	for (auto& archetype : queries)
+	{
+		size_t st_row = archetype->m_transfer_row;
+		size_t st_col = archetype->m_transfer_col;
+		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		{
+			auto& transforms = archetype->GetComponents<C_Transform>(row);
+			auto& cameras = archetype->GetComponents<C_Camera>(row);
+
+			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			{
+				const Vector3& scale = transforms[col].vScale;
+				const Quarternion& rotate = transforms[col].qRotate;
+				const Vector3& position = transforms[col].vPosition;
+				cameras[col].m_MatWorld = GetMat_World(scale, rotate, position);
+				cameras[col].m_MatView = GetMat_View(position, rotate);
+				cameras[col].m_MatProj = GetMat_Perspective(cameras[col].fScreenWidth / cameras[col].fScreenHeight, cameras[col].fFov, cameras[col].fNear, cameras[col].fFar);
+				//ortho leftup
+				cameras[col].m_MatOrtho = GetMat_Orthographic_OffCenter(0.0f, cameras[col].fScreenWidth, 0.0f, cameras[col].fScreenHeight, cameras[col].fNear, cameras[col].fFar);
+			}
+		}
+	}
 }
 
 //void CameraSystem::SetPosition(int chunkIdx, const Vector3& position)
@@ -179,4 +204,4 @@ void CameraSystem::Frame(float deltaTime)
 //	_ASEERTION_NULCHK(chunkIdx < chunks.size(), "idx out of bound");
 //	return GetMat_Orthographic_OffCenter(0.0f, chunks[chunkIdx].m_fScreenWidth, 0.0f, chunks[chunkIdx].m_fScreenHeight, chunks[chunkIdx].m_fNear, chunks[chunkIdx].m_fFar);
 //}
-//
+

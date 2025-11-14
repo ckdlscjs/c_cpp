@@ -35,7 +35,7 @@ public:
 	template<typename T>
 	void AddComponent(ArchetypeKey key, T&& component);
 	template<typename T>
-	std::vector<T>& GetComponents(ArchetypeKey key, size_t idxRow);
+	T& GetComponent(size_t idx_lookup);
 	std::vector<Archetype*> QueryArchetypes(ArchetypeKey key);
 	void UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& swapRowCols, size_t startIdx, Archetype* archetype);
 	void DeleteEntity(size_t lookupIdx);
@@ -91,8 +91,10 @@ inline void ECSSystem::AddComponent(ArchetypeKey key, T&& component)
 }
 
 template<typename T>
-inline std::vector<T>& ECSSystem::GetComponents(ArchetypeKey key, size_t idxRow)
+T& ECSSystem::GetComponent(size_t idx_lookup)
 {
-	return m_Archetypes[key].GetComponents<T>(idxRow);
+	size_t entityIdx = FindEntity(idx_lookup);
+	const auto& entity = m_Entitys[entityIdx];
+	return m_Archetypes[entity.m_Key].GetComponents<T>(entity.m_IdxRow)[entity.m_IdxCol];
 }
 

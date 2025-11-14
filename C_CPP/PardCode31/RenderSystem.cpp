@@ -19,7 +19,10 @@
 #include "TempObj.h"
 #include "TestBlockMacro.h"
 
+#include "Components.h"
+#include "ECSSystem.h"
 #include "RenderAsset.h"
+
 
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
 size_t g_hash_cbpointlight = typeid(CB_PointLight).hash_code();
@@ -103,6 +106,67 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	size_t lookup_maincam = _CameraSystem.lookup_maincam;
+	const auto& maincam = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+	const Matrix4x4& cam_matWorld = maincam.m_MatWorld;
+	const Matrix4x4& cam_matView = maincam.m_MatView;
+	const Matrix4x4& cam_matProj = maincam.m_MatProj;
+	const Matrix4x4& cam_matOrtho = maincam.m_MatOrtho;
+
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render>();
+	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+	
+	// Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
+	for (auto& archetype : queries)
+	{
+		size_t st_row = 0;// archetype->m_transfer_row;
+		size_t st_col = 0;// archetype->m_transfer_col;
+		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		{
+			auto& transforms = archetype->GetComponents<C_Transform>(row);
+			auto& renders = archetype->GetComponents<C_Render>(row);
+			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			{
+				auto renderable = renders[col].bRenderable;
+				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->GetMeshMats();
+				const Vector3& scale = transforms[col].vScale;
+				const Quarternion& rotate = transforms[col].qRotate;
+				const Vector3& position = transforms[col].vPosition;
+				CB_WVPITMatrix cc0;
+				cc0.matWorld = GetMat_World(scale, rotate, position);
+				cc0.matView = cam_matView;
+				cc0.matProj = cam_matProj;
+				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
+				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
+
+				for (UINT j = 0; j < MeshMats.size(); j++)
+				{
+					auto& iter = MeshMats[j];
+					Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+					SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+					SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+					const std::vector<size_t>* texs = pMaterial->GetTextures();
+					int cnt = 0;
+					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+					{
+						for (const auto& hashTx : texs[idxTex])
+						{
+							auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+							SetPS_ShaderResourceView(pSrv, cnt++);
+						}
+					}
+					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				}
+			}
+		}
+	}
 
 #ifdef _ECS
 	//프레임에따른 변환
@@ -161,7 +225,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 			CB_WVPITMatrix cc0;
-			cc0.matWorld = GetMat_WorldMatrix(SkyObj->m_vScale, SkyObj->m_vRotate, SkyObj->m_vPosition);
+			cc0.matWorld = GetMat_World(SkyObj->m_vScale, SkyObj->m_vRotate, SkyObj->m_vPosition);
 			cc0.matView = matView;
 			cc0.matProj = matProj;
 			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
@@ -498,7 +562,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					//if (!obj->bRenderable) continue;
 					//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 					CB_WVPITMatrix cc0;
-					cc0.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_WorldMatrix(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
+					cc0.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_World(obj->m_vScale, obj->m_vRotate, obj->m_vPosition);// +Vector3(-(m_iWidth / 2.0f), m_iHeight / 2.0f, 0.0f));
 					cc0.matView = GetMat_Identity();
 					cc0.matProj = matOrtho;
 					cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
@@ -874,11 +938,21 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 void RenderSystem::ClearRenderViews(float red, float green, float blue, float alpha)
 {
 	FLOAT clearColor[] = { red, green, blue, alpha };
-	m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[m_hash_RTV_0]->GetView(), clearColor);
+
+	/*m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[m_hash_RTV_0]->GetView(), clearColor);
 	m_pCDirect3D->GetDeviceContext()->ClearDepthStencilView(m_pCDSVs[m_hash_DSV_0]->GetView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
 	ID3D11RenderTargetView* RTVS[] =
 	{
 		m_pCRTVs[m_hash_RTV_0]->GetView(),
+	};
+	m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(RTVS), RTVS, m_pCDSVs[m_hash_DSV_0]->GetView());*/
+
+
+	m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[m_hash_RTV_BB]->GetView(), clearColor);
+	m_pCDirect3D->GetDeviceContext()->ClearDepthStencilView(m_pCDSVs[m_hash_DSV_0]->GetView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1, 0);
+	ID3D11RenderTargetView* RTVS[] =
+	{
+		m_pCRTVs[m_hash_RTV_BB]->GetView(),
 	};
 	m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(ARRAYSIZE(RTVS), RTVS, m_pCDSVs[m_hash_DSV_0]->GetView());
 }
