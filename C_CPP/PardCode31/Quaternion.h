@@ -18,9 +18,56 @@ public:
 		m_quat.SetY(v.GetY() * sin);
 		m_quat.SetZ(v.GetZ() * sin);
 	}
-	inline Quarternion(const Vector3& rotate)
+	inline Quarternion(float pitch, float yaw, float roll)
 	{
-		SetFromRotate(rotate);
+		SetFromRotate(pitch, yaw, roll);
+	}
+	/*
+	* 방향으로부터 사원수를 생성한다, 임의의 방향을 기저벡터의 forward와 같은평면상에 있다고
+	* 가정한다면 이 둘을 외적하면 사원수의 임의회전축을 얻을수 있고 이 두벡터의 사잇각을 이용해
+	* (cos(t), sin(t) * n) 을 구성한다
+	*/
+	inline Quarternion(const Vector3& direction)
+	{
+		//두 벡터를 구성한다
+		Vector3 vForward(0.0f, 0.0f, 1.0f);
+		Vector3 vDirection = direction.Normalize();
+
+		//두 벡터의 각을 구한다
+		//n dot v = |n||v| cos t n v는 정규화되어있으므로 n dot v 는 cos t
+		//arccos의 범위는 -1~1이어야 하므로 오차방지를 위해 clamp시킨다
+		float cost = vForward.DotProduct(vDirection);
+		cost = Clamp(cost, -1.0f, 1.0f);
+		float angle = acosf(cost); //radian
+
+		//예외처리
+		//1. 같은방향일경우
+		if (cost > 1.0f - _EPSILON)
+		{
+			m_quat.SetW(1.0f);
+			m_quat.SetX(0.0f);
+			m_quat.SetY(0.0f);
+			m_quat.SetZ(0.0f);
+			return;
+		}
+			
+		//2. 반대방향일경우, yaw를 기준축으로 삼는다
+		if (cost < -1.0f + _EPSILON)
+		{
+			m_quat.SetW(0.0f);
+			m_quat.SetX(0.0f);
+			m_quat.SetY(1.0f);
+			m_quat.SetZ(0.0f);
+			return;
+		}
+
+		//일반적인경우, 두벡터의 외적을통해 기준축을 구한다
+		Vector3 rotateAxis = vForward.CrossProduct(vDirection);	//forward to dir
+		rotateAxis = rotateAxis.Normalize();
+		angle *= 0.5f;	//q v q', theta/2를 사용한다
+		float cosTheta = cosf(angle);
+		float sinTheta = sinf(angle);
+		Set(cosTheta, rotateAxis * sinTheta);
 	}
 
 	inline Quarternion(const Matrix4x4& mat)
@@ -151,11 +198,11 @@ public:
 	}
 	friend inline float DotProduct(const Quarternion& v1, const Quarternion& v2);
 
-	inline void SetFromRotate(const Vector3& rotate)
+	inline void SetFromRotate(float pitch, float yaw, float roll)
 	{
-		float theta_p = _DEGTORAD(rotate.GetX()) * 0.5f;
-		float theta_y = _DEGTORAD(rotate.GetY()) * 0.5f;
-		float theta_r = _DEGTORAD(rotate.GetZ()) * 0.5f;
+		float theta_p = _DEGTORAD(pitch) * 0.5f;
+		float theta_y = _DEGTORAD(yaw) * 0.5f;
+		float theta_r = _DEGTORAD(roll) * 0.5f;
 		float cp = cosf(theta_p), sp = sinf(theta_p);
 		float cy = cosf(theta_y), sy = sinf(theta_y);
 		float cr = cosf(theta_r), sr = sinf(theta_r);

@@ -84,17 +84,21 @@ void AppWindow::OnCreate()
 		vkmask['A'] = true;
 		vkmask['S'] = true;
 		vkmask['D'] = true;
+		vkmask['Q'] = true;
+		vkmask['E'] = true;
 		vkmask[255] = true;
 		_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 		Vector3 pos(0.0f, 20.0f, -50.0f);
 		Vector3 dir = (Vector3(0.0f, 0.0f, 0.0f) - pos).Normalize();
-		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, GetQuarternionFromDirection(dir), pos});
+		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quarternion(dir), pos});
 
 		std::array<unsigned char, E_Behavior::COUNT> behavior;
 		behavior[E_Behavior::MOVE_FORWARD] = 'W';
 		behavior[E_Behavior::MOVE_LEFT] = 'A';
 		behavior[E_Behavior::MOVE_BACKWARD] = 'S';
 		behavior[E_Behavior::MOVE_RIGHT] = 'D';
+		behavior[E_Behavior::MOVE_UP] = 'Q';
+		behavior[E_Behavior::MOVE_DOWN] = 'E';
 		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 		C_Camera camera;
 		camera.fScreenWidth = m_iWidth;
@@ -127,7 +131,7 @@ void AppWindow::OnCreate()
 		vkmask['D'] = true;
 		_ECSSystem.AddComponent<C_Input>(key, { vkmask });*/
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {Vector3(0.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} });
 
 		std::array<unsigned char, E_Behavior::COUNT> behavior;
 		behavior[E_Behavior::MOVE_FORWARD] = 'W';

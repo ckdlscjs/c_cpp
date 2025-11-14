@@ -48,10 +48,14 @@ void BehaviorSystem::Frame(float deltatime)
 				//Rotate
 				if (inputs[col].bVKMask[255])
 				{
+					float sensitivity = 0.1f;
 					Vector2 mouseDelta = _InputSystem.GetMouseDelta();
-					float yaw = mouseDelta.GetX() * 0.01f;	//sensitivity
-					float pitch = mouseDelta.GetY() * 0.01f;
-					transforms[col].qRotate *= Vector3(pitch, yaw, 0.0f);
+					float pitch = mouseDelta.GetY() * sensitivity;	//sensitivity
+					float yaw = mouseDelta.GetX() * sensitivity;	
+					Vector3 rotateRightAxis = transforms[col].qRotate * Vector3(1.0f, 0.0f, 0.0f);
+					Quarternion qPitch(rotateRightAxis, pitch);
+					Quarternion qYaw(Vector3(0.0f, 1.0f, 0.0f), yaw);
+					transforms[col].qRotate = qPitch * qYaw * transforms[col].qRotate;	//qvq'의 순서상 현재회전시키려는 사원수가 가장 우측에온다
 					//std::cout << transforms[col].qRotate.ToRotate().GetX() << '\n';
 				}
 			}
