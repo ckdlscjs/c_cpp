@@ -9,12 +9,11 @@ private:
 	BehaviorSystem& operator=(const BehaviorSystem&) = delete;
 	BehaviorSystem(BehaviorSystem&&) = delete;
 	BehaviorSystem& operator=(BehaviorSystem&&) = delete;
+
 public:
 	~BehaviorSystem();
 	void Init();
 	void Frame(float deltatime);
-
-private:
 
 };
 #define _BehaviorSystem BehaviorSystem::GetInstance()

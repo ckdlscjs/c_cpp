@@ -2,7 +2,7 @@
 #include "BaseSystem.h"
 #include "Archetype.h"
 #include "Entity.h"
-
+#include "Components.h"
 /*
 * 251108 수정필요, 일단 렌더러의 남은구현을위해 정렬까지만하고 추후 최적화 를 구현한다
 * 업데이트관련된 사항을 다음과같이 최적화한다

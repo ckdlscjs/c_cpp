@@ -1,21 +1,18 @@
 #include "AppWindow.h"
 #include "RenderSystem.h"
 #include "InputSystem.h"
-#include "TempObj.h"			//임시오브젝트
-#include "ECSSystem.h"
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
 #include "ResourceSystem.h"
 #include "ImguiSystem.h"
 #include "LightSystem.h"
-#include "Light.h"
 #include "TimerSystem.h"
 #include "CollisionSystem.h"
 #include "TestBlockMacro.h"
 #include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
 #include "GeometryGenerator.h"
 
-#include "Components.h"			//ecstest
+#include "ECSSystem.h"
 #include "BehaviorSystem.h"
 
 AppWindow::AppWindow()
@@ -77,8 +74,8 @@ void AppWindow::OnCreate()
 	//Initialize Cameras
 	{
 		//카메라 기본세팅
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Camera>();
-		_CameraSystem.lookup_maincam = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Camera>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection>();
+		_CameraSystem.lookup_maincam = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection>();
 		std::bitset<256> vkmask;
 		vkmask['W'] = true;
 		vkmask['A'] = true;
@@ -88,7 +85,7 @@ void AppWindow::OnCreate()
 		vkmask['E'] = true;
 		vkmask[255] = true;
 		_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-		Vector3 pos(0.0f, 20.0f, -50.0f);
+		Vector3 pos(0.0f, 50.0f, -50.0f);
 		Vector3 dir = (Vector3(0.0f, 0.0f, 0.0f) - pos).Normalize();
 		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quarternion(dir), pos});
 
@@ -109,11 +106,44 @@ void AppWindow::OnCreate()
 		_ECSSystem.AddComponent<C_Camera>(key, std::move(camera));
 	}
 
+	//Light Initialize
+	{
+		//Directional Light
+		{
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, T_Light_Directional>();
+			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Transform, C_Light, T_Light_Directional>();
+
+			Vector3 dir = Vector3(0.0f, -1.0f, 1.0f).Normalize();
+			_ECSSystem.AddComponent<C_Transform>(key, { {}, Quarternion(dir), {} });
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+		}
+		
+		//Point Light
+		{
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
+			_LightSystem.lookup_point = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
+
+			_ECSSystem.AddComponent<C_Transform>(key, { Vector3(0.0f, 30.0f, 150.0f), {}, {} });
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Light_Attenuation>(key, { 0.49f, 0.5f, 0.01f, 500.0f });
+		}
+		
+		//Spot Light
+		{
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
+			_LightSystem.lookup_spot = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
+
+			_ECSSystem.AddComponent<C_Transform>(key, { Vector3(-250.0f, 500.0f, -5.0f), (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize(), {} });
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Light_Attenuation>(key, { 0.5f, 0.5f, 0.00f, 5000.0f });
+			_ECSSystem.AddComponent<C_Light_Spot>(key, { 50.0f, cosf(_DEGTORAD(130.0f)), cosf(_DEGTORAD(10.0f)) });
+		}
+	}
+
 	//Initialize RenderAsset
 	{
-		 
-		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj", E_Collider::AABB);
-		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_.hlsl");
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
 		std::vector<TX_HASH> tx_hashs;
 		tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
 		_RenderSystem.Material_SetTextures(hash_material, tx_hashs);

@@ -112,7 +112,7 @@ inline Matrix4x4 GetMat_RotRoll(const float degree)
 * Wx		Wy		Wz		0.0f
 * 0.0f		0.0f	0.0f	1.0f
 */
-inline Matrix4x4 GetMat_RotRollPitchYaw(const Vector3& eulerDegrees)
+inline Matrix4x4 GetMat_RotateRollPitchYaw(const Vector3& eulerDegrees)
 {
 	Matrix4x4 matRoll = GetMat_RotRoll(eulerDegrees.GetZ());
 	Matrix4x4 matPitch = GetMat_RotPitch(eulerDegrees.GetX());
@@ -147,7 +147,7 @@ inline Matrix4x4 GetMat_Translation(const Vector3& translation)
 
 inline Matrix4x4 GetMat_World(const Vector3& scale, const Vector3& eulerDegrees, const Vector3& position)
 {
-	return GetMat_Scale(scale) * GetMat_RotRollPitchYaw(eulerDegrees) * GetMat_Translation(position);
+	return GetMat_Scale(scale) * GetMat_RotateRollPitchYaw(eulerDegrees) * GetMat_Translation(position);
 }
 
 //각 회전축의 길이는 스케일값이 곱해져있으므로 길이값이 각 x, y, z스케일값을의미한다
@@ -227,7 +227,7 @@ inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Vector3& posTarget,
 
 inline Matrix4x4 GetMat_View(const Vector3& posCamera, const float& fPitch, const float& fYaw, const float& fRoll)
 {
-	Matrix4x4 matRotate = GetMat_RotRollPitchYaw({ fPitch, fYaw, fRoll }).Transpose();		//회전행렬의 전치행렬(역행렬)
+	Matrix4x4 matRotate = GetMat_RotateRollPitchYaw({ fPitch, fYaw, fRoll }).Transpose();		//회전행렬의 전치행렬(역행렬)
 	Matrix4x4 matTrans = GetMat_Translation(-posCamera);	//이동행렬의 역행렬
 	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;
@@ -482,7 +482,7 @@ inline Matrix4x4 GetMat_InverseTranspose(Matrix4x4 mat)
 * 2.0f(xz + wy)				2.0f(yz - wx)			1.0f-2.0f(x^2+y^2)		0.0f
 * 0.0f						0.0f					0.0f					1.0f
 */
-inline Matrix4x4 GetMat_FromQuarternion(const Quarternion& q)
+inline Matrix4x4 GetMat_RotateFromQuarternion(const Quarternion& q)
 {
 	Matrix4x4 mat;
 	float w = q.GetW();
@@ -512,12 +512,12 @@ inline Matrix4x4 GetMat_FromQuarternion(const Quarternion& q)
 
 inline Matrix4x4 GetMat_World(const Vector3& scale, const Quarternion& quarternion, const Vector3& position)
 {
-	return GetMat_Scale(scale) * GetMat_FromQuarternion(quarternion) * GetMat_Translation(position);
+	return GetMat_Scale(scale) * GetMat_RotateFromQuarternion(quarternion) * GetMat_Translation(position);
 }
 
 inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quarternion& q)
 {
-	Matrix4x4 matRotate = GetMat_FromQuarternion(q).Transpose();	//회전행렬의 역행렬
+	Matrix4x4 matRotate = GetMat_RotateFromQuarternion(q).Transpose();	//회전행렬의 역행렬
 	Matrix4x4 matTrans = GetMat_Translation(-posCamera);	//이동행렬의 역행렬
 	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;

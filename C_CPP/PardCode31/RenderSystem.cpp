@@ -19,7 +19,6 @@
 #include "TempObj.h"
 #include "TestBlockMacro.h"
 
-#include "Components.h"
 #include "ECSSystem.h"
 #include "RenderAsset.h"
 
@@ -106,17 +105,33 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
+
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
-	const auto& maincam = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
-	const Matrix4x4& cam_matWorld = maincam.m_MatWorld;
-	const Matrix4x4& cam_matView = maincam.m_MatView;
-	const Matrix4x4& cam_matProj = maincam.m_MatProj;
-	const Matrix4x4& cam_matOrtho = maincam.m_MatOrtho;
+	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
+	const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
+	const Matrix4x4& cam_matView = c_cam_main.matView;
+	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
+
+	CB_DirectionalLight cb_directional;
+	{
+		size_t lookup = _LightSystem.lookup_directional;
+		const auto& c_transform = _ECSSystem.GetComponent<C_Transform>(lookup);
+		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
+		cb_directional.mAmbient = c_light.vAmbient;
+		cb_directional.mDiffuse = c_light.vDiffuse;
+		cb_directional.mSpecular = c_light.vSpecular;
+		Vector3 dir = c_transform.qRotate.GetForwardAxis();
+		cb_directional.vDirection = Vector4(dir, c_light.fShiness);
+	}
+	
+	m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_directional);
+	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 	
-	// Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
 	for (auto& archetype : queries)
 	{
 		size_t st_row = 0;// archetype->m_transfer_row;
@@ -132,12 +147,12 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				const Vector3& scale = transforms[col].vScale;
 				const Quarternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
-				CB_WVPITMatrix cc0;
-				cc0.matWorld = GetMat_World(scale, rotate, position);
-				cc0.matView = cam_matView;
-				cc0.matProj = cam_matProj;
-				cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
+				CB_WVPITMatrix cb_wvpitmat;
+				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+				cb_wvpitmat.matView = cam_matView;
+				cb_wvpitmat.matProj = cam_matProj;
+				cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
 
 				for (UINT j = 0; j < MeshMats.size(); j++)
@@ -311,7 +326,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				//if (!obj->bRenderable) continue;
 				//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 				Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
-				Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+				Matrix4x4 mat_rotate_obj = GetMat_RotateRollPitchYaw(obj->m_vRotate);
 				Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 				Matrix4x4 mat_reflect = GetMat_Reflect(plane.ToVector4());
 				CB_WVPITMatrix cc0;
@@ -360,7 +375,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				{
 					//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 					Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
-					Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+					Matrix4x4 mat_rotate_obj = GetMat_RotateRollPitchYaw(obj->m_vRotate);
 					Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 					CB_WVPITMatrix cc0;
 					cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
@@ -408,7 +423,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			if (!obj->bRenderable) continue;
 			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
 			Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
-			Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+			Matrix4x4 mat_rotate_obj = GetMat_RotateRollPitchYaw(obj->m_vRotate);
 			Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 			CB_WVPITMatrix cc0;
 			cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
@@ -457,7 +472,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					CB_WVPITMatrix cc0;
 					obj->m_vPosition = matWorld[3].ToVector3() + GetAxesUpFromWorld(matWorld) * -100.0f + GetAxesForwardFromWorld(matWorld) * 500.0f;
 					Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
-					Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate) * GetMat_RotFromMatrix(matWorld);
+					Matrix4x4 mat_rotate_obj = GetMat_RotateRollPitchYaw(obj->m_vRotate) * GetMat_RotFromMatrix(matWorld);
 					Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 					cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
 					cc0.matView = matView;
@@ -504,7 +519,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 				CB_WVPITMatrix cc0;
 				Matrix4x4 mat_scale_obj = GetMat_Scale(obj->m_vScale);
-				Matrix4x4 mat_rotate_obj = GetMat_RotRollPitchYaw(obj->m_vRotate);
+				Matrix4x4 mat_rotate_obj = GetMat_RotateRollPitchYaw(obj->m_vRotate);
 				Matrix4x4 mat_translation_obj = GetMat_Translation(obj->m_vPosition);
 				cc0.matWorld = mat_scale_obj * mat_rotate_obj * mat_translation_obj;
 				cc0.matView = matView;

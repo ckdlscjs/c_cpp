@@ -32,7 +32,5 @@ public:
 private:
 	ArchetypeKey m_Key;
 	
-	
-	
 };
 #define _CameraSystem CameraSystem::GetInstance()

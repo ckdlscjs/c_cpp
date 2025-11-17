@@ -52,11 +52,22 @@ public:
 	float fScreenHeight;		//화면높이
 	float fNear;				//근단면
 	float fFar;					//원단면
-	Matrix4x4 m_MatWorld = GetMat_Identity();
-	Matrix4x4 m_MatView = GetMat_Identity();
-	Matrix4x4 m_MatProj = GetMat_Identity();
-	Matrix4x4 m_MatOrtho = GetMat_Identity();
+	Matrix4x4 matWorld = GetMat_Identity();
+	Matrix4x4 matView = GetMat_Identity();
 };
+
+struct C_Projection
+{
+	Matrix4x4 matProj = GetMat_Identity();
+};
+
+struct C_Orthographic
+{
+	Matrix4x4 matOrtho = GetMat_Identity();
+};
+struct T_Camera_Ortho_CT {};
+struct T_Camera_Ortho_LT {};
+
 
 struct C_Render
 {
@@ -68,7 +79,31 @@ public:
 struct C_Light
 {
 public:
+	Vector4 vAmbient;
+	Vector4 vDiffuse;
+	Vector4 vSpecular;
+	float fShiness;
 };
+
+struct C_Light_Attenuation
+{
+public:
+	float fAtt_a0;
+	float fAtt_a1;
+	float fAtt_a2;
+	float fRange;
+};
+
+struct C_Light_Spot
+{
+public:
+	float fSpot;
+	float fCos_OuterCone;
+	float fCos_InnerCone;
+};
+struct T_Light_Directional {};
+struct T_Light_Point {};
+struct T_Light_Spot {};
 
 struct C_Collider
 {

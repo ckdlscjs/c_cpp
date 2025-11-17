@@ -13,17 +13,16 @@ private:
 	LightSystem(LightSystem&&) = delete;
 	LightSystem& operator=(LightSystem&&) = delete;
 
-	bool CheckMask(int VK_KEY);
 public:
-	BaseLight* GetLight(size_t idx);
-	void AddLight(BaseLight* light);
 	void Init();
 	void Frame();
 	~LightSystem();
 
+	//ÀÓ½Ã
+	size_t lookup_directional;
+	size_t lookup_point;
+	size_t lookup_spot;
 private:
-	//ºû°´Ã¼µé
-	std::unordered_map<size_t, BaseLight*> m_Lights;
-	size_t m_lLightID;
+	
 };
 #define _LightSystem LightSystem::GetInstance()

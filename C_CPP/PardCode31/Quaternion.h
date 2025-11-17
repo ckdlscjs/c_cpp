@@ -296,6 +296,21 @@ public:
 		}
 		return Vector3(_RADTODEG(pitch), _RADTODEG(yaw), _RADTODEG(roll));
 	}
+	inline Vector3 GetRightAxis() const
+	{
+		Vector3 forward(1.0f, 0.0f, 0.0f);
+		return *this * forward;
+	}
+	inline Vector3 GetUpAxis() const
+	{
+		Vector3 forward(0.0f, 1.0f, 0.0f);
+		return *this * forward;
+	}
+	inline Vector3 GetForwardAxis() const
+	{
+		Vector3 forward(0.0f, 0.0f, 1.0f);
+		return *this * forward;
+	}
 private:
 	Vector4 m_quat;
 };
