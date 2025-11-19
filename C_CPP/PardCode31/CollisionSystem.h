@@ -29,7 +29,6 @@ private:
 	bool CheckBound(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld);
 
 	std::unordered_map<size_t, Collider*> m_Colliders;
-	size_t m_lColliderID;
 };
 #define _CollisionSystem CollisionSystem::GetInstance()
 

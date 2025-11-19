@@ -136,6 +136,7 @@ struct InputEvent
 	int mouseDeltaY = 0;
 	int wheelDelta = 0;
 };
+
 using EventCallBack = std::function<void(const InputEvent&)>;
 struct PointXY
 {

@@ -20,7 +20,7 @@
 #include "TestBlockMacro.h"
 
 #include "ECSSystem.h"
-#include "RenderAsset.h"
+#include "Assets.h"
 
 
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
@@ -107,13 +107,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 
-	size_t lookup_maincam = _CameraSystem.lookup_maincam;
-	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
-	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
-	const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
-	const Matrix4x4& cam_matView = c_cam_main.matView;
-	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
-
 	CB_DirectionalLight cb_directional;
 	{
 		size_t lookup = _LightSystem.lookup_directional;
@@ -122,12 +115,57 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		cb_directional.mAmbient = c_light.vAmbient;
 		cb_directional.mDiffuse = c_light.vDiffuse;
 		cb_directional.mSpecular = c_light.vSpecular;
-		Vector3 dir = c_transform.qRotate.GetForwardAxis();
-		cb_directional.vDirection = Vector4(dir, c_light.fShiness);
+		cb_directional.vDirection = Vector4(c_transform.qRotate.GetForwardAxis(), c_light.fShiness);
 	}
-	
 	m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_directional);
 	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
+
+	CB_PointLight cb_point;
+	{
+		size_t lookup = _LightSystem.lookup_point;
+		const auto& c_transform = _ECSSystem.GetComponent<C_Transform>(lookup);
+		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
+		const auto& c_attenuation = _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
+		cb_point.mAmbient = c_light.vAmbient;
+		cb_point.mDiffuse = c_light.vDiffuse;
+		cb_point.mSpecular = c_light.vSpecular;
+		cb_point.vPosition = Vector4(c_transform.vPosition, c_light.fShiness);
+		cb_point.fAttenuations = Vector4(c_attenuation.fAtt_a0, c_attenuation.fAtt_a1, c_attenuation.fAtt_a2, c_attenuation.fRange);
+	}
+	m_pCCBs[g_hash_cbpointlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_point);
+	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbpointlight]->GetBuffer(), 1);
+	
+	CB_SpotLight cb_spot;
+	{
+		size_t lookup = _LightSystem.lookup_spot;
+		const auto& c_transform = _ECSSystem.GetComponent<C_Transform>(lookup);
+		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
+		const auto& c_attenuation = _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
+		const auto& c_spot = _ECSSystem.GetComponent<C_Light_Spot>(lookup);
+		cb_spot.mAmbient = c_light.vAmbient;
+		cb_spot.mDiffuse = c_light.vDiffuse;
+		cb_spot.mSpecular = c_light.vSpecular;
+		cb_spot.vDirection = c_transform.qRotate.GetForwardAxis();
+		cb_spot.vPosition = Vector4(c_transform.vPosition, c_light.fShiness);
+		cb_spot.fAttenuations = Vector4(c_attenuation.fAtt_a0, c_attenuation.fAtt_a1, c_attenuation.fAtt_a2, c_attenuation.fRange);
+		cb_spot.fSpots = Vector4(c_spot.fSpot, c_spot.fCos_OuterCone, c_spot.fCos_InnerCone, 0.0f);
+	}
+	m_pCCBs[g_hash_cbspotlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_spot);
+	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbspotlight]->GetBuffer(), 2);
+
+	size_t lookup_maincam = _CameraSystem.lookup_maincam;
+	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
+	const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
+	const Matrix4x4& cam_matView = c_cam_main.matView;
+	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
+
+	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
+	CB_Campos cb_campos;
+	cb_campos.vPosition = c_cam_transform.vPosition;
+	m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_campos);
+	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
+	
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
@@ -143,7 +181,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
 				auto renderable = renders[col].bRenderable;
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->GetMeshMats();
+				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
 				const Vector3& scale = transforms[col].vScale;
 				const Quarternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
@@ -686,6 +724,12 @@ RenderSystem::~RenderSystem()
 		iter = m_pCRAs.erase(iter);
 	}
 
+	for (auto iter = m_pCCAs.begin(); iter != m_pCCAs.end();)
+	{
+		delete iter->second;
+		iter = m_pCCAs.erase(iter);
+	}
+
 	if (SkyObj)
 		delete SkyObj;
 
@@ -1112,7 +1156,7 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_
 }
 
 template<typename T>
-size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices, E_Collider collider)
+size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices)
 {
 	std::vector<RenderCounts> countsVertices;
 	countsVertices.push_back({ (UINT)vertices.size(), 0 });
@@ -1122,27 +1166,31 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vect
 	std::wstring szTypename = _tomw(typeid(T).name());
 	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	if (pMesh->GetCL().empty())//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
-	{
-		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
-			pMesh->SetCL(_CollisionSystem.CreateCollider(szName + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
-	}
 	return pMesh->GetHash();
 }
+
 template<typename T>
-size_t RenderSystem::CreateMesh(const std::wstring& szFilePath, E_Collider collider)
+size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
 {
 	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szFilePath);
 	std::wstring szTypename = _tomw(typeid(T).name());
 	pMesh->SetVB(CreateVertexBuffer(szFilePath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	if (pMesh->GetCL().empty())//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
-	{
-		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
-			pMesh->SetCL(_CollisionSystem.CreateCollider(szFilePath + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
-	}
 	return pMesh->GetHash();
 }
+
+template<typename T>
+const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh, E_Collider collider)
+{
+	Mesh<T>* pMesh = _ResourceSystem.GetResource<Mesh<T>>(hash_mesh);
+	if (pMesh->GetCL().empty())	//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
+	{
+		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
+			pMesh->SetCL(_CollisionSystem.CreateCollider(pMesh->GetPath() + std::to_wstring(idx), &pMesh->GetPoints()[idx], collider));
+	}
+	return pMesh->GetCL();
+}
+
 template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
 {
@@ -1175,16 +1223,27 @@ void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<
 		pMaterial->SetTexture(iter);
 }
 
-size_t RenderSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& MeshMats)
+size_t RenderSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs)
 {
 	size_t hash = Hasing_wstring(szName);
 	if (m_pCRAs.find(hash) != m_pCRAs.end()) return hash;
 
 	RenderAsset* pRenderAsset = new RenderAsset(szName);
 	_ASEERTION_NULCHK(pRenderAsset, "RA is nullptr");
-	for (const auto& iter : MeshMats)
-		pRenderAsset->SetMeshMaterial(iter);
+	pRenderAsset->m_hMeshMats = hashs;
 	m_pCRAs[hash] = pRenderAsset;
+	return hash;
+}
+
+size_t RenderSystem::CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCCAs.find(hash) != m_pCCAs.end()) return hash;
+
+	ColliderAsset* pColliderAsset = new ColliderAsset(szName);
+	_ASEERTION_NULCHK(pColliderAsset, "RA is nullptr");
+	pColliderAsset->m_hColliders = hashs;
+	m_pCCAs[hash] = pColliderAsset;
 	return hash;
 }
 

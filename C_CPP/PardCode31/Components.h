@@ -108,5 +108,5 @@ struct T_Light_Spot {};
 struct C_Collider
 {
 public:
-
+	size_t hash_ca = 0;
 };

@@ -3,6 +3,7 @@
 #include "Plane.h"
 #include "Sphere.h"
 #include "Box.h"
+#include "ECSSystem.h"
 //밑부분은 책임분리 고려필요
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
@@ -30,6 +31,19 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
+	UINT count_all = 1;
+	UINT count = 1;
+	size_t lookup_maincam = _CameraSystem.lookup_maincam;
+	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
+	const Matrix4x4& cam_matView = c_cam_main.matView;
+	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
+
+	Frustum frustum(c_cam_main.fFar, cam_matView, cam_matProj);
+
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider>();
+	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+
 #ifdef _ECS
 	UINT count_all = 1;
 	UINT count = 1;

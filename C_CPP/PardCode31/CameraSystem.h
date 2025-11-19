@@ -15,6 +15,7 @@ public:
 	void Init();
 	void Frame(float deltaTime);
 
+	/*
 	//속성
 	void SetPosition(int chunkIdx, const Vector3& position);
 	void SetFOV(int chunkIdx, float FOV);
@@ -27,6 +28,7 @@ public:
 	const Matrix4x4& GetProjMatrix(int chunkIdx);
 	const Matrix4x4& GetOrthoMatrix_CT(int chunkIdx);
 	const Matrix4x4& GetOrthoMatrix_LT(int chunkIdx);
+	*/
 	//임시
 	size_t lookup_maincam;
 private:

@@ -60,7 +60,7 @@ void AppWindow::OnCreate()
 
 	// 3. 난수 분포(distribution)를 정의합니다.
 	// 여기서는 1부터 100까지의 균등한 정수 난수를 생성하도록 설정합니다.
-	std::uniform_int_distribution<int> dis(-100, 100);
+	std::uniform_int_distribution<int> dis(-10, 10);
 
 	_InputSystem.SetMouseCenter(m_hWnd);
 	//InputSystem Listner(event driven)
@@ -123,8 +123,8 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
 			_LightSystem.lookup_point = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { Vector3(0.0f, 30.0f, 150.0f), {}, {} });
-			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Transform>(key, { {}, {}, Vector3(10.0f, 10.0f, 0.0f) });
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.5f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
 			_ECSSystem.AddComponent<C_Light_Attenuation>(key, { 0.49f, 0.5f, 0.01f, 500.0f });
 		}
 		
@@ -133,7 +133,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
 			_LightSystem.lookup_spot = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { Vector3(-250.0f, 500.0f, -5.0f), (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize(), {} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {}, (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize(), Vector3(-250.0f, 500.0f, -5.0f) });
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
 			_ECSSystem.AddComponent<C_Light_Attenuation>(key, { 0.5f, 0.5f, 0.00f, 5000.0f });
 			_ECSSystem.AddComponent<C_Light_Spot>(key, { 50.0f, cosf(_DEGTORAD(130.0f)), cosf(_DEGTORAD(10.0f)) });
@@ -142,7 +142,8 @@ void AppWindow::OnCreate()
 
 	//Initialize RenderAsset
 	{
-		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj");
+		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::AABB);
 		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
 		std::vector<TX_HASH> tx_hashs;
 		tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
@@ -150,27 +151,38 @@ void AppWindow::OnCreate()
 		std::vector<Mesh_Material> mesh_mats;
 		mesh_mats.push_back({ hash_mesh, hash_material });
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra0", mesh_mats);
-
+		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca0", hash_CLs);
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Render>();
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Behavior, C_Render>();
-		/*std::bitset<256> vkmask;
-		vkmask['W'] = true;
-		vkmask['A'] = true;
-		vkmask['S'] = true;
-		vkmask['D'] = true;
-		_ECSSystem.AddComponent<C_Input>(key, { vkmask });*/
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Render, C_Collider>();
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} });
+		//rand obj
+		{
+			for (int i = 0; i < 50; i++)
+			{
+				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Behavior, C_Render, C_Collider>();
+				/*std::bitset<256> vkmask;
+				vkmask['W'] = true;
+				vkmask['A'] = true;
+				vkmask['S'] = true;
+				vkmask['D'] = true;
+				_ECSSystem.AddComponent<C_Input>(key, { vkmask });*/
 
-		std::array<unsigned char, E_Behavior::COUNT> behavior;
-		behavior[E_Behavior::MOVE_FORWARD] = 'W';
-		behavior[E_Behavior::MOVE_LEFT] = 'A';
-		behavior[E_Behavior::MOVE_BACKWARD] = 'S';
-		behavior[E_Behavior::MOVE_RIGHT] = 'D';
-		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+				_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, {dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f} });
 
-		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+				std::array<unsigned char, E_Behavior::COUNT> behavior;
+				behavior[E_Behavior::MOVE_FORWARD] = 'W';
+				behavior[E_Behavior::MOVE_LEFT] = 'A';
+				behavior[E_Behavior::MOVE_BACKWARD] = 'S';
+				behavior[E_Behavior::MOVE_RIGHT] = 'D';
+				_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+
+				_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+				_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+			}
+		}
+		
+		
 	}
 
 	//Initialize RTV, DSV
@@ -180,7 +192,7 @@ void AppWindow::OnCreate()
 		std::vector<Vertex_PT> vertices;
 		std::vector<UINT> indices;
 		GeometryGenerate_Plane(points, vertices, indices);
-		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", std::move(points), std::move(vertices), std::move(indices), E_Collider::AABB);
+		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", std::move(points), std::move(vertices), std::move(indices));
 		{
 			/*size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PT>(L"Mat_srv", L"VS_PT.hlsl", L"PS_Distortion.hlsl");
 			std::vector<TX_HASH> tx_hashs;

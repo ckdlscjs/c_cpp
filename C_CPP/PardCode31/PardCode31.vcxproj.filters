@@ -208,7 +208,7 @@
     <ClInclude Include="BehaviorSystem.h">
       <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
-    <ClInclude Include="RenderAsset.h">
+    <ClInclude Include="Assets.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
   </ItemGroup>
@@ -303,7 +303,7 @@
     <ClCompile Include="BehaviorSystem.cpp">
       <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
-    <ClCompile Include="RenderAsset.cpp">
+    <ClCompile Include="Assets.cpp">
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>

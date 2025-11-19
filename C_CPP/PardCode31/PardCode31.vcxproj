@@ -151,6 +151,7 @@
     <ClInclude Include="..\Include\ImGui\imstb_truetype.h" />
     <ClInclude Include="AppWindow.h" />
     <ClInclude Include="Archetype.h" />
+    <ClInclude Include="Assets.h" />
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Buffers.h" />
@@ -174,7 +175,6 @@
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
-    <ClInclude Include="RenderAsset.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
@@ -207,6 +207,7 @@
     <ClCompile Include="..\Include\ImGui\imgui_tables.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="AppWindow.cpp" />
+    <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="CollisionSystem.cpp" />
@@ -242,7 +243,6 @@
     </FxCompile>
     <ClCompile Include="Direct3D.cpp" />
     <ClCompile Include="FirstPersonCamera.cpp" />
-    <ClCompile Include="RenderAsset.cpp" />
     <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="InputSystem.cpp" />
