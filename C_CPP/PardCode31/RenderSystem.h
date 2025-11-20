@@ -62,6 +62,7 @@ public:
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
+	const ColliderAsset* GetColliderAsset(size_t hash);
 private:
 	//API리소스 생성
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
@@ -127,16 +128,17 @@ private:
 	size_t												m_hash_RTV_0;
 	size_t												m_hash_DSV_0;
 
+	//AssetSystem분리필요?
 	std::unordered_map<size_t, RenderAsset*>			m_pCRAs;
 	std::unordered_map<size_t, ColliderAsset*>			m_pCCAs;
 public:
-	//추후 오브젝트시스템으로분리
-	TempObj* SkyObj;
-	TempObj* Gizmo;
-	TempObj* SpaceShip;
-	TempObj* ReflectPlane;
-	std::vector<TempObj*> objs;
-	std::vector<TempObj*> ortho_objs;
+	////추후 오브젝트시스템으로분리
+	//TempObj* SkyObj;
+	//TempObj* Gizmo;
+	//TempObj* SpaceShip;
+	//TempObj* ReflectPlane;
+	//std::vector<TempObj*> objs;
+	//std::vector<TempObj*> ortho_objs;
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()

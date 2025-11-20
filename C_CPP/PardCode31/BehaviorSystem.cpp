@@ -64,6 +64,8 @@ void BehaviorSystem::Frame(float deltatime)
 					}
 				}
 			}
+			archetype->m_transfer_row = 0;
+			archetype->m_transfer_col = 0;
 		}
 	}
 	

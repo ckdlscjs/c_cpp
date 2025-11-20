@@ -7,10 +7,9 @@
 //밑부분은 책임분리 고려필요
 #include "CameraSystem.h"
 #include "FirstPersonCamera.h"
-#include "RenderSystem.h"	//임시, obj를받아오기위함 추후 objectSystem에서 받아와야함
-#include "ResourceSystem.h"
-#include "Mesh.h"
-#include "TempObj.h"
+#include "RenderSystem.h"	//Asset을받아온다
+#include "Assets.h"
+//#include "ResourceSystem.h"
 
 CollisionSystem::CollisionSystem()
 {
@@ -31,8 +30,6 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	UINT count_all = 1;
-	UINT count = 1;
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
 	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
 	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
@@ -43,6 +40,35 @@ void CollisionSystem::Frame(float deltatime)
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+
+	for (auto& archetype : queries)
+	{
+		size_t st_row = archetype->m_transfer_row;
+		size_t st_col = archetype->m_transfer_col;
+		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		{
+			auto& transforms = archetype->GetComponents<C_Transform>(row);
+			auto& renders = archetype->GetComponents<C_Render>(row);
+			auto& colliders = archetype->GetComponents<C_Collider>(row);
+			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			{
+				renders[col].bRenderable = false;
+				const Vector3& scale = transforms[col].vScale;
+				const Quarternion& rotate = transforms[col].qRotate;
+				const Vector3& position = transforms[col].vPosition;
+				Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
+				const ColliderAsset* pColliderAsset = _RenderSystem.GetColliderAsset(colliders[col].hash_ca);
+				for (const auto& iter : pColliderAsset->m_hColliders)
+				{
+					if (CheckBound(frustum, iter, matWorld))
+					{
+						renders[col].bRenderable = true;
+						break;
+					}
+				}
+			}
+		}
+	}
 
 #ifdef _ECS
 	UINT count_all = 1;

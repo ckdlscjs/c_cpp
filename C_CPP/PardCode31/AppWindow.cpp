@@ -152,28 +152,29 @@ void AppWindow::OnCreate()
 		mesh_mats.push_back({ hash_mesh, hash_material });
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra0", mesh_mats);
 		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca0", hash_CLs);
+
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Render, C_Collider>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider>();
 
 		//rand obj
 		{
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < 30; i++)
 			{
-				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Behavior, C_Render, C_Collider>();
-				/*std::bitset<256> vkmask;
-				vkmask['W'] = true;
-				vkmask['A'] = true;
-				vkmask['S'] = true;
-				vkmask['D'] = true;
-				_ECSSystem.AddComponent<C_Input>(key, { vkmask });*/
+				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider>();
+				std::bitset<256> vkmask;
+				vkmask[VK_UP] = true;
+				//vkmask[VK_LEFT] = true;
+				vkmask[VK_DOWN] = true;
+				//vkmask[VK_RIGHT] = true;
+				_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
-				_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, {dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f} });
+				_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f}});
 
 				std::array<unsigned char, E_Behavior::COUNT> behavior;
-				behavior[E_Behavior::MOVE_FORWARD] = 'W';
-				behavior[E_Behavior::MOVE_LEFT] = 'A';
-				behavior[E_Behavior::MOVE_BACKWARD] = 'S';
-				behavior[E_Behavior::MOVE_RIGHT] = 'D';
+				behavior[E_Behavior::MOVE_FORWARD] = VK_UP;
+				behavior[E_Behavior::MOVE_LEFT] = VK_LEFT;
+				behavior[E_Behavior::MOVE_BACKWARD] = VK_DOWN;
+				behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 				_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 				_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
@@ -181,8 +182,98 @@ void AppWindow::OnCreate()
 				_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 			}
 		}
-		
-		
+	}
+
+	//Initialize RenderAsset
+	{
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj");
+		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::AABB);
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand1", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
+		std::vector<TX_HASH> tx_hashs;
+		tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter6.webp", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_material });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra1", mesh_mats);
+		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca1", hash_CLs);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider>();
+
+		//rand obj
+		{
+			for (int i = 0; i < 50; i++)
+			{
+				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider>();
+				std::bitset<256> vkmask;
+				//vkmask[VK_UP] = true;
+				vkmask[VK_LEFT] = true;
+				//vkmask[VK_DOWN] = true;
+				vkmask[VK_RIGHT] = true;
+				_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+				_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f} });
+
+				std::array<unsigned char, E_Behavior::COUNT> behavior;
+				behavior[E_Behavior::MOVE_FORWARD] = VK_UP;
+				behavior[E_Behavior::MOVE_LEFT] = VK_LEFT;
+				behavior[E_Behavior::MOVE_BACKWARD] = VK_DOWN;
+				behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
+				_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+
+				_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+				_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+			}
+		}
+	}
+
+	//Initialize RenderAsset
+	{
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/nene.obj");
+		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
+		std::vector<std::wstring> VSs, PSs;
+		VSs.push_back(L"VS_PTN.hlsl"); VSs.push_back(L"VS_PTN.hlsl"); VSs.push_back(L"VS_PTN.hlsl");
+		PSs.push_back(L"PS_PTN.hlsl"); PSs.push_back(L"PS_PTN.hlsl"); PSs.push_back(L"PS_PTN.hlsl");
+		std::vector<size_t> hash_materals = _RenderSystem.CreateMaterials<Vertex_PTN>(L"../Assets/Meshes/nene.mtl", VSs, PSs);
+		std::vector<TX_HASH> tx_hashs[3];
+		tx_hashs[0].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/face.dds", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materals[0], tx_hashs[0]);
+		tx_hashs[1].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/body.dds", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materals[1], tx_hashs[1]);
+		tx_hashs[2].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/hair.dds", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materals[2], tx_hashs[2]);
+
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_materals[0]});
+		mesh_mats.push_back({ hash_mesh, hash_materals[1] });
+		mesh_mats.push_back({ hash_mesh, hash_materals[2] });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra2", mesh_mats);
+		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca2", hash_CLs);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Behavior, C_Render, C_Collider>();
+
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Behavior, C_Render, C_Collider>();
+		std::bitset<256> vkmask;
+		vkmask[VK_UP] = true;
+		//vkmask[VK_LEFT] = true;
+		vkmask[VK_DOWN] = true;
+		//vkmask[VK_RIGHT] = true;
+		//_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
+		_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
+
+		std::array<unsigned char, E_Behavior::COUNT> behavior;
+		behavior[E_Behavior::MOVE_FORWARD] = VK_UP;
+		behavior[E_Behavior::MOVE_LEFT] = VK_LEFT;
+		behavior[E_Behavior::MOVE_BACKWARD] = VK_DOWN;
+		behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
+		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+
+		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 	}
 
 	//Initialize RTV, DSV

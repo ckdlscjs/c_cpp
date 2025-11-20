@@ -55,7 +55,6 @@ void InputSystem::Frame()
 		else if (m_bOldKeyStates[vk_key] && !m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_UP;
 		else m_eKeyStates[vk_key] = E_InputEvent::NOTHING;
 	}
-
 	m_bOldKeyStates = m_bCurKeyStates; //상태전이(다음프레임에반영)
 	m_bCurKeyStates[255] = false;
 }

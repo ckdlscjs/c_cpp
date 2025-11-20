@@ -46,7 +46,7 @@
     <Filter Include="Math">
       <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\ECSSystem">
+    <Filter Include="Engine\CollisionSystem\ECSSystem">
       <UniqueIdentifier>{2786f152-fedd-4015-88e7-d229850ed246}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -194,19 +194,19 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="Components.h">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="ECSSystem.h">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Archetype.h">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Entity.h">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="BehaviorSystem.h">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Assets.h">
       <Filter>Engine\GraphicSystem</Filter>
@@ -298,10 +298,10 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="ECSSystem.cpp">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClCompile>
     <ClCompile Include="BehaviorSystem.cpp">
-      <Filter>Engine\ECSSystem</Filter>
+      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
     </ClCompile>
     <ClCompile Include="Assets.cpp">
       <Filter>Engine\GraphicSystem</Filter>

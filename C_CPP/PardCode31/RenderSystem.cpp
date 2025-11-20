@@ -169,18 +169,19 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-	
+	UINT renderCnt = 0;
 	for (auto& archetype : queries)
 	{
-		size_t st_row = 0;// archetype->m_transfer_row;
-		size_t st_col = 0;// archetype->m_transfer_col;
+		size_t st_row = archetype->m_transfer_row;
+		size_t st_col = archetype->m_transfer_col;
 		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 		{
 			auto& transforms = archetype->GetComponents<C_Transform>(row);
 			auto& renders = archetype->GetComponents<C_Render>(row);
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
-				auto renderable = renders[col].bRenderable;
+				if (!renders[col].bRenderable) continue;
+				renderCnt++;
 				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
 				const Vector3& scale = transforms[col].vScale;
 				const Quarternion& rotate = transforms[col].qRotate;
@@ -220,6 +221,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			}
 		}
 	}
+	std::cout << "렌더링된객체수 : " << renderCnt << '\n';
 
 #ifdef _ECS
 	//프레임에따른 변환
@@ -730,7 +732,7 @@ RenderSystem::~RenderSystem()
 		iter = m_pCCAs.erase(iter);
 	}
 
-	if (SkyObj)
+	/*if (SkyObj)
 		delete SkyObj;
 
 	if (Gizmo)
@@ -752,7 +754,7 @@ RenderSystem::~RenderSystem()
 	{
 		delete* iter;
 		iter = ortho_objs.erase(iter);
-	}
+	}*/
 
 	if (m_pCSamplers)
 	{
@@ -1245,6 +1247,11 @@ size_t RenderSystem::CreateColliderAsset(const std::wstring& szName, const std::
 	pColliderAsset->m_hColliders = hashs;
 	m_pCCAs[hash] = pColliderAsset;
 	return hash;
+}
+
+const ColliderAsset* RenderSystem::GetColliderAsset(size_t hash)
+{
+	return m_pCCAs[hash];
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)
