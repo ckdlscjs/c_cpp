@@ -68,13 +68,14 @@ struct C_Orthographic
 struct T_Camera_Ortho_CT {};
 struct T_Camera_Ortho_LT {};
 
-
 struct C_Render
 {
 public:
 	bool bRenderable = false;
 	size_t hash_ra = 0;
 };
+struct T_Render_Geometry {};
+struct T_Render_UI {};
 
 struct C_Light
 {

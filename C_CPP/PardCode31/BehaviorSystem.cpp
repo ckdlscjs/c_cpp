@@ -58,15 +58,11 @@ void BehaviorSystem::Frame(float deltatime)
 					if (inputs[col].bVKMask[255])
 					{
 						//roll * pitch * yaw를 따른다
-						Quarternion qPitch(transforms[col].qRotate.GetRightAxis(), pitch);
-						Quarternion qYaw(Vector3(0.0f, 1.0f, 0.0f), yaw);
-						transforms[col].qRotate = qPitch * qYaw * transforms[col].qRotate;	//qvq'의 순서상 회전시키려는 사원수(v에해당)가 가장 우측에온다
+						Quarternion qDelta(pitch, yaw, 0.0f);
+						transforms[col].qRotate *= qDelta;
 					}
 				}
 			}
-			archetype->m_transfer_row = 0;
-			archetype->m_transfer_col = 0;
 		}
 	}
-	
 }

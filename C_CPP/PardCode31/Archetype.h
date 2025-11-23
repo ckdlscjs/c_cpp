@@ -176,7 +176,7 @@ public:
 	void Swap(size_t srcCol, ComponentChunk* destChunk, size_t destCol) override
 	{
 		_ASEERTION_NULCHK(GetCount() && srcCol < GetCount(), "idx out of bound");
-		_ASEERTION_NULCHK(destChunk->GetCount() && srcCol < destChunk->GetCount(), "idx out of bound");
+		_ASEERTION_NULCHK(destChunk->GetCount() && destCol < destChunk->GetCount(), "idx out of bound");
 		std::vector<T>& pChunks = static_cast<ChunkData<T>*>(destChunk)->m_data;
 		std::swap(m_data[srcCol], pChunks[destCol]);
 	}
@@ -322,11 +322,14 @@ inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t 
 	//swap
 	for (auto& iter : m_Components)
 		iter.second[srcRow]->Swap(srcCol, iter.second[destRow], destCol);
-
+	
 	//Lookup을 교체, 리턴
 	size_t srcIdx = srcRow * m_ChunksCapacity + srcCol;
 	size_t destIdx = destRow * m_ChunksCapacity + destCol;
-	return { m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx] };
+	size_t lookupSrc = m_LookupIdxs[srcIdx];
+	size_t lookupDest = m_LookupIdxs[destIdx];
+	std::swap(m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx]);
+	return { lookupSrc, lookupDest };
 }
 
 inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)

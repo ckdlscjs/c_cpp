@@ -124,13 +124,17 @@ private:
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
-	size_t												m_hash_RTV_BB;
-	size_t												m_hash_RTV_0;
-	size_t												m_hash_DSV_0;
 
 	//AssetSystem분리필요?
 	std::unordered_map<size_t, RenderAsset*>			m_pCRAs;
 	std::unordered_map<size_t, ColliderAsset*>			m_pCCAs;
+
+public:
+	size_t												m_hash_RTV_BB;
+	size_t												m_hash_RTV_0;
+	size_t												m_hash_DSV_0;
+
+
 public:
 	////추후 오브젝트시스템으로분리
 	//TempObj* SkyObj;

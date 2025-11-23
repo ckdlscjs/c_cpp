@@ -111,29 +111,50 @@ void CameraSystem::Init()
 void CameraSystem::Frame(float deltaTime)
 {
 	std::cout << "Frame : " << "CameraSystem" << " Class" << '\n';
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera, C_Projection>();
-	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-
-	//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
-	for (auto& archetype : queries)
 	{
-		size_t st_row = archetype->m_transfer_row;
-		size_t st_col = archetype->m_transfer_col;
-		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera, C_Projection>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+
+		//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
+		for (auto& archetype : queries)
 		{
-			auto& transforms = archetype->GetComponents<C_Transform>(row);
-			auto& cameras = archetype->GetComponents<C_Camera>(row);
-			auto& projections = archetype->GetComponents<C_Projection>(row);
-			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			size_t st_row = archetype->m_transfer_row;
+			size_t st_col = archetype->m_transfer_col;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
-				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
-				const Vector3& position = transforms[col].vPosition;
-				cameras[col].matWorld = GetMat_World(scale, rotate, position);
-				cameras[col].matView = GetMat_View(position, rotate);
-				projections[col].matProj = GetMat_Perspective(cameras[col].fScreenWidth / cameras[col].fScreenHeight, cameras[col].fFov, cameras[col].fNear, cameras[col].fFar);
-				//ortho leftup
-				//cameras[col].matOrtho = GetMat_Orthographic_OffCenter(0.0f, cameras[col].fScreenWidth, 0.0f, cameras[col].fScreenHeight, cameras[col].fNear, cameras[col].fFar);
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& cameras = archetype->GetComponents<C_Camera>(row);
+				auto& projections = archetype->GetComponents<C_Projection>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					cameras[col].matWorld = GetMat_World(scale, rotate, position);
+					cameras[col].matView = GetMat_View(position, rotate);
+					projections[col].matProj = GetMat_Perspective(cameras[col].fScreenWidth / cameras[col].fScreenHeight, cameras[col].fFov, cameras[col].fNear, cameras[col].fFar);
+				}
+			}
+		}
+	}
+	
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Camera, C_Orthographic, T_Camera_Ortho_LT>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+
+		//Input이 있는 인덱스를 기록하고 뒤로 밀집시킨다
+		for (auto& archetype : queries)
+		{
+			size_t st_row = archetype->m_transfer_row;
+			size_t st_col = archetype->m_transfer_col;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& cameras = archetype->GetComponents<C_Camera>(row);
+				auto& orthographics = archetype->GetComponents<C_Orthographic>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					orthographics[col].matOrtho = GetMat_Orthographic_OffCenter(0.0f, cameras[col].fScreenWidth, 0.0f, cameras[col].fScreenHeight, cameras[col].fNear, cameras[col].fFar);
+				}
 			}
 		}
 	}

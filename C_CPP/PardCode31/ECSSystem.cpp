@@ -26,13 +26,14 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
 
 void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& RowCols, size_t startIdx, Archetype* archetype)
 {
-	size_t idx = startIdx;
+	if (RowCols.empty()) return;
+	size_t idx = archetype->GetAllChunkCount() - 1;
 	size_t capacity = archetype->GetCapacity_Chunks();
 	//청크의 뒤에 배치시킨다(Swap)
-	for (const auto& iter : RowCols)
+	for(auto iter = RowCols.rbegin(); iter != RowCols.rend(); iter++)
 	{
-		size_t srcRow = iter.first;
-		size_t srcCol = iter.second;
+		size_t srcRow = iter->first;
+		size_t srcCol = iter->second;
 		size_t destRow = idx / capacity;
 		size_t destCol = idx % capacity;
 		auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
@@ -40,7 +41,7 @@ void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& Ro
 		size_t destEntityIdx = FindEntity(src_dest.second);
 		std::swap(m_Entitys[srcEntityIdx], m_Entitys[destEntityIdx]);
 		std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
-		idx++;
+		idx--;
 	}
 	//다음 계층에서의 사용을 위한 row/col transfer 계산
 	archetype->m_transfer_row = startIdx / capacity;

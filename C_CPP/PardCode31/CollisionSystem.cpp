@@ -43,8 +43,8 @@ void CollisionSystem::Frame(float deltatime)
 
 	for (auto& archetype : queries)
 	{
-		size_t st_row = archetype->m_transfer_row;
-		size_t st_col = archetype->m_transfer_col;
+		size_t st_row = 0;
+		size_t st_col = 0;
 		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 		{
 			auto& transforms = archetype->GetComponents<C_Transform>(row);
