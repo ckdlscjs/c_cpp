@@ -13,9 +13,6 @@
     <Filter Include="Engine\InputSystem">
       <UniqueIdentifier>{6eaabdf1-603d-4291-86b7-9a8e559094e7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\ObjectSystem">
-      <UniqueIdentifier>{cf17b1c6-65a3-4164-9d67-a4d05ea11f68}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Engine\CameraSystem">
       <UniqueIdentifier>{fd1199a6-2ee2-43ee-a3ab-5197d52ac16c}</UniqueIdentifier>
     </Filter>
@@ -72,9 +69,6 @@
     </ClInclude>
     <ClInclude Include="InputSystem.h">
       <Filter>Engine\InputSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="TempObj.h">
-      <Filter>Engine\ObjectSystem</Filter>
     </ClInclude>
     <ClInclude Include="CameraSystem.h">
       <Filter>Engine\CameraSystem</Filter>
@@ -146,9 +140,6 @@
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
     <ClInclude Include="LightSystem.h">
-      <Filter>Engine\LightSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="Light.h">
       <Filter>Engine\LightSystem</Filter>
     </ClInclude>
     <ClInclude Include="TimerSystem.h">
@@ -230,9 +221,6 @@
     </ClCompile>
     <ClCompile Include="InputSystem.cpp">
       <Filter>Engine\InputSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="TempObj.cpp">
-      <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
     <ClCompile Include="CameraSystem.cpp">
       <Filter>Engine\CameraSystem</Filter>

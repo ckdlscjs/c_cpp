@@ -171,7 +171,6 @@
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="ImguiSystem.h" />
     <ClInclude Include="LightSystem.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
@@ -188,7 +187,6 @@
     <ClInclude Include="ResourceSystem.h" />
     <ClInclude Include="std.h" />
     <ClInclude Include="SwapChain.h" />
-    <ClInclude Include="TempObj.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TimerSystem.h" />
     <ClInclude Include="Vector2.h" />
@@ -248,7 +246,6 @@
     <ClCompile Include="Shaders.cpp" />
     <ClCompile Include="States.cpp" />
     <ClCompile Include="SwapChain.cpp" />
-    <ClCompile Include="TempObj.cpp" />
     <ClCompile Include="TimerSystem.cpp" />
     <ClCompile Include="Views.cpp" />
     <ClCompile Include="Window.cpp" />
