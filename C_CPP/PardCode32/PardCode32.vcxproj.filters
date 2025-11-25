@@ -1,0 +1,347 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Engine">
+      <UniqueIdentifier>{62b92454-c615-4142-a392-f428a230de81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="App">
+      <UniqueIdentifier>{ebc456e5-4799-4326-bede-27702e8cfac3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\GraphicSystem">
+      <UniqueIdentifier>{b2592574-44f9-4e67-9964-70fa202bd5fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\InputSystem">
+      <UniqueIdentifier>{6eaabdf1-603d-4291-86b7-9a8e559094e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\CameraSystem">
+      <UniqueIdentifier>{fd1199a6-2ee2-43ee-a3ab-5197d52ac16c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\ResourceSystem">
+      <UniqueIdentifier>{05261a6a-5e91-4433-8356-ec287ffb98ab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Shaders">
+      <UniqueIdentifier>{710e05e5-2c7d-4148-b2a7-674eb333e60a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ImGui">
+      <UniqueIdentifier>{43cbfc13-4d98-4747-9b15-5aef49ec383f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\ImguiSystem">
+      <UniqueIdentifier>{6887e805-4d40-441b-8cf3-35b42389c57c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\Window">
+      <UniqueIdentifier>{cd8071f3-62e9-4823-bd08-21d475dbf9f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\LightSystem">
+      <UniqueIdentifier>{60773b21-fb92-443b-bc6d-0f585001bf6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\TimerSystem">
+      <UniqueIdentifier>{6b9b85d4-64fb-40fa-95b5-14de369f4d2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\CollisionSystem">
+      <UniqueIdentifier>{23f0691b-7b2a-472c-b152-c77308a4b2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Engine\ECSSystem">
+      <UniqueIdentifier>{2786f152-fedd-4015-88e7-d229850ed246}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AppWindow.h">
+      <Filter>App</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Engine\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderSystem.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="std.h" />
+    <ClInclude Include="SwapChain.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Direct3D.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="InputLayout.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="InputSystem.h">
+      <Filter>Engine\InputSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraSystem.h">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSystem.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceSystem.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ImguiSystem.h">
+      <Filter>Engine\ImguiSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imconfig.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_impl_dx11.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_impl_win32.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imgui_internal.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_rectpack.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_textedit.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Include\ImGui\imstb_truetype.h">
+      <Filter>ImGui</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Quaternion.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix4x4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonMath.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Position.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="LightSystem.h">
+      <Filter>Engine\LightSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="TimerSystem.h">
+      <Filter>Engine\TimerSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionSystem.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Collider.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonHeader.h" />
+    <ClInclude Include="Box.h">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="TestBlockMacro.h" />
+    <ClInclude Include="States.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="Views.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Buffers.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Components.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ECSSystem.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Archetype.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="BehaviorSystem.h">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Assets.h">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AppWindow.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="Window.cpp">
+      <Filter>Engine\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderSystem.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="SwapChain.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Direct3D.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="InputLayout.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSystem.cpp">
+      <Filter>Engine\InputSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraSystem.cpp">
+      <Filter>Engine\CameraSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceSystem.cpp">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>App</Filter>
+    </ClCompile>
+    <ClCompile Include="ImguiSystem.cpp">
+      <Filter>Engine\ImguiSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_demo.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_draw.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_impl_dx11.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_impl_win32.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_tables.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp">
+      <Filter>ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="LightSystem.cpp">
+      <Filter>Engine\LightSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TimerSystem.cpp">
+      <Filter>Engine\TimerSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionSystem.cpp">
+      <Filter>Engine\CollisionSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="States.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Views.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Shaders.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Buffers.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ECSSystem.cpp">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="BehaviorSystem.cpp">
+      <Filter>Engine\ECSSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Assets.cpp">
+      <Filter>Engine\GraphicSystem</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="VS_PCT.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PixelShader.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_Lights.hlsli">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_TextureFlow.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_RotatePointLight.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_DepthDebug.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_PC.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PC.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_Distortion.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_PT.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PT.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_PTN_Transparent.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\Include\ImGui\LICENSE.txt">
+      <Filter>ImGui</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
