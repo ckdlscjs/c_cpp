@@ -104,7 +104,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 {
 	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 
 	CB_DirectionalLight cb_directional;
 	{
@@ -166,9 +165,73 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	cb_campos.vPosition = c_cam_transform.vPosition;
 	m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_campos);
 	SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
+
+	//Render SkySphere
+	{
+		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
+		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::SKYBOX));
+		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLFRONT_CW));
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Sky>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = cam_matView;
+					cb_wvpitmat.matProj = cam_matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
+
+					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+						{
+							for (const auto& hashTx : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
+						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					}
+				}
+				st_col = 0;
+			}
+		}
+	}
 	
 	//Render Geometry
 	{
+		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
+		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
+		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		UINT renderCnt = 0;
@@ -221,6 +284,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
+				st_col = 0;
 			}
 		}
 		std::cout << "·»´õ¸µµÈ°´Ã¼¼ö : " << renderCnt << '\n';
@@ -229,6 +293,10 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	
 	//Render UI
 	{
+		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
+		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::UI));
+		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 		//2D°´Ã¼·Î SRVÀÓ½ÃÃ¼Å©
 		m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(0, nullptr, nullptr);
 		ID3D11RenderTargetView* RTVS[]
@@ -265,7 +333,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
-						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+						Mesh<Vertex_PT>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PT>>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -288,6 +356,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					}
 				}
 			}
+			st_col = 0;
 		}
 	}
 	

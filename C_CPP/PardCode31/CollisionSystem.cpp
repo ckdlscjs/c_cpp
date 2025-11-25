@@ -67,6 +67,7 @@ void CollisionSystem::Frame(float deltatime)
 				}
 			}
 		}
+		st_col = 0;
 	}
 
 #ifdef _ECS

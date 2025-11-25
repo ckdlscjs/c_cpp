@@ -1,5 +1,38 @@
 #pragma once
 #include "Resource.h"
+//class BaseMesh : public BaseResource<BaseMesh>
+//{
+//	friend class BaseResource<BaseMesh>;
+//protected:
+//	BaseMesh();
+//	BaseMesh(const BaseMesh&) = delete;
+//	BaseMesh& operator=(const BaseMesh&) = delete;
+//	BaseMesh(BaseMesh&&) = delete;
+//	BaseMesh& operator=(BaseMesh&&) = delete;
+//public:
+//	const std::vector<std::vector<Vector3>>& GetPoints() const;
+//	UINT* GetIndices();
+//	size_t GetIndicesSize();
+//	void SetCL(size_t hashCL);
+//	const std::unordered_set<size_t>& GetCL() const;
+//	const std::vector<RenderCounts>& GetRendVertices() const;
+//	const std::vector<RenderCounts>& GetRendIndices() const;
+//	void SetVB(size_t hashVB);
+//	size_t GetVB() const;
+//	void SetIB(size_t hashIB);
+//	size_t GetIB() const;
+//
+//	size_t GetVerticesSize();
+//
+//private:
+//	std::vector<std::vector<Vector3>> m_Points;
+//	std::vector<UINT> m_Indices;
+//	std::unordered_set<size_t> m_lCL;
+//	std::vector<RenderCounts> m_RenderVertices;
+//	std::vector<RenderCounts> m_RenderIndices;
+//	size_t m_lVB;
+//	size_t m_lIB;
+//};
 template<typename T>
 class Mesh : public BaseResource<Mesh<T>>
 {
