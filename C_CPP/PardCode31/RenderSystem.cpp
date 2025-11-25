@@ -17,10 +17,7 @@
 #include "ECSSystem.h"
 #include "Assets.h"
 
-#include "TempObj.h"
 #include "TestBlockMacro.h"
-
-
 
 size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
 size_t g_hash_cbpointlight = typeid(CB_PointLight).hash_code();
@@ -199,7 +196,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
-						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -262,7 +259,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
-						Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
@@ -333,7 +330,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
-						Mesh<Vertex_PT>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PT>>(iter.hash_mesh);
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 

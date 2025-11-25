@@ -138,6 +138,7 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Light_Spot>(key, { 50.0f, cosf(_DEGTORAD(130.0f)), cosf(_DEGTORAD(10.0f)) });
 		}
 	}
+
 	//Initialize RenderAsset
 	{
 		//SkySphere
@@ -178,6 +179,7 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 		}
 
+		//rand obj
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj");
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand0", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
@@ -191,10 +193,8 @@ void AppWindow::OnCreate()
 			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::AABB);
 			size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca0", hash_CLs);
 
-			//ECS Initialize(test, 251111)
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry>();
 
-			//rand obj
 			{
 				for (int i = 0; i < 500; i++)
 				{
@@ -235,10 +235,8 @@ void AppWindow::OnCreate()
 			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
 			size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca1", hash_CLs);
 
-			//ECS Initialize(test, 251111)
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry>();
 
-			//rand obj
 			{
 				for (int i = 0; i < 500; i++)
 				{
@@ -266,21 +264,7 @@ void AppWindow::OnCreate()
 			}
 		}
 
-		////NormalMap
-		//{
-		//	size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/sphere.obj", E_Collider::SPHERE);
-		//	size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_NormalMapping", L"VS_PTNTB.hlsl", L"PS_PTNTB.hlsl");
-		//	std::vector<TX_HASH> tx_hash;
-		//	tx_hash.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/brick_d.jpg", WIC_FLAGS_IGNORE_SRGB) });
-		//	tx_hash.push_back({ E_Texture::Normal, _RenderSystem.CreateTexture(L"../Assets/Textures/brick_n.jpg", WIC_FLAGS_IGNORE_SRGB) });
-		//	_RenderSystem.Material_SetTextures(hash_material, tx_hash);
-
-		//	_RenderSystem.objs.push_back(new TempObj());
-		//	TempObj* obj = _RenderSystem.objs.back();
-		//	obj->m_vScale = Vector3(300, 300, 300);
-		//	obj->m_Mesh_Material.push_back({ hash_mesh , hash_material });
-		//}
-		//NormalMap
+		//Normal Map
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/sphere.obj");
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_NormalMapping", L"VS_PTNTB.hlsl", L"PS_PTNTB.hlsl");
@@ -299,14 +283,14 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {}, {} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {}, {100.0f, 0.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 
-		//Initialize RenderAsset
+		//nene
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/nene.obj");
 			
