@@ -3,7 +3,6 @@
 #include "SwapChain.h"
 #include "InputLayout.h"
 #include "CameraSystem.h"
-#include "FirstPersonCamera.h"
 #include "ResourceSystem.h"
 #include "Texture.h"
 #include "Mesh.h"

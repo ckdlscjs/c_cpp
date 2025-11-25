@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _OOP
 #include "CommonHeader.h"
 
 class BaseLight
@@ -9,7 +10,7 @@ protected:
 	BaseLight& operator=(const BaseLight&) = delete;	//복사대입연산자삭제
 	BaseLight(BaseLight&&) = delete;					//이동생성자삭제
 	BaseLight& operator=(BaseLight&&) = delete;			//이동대입연산자삭제
-	
+
 public:
 	Vector4 m_mAmbient;
 	Vector4 m_mDiffuse;
@@ -61,3 +62,5 @@ public:
 	float m_fCos_InnerCone;
 	CB_SpotLight m_CBData;
 };
+#endif // _OOP
+

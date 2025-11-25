@@ -1,4 +1,5 @@
 #pragma once
+#ifdef _OOP
 #include "CommonHeader.h"
 struct CameraProperties
 {
@@ -11,7 +12,7 @@ struct CameraProperties
 	Vector3 m_vForward;				//카메라의 정면벡터		(forward)
 
 	//사원수를 추가해야 오일러각<->사원수<->벡터 간의 원활한 각도계산이 가능 추후에 추가
-	float m_fRoll;					
+	float m_fRoll;
 	float m_fPitch;
 	float m_fYaw;
 
@@ -41,7 +42,8 @@ struct CameraProperties
 		m_fFarZ(4000.0f),
 		m_fSpeedMove(500.0f),
 		m_fSpeedRotate(200.0f)
-	{}
+	{
+	}
 };
 class BaseCamera
 {
@@ -155,16 +157,16 @@ inline void BaseCamera::SetTarget(const Vector3& target)
 	/*
 	vLookat을 구했다면 여기서 역산하여 오일러각을 구할 수 있다 기본적으로 벡터의 구성요소인 x,y,z에서 역산한다
 	atan2f, 즉 삼각함수의 tan값의역함수인 아크탄젠트를 이용해서 구한다, 이때 atan2f(_y, _x)는 (회전하려는축, 기준축) 이되고 이때의 요소는 이일반적인 삼각함수의회전에서(대변(회전하려는 축, y를의미), 인접변(기존축, 수평축, x를의미)) 한다
-	
+
 	1)yaw회전은 pitch회전에 의해서 성분요소인 x,z의 값이 둘 다 영향을 받으므로 비례값인 tan의 결과값이 바뀌지 않는다, 즉 atan2f의 비례값은 그대로 이기때문에 요소를 이용한다, 이때 yaw는 z->x회전이고 기본적인 요소값은 바뀌지 않는상태이므로 양수->양수 기준이기때문에
 	atan2f(x, z)가 된다
-	
+
 	2)pitch회전또한 atan2f로 구할 순 있다, 이때 yaw에 영향을 받는데 차이점은 yaw에 의해 z는 그 요소가 변하나 y는 영향을 받지 않으므로 올바른 비례식을 그대로 사용 할 수 없다, 그러므로 벡터(x, y, z)를 xz평면에 투영하면 수평축에대한 길이요소값을 얻을 수 있으므로 수평축의 길이값
 	sqrt(x^2 + z^2) 을 이용한다, 즉 수평축이 되며 수직축은 y인데 기본적인 pitch는 y -> z회전 이나 z축이 기준이되면 z -> -y로의 회전이 되므로
 	atan2f(-y, sqrt(x^2 + z^2)) 가 된다, 하지만 비례식의 특성상 빗변의 길이가 1인 단위벡터에서 sinf는 빗변의 길이가 1일때 y의 이동량을 의미하므로 이에대한 역함수 asinf를 이용하면 각도가 나온다, 마찬가지로 -y로 회전하므로 asinf(-y)로 대체가 가능하며 이쪽이 효율적이다, 다만
 	asinf의 결과는 -90~90 이나 일반적인 pitch는 이로충분하다, 이를 넘는 피치회전을 체크할경우 atan2f를 이용한다
-	
-	3)roll은 일반적으로 체크하지 않기에 0.0f로둔다	
+
+	3)roll은 일반적으로 체크하지 않기에 0.0f로둔다
 	*/
 	m_Properties.m_vLookAt = target;
 	//forward계산
@@ -239,3 +241,6 @@ inline float BaseCamera::GetFarZ()
 {
 	return m_Properties.m_fFarZ;
 }
+
+#endif // _OOP
+

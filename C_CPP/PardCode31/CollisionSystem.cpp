@@ -6,7 +6,6 @@
 #include "ECSSystem.h"
 //밑부분은 책임분리 고려필요
 #include "CameraSystem.h"
-#include "FirstPersonCamera.h"
 #include "RenderSystem.h"	//Asset을받아온다
 #include "Assets.h"
 //#include "ResourceSystem.h"

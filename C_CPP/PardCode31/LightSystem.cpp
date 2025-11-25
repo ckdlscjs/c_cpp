@@ -1,5 +1,4 @@
 #include "LightSystem.h"
-#include "Light.h"
 #include "ECSSystem.h"
 
 LightSystem::LightSystem()

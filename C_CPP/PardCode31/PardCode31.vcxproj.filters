@@ -46,7 +46,7 @@
     <Filter Include="Math">
       <UniqueIdentifier>{27495f46-5686-4d73-9ed9-86b24f990e88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Engine\CollisionSystem\ECSSystem">
+    <Filter Include="Engine\ECSSystem">
       <UniqueIdentifier>{2786f152-fedd-4015-88e7-d229850ed246}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -83,9 +83,6 @@
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Engine\CameraSystem</Filter>
-    </ClInclude>
-    <ClInclude Include="FirstPersonCamera.h">
       <Filter>Engine\CameraSystem</Filter>
     </ClInclude>
     <ClInclude Include="ResourceSystem.h">
@@ -194,19 +191,19 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
     <ClInclude Include="Components.h">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="ECSSystem.h">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Archetype.h">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Entity.h">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="BehaviorSystem.h">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
     <ClInclude Include="Assets.h">
       <Filter>Engine\GraphicSystem</Filter>
@@ -238,9 +235,6 @@
       <Filter>Engine\ObjectSystem</Filter>
     </ClCompile>
     <ClCompile Include="CameraSystem.cpp">
-      <Filter>Engine\CameraSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="FirstPersonCamera.cpp">
       <Filter>Engine\CameraSystem</Filter>
     </ClCompile>
     <ClCompile Include="ResourceSystem.cpp">
@@ -276,9 +270,6 @@
     <ClCompile Include="LightSystem.cpp">
       <Filter>Engine\LightSystem</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
-      <Filter>Engine\LightSystem</Filter>
-    </ClCompile>
     <ClCompile Include="TimerSystem.cpp">
       <Filter>Engine\TimerSystem</Filter>
     </ClCompile>
@@ -298,10 +289,10 @@
       <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
     <ClCompile Include="ECSSystem.cpp">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
     <ClCompile Include="BehaviorSystem.cpp">
-      <Filter>Engine\CollisionSystem\ECSSystem</Filter>
+      <Filter>Engine\ECSSystem</Filter>
     </ClCompile>
     <ClCompile Include="Assets.cpp">
       <Filter>Engine\GraphicSystem</Filter>

@@ -18,8 +18,8 @@ void BehaviorSystem::Frame(float deltatime)
 	std::cout << "Frame : " << "BehaviorSystem" << " Class" << '\n';
 	float sensitivity = 0.1f;
 	Vector2 mouseDelta = _InputSystem.GetMouseDelta();
-	float pitch = mouseDelta.GetY() * sensitivity;	//sensitivity
-	float yaw = mouseDelta.GetX() * sensitivity;
+	float dt_Pitch = mouseDelta.GetY() * sensitivity;	//sensitivity
+	float dt_Yaw = mouseDelta.GetX() * sensitivity;
 
 	//NoInputBlock
 	{
@@ -55,13 +55,17 @@ void BehaviorSystem::Frame(float deltatime)
 					transforms[col].vPosition += (transforms[col].qRotate * moveDir.Normalize()) * 100.0f * deltatime;	//speed * dt
 
 					//MouseRotate
-					if (inputs[col].bVKMask[255])
+					if (inputs[col].bVKMask[VK_MOUSE_MOVE])
 					{
-						//roll * pitch * yaw를 따른다
-						Quarternion qDelta(pitch, yaw, 0.0f);
-						transforms[col].qRotate *= qDelta;
+						Vector3 eulerRotate = transforms[col].qRotate.ToRotate();
+						//std::cout << eulerRotate.GetX() << ' ' << eulerRotate.GetY() << '\n';
+						float rotPitch = eulerRotate.GetX() + dt_Pitch;
+						float rotYaw = eulerRotate.GetY() + dt_Yaw;
+						//Clamp(rotPitch, -89.9f, 89.9f);	//need?
+						transforms[col].qRotate.SetFromRotate(rotPitch, rotYaw, 0.0f);
 					}
 				}
+				st_col = 0;
 			}
 		}
 	}

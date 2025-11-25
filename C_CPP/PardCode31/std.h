@@ -10,7 +10,7 @@
 #define _RADTODEG(RAD) RAD / XM_PI * 180.0f
 #define _EPSILON 1e-6f
 #define _CLAMP(val, low, high) Clamp(val, low, high)
-
+#define VK_MOUSE_MOVE 255
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>

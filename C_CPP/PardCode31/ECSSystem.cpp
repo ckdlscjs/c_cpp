@@ -24,23 +24,30 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
 	return archetypes;
 }
 
+/*
+* RowCols에 실제로 업데이트된 엔티티들의 row/col이 순서대로 담겨있으므로 이를 역순으로 Archetype의 끝부분으로 
+* 밀집시켜 이후 계층에서 순회량을 줄인다
+*/
 void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& RowCols, size_t startIdx, Archetype* archetype)
 {
 	if (RowCols.empty()) return;
 	size_t idx = archetype->GetAllChunkCount() - 1;
 	size_t capacity = archetype->GetCapacity_Chunks();
-	//청크의 뒤에 배치시킨다(Swap)
+	//청크의 뒤에 배치시킨다(Swap), 충돌을 방지하기위해 뒤에서부터 채워나간다
 	for(auto iter = RowCols.rbegin(); iter != RowCols.rend(); iter++)
 	{
 		size_t srcRow = iter->first;
 		size_t srcCol = iter->second;
 		size_t destRow = idx / capacity;
 		size_t destCol = idx % capacity;
-		auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
-		size_t srcEntityIdx = FindEntity(src_dest.first);
-		size_t destEntityIdx = FindEntity(src_dest.second);
-		std::swap(m_Entitys[srcEntityIdx], m_Entitys[destEntityIdx]);
-		std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
+		if (srcRow != destRow || srcCol != destCol)
+		{
+			auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
+			size_t srcEntityIdx = FindEntity(src_dest.first);
+			size_t destEntityIdx = FindEntity(src_dest.second);
+			std::swap(m_Entitys[srcEntityIdx], m_Entitys[destEntityIdx]);
+			std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
+		}
 		idx--;
 	}
 	//다음 계층에서의 사용을 위한 row/col transfer 계산

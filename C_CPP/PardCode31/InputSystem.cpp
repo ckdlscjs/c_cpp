@@ -45,7 +45,7 @@ void InputSystem::Frame()
 		}
 		size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
 		//어떠한 Chunk가 Component우선순위에 따라 정렬을 할경우 중복된 컴포넌트(input, move, 등 동시우선순위에 의해 앞으로 돌리려면 예외처리가 힘들다)
-		//_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
+		_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
 	}
 	
 	for (unsigned char vk_key = 0; vk_key < 255; vk_key++)	//255번은 마우스체크(임시)

@@ -181,7 +181,6 @@
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="TestBlockMacro.h" />
     <ClInclude Include="Direct3D.h" />
-    <ClInclude Include="FirstPersonCamera.h" />
     <ClInclude Include="RenderSystem.h" />
     <ClInclude Include="InputLayout.h" />
     <ClInclude Include="InputSystem.h" />
@@ -213,7 +212,6 @@
     <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="ECSSystem.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
-    <ClCompile Include="Light.cpp" />
     <ClCompile Include="LightSystem.cpp" />
     <ClCompile Include="BehaviorSystem.cpp" />
     <FxCompile Include="PS_DepthDebug.hlsl">
@@ -242,7 +240,6 @@
       <FileType>Document</FileType>
     </FxCompile>
     <ClCompile Include="Direct3D.cpp" />
-    <ClCompile Include="FirstPersonCamera.cpp" />
     <ClCompile Include="RenderSystem.cpp" />
     <ClCompile Include="InputLayout.cpp" />
     <ClCompile Include="InputSystem.cpp" />

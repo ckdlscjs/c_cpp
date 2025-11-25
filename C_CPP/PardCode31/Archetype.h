@@ -268,6 +268,10 @@ inline bool Archetype::NeedNewChunk()
 	return lastChunk->GetCount() >= m_ChunksCapacity;
 }
 
+/*
+* Archetype이 가지는 lookup vector컨테이너에 룩업테이블의 인덱스를 저장한다,
+* 예약된 청크를 실제로 추가시키고 해당청크의 row/col을 리턴한다
+*/
 inline void Archetype::ReserveIndexes(const size_t lookupIdx, size_t& out_idxRow, size_t& out_idxCol)
 {
 	_ASEERTION_NULCHK(m_Components.size(), "Component Chunk not exist");
@@ -319,17 +323,14 @@ inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t 
 	_ASEERTION_NULCHK(srcRow < chunks.size(), "Chunk row Out of Bound");
 	_ASEERTION_NULCHK(!m_LookupIdxs.empty(), "Entity Lookup empty");
 
-	//swap
+	//swap(실제데이터 교체)
 	for (auto& iter : m_Components)
 		iter.second[srcRow]->Swap(srcCol, iter.second[destRow], destCol);
 	
-	//Lookup을 교체, 리턴
+	//Lookup을 계산해 반환
 	size_t srcIdx = srcRow * m_ChunksCapacity + srcCol;
 	size_t destIdx = destRow * m_ChunksCapacity + destCol;
-	size_t lookupSrc = m_LookupIdxs[srcIdx];
-	size_t lookupDest = m_LookupIdxs[destIdx];
-	std::swap(m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx]);
-	return { lookupSrc, lookupDest };
+	return { m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx] };
 }
 
 inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
