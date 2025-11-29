@@ -7,6 +7,11 @@ ECSSystem::ECSSystem()
 
 ECSSystem::~ECSSystem()
 {
+	for (auto iter = m_Archetypes.begin(); iter != m_Archetypes.end();)
+	{
+		delete iter->second;
+		iter = m_Archetypes.erase(iter);
+	}
 }
 
 void ECSSystem::Init()
@@ -19,7 +24,7 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
 	for (auto& iter : m_Archetypes)
 	{
 		if ((iter.first & key) == key)
-			archetypes.push_back(&iter.second);
+			archetypes.push_back(iter.second);
 	}
 	return archetypes;
 }
@@ -59,7 +64,7 @@ void ECSSystem::DeleteEntity(size_t lookupIdx)
 {
 	size_t delEntityIdx = FindEntity(lookupIdx);
 	Entity delEntity = m_Entitys[delEntityIdx];
-	size_t movedLookupIdx = m_Archetypes[delEntity.m_Key].DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
+	size_t movedLookupIdx = m_Archetypes[delEntity.m_Key]->DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
 	m_LookupTable[lookupIdx] = -1;	//해당 룩업은 폐기
 	//삭제시킨 Lookup이 삭제시킬 Lookup과 같다면 청크의 끝이 삭제된것
 	if (movedLookupIdx == lookupIdx)

@@ -42,7 +42,7 @@ public:
 private:
 	size_t FindEntity(size_t lookupIdx);
 private:
-	std::unordered_map<ArchetypeKey, Archetype> m_Archetypes;
+	std::unordered_map<ArchetypeKey, Archetype*> m_Archetypes;
 	std::vector<Entity> m_Entitys;
 	std::vector<size_t> m_LookupTable;
 };
@@ -63,7 +63,8 @@ inline ArchetypeKey ECSSystem::CreateArchetype()
 	ArchetypeKey key = GetArchetypeKey<Comps...>();
 	if (m_Archetypes.find(key) != m_Archetypes.end()) 
 		return key;
-	(m_Archetypes[key].RegisterComponent<Comps>(), ...);
+	m_Archetypes[key] = new Archetype();
+	(m_Archetypes[key]->RegisterComponent<Comps>(), ...);
 	return key;
 }
 
@@ -78,16 +79,16 @@ inline size_t ECSSystem::CreateEntity()
 	ArchetypeKey key = CreateArchetype<Comps...>();
 	m_Entitys.back().m_Key = key;
 	m_Entitys.back().m_IdxLookup = lookupIdx;
-	if (m_Archetypes[key].NeedNewChunk())
-		(m_Archetypes[key].CreateNewChunk<Comps>(), ...);
-	m_Archetypes[key].ReserveIndexes(m_Entitys.back().m_IdxLookup, m_Entitys.back().m_IdxRow, m_Entitys.back().m_IdxCol);
+	if (m_Archetypes[key]->NeedNewChunk())
+		(m_Archetypes[key]->CreateNewChunk<Comps>(), ...);
+	m_Archetypes[key]->ReserveIndexes(m_Entitys.back().m_IdxLookup, m_Entitys.back().m_IdxRow, m_Entitys.back().m_IdxCol);
 	return lookupIdx;
 }
 
 template<typename T>
 inline void ECSSystem::AddComponent(ArchetypeKey key, T&& component)
 {
-	m_Archetypes[key].AddComponent<T>(std::forward<T>(component));
+	m_Archetypes[key]->AddComponent<T>(std::forward<T>(component));
 }
 
 template<typename T>
@@ -95,6 +96,6 @@ T& ECSSystem::GetComponent(size_t idx_lookup)
 {
 	size_t entityIdx = FindEntity(idx_lookup);
 	const auto& entity = m_Entitys[entityIdx];
-	return m_Archetypes[entity.m_Key].GetComponents<T>(entity.m_IdxRow)[entity.m_IdxCol];
+	return m_Archetypes[entity.m_Key]->GetComponents<T>(entity.m_IdxRow)[entity.m_IdxCol];
 }
 
