@@ -1,0 +1,44 @@
+////////////////////////////////////////////////////////////////////////////////
+// Filename: ps_fade.hlsl
+////////////////////////////////////////////////////////////////////////////////
+
+
+/////////////
+// GLOBALS //
+/////////////
+Texture2D shaderTexture;
+SamplerState SampleType;
+
+cbuffer FadeBuffer
+{
+    float fadeAmount;
+    float3 padding;
+};
+
+
+//////////////
+// TYPEDEFS //
+//////////////
+struct PixelInputType
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Pixel Shader
+////////////////////////////////////////////////////////////////////////////////
+float4 FadePixelShader(PixelInputType input) : SV_TARGET
+{
+	float4 color;
+
+
+    // 이 위치에서 텍스처 픽셀을 샘플링합니다.
+    color = shaderTexture.Sample(SampleType, input.tex);
+
+	// 현재의 페이드 비율로 색상 밝기를 줄입니다.
+    color = color * fadeAmount;
+
+	return color;
+}
