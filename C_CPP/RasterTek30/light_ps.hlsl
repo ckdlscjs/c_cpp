@@ -46,7 +46,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 	float4 color, color1, color2, color3, color4;
 	
 
-	// 조명의 위치에 따라이 픽셀에서 서로 다른 빛의 양을 계산합니다.
+	// 조명의 위치를 기준으로 픽셀에서 서로 다른 빛의 양을 계산합니다.
 	lightIntensity1 = saturate(dot(input.normal, input.lightPos1));
 	lightIntensity2 = saturate(dot(input.normal, input.lightPos2));
 	lightIntensity3 = saturate(dot(input.normal, input.lightPos3));
@@ -62,7 +62,7 @@ float4 LightPixelShader(PixelInputType input) : SV_TARGET
 	textureColor = shaderTexture.Sample(SampleType, input.tex);
 
 	// 최종 결과를 얻으려면 텍스처 픽셀을 네 가지 밝은 색상의 조합으로 곱합니다.
-	color = saturate(color1 + color2 + color3 + color4) * textureColor;
+    color = saturate(color1 + color2 + color3 + color4);// * textureColor;
 	
 	return color;
 }
