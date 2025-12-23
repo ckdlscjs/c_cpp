@@ -99,6 +99,8 @@ private:
 	void SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 	void SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
 
+	void SetGS_Shader(ID3D11GeometryShader* pGS);
+
 	void SetPS_Shader(ID3D11PixelShader* pPS);
 	void SetPS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
 	void SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);

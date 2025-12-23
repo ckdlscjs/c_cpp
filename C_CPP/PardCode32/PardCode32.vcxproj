@@ -212,6 +212,9 @@
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="LightSystem.cpp" />
     <ClCompile Include="BehaviorSystem.cpp" />
+    <FxCompile Include="GS_PTN.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="PS_DepthDebug.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>

@@ -201,6 +201,7 @@ void AppWindow::OnCreate()
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/cube.obj");
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_rand0");
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
+			_RenderSystem.Material_SetGS(hash_material, L"GS_PTN.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 

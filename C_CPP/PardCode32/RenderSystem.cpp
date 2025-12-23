@@ -168,7 +168,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::SKYBOX));
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLFRONT_CW));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::WIRE_CULLBACK_CW));
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Sky>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
@@ -228,7 +228,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::WIRE_CULLBACK_CW));
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		UINT renderCnt = 0;
@@ -266,6 +266,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						if(m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
+							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
 						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
@@ -1195,7 +1197,12 @@ void RenderSystem::SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 
 void RenderSystem::SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx)
 {
-	m_pCDirect3D->GetDeviceContext()->VSGetSamplers(startIdx, 1, &pState);
+	m_pCDirect3D->GetDeviceContext()->VSSetSamplers(startIdx, 1, &pState);
+}
+
+void RenderSystem::SetGS_Shader(ID3D11GeometryShader* pGS)
+{
+	m_pCDirect3D->GetDeviceContext()->GSSetShader(pGS, nullptr, 0);
 }
 
 void RenderSystem::SetPS_SamplerState(ID3D11SamplerState* pState, UINT startIdx)
@@ -1276,7 +1283,7 @@ size_t RenderSystem::CreateGeometryShader(std::wstring shaderName, std::string e
 	if (m_pCGSs.find(hash) != m_pCGSs.end()) return hash;
 
 	GeometryShader* pGeometryShader = new GeometryShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pGeometryShader, "VS is nullptr");
+	_ASEERTION_NULCHK(pGeometryShader, "GS is nullptr");
 	m_pCGSs[hash] = pGeometryShader;
 	return hash;
 }
