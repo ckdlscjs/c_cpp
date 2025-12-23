@@ -12,9 +12,11 @@ public:
 	Material(Material&&) = delete;
 	Material& operator=(Material&&) = delete;
 
-	void SetVS_Shader(size_t hashVS);
+	void SetVS(size_t hashVS);
 	size_t GetVS() const;
-	void SetPS_Shader(size_t hashPS);
+	void SetGS(size_t hashGS);
+	size_t GetGS() const;
+	void SetPS(size_t hashPS);
 	size_t GetPS() const;
 	void SetIL(size_t hashIL);
 	size_t GetIL() const;
@@ -24,6 +26,7 @@ public:
 	const std::vector<std::string>* GetTexturesPaths() const;
 private:
 	size_t m_lVS;
+	size_t m_lGS;
 	size_t m_lPS;
 	size_t m_lIL;
 	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
@@ -82,7 +85,7 @@ inline Material::Material(size_t hash, const std::wstring& szFilePath)
 	SetFilePath(szFilePath);
 }
 
-inline void Material::SetVS_Shader(size_t hashVS)
+inline void Material::SetVS(size_t hashVS)
 {
 	m_lVS = hashVS;
 }
@@ -92,7 +95,17 @@ inline size_t Material::GetVS() const
 	return m_lVS;
 }
 
-inline void Material::SetPS_Shader(size_t hashPS)
+inline void Material::SetGS(size_t hashGS)
+{
+	m_lGS = hashGS;
+}
+
+inline size_t Material::GetGS() const
+{
+	return m_lGS;
+}
+
+inline void Material::SetPS(size_t hashPS)
 {
 	m_lPS = hashPS;
 }

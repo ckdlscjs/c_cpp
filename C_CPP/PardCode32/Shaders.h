@@ -65,3 +65,12 @@ public:
 	PixelShader& operator=(PixelShader&&) = delete;
 };
 
+class GeometryShader : public BaseShader<ID3D11GeometryShader>
+{
+public:
+	GeometryShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
+	GeometryShader(const GeometryShader&) = delete;
+	GeometryShader& operator=(const GeometryShader&) = delete;
+	GeometryShader(GeometryShader&&) = delete;
+	GeometryShader& operator=(GeometryShader&&) = delete;
+};

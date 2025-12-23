@@ -8,6 +8,7 @@ class Direct3D;
 class VertexBuffer;
 class InputLayout;
 class VertexShader;
+class GeometryShader;
 class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
@@ -54,9 +55,15 @@ public:
 	template<typename T>
 	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
 	template<typename T>
-	size_t CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
+	size_t CreateMaterial(const std::wstring& szFilePath);
 	template<typename T>
-	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
+	std::vector<size_t> CreateMaterialsFromFile(const std::wstring& szFilePath);
+
+	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
+	template<typename T>
+	void Material_SetIL(size_t hash_material, const std::wstring& vsName);
+	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
+	void Material_SetPS(size_t hash_material, const std::wstring& psName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
 	//Asset(Components <-> API) 리소스 생성
@@ -70,6 +77,7 @@ private:
 	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
+	size_t CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
 	size_t CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource);
@@ -119,6 +127,7 @@ private:
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;
 	std::unordered_map<size_t, VertexShader*>			m_pCVSs;
+	std::unordered_map<size_t, GeometryShader*>			m_pCGSs;
 	std::unordered_map<size_t, PixelShader*>			m_pCPSs;
 	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
@@ -150,12 +159,16 @@ public:
 //템플릿 추론 명시
 template size_t RenderSystem::CreateMesh<Vertex_PTN>(const std::wstring& szFilePath);
 template size_t RenderSystem::CreateMesh<Vertex_PTNTB>(const std::wstring& szFilePath);
-template size_t RenderSystem::CreateMaterial<Vertex_PC>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-template size_t RenderSystem::CreateMaterial<Vertex_PT>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName);
-template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTN>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
-template std::vector<size_t> RenderSystem::CreateMaterials<Vertex_PTNTB>(const std::wstring& szFilePath, const std::vector<std::wstring>& vss, const std::vector<std::wstring>& pss);
+template size_t RenderSystem::CreateMaterial<Vertex_PC>(const std::wstring& szFilePath);
+template size_t RenderSystem::CreateMaterial<Vertex_PT>(const std::wstring& szFilePath);
+template size_t RenderSystem::CreateMaterial<Vertex_PTN>(const std::wstring& szFilePath);
+template size_t RenderSystem::CreateMaterial<Vertex_PTNTB>(const std::wstring& szFilePath);
+template void RenderSystem::Material_SetIL<Vertex_PC>(size_t hash_material, const std::wstring& vsName);
+template void RenderSystem::Material_SetIL<Vertex_PT>(size_t hash_material, const std::wstring& vsName);
+template void RenderSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, const std::wstring& vsName);
+template void RenderSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName);
+template std::vector<size_t> RenderSystem::CreateMaterialsFromFile<Vertex_PTN>(const std::wstring& szFilePath);
+template std::vector<size_t> RenderSystem::CreateMaterialsFromFile<Vertex_PTNTB>(const std::wstring& szFilePath);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PC>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PC>&& vertices, std::vector<UINT>&& indices);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PT>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PT>&& vertices, std::vector<UINT>&& indices);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices);

@@ -387,8 +387,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 				SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-				SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-				SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
@@ -444,8 +444,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 			Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 			SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-			SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-			SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+			SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+			SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 			const std::vector<size_t>* texs = pMaterial->GetTextures();
 			int cnt = 0;
@@ -520,8 +520,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+					SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+					SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 					const std::vector<size_t>* texs = pMaterial->GetTextures();
 					int cnt = 0;
@@ -568,8 +568,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+						SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
@@ -616,8 +616,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 				Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 				SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-				SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-				SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 				const std::vector<size_t>* texs = pMaterial->GetTextures();
 				int cnt = 0;
@@ -665,8 +665,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+						SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
@@ -712,8 +712,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+					SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+					SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 					const std::vector<size_t>* texs = pMaterial->GetTextures();
 					int cnt = 0;
@@ -767,8 +767,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+						SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
 						int cnt = 0;
@@ -822,6 +822,12 @@ RenderSystem::~RenderSystem()
 	{
 		delete iter->second;
 		iter = m_pCVSs.erase(iter);
+	}
+
+	for (auto iter = m_pCGSs.begin(); iter != m_pCGSs.end();)
+	{
+		delete iter->second;
+		iter = m_pCGSs.erase(iter);
 	}
 
 	for (auto iter = m_pCPSs.begin(); iter != m_pCPSs.end();)
@@ -1264,6 +1270,17 @@ size_t RenderSystem::CreateVertexShader(std::wstring shaderName, std::string ent
 	return hash;
 }
 
+size_t RenderSystem::CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCGSs.find(hash) != m_pCGSs.end()) return hash;
+
+	GeometryShader* pGeometryShader = new GeometryShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pGeometryShader, "VS is nullptr");
+	m_pCGSs[hash] = pGeometryShader;
+	return hash;
+}
+
 size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target)
 {
 	size_t hash = Hasing_wstring(shaderName);
@@ -1328,28 +1345,45 @@ const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh
 }
 
 template<typename T>
-size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath, const std::wstring& vsName, const std::wstring& psName)
+size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath)
 {
 	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
-	pMaterial->SetVS_Shader(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
-	pMaterial->SetPS_Shader(CreatePixelShader(psName, "psmain", "ps_5_0"));
-	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
 	return pMaterial->GetHash();
 }
+
 template<typename T>
-std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::vector<std::wstring>& VSs, const std::vector<std::wstring>& PSs)
+std::vector<size_t> RenderSystem::CreateMaterialsFromFile(const std::wstring& szFilePath)
 {
 	std::vector<size_t> rets;
 	std::vector<Material*> materials = _ResourceSystem.CreateResourcesFromFile<Material>(szFilePath);
-	_ASEERTION_NULCHK(materials.size() == VSs.size(), "material and shader counts not equal");
-	for (UINT i = 0; i < materials.size(); i++)
-	{
-		materials[i]->SetVS_Shader(CreateVertexShader(VSs[i], "vsmain", "vs_5_0"));
-		materials[i]->SetPS_Shader(CreatePixelShader(PSs[i], "psmain", "ps_5_0"));
-		materials[i]->SetIL(CreateInputLayout(VSs[i] + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(VSs[i], "vsmain", "vs_5_0")]->GetBlob()));
-		rets.push_back(materials[i]->GetHash());
-	}
+	for (const auto& iter : materials)
+		rets.push_back(iter->GetHash());
 	return rets;
+}
+
+void RenderSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
+}
+
+template<typename T>
+void RenderSystem::Material_SetIL(size_t hash_material, const std::wstring& vsName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
+}
+
+void RenderSystem::Material_SetGS(size_t hash_material, const std::wstring& gsName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetGS(CreateGeometryShader(gsName, "gsmain", "gs_5_0"));
+}
+
+void RenderSystem::Material_SetPS(size_t hash_material, const std::wstring& psName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
 }
 
 void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
