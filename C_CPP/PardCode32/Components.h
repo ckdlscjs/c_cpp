@@ -67,6 +67,7 @@ struct C_Orthographic
 };
 struct T_Camera_Ortho_CT {};
 struct T_Camera_Ortho_LT {};
+struct T_Camera_Cubemap {};
 
 struct C_Render
 {

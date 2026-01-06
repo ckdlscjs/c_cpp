@@ -41,6 +41,7 @@ public:
 	void PostRender();
 	void OnResize(UINT width, UINT height);
 	void SetViewportSize(UINT iWidth, UINT iHeight);
+	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 	
@@ -65,7 +66,8 @@ public:
 	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
 	void Material_SetPS(size_t hash_material, const std::wstring& psName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
-
+	
+	void CreateCubeMapTexture(int iSize);
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
@@ -84,6 +86,7 @@ private:
 	size_t CreateRenderTargetView(const std::wstring& szName);
 	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
+	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
 
 private:
 	//API 파이프라인
@@ -107,6 +110,7 @@ private:
 	void SetPS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
 
 	void SetRS_RasterizerState(ID3D11RasterizerState* pState);
+	void SetRS_Viewport(D3D11_VIEWPORT* pViewport);
 	void SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef = 1);
 	void SetOM_BlendState(ID3D11BlendState* pState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
 
@@ -144,7 +148,12 @@ public:
 	size_t												m_hash_RTV_BB;
 	size_t												m_hash_RTV_0;
 	size_t												m_hash_DSV_0;
+	D3D11_VIEWPORT										m_vp_BB;
 
+	size_t												m_hash_RTV_CubeMap[6];
+	size_t												m_hash_SRV_CubeMap;
+	size_t												m_hash_DSV_CubeMap;
+	D3D11_VIEWPORT										m_vp_CubeMap;
 
 public:
 	////추후 오브젝트시스템으로분리

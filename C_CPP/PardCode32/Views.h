@@ -54,7 +54,7 @@ class RenderTargetView : public BaseView<ID3D11RenderTargetView>
 {
 public:
 	RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain);
-	RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer);
+	RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format);
 	RenderTargetView(const RenderTargetView&) = delete;
 	RenderTargetView& operator=(const RenderTargetView&) = delete;
 	RenderTargetView(RenderTargetView&&) = delete;
@@ -67,7 +67,7 @@ public:
 class DepthStencilView : public BaseView<ID3D11DepthStencilView>
 {
 public:
-	DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer);
+	DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format);
 	DepthStencilView(const DepthStencilView&) = delete;
 	DepthStencilView& operator=(const DepthStencilView&) = delete;
 	DepthStencilView(DepthStencilView&&) = delete;

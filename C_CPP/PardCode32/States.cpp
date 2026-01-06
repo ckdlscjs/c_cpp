@@ -203,29 +203,15 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	ID3D11RasterizerState* pState;
 	ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
 
-	rasterizer_desc.FrontCounterClockwise = FALSE;
 	rasterizer_desc.DepthClipEnable = TRUE;
 	rasterizer_desc.MultisampleEnable = TRUE;
 
 	//SOLID, CULLBACK, CW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.FrontCounterClockwise = FALSE;
 	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
 	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CW");
-	m_pStates.push_back(pState);
-
-	//SOLID, CULLFRONT, CW
-	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CW");
-	m_pStates.push_back(pState);
-
-	//WIREFRAME, CULLBACK, CW
-	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
-	rasterizer_desc.CullMode = D3D11_CULL_BACK;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
 	m_pStates.push_back(pState);
 
 	//SOLID, CULLBACK, CCW
@@ -235,6 +221,31 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
 	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CCW");
 	m_pStates.push_back(pState);
+
+	//SOLID, CULLFRONT, CW
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
+	rasterizer_desc.FrontCounterClockwise = FALSE;
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
+	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CW");
+	m_pStates.push_back(pState);
+
+	//SOLID, CULLFRONT, CCW
+	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
+	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
+	rasterizer_desc.FrontCounterClockwise = TRUE;
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
+	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CCW");
+	m_pStates.push_back(pState);
+
+	//WIREFRAME, CULLBACK, CW
+	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterizer_desc.CullMode = D3D11_CULL_BACK;
+	rasterizer_desc.FrontCounterClockwise = FALSE;
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
+	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
+	m_pStates.push_back(pState);
+
 	//필요시 추가
 }
 

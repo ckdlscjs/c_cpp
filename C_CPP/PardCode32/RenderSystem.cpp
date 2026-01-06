@@ -65,6 +65,8 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
+	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
+	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
 	OnResize(m_iWidth, m_iHeight);
 }
 
@@ -86,8 +88,6 @@ void RenderSystem::Frame(float deltatime, float elapsedtime)
 		iter->Frame(deltatime);
 	}
 #endif // _ECS
-
-	
 }
 
 void RenderSystem::PreRender(float deltatime, float elapsedtime)
@@ -95,6 +95,7 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 	std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
 	//RTV초기화
 	ClearRenderViews(0, 0.3f, 0.4f, 1);
+	SetRS_Viewport(&m_vp_BB);
 }
 
 void RenderSystem::Render(float deltatime, float elapsedtime)
@@ -168,7 +169,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::SKYBOX));
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLFRONT_CW));
+		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CCW));
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Sky>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
@@ -266,8 +267,10 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						/*if(m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
-							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());*/
+						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
+							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
+						else
+							SetGS_Shader(nullptr);
 						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
@@ -337,6 +340,10 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
+							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
+						else
+							SetGS_Shader(nullptr);
 						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
 						const std::vector<size_t>* texs = pMaterial->GetTextures();
@@ -427,13 +434,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	}
 	
 #ifdef _ECS
-	//프레임에따른 변환
-	Matrix4x4 matWorld = _CameraSystem.GetCamera(0)->GetWorldMatrix();
-	Matrix4x4 matView = _CameraSystem.GetCamera(0)->GetViewMatrix();
-	Matrix4x4 matProj = _CameraSystem.GetCamera(0)->GetProjMatrix();
-
-	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
-
 	//gizmo
 	std::function<void(const Matrix4x4& matWorld)> drawgizmo = [&](const Matrix4x4& matWorld)->void
 		{
@@ -464,99 +464,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		};
-
-	if (SkyObj)//SKYOBJ
-	{
-		{
-			SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::SKYBOX));
-			//DirectionalLight
-			m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
-
-			//PointLight
-			m_pCCBs[g_hash_cbpointlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbpointlight]->GetBuffer(), 1);
-
-			//SpotLight
-			m_pCCBs[g_hash_cbspotlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbspotlight]->GetBuffer(), 2);
-
-			//상수버퍼에 cc0(wvp mat), cc1(시간) 을 세팅한다
-			CB_WVPITMatrix cc0;
-			cc0.matWorld = GetMat_World(SkyObj->m_vScale, SkyObj->m_vRotate, SkyObj->m_vPosition);
-			cc0.matView = matView;
-			cc0.matProj = matProj;
-			cc0.matInvTrans = GetMat_InverseTranspose(cc0.matWorld);
-			m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc0);
-			SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 3);
-
-			CB_Time cc1;
-			cc1.fTime = elapsedtime;
-			m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbtime]->GetBuffer(), 4);
-
-			CB_Campos cc2;
-			cc2.vPosition = _CameraSystem.GetCamera(0)->GetPosition();
-			m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
-			SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
-
-			SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
-			SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLFRONT_CW));
-		}
-
-		for (UINT i = 0; i < SkyObj->m_Mesh_Material.size(); i++)
-		{
-			auto& iter = SkyObj->m_Mesh_Material[i];
-			Mesh<Vertex_PTN>* pMesh = _ResourceSystem.GetResource<Mesh<Vertex_PTN>>(iter.hash_mesh);
-			SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
-			SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
-
-			Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-			SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-			SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
-			SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
-
-			const std::vector<size_t>* texs = pMaterial->GetTextures();
-			int cnt = 0;
-			for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-			{
-				for (const auto& hashTX : texs[idxTex])
-				{
-					auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTX)->GetSRV()]->GetView();
-					SetPS_ShaderResourceView(pSrv, cnt++);
-				}
-			}
-			Draw_Indices(pMesh->GetRendIndices()[i].count, pMesh->GetRendIndices()[i].idx, 0);
-		}
-	}
-
-	//OBJS
-	{
-		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
-		//DirectionalLight
-		m_pCCBs[g_hash_cbdirectionalLight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(0)->GetConstant());
-		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbdirectionalLight]->GetBuffer(), 0);
-
-		//PointLight
-		m_pCCBs[g_hash_cbpointlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(1)->GetConstant());
-		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbpointlight]->GetBuffer(), 1);
-
-		//SpotLight
-		m_pCCBs[g_hash_cbspotlight]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), _LightSystem.GetLight(2)->GetConstant());
-		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbspotlight]->GetBuffer(), 2);
-
-		CB_Time cc1;
-		cc1.fTime = elapsedtime;
-		m_pCCBs[g_hash_cbtime]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc1);
-		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbtime]->GetBuffer(), 4);
-
-		CB_Campos cc2;
-		cc2.vPosition = _CameraSystem.GetCamera(0)->GetPosition();
-		m_pCCBs[g_hash_cbcampos]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cc2);
-		SetPS_ConstantBuffer(m_pCCBs[g_hash_cbcampos]->GetBuffer(), 5);
-
-		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
-		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 
 #ifdef _REFLECT
 #include "Plane.h"
@@ -1030,7 +937,8 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	m_hash_RTV_BB = CreateRenderTargetView(L"BackBufferRTV");
 	m_hash_RTV_0 = CreateRenderTargetView(L"RTV0", m_iWidth, m_iHeight);
 	m_hash_DSV_0 = CreateDepthStencilView(L"DSV0", m_iWidth, m_iHeight);
-	SetViewportSize(m_iWidth, m_iHeight);
+	//SetViewportSize(m_iWidth, m_iHeight);
+	SetViewportSize(&m_vp_BB, m_iWidth, m_iHeight);
 }
 
 void RenderSystem::SetViewportSize(UINT iWidth, UINT iHeight)
@@ -1041,6 +949,12 @@ void RenderSystem::SetViewportSize(UINT iWidth, UINT iHeight)
 	vp.MinDepth = 0.0f;
 	vp.MaxDepth = 1.0f;
 	m_pCDirect3D->GetDeviceContext()->RSSetViewports(1, &vp);
+}
+
+void RenderSystem::SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight)
+{
+	pViewport->Width = iWidth;
+	pViewport->Height = iHeight;
 }
 
 size_t RenderSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
@@ -1085,6 +999,7 @@ size_t RenderSystem::CreateShaderResourceView(const std::wstring& szName, const 
 	return hash;
 }
 
+//백버퍼 렌더타겟뷰
 size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName)
 {
 	size_t hash = Hasing_wstring(szName);
@@ -1102,26 +1017,14 @@ size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName)
 	return hash;
 }
 
+//사이즈지정 렌더타겟뷰
 size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height)
 {
 	size_t hash = Hasing_wstring(szName);
 	HRESULT hResult;
 	// 렌더 타겟 텍스처 설명을 초기화합니다.
 	ID3D11Texture2D* pBuffer;
-	D3D11_TEXTURE2D_DESC desc_tex;
-	ZeroMemory(&desc_tex, sizeof(D3D11_TEXTURE2D_DESC));
-
-	// 렌더 타겟 텍스처 설명을 설정합니다.
-	desc_tex.Width = width;
-	desc_tex.Height = height;
-	desc_tex.MipLevels = 1;
-	desc_tex.ArraySize = 1;
-	desc_tex.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-	desc_tex.SampleDesc.Count = 1;
-	desc_tex.Usage = D3D11_USAGE_DEFAULT;
-	desc_tex.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	desc_tex.CPUAccessFlags = 0;
-	desc_tex.MiscFlags = 0;
+	D3D11_TEXTURE2D_DESC desc_tex = GetTex2DDesc(E_ResourcesUsage::RTV, width, height);
 
 	// 렌더 타겟 텍스처를 만듭니다.
 	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&desc_tex, NULL, &pBuffer);
@@ -1131,11 +1034,11 @@ size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName, UINT wid
 	if (m_pCRTVs.find(hash) != m_pCRTVs.end())
 	{
 		pRTV = m_pCRTVs[hash];
-		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT);
+		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
 	}
 	else
 	{
-		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer);
+		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
 		m_pCRTVs[hash] = pRTV;
 	}
 
@@ -1143,11 +1046,11 @@ size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName, UINT wid
 	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
 	{
 		pSRV = m_pCSRVs[hash];
-		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT);
+		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
 	}
 	else
 	{
-		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT);
+		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
 		m_pCSRVs[hash] = pSRV;
 	}
 
@@ -1161,18 +1064,7 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 	//뎁스스텐실뷰에 사용할 텍스쳐버퍼 디스크립션
 	HRESULT hResult;
 	ID3D11Texture2D* pBuffer;
-	D3D11_TEXTURE2D_DESC tex_desc;
-	ZeroMemory(&tex_desc, sizeof(D3D11_TEXTURE2D_DESC));
-	tex_desc.Width = width;
-	tex_desc.Height = height;
-	tex_desc.MipLevels = 1;
-	tex_desc.ArraySize = 1;
-	tex_desc.Format = DXGI_FORMAT_R24G8_TYPELESS;							//dsv, srv에 이용하기위해 TYPELESS로이용한다
-	tex_desc.SampleDesc.Count = 1;
-	tex_desc.Usage = D3D11_USAGE_DEFAULT;
-	tex_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
-	tex_desc.CPUAccessFlags = 0;											// AccessFlag 값의 조합
-	tex_desc.MiscFlags = 0;													// 텍스처의 다양한 속성(큐브맵, 배열 등을 제어하는 기타플래그)
+	D3D11_TEXTURE2D_DESC tex_desc = GetTex2DDesc(E_ResourcesUsage::DSV, width, height);
 
 	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
 	_ASEERTION_CREATE(hResult, "DepthBuffer");
@@ -1185,7 +1077,7 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 	}
 	else
 	{
-		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer);
+		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
 		m_pCDSVs[hash] = pDSV;
 	}
 
@@ -1203,6 +1095,93 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 
 	pBuffer->Release();	//사용을 끝낸 refCount감소
 	return hash;
+}
+
+std::vector<size_t>  RenderSystem::CreateCubeMapViews(const int width, const int height)
+{
+	// 렌더타겟은 백버퍼와다르게해상도가 다르므로 뷰포트를 해당크기에맞게끔지정해 드로우콜에이용해야한다
+
+	//6(RTV), 1(SRV), 1(DSV)
+	std::vector<size_t> hashs;
+	HRESULT hResult;
+	
+	//큐브맵에 사용할 텍스쳐자원을 생성한다
+	ID3D11Texture2D* pBuffer;
+	D3D11_TEXTURE2D_DESC tex_desc = GetTex2DDesc(E_ResourcesUsage::CubeMap, width, height);
+	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
+	_ASEERTION_CREATE(hResult, "CubeMapTex");
+
+	//RTV를 생성한다(6면)
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.Format = tex_desc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+	rtvDesc.Texture2DArray.ArraySize = 1;
+	rtvDesc.Texture2DArray.MipSlice = 0;
+
+	for (int i = 0; i < 6; i++)
+	{
+		rtvDesc.Texture2DArray.FirstArraySlice = i;
+		size_t hash = Hasing_wstring(L"CubeMapRTV" + std::to_wstring(i));
+		RenderTargetView* pRTV;
+		if (m_pCRTVs.find(hash) != m_pCRTVs.end())
+		{
+			pRTV = m_pCRTVs[hash];
+			pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, tex_desc.Format);
+		}
+		else
+		{
+			pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R8G8B8A8_UNORM);
+			m_pCRTVs[hash] = pRTV;
+		}
+		hashs.push_back(hash);
+	}
+	
+	//렌더링에 사용할 SRV자원을 생성한다
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = tex_desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = -1;
+
+	size_t hash = Hasing_wstring(L"CubeMapSRV");
+	ShaderResourceView* pSRV;
+	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
+	{
+		pSRV = m_pCSRVs[hash];
+		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, tex_desc.Format);
+	}
+	else
+	{
+		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, tex_desc.Format);
+		m_pCSRVs[hash] = pSRV;
+	}
+	hashs.push_back(hash);
+
+	pBuffer->Release();	//사용을 끝낸 refCount감소
+	
+	//큐브맵에 사용할 텍스쳐자원을 생성한다(DSV)
+	tex_desc = GetTex2DDesc(E_ResourcesUsage::DSV, width, height);
+	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
+	_ASEERTION_CREATE(hResult, "CubeMapTex");
+
+	//렌더링에 사용할 DSV자원을 생성한다
+	hash = Hasing_wstring(L"CubeMapDSV");
+	DepthStencilView* pDSV;
+	if (m_pCDSVs.find(hash) != m_pCDSVs.end())
+	{
+		pDSV = m_pCDSVs[hash];
+		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+	}
+	else
+	{
+		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		m_pCDSVs[hash] = pDSV;
+	}
+	hashs.push_back(hash);
+
+	pBuffer->Release();//사용을 끝낸 refCount감소
+
+	return hashs;
 }
 
 void RenderSystem::ClearRenderViews(float red, float green, float blue, float alpha)
@@ -1295,6 +1274,11 @@ void RenderSystem::SetPS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 void RenderSystem::SetRS_RasterizerState(ID3D11RasterizerState* pState)
 {
 	m_pCDirect3D->GetDeviceContext()->RSSetState(pState);
+}
+
+void RenderSystem::SetRS_Viewport(D3D11_VIEWPORT* pViewport)
+{
+	m_pCDirect3D->GetDeviceContext()->RSSetViewports(1, pViewport);
 }
 
 void RenderSystem::SetOM_DepthStenilState(ID3D11DepthStencilState* pState, UINT stencilRef)
@@ -1465,6 +1449,15 @@ void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
+}
+
+void RenderSystem::CreateCubeMapTexture(int iSize)
+{
+	auto hashs = CreateCubeMapViews(iSize, iSize);
+	for (int i = 0; i < 6; i++)
+		m_hash_RTV_CubeMap[i] = hashs[i];
+	m_hash_SRV_CubeMap = hashs[6];
+	m_hash_DSV_CubeMap = hashs[7];
 }
 
 size_t RenderSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs)

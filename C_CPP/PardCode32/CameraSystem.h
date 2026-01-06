@@ -31,6 +31,7 @@ public:
 	*/
 	//юс╫ц
 	size_t lookup_maincam;
+	size_t lookup_cubemapcam[6];
 private:
 	ArchetypeKey m_Key;
 	

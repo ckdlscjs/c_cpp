@@ -54,9 +54,9 @@ RenderTargetView::RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapC
 	Resize(pDevice, pSwapChain);
 }
 
-RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer)
+RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
 {
-	Resize(pDevice, pBuffer, DXGI_FORMAT_R32G32B32A32_FLOAT);
+	Resize(pDevice, pBuffer, format);
 }
 
 //백버퍼기반
@@ -94,9 +94,9 @@ void RenderTargetView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D
 // DepthStencilView
 ////////////////////////////////////////////////////////////////////////////////
 
-DepthStencilView::DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer)
+DepthStencilView::DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
 {
-	Resize(pDevice, pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+	Resize(pDevice, pBuffer, format);
 }
 
 void DepthStencilView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
