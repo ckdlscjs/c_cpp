@@ -29,6 +29,14 @@ ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* p
 	Resize(pDevice, pBuffer, format);
 }
 
+ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_SHADER_RESOURCE_VIEW_DESC desc)
+{
+	HRESULT hResult;
+	// ·»´õ Å¸°Ù ºä¸¦ »ý¼ºÇÑ´Ù.
+	hResult = pDevice->CreateShaderResourceView(pBuffer, &desc, &m_pView);
+	_ASEERTION_CREATE(hResult, "SRV");
+}
+
 void ShaderResourceView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
 {
 	HRESULT hResult;
@@ -57,6 +65,14 @@ RenderTargetView::RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapC
 RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
 {
 	Resize(pDevice, pBuffer, format);
+}
+
+RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc)
+{
+	HRESULT hResult;
+	// ·»´õ Å¸°Ù ºä¸¦ »ý¼ºÇÑ´Ù.
+	hResult = pDevice->CreateRenderTargetView(pBuffer, &rtvDesc, &m_pView);
+	_ASEERTION_CREATE(hResult, "RTV");
 }
 
 //¹é¹öÆÛ±â¹Ý

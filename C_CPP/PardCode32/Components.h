@@ -79,6 +79,7 @@ struct T_Render_Sky {};
 struct T_Render_Geometry {};
 struct T_Render_Billboard {};
 struct T_Render_UI {};
+struct T_Render_Cubemap {};
 
 #ifdef _RENDERPASS
 /**

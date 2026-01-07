@@ -43,6 +43,7 @@ class ShaderResourceView : public BaseView<ID3D11ShaderResourceView>
 public:
 	ShaderResourceView(ID3D11Device* pDevice, const ScratchImage* pResource);
 	ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format);
+	ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_SHADER_RESOURCE_VIEW_DESC desc);
 	ShaderResourceView(const ShaderResourceView&) = delete;
 	ShaderResourceView& operator=(const ShaderResourceView&) = delete;
 	ShaderResourceView(ShaderResourceView&&) = delete;
@@ -55,6 +56,7 @@ class RenderTargetView : public BaseView<ID3D11RenderTargetView>
 public:
 	RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain);
 	RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format);
+	RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc);
 	RenderTargetView(const RenderTargetView&) = delete;
 	RenderTargetView& operator=(const RenderTargetView&) = delete;
 	RenderTargetView(RenderTargetView&&) = delete;

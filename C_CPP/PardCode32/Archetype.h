@@ -228,6 +228,7 @@ public:
 	size_t GetCount_Chunks() const;
 	size_t GetCount_Chunk(size_t row) const;
 	size_t GetAllChunkCount() const;
+	size_t GetLookupIdx(size_t row, size_t col) const;
 
 	size_t m_transfer_row = 0;
 	size_t m_transfer_col = 0;
@@ -386,4 +387,9 @@ inline size_t Archetype::GetAllChunkCount() const
 	const auto& chunks = m_Components.begin()->second;
 	const auto& lastchunk = chunks.back();
 	return (GetCount_Chunks() - 1) * m_ChunksCapacity + lastchunk->GetCount();
+}
+
+inline size_t Archetype::GetLookupIdx(size_t row, size_t col) const
+{
+	return m_LookupIdxs[row * m_ChunksCapacity + col];
 }

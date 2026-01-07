@@ -108,62 +108,90 @@ void AppWindow::OnCreate()
 			camera.fFar = 10000.0f;
 			_ECSSystem.AddComponent<C_Camera>(key, std::move(camera));
 		}
-		
-		//큐브맵카메라 세팅
-		{
-			Vector3 campos(0.0f, 0.0f, 0.0f);
-			float x = campos.GetX();
-			float y = campos.GetY();
-			float z = campos.GetZ();
-			Vector3 targets[6] =
-			{
-				{ x + 1.0f, y, z }, // +X
-				{ x - 1.0f, y, z }, // -X
-				{ x, y + 1.0f, z }, // +Y
-				{ x, y - 1.0f, z }, // -Y
-				{ x, y, z + 1.0f }, // +Z
-				{ x, y, z - 1.0f }  // -Z
-			};
-			UINT cubemapsize = 256;
-			_RenderSystem.CreateCubeMapTexture(cubemapsize);
+	}
 
+	//Initilze Cubemap
+	{
+		Vector3 pos(50.0f, 0.0f, 0.0f);
+		float x = pos.GetX();
+		float y = pos.GetY();
+		float z = pos.GetZ();
+		Vector3 targets[6] =
+		{
+			{ x + 1.0f, y, z }, // +X
+			{ x - 1.0f, y, z }, // -X
+			{ x, y + 1.0f, z }, // +Y
+			{ x, y - 1.0f, z }, // -Y
+			{ x, y, z + 1.0f }, // +Z
+			{ x, y, z - 1.0f }  // -Z
+		};
+		
+		Vector3 ups[6] =
+		{
+			{ 0.0f,  1.0f,  0.0f}, // +X: Up is Y
+			{ 0.0f,  1.0f,  0.0f}, // -X: Up is Y
+			{ 0.0f,  0.0f, -1.0f}, // +Y: Up is -Z (중요)
+			{ 0.0f,  0.0f,  1.0f}, // -Y: Up is +Z (중요)
+			{ 0.0f,  1.0f,  0.0f}, // +Z: Up is Y
+			{ 0.0f,  1.0f,  0.0f}  // -Z: Up is Y
+		};
+		
+		//큐브맵 텍스쳐
+		UINT cubemapsize = 256;
+		_RenderSystem.m_vp_CubeMap.Width = _RenderSystem.m_vp_CubeMap.Height = cubemapsize;
+		_RenderSystem.CreateCubeMapTexture(cubemapsize);
+
+		//pos = Vector3(50.0f, 50.0f, 0.0f);
+		//큐브맵 카메라 세팅
+		{
 			for (int idx = 0; idx < 6; idx++)
 			{
-				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, T_Camera_Cubemap>();
-				_CameraSystem.lookup_cubemapcam[idx] = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, T_Camera_Cubemap>();
+				auto campos = pos;
+				auto matView = GetMat_View(campos, targets[idx], ups[idx]);
+				auto matWorld = GetMat_Inverse(matView);
+				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera, C_Projection, T_Camera_Cubemap>();
+				_CameraSystem.lookup_cubemapcam[idx] = _ECSSystem.CreateEntity<C_Transform, C_Camera, C_Projection, T_Camera_Cubemap>();
 
-				std::bitset<256> vkmask;
-				/*vkmask['W'] = true;
-				vkmask['A'] = true;
-				vkmask['S'] = true;
-				vkmask['D'] = true;
-				vkmask['Q'] = true;
-				vkmask['E'] = true;
-				vkmask[VK_MOUSE_MOVE] = true;*/
-				_ECSSystem.AddComponent<C_Input>(key, { vkmask });
-
-				Vector3 pos = campos;
-				Vector3 dir = (targets[idx] - pos).Normalize();
-				_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quarternion(dir), pos });
-
-				std::array<unsigned char, E_Behavior::COUNT> behavior;
-				behavior[E_Behavior::MOVE_FORWARD] = 'W';
-				behavior[E_Behavior::MOVE_LEFT] = 'A';
-				behavior[E_Behavior::MOVE_BACKWARD] = 'S';
-				behavior[E_Behavior::MOVE_RIGHT] = 'D';
-				behavior[E_Behavior::MOVE_UP] = 'Q';
-				behavior[E_Behavior::MOVE_DOWN] = 'E';
-				_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+				_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, matWorld, campos});
 
 				C_Camera camera;
-				camera.fScreenWidth = m_iWidth;
-				camera.fScreenHeight = m_iHeight;
-				camera.fFov = 75.0f;
+				camera.fScreenWidth = cubemapsize;
+				camera.fScreenHeight = cubemapsize;
+				camera.fFov = 90.0f;	//큐브맵의 카메라는 90도여야한다
 				camera.fNear = 0.1f;
 				camera.fFar = 10000.0f;
 				_ECSSystem.AddComponent<C_Camera>(key, std::move(camera));
 			}
+		}
 
+		{
+			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sphere.obj");
+			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_Environment");
+			_RenderSystem.Material_SetVS(hash_material, L"VS_CubeMap.hlsl");
+			_RenderSystem.Material_SetPS(hash_material, L"PS_CubeMap.hlsl");
+			_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_CubeMap.hlsl");
+
+			std::vector<TX_HASH> tx_hashs;
+			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_SRV_CubeMap });
+			//tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter7.png", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+			std::vector<Mesh_Material> mesh_mats;
+			mesh_mats.push_back({ hash_mesh, hash_material });
+			size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_Environment", mesh_mats);
+
+			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
+			size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_Environment", hash_CLs);
+
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Cubemap>();
+
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Cubemap>();
+			_RenderSystem.m_hash_CubemapLookup = lookup;
+
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, pos });
+
+			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 	}
 

@@ -87,6 +87,7 @@ private:
 	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
 	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
+	void RenderCubemap(UINT cubemapIdx);
 
 private:
 	//API 파이프라인
@@ -154,6 +155,7 @@ public:
 	size_t												m_hash_SRV_CubeMap;
 	size_t												m_hash_DSV_CubeMap;
 	D3D11_VIEWPORT										m_vp_CubeMap;
+	size_t												m_hash_CubemapLookup;
 
 public:
 	////추후 오브젝트시스템으로분리
