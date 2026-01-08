@@ -158,6 +158,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		}
 		ClearRenderViews(0, 0.3f, 0.4f, 1);
 		SetRS_Viewport(&m_vp_BB);
+		// RTV, SRV에 사용하는 버퍼의 밉맵을 형성한다(앨리어싱처리)
 		m_pCDirect3D->GetDeviceContext()->GenerateMips(m_pCSRVs[m_hash_SRV_CubeMap]->GetView());
 	}
 	
@@ -305,7 +306,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		std::cout << "렌더링된객체수 : " << renderCnt << '\n';
 	}
 
-	//Render CubeMap
+	//Render RTV_CubeMap
 	{
 		SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
@@ -360,10 +361,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						{
 							for (const auto& hashTx : texs[idxTex])
 							{
-								auto pSrv = m_pCSRVs[hashTx]->GetView();
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
+						SetPS_ShaderResourceView(m_pCSRVs[_RenderSystem.m_hash_SRV_CubeMap]->GetView(), cnt++);
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
@@ -1111,27 +1113,37 @@ size_t RenderSystem::CreateRenderTargetView(const std::wstring& szName, UINT wid
 	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&desc_tex, NULL, &pBuffer);
 	_ASEERTION_CREATE(hResult, "Buffer");
 
+	D3D11_RENDER_TARGET_VIEW_DESC desc_rtv;
+	desc_rtv.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	desc_rtv.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	desc_rtv.Texture2D.MipSlice = 0;
+
 	RenderTargetView* pRTV;
 	if (m_pCRTVs.find(hash) != m_pCRTVs.end())
 	{
 		pRTV = m_pCRTVs[hash];
-		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
+		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_rtv);
 	}
 	else
 	{
-		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
+		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, desc_rtv);
 		m_pCRTVs[hash] = pRTV;
 	}
 
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc_srv;
+	desc_srv.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	desc_srv.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	desc_srv.Texture2D.MostDetailedMip = 0;
+	desc_srv.Texture2D.MipLevels = 1;
 	ShaderResourceView* pSRV;
 	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
 	{
 		pSRV = m_pCSRVs[hash];
-		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
+		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
 	}
 	else
 	{
-		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc_tex.Format);
+		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
 		m_pCSRVs[hash] = pSRV;
 	}
 
@@ -1150,27 +1162,37 @@ size_t RenderSystem::CreateDepthStencilView(const std::wstring& szName, UINT wid
 	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
 	_ASEERTION_CREATE(hResult, "DepthBuffer");
 
+	D3D11_DEPTH_STENCIL_VIEW_DESC desc_dsv;
+	ZeroMemory(&desc_dsv, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	desc_dsv.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;													//깊이맵은 D24_UNROM_S8_UINT가정석
+	desc_dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	desc_dsv.Texture2D.MipSlice = 0;
 	DepthStencilView* pDSV;
 	if (m_pCDSVs.find(hash) != m_pCDSVs.end())
 	{
 		pDSV = m_pCDSVs[hash];
-		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_dsv);
 	}
 	else
 	{
-		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, desc_dsv);
 		m_pCDSVs[hash] = pDSV;
 	}
 
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc_srv;
+	desc_srv.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	desc_srv.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	desc_srv.Texture2D.MostDetailedMip = 0;
+	desc_srv.Texture2D.MipLevels = 1;
 	ShaderResourceView* pSRV;
 	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
 	{
 		pSRV = m_pCSRVs[hash];
-		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
 	}
 	else
 	{
-		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_R24_UNORM_X8_TYPELESS);
+		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
 		m_pCSRVs[hash] = pSRV;
 	}
 
@@ -1189,7 +1211,7 @@ std::vector<size_t>  RenderSystem::CreateCubeMapViews(const int width, const int
 	
 	//큐브맵에 사용할 텍스쳐자원을 생성한다
 	ID3D11Texture2D* pBuffer;
-	D3D11_TEXTURE2D_DESC tex_desc = GetTex2DDesc(E_ResourcesUsage::CubeMap, width, height);
+	D3D11_TEXTURE2D_DESC tex_desc = GetTex2DDesc(E_ResourcesUsage::RTV_CubeMap, width, height);
 	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
 	_ASEERTION_CREATE(hResult, "CubeMapTex");
 
@@ -1232,8 +1254,79 @@ std::vector<size_t>  RenderSystem::CreateCubeMapViews(const int width, const int
 
 	//렌더링에 사용할 DSV자원을 생성한다
 	hash = Hasing_wstring(L"CubeMapDSV");
+	D3D11_DEPTH_STENCIL_VIEW_DESC desc_dsv;
+	ZeroMemory(&desc_dsv, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	desc_dsv.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;													//깊이맵은 D24_UNROM_S8_UINT가정석
+	desc_dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	desc_dsv.Texture2D.MipSlice = 0;
 	DepthStencilView* pDSV;
-	pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, DXGI_FORMAT_D24_UNORM_S8_UINT);
+	pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, desc_dsv);
+	m_pCDSVs[hash] = pDSV;
+	hashs.push_back(hash);
+
+	pBuffer->Release();//사용을 끝낸 refCount감소
+
+	return hashs;
+}
+
+//기하셰이더를 이용한 입방체맵의 생성
+std::vector<size_t> RenderSystem::CreateCubeMapView(const int width, const int height)
+{
+	// 렌더타겟은 백버퍼와다르게해상도가 다르므로 뷰포트를 해당크기에맞게끔지정해 드로우콜에이용해야한다
+	//1(RTV), 1(SRV), 1(DSV)
+	std::vector<size_t> hashs;
+	size_t hash;
+	HRESULT hResult;
+
+	//큐브맵에 사용할 텍스쳐자원을 생성한다
+	ID3D11Texture2D* pBuffer;
+	D3D11_TEXTURE2D_DESC tex_desc = GetTex2DDesc(E_ResourcesUsage::RTV_CubeMap, width, height);
+	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
+	_ASEERTION_CREATE(hResult, "CubeMapRTV,SRV Tex");
+
+	//RTV를 생성한다(6면)
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	rtvDesc.Format = tex_desc.Format;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+	rtvDesc.Texture2DArray.FirstArraySlice = 0;
+	rtvDesc.Texture2DArray.ArraySize = 6;
+	rtvDesc.Texture2DArray.MipSlice = 0;
+	hash = Hasing_wstring(L"CubeMapRTV");
+	RenderTargetView* pRTV;
+	pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, rtvDesc);
+	m_pCRTVs[hash] = pRTV;
+	hashs.push_back(hash);
+
+	//렌더링에 사용할 SRV자원을 생성한다
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	srvDesc.Format = tex_desc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+	srvDesc.TextureCube.MostDetailedMip = 0;
+	srvDesc.TextureCube.MipLevels = -1;
+
+	hash = Hasing_wstring(L"CubeMapSRV");
+	ShaderResourceView* pSRV;
+	pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, srvDesc);
+	m_pCSRVs[hash] = pSRV;
+	hashs.push_back(hash);
+
+	pBuffer->Release();	//사용을 끝낸 refCount감소
+
+	//큐브맵에 사용할 텍스쳐자원을 생성한다(DSV)
+	tex_desc = GetTex2DDesc(E_ResourcesUsage::DSV_CubeMap, width, height);
+	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&tex_desc, nullptr, &pBuffer);
+	_ASEERTION_CREATE(hResult, "CubeMapDSV Tex");
+
+	//렌더링에 사용할 DSV자원을 생성한다
+	hash = Hasing_wstring(L"CubeMapDSV");
+	D3D11_DEPTH_STENCIL_VIEW_DESC desc_dsv;
+	ZeroMemory(&desc_dsv, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	desc_dsv.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;													//깊이맵은 D24_UNROM_S8_UINT가정석
+	desc_dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+	desc_dsv.Texture2DArray.ArraySize = 6;
+	desc_dsv.Texture2D.MipSlice = 0;
+	DepthStencilView* pDSV;
+	pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, desc_dsv);
 	m_pCDSVs[hash] = pDSV;
 	hashs.push_back(hash);
 

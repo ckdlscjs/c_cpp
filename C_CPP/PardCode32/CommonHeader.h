@@ -112,7 +112,8 @@ enum class E_ResourcesUsage
 	TextureMap,
 	RTV,
 	DSV,
-	CubeMap,
+	RTV_CubeMap,
+	DSV_CubeMap,
 };
 
 inline D3D11_TEXTURE2D_DESC& GetTex2DDesc(E_ResourcesUsage usage, UINT width, UINT height)
@@ -184,12 +185,21 @@ Format (무엇을 담는가?)
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
 		}break;
 
-		case E_ResourcesUsage::CubeMap :
+		case E_ResourcesUsage::RTV_CubeMap :
 		{
 			desc.MipLevels = 0;
 			desc.ArraySize = 6;
 			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
+		}break;
+
+		case E_ResourcesUsage::DSV_CubeMap:
+		{
+			desc.MipLevels = 1;
+			desc.ArraySize = 6;
+			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
 		}break;
 	}

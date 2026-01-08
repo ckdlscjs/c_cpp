@@ -24,31 +24,16 @@ ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, const ScratchImage
 }
 
 //버퍼 기반의 SRV생성
-ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
+ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc)
 {
-	Resize(pDevice, pBuffer, format);
+	Resize(pDevice, pBuffer, srvDesc);
 }
 
-ShaderResourceView::ShaderResourceView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_SHADER_RESOURCE_VIEW_DESC desc)
+void ShaderResourceView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc)
 {
 	HRESULT hResult;
 	// 렌더 타겟 뷰를 생성한다.
-	hResult = pDevice->CreateShaderResourceView(pBuffer, &desc, &m_pView);
-	_ASEERTION_CREATE(hResult, "SRV");
-}
-
-void ShaderResourceView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
-{
-	HRESULT hResult;
-	// 셰이더 리소스 뷰의 설명을 설정합니다.
-	D3D11_SHADER_RESOURCE_VIEW_DESC desc_srv;
-	desc_srv.Format = format;
-	desc_srv.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	desc_srv.Texture2D.MostDetailedMip = 0;
-	desc_srv.Texture2D.MipLevels = 1;
-
-	// 셰이더 리소스 뷰를 만듭니다.
-	hResult = pDevice->CreateShaderResourceView(pBuffer, &desc_srv, &m_pView);
+	hResult = pDevice->CreateShaderResourceView(pBuffer, &srvDesc, &m_pView);
 	_ASEERTION_CREATE(hResult, "SRV");
 }
 
@@ -62,17 +47,9 @@ RenderTargetView::RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapC
 	Resize(pDevice, pSwapChain);
 }
 
-RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
-{
-	Resize(pDevice, pBuffer, format);
-}
-
 RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc)
 {
-	HRESULT hResult;
-	// 렌더 타겟 뷰를 생성한다.
-	hResult = pDevice->CreateRenderTargetView(pBuffer, &rtvDesc, &m_pView);
-	_ASEERTION_CREATE(hResult, "RTV");
+	Resize(pDevice, pBuffer, rtvDesc);
 }
 
 //백버퍼기반
@@ -91,18 +68,11 @@ void RenderTargetView::Resize(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
 }
 
 //버퍼기반
-void RenderTargetView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
+void RenderTargetView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc)
 {
 	HRESULT hResult;
-
-	// 렌더 타겟 뷰의 설명을 설정합니다.
-	D3D11_RENDER_TARGET_VIEW_DESC desc_rtv;
-	desc_rtv.Format = format;
-	desc_rtv.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	desc_rtv.Texture2D.MipSlice = 0;
-
 	// 렌더 타겟 뷰를 생성한다.
-	hResult = pDevice->CreateRenderTargetView(pBuffer, &desc_rtv, &m_pView);
+	hResult = pDevice->CreateRenderTargetView(pBuffer, &rtvDesc, &m_pView);
 	_ASEERTION_CREATE(hResult, "RTV");
 }
 
@@ -110,22 +80,14 @@ void RenderTargetView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D
 // DepthStencilView
 ////////////////////////////////////////////////////////////////////////////////
 
-DepthStencilView::DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
+DepthStencilView::DepthStencilView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc)
 {
-	Resize(pDevice, pBuffer, format);
+	Resize(pDevice, pBuffer, dsvDesc);
 }
 
-void DepthStencilView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, DXGI_FORMAT format)
+void DepthStencilView::Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc)
 {
 	HRESULT hResult;
-
-	D3D11_DEPTH_STENCIL_VIEW_DESC desc_dsv;
-	ZeroMemory(&desc_dsv, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-	desc_dsv.Format = format;													//깊이맵은 D24_UNROM_S8_UINT가정석
-	desc_dsv.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	desc_dsv.Texture2D.MipSlice = 0;
-	hResult = pDevice->CreateDepthStencilView(pBuffer, &desc_dsv, &m_pView);	//해당버퍼를 이용하여 깊이스텐실 뷰를 생성	
+	hResult = pDevice->CreateDepthStencilView(pBuffer, &dsvDesc, &m_pView);	//해당버퍼를 이용하여 깊이스텐실 뷰를 생성	
 	_ASEERTION_CREATE(hResult, "DSV");
 }
-
-

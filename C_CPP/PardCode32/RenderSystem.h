@@ -87,6 +87,7 @@ private:
 	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
 	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
+	std::vector<size_t> CreateCubeMapView(const int width, const int height);
 	void RenderCubemap(UINT cubemapIdx);
 
 private:
@@ -151,6 +152,7 @@ public:
 	size_t												m_hash_DSV_0;
 	D3D11_VIEWPORT										m_vp_BB;
 
+	//큐브맵 렌더링을 위한 변수들
 	size_t												m_hash_RTV_CubeMap[6];
 	size_t												m_hash_SRV_CubeMap;
 	size_t												m_hash_DSV_CubeMap;
