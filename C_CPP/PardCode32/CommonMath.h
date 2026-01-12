@@ -333,6 +333,10 @@ inline Matrix4x4 GetMat_Reflect(const Vector4& plane)
 
 /*
 * 스크린좌표행렬
+* [스크린 좌표 행렬 (Viewport Matrix)]
+* - (0.0, 0.0) ~ (width, height) (픽셀 단위)
+* - GPU 하드웨어가 3D 점을 실제 모니터의 어느 '픽셀'에 점을 찍을지 결정할 때 사용.
+* - 윈도우 창 크기(w, h)에 직접적으로 의존합니다.
 * w/2.0f			0.0f			0.0f				0.0f
 * 0.0f				-h/2.0f			0.0f				0.0f
 * 0.0f				0.0f			MaxDepth-MinDepth	0.0f
@@ -345,6 +349,22 @@ inline Matrix4x4 GetMat_ScreenSpace(float width, float height, float left = 0.0f
 	mat[1] = Vector4(0.0f, -height / 2.0f, 0.0f, 0.0f);
 	mat[2] = Vector4(0.0f, 0.0f, depth_max - depth_min, 0.0f);
 	mat[3] = Vector4(width / 2.0f + left, height / 2.0f + top, depth_min, 1.0f);
+	return mat;
+}
+
+/*
+* NDC(-1 ~ 1) to TextureSpace
+* [텍스처 변환 행렬 (Bias Matrix)]
+* - (0.0, 0.0) ~ (1.0, 1.0)
+* - 쉐이더 코드 내부에서 `Texture.Sample(uv)`를 호출하기 위한 좌표 생성.
+*/
+inline Matrix4x4 GetMat_TextureSpace()
+{
+	Matrix4x4 mat;
+	mat[0] = Vector4(0.5f, 0.0f, 0.0f, 0.0f);
+	mat[1] = Vector4(0.0f, -0.5f, 0.0f, 0.0f);
+	mat[2] = Vector4(0.0f, 0.0f, 1.0f, 0.0f);
+	mat[3] = Vector4(0.5f, 0.5f, 0.0f, 1.0f);
 	return mat;
 }
 
