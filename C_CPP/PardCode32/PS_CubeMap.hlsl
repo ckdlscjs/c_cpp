@@ -1,6 +1,7 @@
 #include "PS_Lights.hlsli"
 
 Texture2D Texture : register(t0);               //psset으로세팅하였다
+Texture2D ShadowMapTexture : register(t6); //psset으로세팅하였다
 TextureCube CubeTexture : register(t1);         //psset으로세팅하였다
 SamplerState TextureSampler : register(s0);     //세팅하지않아도 기본샘플러가 레지스터0에 세팅된다
 
@@ -26,5 +27,8 @@ float4 psmain(PS_INPUT input) : SV_Target
     float3 V = normalize(campos - P);               //시점을향하는벡터
     float3 incident = -V;                           //시점에서 픽셀을 향하는벡터
     float3 reflectionV = reflect(incident, N);      //픽셀을기준으로 반사벡터를 계산해 texuv로활용
-    return DirectionalLight(L, N, R, V) * Texture.Sample(TextureSampler, input.tex0.xy) * CubeTexture.Sample(TextureSampler, reflectionV);
+    
+    Calc_DL DL = DirectionalLight(L, N, R, V);
+    float4 intensity = DL.intensity.Ambient + DL.intensity.Diffuse + DL.intensity.Specular;
+    return intensity * Texture.Sample(TextureSampler, input.tex0.xy) * CubeTexture.Sample(TextureSampler, reflectionV);
 }

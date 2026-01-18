@@ -68,10 +68,13 @@ public:
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 	
 	void CreateCubeMapTexture(int iSize);
+	size_t CreateShadowMapTexture(const int width, const int height);
+
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
 	const ColliderAsset* GetColliderAsset(size_t hash);
+
 private:
 	//API리소스 생성
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
@@ -88,7 +91,6 @@ private:
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
 	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
 	std::vector<size_t> CreateCubeMapView(const int width, const int height);
-	void RenderCubemap(UINT cubemapIdx);
 
 private:
 	//API 파이프라인
@@ -119,6 +121,18 @@ private:
 	void Draw_Vertices(UINT vertexCount, UINT startIdx);
 	void Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset);
 	void SwapchainPresent(bool vsync);
+
+	//RenderPass
+private:
+	void RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderCubeMap();
+	void RenderCubeMapTexture(UINT cubemapIdx);
+	void RenderUI(const Matrix4x4& matOrtho);
+
 private:
 	UINT m_iWidth = 800;
 	UINT m_iHeight = 600;
@@ -159,14 +173,11 @@ public:
 	D3D11_VIEWPORT										m_vp_CubeMap;
 	size_t												m_hash_CubemapLookup;
 
+	//그림자맵 렌더링을 위한 변수들
+	size_t												m_hash_DSV_ShadowMap;
+	size_t												m_hash_Mat_ShadowMap;
+
 public:
-	////추후 오브젝트시스템으로분리
-	//TempObj* SkyObj;
-	//TempObj* Gizmo;
-	//TempObj* SpaceShip;
-	//TempObj* ReflectPlane;
-	//std::vector<TempObj*> objs;
-	//std::vector<TempObj*> ortho_objs;
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()

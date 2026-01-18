@@ -106,7 +106,6 @@ enum class E_InputLayout
 * 
 */
 
-
 enum class E_ResourcesUsage
 {
 	TextureMap,
@@ -206,14 +205,14 @@ Format (무엇을 담는가?)
 
 	return desc;
 }
-//enum class E_RenderPass
-//{
-//	FORWARD_PASS,
-//	DEFERRED_PASS,
-//	UI_PASS,
-//	SHADOW_PASS,
-//	COUNT
-//};
+
+enum class E_RenderPass
+{
+	FORWARD_PASS,
+	DEFERRED_PASS,
+	SHADOW_PASS,
+	COUNT
+};
 
 
 //Resources data struct
@@ -588,6 +587,14 @@ struct CB_WVPITMatrix
 	Matrix4x4 matView;
 	Matrix4x4 matProj;
 	Matrix4x4 matInvTrans;
+};
+
+__declspec(align(16))
+struct CB_LightMatrix
+{
+	Matrix4x4 matLightView;
+	Matrix4x4 matLightProj;
+	Vector4	vPos;
 };
 
 __declspec(align(16))

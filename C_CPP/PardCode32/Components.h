@@ -75,11 +75,6 @@ public:
 	bool bRenderable = false;
 	size_t hash_ra = 0;
 };
-struct T_Render_Sky {};
-struct T_Render_Geometry {};
-struct T_Render_Billboard {};
-struct T_Render_UI {};
-struct T_Render_Cubemap {};
 
 #ifdef _RENDERPASS
 /**
@@ -143,6 +138,13 @@ struct T_Render_StencilOnly {};
 struct T_Render_DeferredLight {};
 #endif // _GUBFFER
 
+struct T_Render_Sky {};
+struct T_Render_Geometry {};
+struct T_Render_Billboard {};
+struct T_Render_UI {};
+struct T_Render_CubeMap {};
+struct T_Render_ShadowMap {};
+
 
 struct C_Light
 {
@@ -151,6 +153,12 @@ public:
 	Vector4 vDiffuse;
 	Vector4 vSpecular;
 	float fShiness;
+};
+
+struct C_Light_Direction
+{
+public:
+	Vector3 dir;
 };
 
 struct C_Light_Attenuation

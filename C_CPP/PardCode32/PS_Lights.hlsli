@@ -21,22 +21,34 @@ cbuffer Light_Directional : register(b0)
     float ld_shiness;           //광택도
 };
 
-float4 DirectionalLight(float3 L, float3 N, float3 R, float3 V)
+struct LightIntensity
 {
-    float4 D_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 D_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 D_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    float4 Ambient;
+    float4 Diffuse;
+    float4 Specular;
+};
+
+struct Calc_DL
+{
+    LightIntensity intensity;
+};
+
+//D_A + D_D + D_S
+Calc_DL DirectionalLight(float3 L, float3 N, float3 R, float3 V)
+{
+    Calc_DL ret;
     //ambient
-    D_A = ld_ambient;
+    ret.intensity.Ambient = ld_ambient;
     
     //diffuse
     float Kd = max(dot(L, N), 0.0f);                    //max(L dot N, 0)  //일치도내적결과
-    D_D = Kd * ld_diffuse;
+    ret.intensity.Diffuse = Kd * ld_diffuse;
 
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), ld_shiness);   //반사벡터와 시점벡터의 일치도를 구해서 표면의 광택도로 지수승하여 구한다
-    D_S = Kd * Ks * ld_specular;                        //Kd, 즉 표면에서의 내적결과를 곱해 올바른 내적결과인지를 반영시킨다
-    return D_A + D_D + D_S;
+    ret.intensity.Specular = Kd * Ks * ld_specular; //Kd, 즉 표면에서의 내적결과를 곱해 올바른 내적결과인지를 반영시킨다
+   
+    return ret;
 }
 
 /*
@@ -69,25 +81,31 @@ cbuffer Light_Point : register(b1)
     float lp_range;         //도달범위
 };
 
-float4 PointLight(float3 L, float D, float3 N, float3 R, float3 V)
+struct Calc_PL
 {
-    float4 P_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 P_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 P_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    LightIntensity intensity;
+    float attenuation;
+};
+
+ //P_A + (P_D + P_S) * att
+Calc_PL PointLight(float3 L, float D, float3 N, float3 R, float3 V)
+{
+    Calc_PL ret;
     float ratioD = D / lp_range;
     //ambient
-    P_A = lp_ambient;
+    ret.intensity.Ambient = lp_ambient;
     
     //diffuse,
     float Kd = max(dot(L, N), 0.0f);                    //max(L dot N, 0)
-    P_D = Kd * lp_diffuse;
+    ret.intensity.Diffuse = Kd * lp_diffuse;
     
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), lp_shiness);
-    P_S = Kd * Ks * lp_specular;
+    ret.intensity.Specular = Kd * Ks * lp_specular;
     
-    float att = 1.0f / dot(float3(lp_att_a0, lp_att_a1, lp_att_a2), float3(1.0f, ratioD, ratioD * ratioD)); //감쇠계산, a0 + a1d + a2d^2
-    return P_A + (P_D + P_S) * att; //Ambient는 그냥 발산된다
+    ret.attenuation = 1.0f / dot(float3(lp_att_a0, lp_att_a1, lp_att_a2), float3(1.0f, ratioD, ratioD * ratioD)); //감쇠계산, a0 + a1d + a2d^2
+    
+    return ret;
 }
 
 /*
@@ -130,22 +148,28 @@ cbuffer Light_Spot : register(b2)
     float ls_padd2;         //패딩값
 };
 
-float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
+struct Calc_SL
 {
-    float4 S_A = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 S_D = float4(0.0f, 0.0f, 0.0f, 0.0f);
-    float4 S_S = float4(0.0f, 0.0f, 0.0f, 0.0f);
+    LightIntensity intensity;
+    float attenuation;
+    float spot;
+};
+
+//(S_A + (S_D + S_S) * att) * spot
+Calc_SL SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
+{
+    Calc_SL ret;
     float ratioD = D / ls_range;
     //ambient
-    S_A = ls_ambient;
+    ret.intensity.Ambient = ls_ambient;
     
     //diffuse,
     float Kd = max(dot(L, N), 0.0f); //max(L dot N, 0)
-    S_D = Kd * ls_diffuse;
+    ret.intensity.Diffuse = Kd * ls_diffuse;
     
     //specular
     float Ks = pow(max(dot(R, V), 0.0f), ls_shiness);
-    S_S = Kd * Ks * ls_specular;
+    ret.intensity.Specular = Kd * Ks * ls_specular;
     
     //spot
     float match = max(dot(normalize(ls_dir), -L), 0.0f);
@@ -159,7 +183,8 @@ float4 SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
         val = (match - ls_cosOuter) / (ls_cosInner - ls_cosOuter);
     */
     val = saturate((match - ls_cosOuter) / (ls_cosInner - ls_cosOuter)); //saturate, 0~1, same
-    float spot = pow(val, ls_spot); //일치도를 기반으로 스팟값을 지수승화
-    float att = 1.0f / dot(float3(ls_att_a0, ls_att_a1, ls_att_a2), float3(1.0f, ratioD, ratioD * ratioD));
-    return (S_A + (S_D + S_S) * att) * spot;
+    ret.spot = pow(val, ls_spot); //일치도를 기반으로 스팟값을 지수승화
+    ret.attenuation = 1.0f / dot(float3(ls_att_a0, ls_att_a1, ls_att_a2), float3(1.0f, ratioD, ratioD * ratioD));
+ 
+    return ret;
 }

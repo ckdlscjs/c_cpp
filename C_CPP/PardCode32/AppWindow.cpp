@@ -7,7 +7,6 @@
 #include "LightSystem.h"
 #include "TimerSystem.h"
 #include "CollisionSystem.h"
-#include "Material.h"			//mtl텍스쳐로딩을위한 임시임포트
 #include "GeometryGenerator.h"
 #include "ECSSystem.h"
 #include "BehaviorSystem.h"
@@ -113,15 +112,29 @@ void AppWindow::OnCreate()
 	//Light Initialize
 	{
 		//Directional Light
+#ifdef _MoveDirecionalLight
 		{
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, T_Light_Directional>();
-			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Transform, C_Light, T_Light_Directional>();
-
-			Vector3 dir = Vector3(0.0f, -1.0f, 1.0f).Normalize();
-			_ECSSystem.AddComponent<C_Transform>(key, { {}, Quarternion(dir), {} });
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Light, C_Light_Direction, T_Light_Directional>();
+			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
+			
+			size_t lookup_maincam = _CameraSystem.lookup_maincam;
+			const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
+			Vector3 dir = -c_cam_transform.vPosition;
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Light_Direction>(key, { dir.Normalize()});
 		}
-		
+#endif // _MoveDirecionalLight
+
+#ifndef _MoveDirecionalLight
+		{
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Light, C_Light_Direction, T_Light_Directional>();
+			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
+
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Light_Direction>(key, { Vector3(0.0f, -1.0f, 1.0f) });
+		}
+#endif // !_MoveDirecionalLight
+
 		//Point Light
 		{
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
@@ -295,7 +308,7 @@ void AppWindow::OnCreate()
 			}
 		}
 
-		//Normal Map
+#ifdef _NORMALMAP
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/sphere.obj");
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_NormalMapping");
@@ -324,8 +337,9 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
+#endif // _NORMALMAP
 
-		//house
+#ifdef _HOUSE
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/house.obj");
 			std::vector<size_t> hash_materials = _RenderSystem.CreateMaterialsFromFile<Vertex_PTN>(L"../Assets/Meshes/house.mtl");
@@ -361,14 +375,15 @@ void AppWindow::OnCreate()
 
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 0.0f, 0.0f), {150.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {150.0f, 0.0f, 50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
+#endif // _HOUSE
 
-		//sponza
+#ifdef _SPONZA
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/sponza_basic.obj");
 			std::vector<size_t> hash_materials = _RenderSystem.CreateMaterialsFromFile<Vertex_PTN>(L"../Assets/Meshes/sponza_basic.mtl");
@@ -413,7 +428,40 @@ void AppWindow::OnCreate()
 
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
+
+			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+		}
+#endif // _SPONZA
+		
+		//floor
+		{
+			std::vector<std::vector<Vector3>> points;
+			std::vector<Vertex_PTN> vertices;
+			std::vector<UINT> indices;
+			GeometryGenerate_Plane(points, vertices, indices);
+			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"floor", std::move(points), std::move(vertices), std::move(indices));
+			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_floor");
+			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
+			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
+
+			std::vector<TX_HASH> tx_hashs;
+			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter8.png", WIC_FLAGS_IGNORE_SRGB) });
+			_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+			std::vector<Mesh_Material> mesh_mats;
+			mesh_mats.push_back({ hash_mesh, hash_material });
+			size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_floor", mesh_mats);
+
+			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::AABB);
+			size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_floor", hash_CLs);
+
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+
+			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quarternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -451,7 +499,6 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
-
 #ifdef _NENE
 		{
 			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/nene.obj");
@@ -528,6 +575,7 @@ void AppWindow::OnCreate()
 #endif // _MECHAGIRL
 	}
 
+#ifdef _EnviornmentMap
 	//Initilze Cubemap
 	{
 		Vector3 pos(50.0f, 0.0f, 0.0f);
@@ -600,9 +648,9 @@ void AppWindow::OnCreate()
 			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
 			size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_Environment", hash_CLs);
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Cubemap>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Cubemap>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
 			_RenderSystem.m_hash_CubemapLookup = lookup;
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {0.0f, 0.0f, 0.0f}, pos });
@@ -611,6 +659,19 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
+	}
+	
+
+#endif //_EnvironmentMap
+
+	//ShadowMap
+	{
+		_RenderSystem.m_hash_DSV_ShadowMap = _RenderSystem.CreateShadowMapTexture(m_iWidth, m_iHeight);
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PT>(L"Mat_ShadowMap");
+		_RenderSystem.Material_SetVS(hash_material, L"VS_ShadowMap.hlsl");
+		_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_ShadowMap.hlsl");
+		_RenderSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
+		_RenderSystem.m_hash_Mat_ShadowMap = hash_material;
 	}
 
 	//Initialize RTV, DSV
@@ -649,7 +710,9 @@ void AppWindow::OnCreate()
 			_RenderSystem.Material_SetIL<Vertex_PT>(hash_material, L"VS_PT.hlsl");
 
 			std::vector<TX_HASH> tx_hashs;
-			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_0 });
+			//_RenderSystem.m_hash_DSV_ShadowMap
+			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_ShadowMap });
+			//tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_0 });
 			_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });

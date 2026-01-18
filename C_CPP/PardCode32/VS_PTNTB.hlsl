@@ -17,7 +17,7 @@ struct VS_OUTPUT
     float4 pos1 : WORLDP0;
 };
 
-cbuffer CB_WVPIT : register(b3)
+cbuffer CB_WVPIT : register(b0)
 {
     row_major float4x4 matWorld;
     row_major float4x4 matView;

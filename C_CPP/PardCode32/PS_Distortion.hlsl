@@ -1,4 +1,5 @@
 Texture2D Texture : register(t0); //psset으로세팅하였다
+Texture2D ShadowMapTexture : register(t6); //psset으로세팅하였다
 sampler TextureSampler : register(s0); //세팅하지않아도 기본샘플러가 레지스터0에 세팅된다
 
 struct PS_INPUT

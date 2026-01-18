@@ -11,10 +11,13 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	//	D3D11_DEPTH_WRITE_MASK DepthWriteMask;	// 깊이 버퍼에 값 쓰기 활성화 마스크
 	//	D3D11_COMPARISON_FUNC DepthFunc;		// 깊이 테스트 비교 함수
 
+
+	// 스텐실버퍼는 비트마스킹 값을 이용해서 결과만을 남긴다, 이를이용해 OMSET에서 마스킹값을 지정하고 비교연산자(OP)를 이용해 사용한다
 	//	BOOL StencilEnable;						// 스텐실 테스트 활성화 여부
 	//	UINT8 StencilReadMask;					// 스텐실 버퍼 읽기 마스크
 	//	UINT8 StencilWriteMask;					// 스텐실 버퍼 쓰기 마스크
 
+	
 	//	D3D11_DEPTH_STENCILOP_DESC FrontFace;	// 앞면(Front-Facing) 폴리곤 스텐실 설정
 	//	D3D11_DEPTH_STENCILOP_DESC BackFace;	// 뒷면(Back-Facing) 폴리곤 스텐실 설정
 	//} D3D11_DEPTH_STENCIL_DESC;

@@ -10,7 +10,7 @@ struct VS_OUTPUT
     float4 color0 : COLOR0;
 };
 
-cbuffer CB_WVP : register(b3)
+cbuffer CB_WVP : register(b0)
 {
     row_major float4x4 matWorld;
     row_major float4x4 matView;
