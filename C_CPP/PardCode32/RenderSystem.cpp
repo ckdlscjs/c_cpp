@@ -159,7 +159,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		Vector4 pos = -lightDir.dir * 5000.0f;
 		cb_lightMat.matLightView = GetMat_View(pos.ToVector3(), lightDir.dir);
 
-		cb_lightMat.matLightProj = GetMat_Orthographic(c_cam.fScreenWidth, c_cam.fScreenHeight, c_cam.fNear, c_cam.fFar);
+		cb_lightMat.matLightProj = GetMat_Orthographic(c_cam.fScreenWidth, c_cam.fScreenHeight, c_cam.fNear, 10000.0f);
 		cb_lightMat.vPos = pos;
 	}
 	m_pCCBs[g_hash_cblightmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_lightMat);
@@ -1089,6 +1089,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 	SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::POINT_CLAMP_COMPARISON), 6);
 	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);

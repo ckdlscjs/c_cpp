@@ -34,7 +34,7 @@ struct Calc_DL
 };
 
 //D_A + D_D + D_S
-Calc_DL DirectionalLight(float3 L, float3 N, float3 R, float3 V)
+Calc_DL DirectionalLight(in float3 L, in float3 N, in float3 R, in float3 V)
 {
     Calc_DL ret;
     //ambient
@@ -88,7 +88,7 @@ struct Calc_PL
 };
 
  //P_A + (P_D + P_S) * att
-Calc_PL PointLight(float3 L, float D, float3 N, float3 R, float3 V)
+Calc_PL PointLight(in float3 L, in float D, in float3 N, in float3 R, in float3 V)
 {
     Calc_PL ret;
     float ratioD = D / lp_range;
@@ -156,7 +156,7 @@ struct Calc_SL
 };
 
 //(S_A + (S_D + S_S) * att) * spot
-Calc_SL SpotLight(float3 L, float D, float3 N, float3 R, float3 V)
+Calc_SL SpotLight(in float3 L, in float D, in float3 N, in float3 R, in float3 V)
 {
     Calc_SL ret;
     float ratioD = D / ls_range;

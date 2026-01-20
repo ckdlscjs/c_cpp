@@ -39,6 +39,7 @@ enum class E_Sampler
 	LINEAR_WRAP,
 	ANISOTROPIC_WRAP,
 	POINT_CLAMP,
+	POINT_CLAMP_COMPARISON,
 	// 새롭게 추가된 샘플러 상태들
 	//LINEAR_CLAMP,
 	//ANISOTROPIC_CLAMP,
@@ -115,7 +116,7 @@ enum class E_ResourcesUsage
 	DSV_CubeMap,
 };
 
-inline D3D11_TEXTURE2D_DESC& GetTex2DDesc(E_ResourcesUsage usage, UINT width, UINT height)
+inline D3D11_TEXTURE2D_DESC GetTex2DDesc(E_ResourcesUsage usage, UINT width, UINT height)
 {
 /*
 Usage (어떻게 갱신하는가?)
@@ -151,7 +152,7 @@ Format (무엇을 담는가?)
 	UINT MiscFlags;
 */
 	//기본초기화, static
-	static D3D11_TEXTURE2D_DESC desc;
+	D3D11_TEXTURE2D_DESC desc;
 	desc.Width = width;
 	desc.Height = height;
 	desc.MipLevels = 1;

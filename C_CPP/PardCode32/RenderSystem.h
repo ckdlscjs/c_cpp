@@ -59,6 +59,8 @@ public:
 	size_t CreateMaterial(const std::wstring& szFilePath);
 	template<typename T>
 	std::vector<size_t> CreateMaterialsFromFile(const std::wstring& szFilePath);
+	void CreateCubeMapTexture(int iSize);
+	size_t CreateShadowMapTexture(const int width, const int height);
 
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
 	template<typename T>
@@ -67,9 +69,6 @@ public:
 	void Material_SetPS(size_t hash_material, const std::wstring& psName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 	
-	void CreateCubeMapTexture(int iSize);
-	size_t CreateShadowMapTexture(const int width, const int height);
-
 	//Asset(Components <-> API) 府家胶 积己
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);

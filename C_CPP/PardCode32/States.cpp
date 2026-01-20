@@ -151,6 +151,18 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	_ASEERTION_NULCHK(pSamplers, "Point_Clamp");
 	m_pStates.push_back(pSamplers);
 
+	//그림자를위한 비교 SAMPLER
+	sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT; // 깊이 버퍼 샘플링에는 Point 필터가 적합합니다.
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
+	sampler_desc.MinLOD = 0;
+	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
+	_ASEERTION_NULCHK(pSamplers, "Point_Clamp_Comparison");
+	m_pStates.push_back(pSamplers);
+
 
 	/*
 	//필요시 추가
@@ -191,9 +203,9 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	//   D3D11_CULL_MODE CullMode;				//컬링
 	//   BOOL FrontCounterClockwise;			//true시 ccw를 앞면, false시 cw를앞면 일반적으로는 cw 
 
-	//   INT DepthBias;						//깊이바이어스
-	//   FLOAT DepthBiasClamp;					//
-	//   FLOAT SlopeScaledDepthBias;			//
+	//   INT DepthBias;							//깊이바이어스, 24비트기준으로 일반적으로 100~1000의값을사용한다
+	//   FLOAT DepthBiasClamp;					//바이어스가 너무 커져 물체가 벽을 뚫고 보이는 부작용등을 막기위한 한계치
+	//   FLOAT SlopeScaledDepthBias;			//경사면에 비례해 바이어스를 가변적으로 사용하기 위한 옵션값, 일반적으로 평면보다 경사면이 깊이여드름이 더 자주생긴다
 
 	//   BOOL DepthClipEnable;					//0~1(ndc)밖의 폴리곤을 잘라낸다, 일반적으로 true로활성화
 	//   BOOL ScissorEnable;					//화면의 지정영역의 픽셀만 렌더링, UI나 미니맵등 특정영역의 업데이트시 유용, 일반적으로 TRUE
@@ -207,8 +219,13 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
 
 	rasterizer_desc.DepthClipEnable = TRUE;
+	rasterizer_desc.DepthBias = 1000;
+	rasterizer_desc.DepthBiasClamp = 0.0f;
+	rasterizer_desc.SlopeScaledDepthBias = 2.0f;
+	//rasterizer_desc.ScissorEnable = TRUE;
 	rasterizer_desc.MultisampleEnable = TRUE;
-
+	rasterizer_desc.AntialiasedLineEnable = TRUE;
+	
 	//SOLID, CULLBACK, CW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;

@@ -120,7 +120,7 @@ void AppWindow::OnCreate()
 			size_t lookup_maincam = _CameraSystem.lookup_maincam;
 			const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
 			Vector3 dir = -c_cam_transform.vPosition;
-			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
+			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
 			_ECSSystem.AddComponent<C_Light_Direction>(key, { dir.Normalize()});
 		}
 #endif // _MoveDirecionalLight
@@ -493,7 +493,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {300.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -532,7 +532,7 @@ void AppWindow::OnCreate()
 
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 0.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -543,7 +543,7 @@ void AppWindow::OnCreate()
 #ifdef _MECHAGIRL
 		//MechaGirl
 		{
-			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/obj/OBJ/SK_MechanicGirl_AllPartsTogether.obj");
+			size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/obj/OBJ/SK_MechanicGirl_AllPartsTogether.obj");
 
 			size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_mg");
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
@@ -566,7 +566,7 @@ void AppWindow::OnCreate()
 
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quarternion(0.0f, 0.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -711,8 +711,8 @@ void AppWindow::OnCreate()
 
 			std::vector<TX_HASH> tx_hashs;
 			//_RenderSystem.m_hash_DSV_ShadowMap
-			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_ShadowMap });
-			//tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_0 });
+			//tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_ShadowMap });
+			tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.m_hash_DSV_0 });
 			_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
