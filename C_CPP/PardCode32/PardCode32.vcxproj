@@ -73,7 +73,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>../Output/Debug/</OutDir>
     <IntDir>../Output/</IntDir>
-    <IncludePath>../Include/tinyobjloader;../Include/DXTEX;$(IncludePath)</IncludePath>
+    <IncludePath>../Include/tinyobjloader;../Include/DXTEX;../Include;$(IncludePath)</IncludePath>
     <LibraryWPath>$(LibraryWPath)</LibraryWPath>
     <LibraryPath>../Lib;$(LibraryPath)</LibraryPath>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>

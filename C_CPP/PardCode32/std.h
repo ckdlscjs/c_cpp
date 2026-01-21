@@ -42,6 +42,9 @@
 #include <DirectXTex.h>						//Include/DXTEX, 텍스쳐사용을위한추가
 #pragma comment(lib, "DirectXTex.lib")
 
+//assimp
+#pragma comment(lib, "assimp-vc145-mtd.lib")
+
 using namespace DirectX;
 
 //#include "bits/stdc++.h"

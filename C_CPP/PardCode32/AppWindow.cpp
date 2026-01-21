@@ -13,6 +13,7 @@
 
 #include "TestBlockMacro.h"
 
+
 AppWindow::AppWindow()
 {
 	std::cout << "Initialize : " << "AppWindow" << " Class" << '\n';
@@ -33,8 +34,17 @@ AppWindow::~AppWindow()
 	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
 }
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/version.h>
 void AppWindow::OnCreate()
 {
+	Assimp::Importer importer;
+	std::cout << "Assimp Version: "
+		<< aiGetVersionMajor() << "."
+		<< aiGetVersionMinor() << std::endl;
+
 	std::cout << "OnCreate" << '\n';
 	_TimerSystem.Init();
 	_InputSystem.Init();
