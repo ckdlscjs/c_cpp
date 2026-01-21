@@ -660,8 +660,6 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 	}
-	
-
 #endif //_EnvironmentMap
 
 	//ShadowMap
@@ -725,6 +723,7 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 		}
 	}
+
 #ifdef _ECS
 	//gizmo
 	{

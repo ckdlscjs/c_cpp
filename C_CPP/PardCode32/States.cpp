@@ -152,10 +152,10 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	m_pStates.push_back(pSamplers);
 
 	//그림자를위한 비교 SAMPLER
-	sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT; // 깊이 버퍼 샘플링에는 Point 필터가 적합합니다.
-	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+	sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT; 
+	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	sampler_desc.MinLOD = 0;
 	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
