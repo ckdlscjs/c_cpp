@@ -34,17 +34,8 @@ AppWindow::~AppWindow()
 	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
 }
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/version.h>
 void AppWindow::OnCreate()
 {
-	Assimp::Importer importer;
-	std::cout << "Assimp Version: "
-		<< aiGetVersionMajor() << "."
-		<< aiGetVersionMinor() << std::endl;
-
 	std::cout << "OnCreate" << '\n';
 	_TimerSystem.Init();
 	_InputSystem.Init();
@@ -585,6 +576,71 @@ void AppWindow::OnCreate()
 #endif // _MECHAGIRL
 	}
 
+#ifdef _GIRL
+	//girl fbx
+	{
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/girl.fbx");
+
+		std::vector<size_t> hash_materials = _RenderSystem.CreateMaterialsFromFile<Vertex_PTN>(L"../Assets/Meshes/girl.mtl");
+		for (const auto& hash_material : hash_materials)
+		{
+			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
+			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
+		}
+
+		std::vector<TX_HASH> hash_tx_hash[7];
+		hash_tx_hash[0].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/bot color.jpg", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[0], hash_tx_hash[0]);
+
+		hash_tx_hash[1].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[1], hash_tx_hash[1]);
+
+		hash_tx_hash[2].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/FACE Base Color alpha.png", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[2], hash_tx_hash[2]);
+
+		hash_tx_hash[3].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/COLORS.jpg", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[3], hash_tx_hash[3]);
+
+		hash_tx_hash[4].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/BOdy Skin Base Color.png", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[4], hash_tx_hash[4]);
+
+		hash_tx_hash[5].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/COLORS.jpg", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[5], hash_tx_hash[5]);
+
+		hash_tx_hash[6].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/tEXTURE/top color.png", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_materials[6], hash_tx_hash[6]);
+
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_materials[0] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[1] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[2] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[3] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[4] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[5] });
+		mesh_mats.push_back({ hash_mesh, hash_materials[6] });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_girl", mesh_mats);
+
+		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
+		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_girl", hash_CLs);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+
+		_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
+
+		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+	}
+#endif // _GIRL
+
+	
+
+	
+
 #ifdef _EnviornmentMap
 	//Initilze Cubemap
 	{
@@ -680,6 +736,54 @@ void AppWindow::OnCreate()
 		_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_ShadowMap.hlsl");
 		_RenderSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 		_RenderSystem.m_hash_Mat_ShadowMap = hash_material;
+	}
+
+	
+
+	//AssimpTest
+	{
+		/*size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/girl.obj");
+		_RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/girl.fbx");*/
+		//_RenderSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/girl.fbx");
+		/*
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTN>(L"Mat_SkySphere");
+		_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
+		_RenderSystem.Material_SetPS(hash_material, L"PS_.hlsl");
+		_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
+
+		std::vector<TX_HASH> tx_hashs;
+		tx_hashs.push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter8.png", WIC_FLAGS_IGNORE_SRGB) });
+		_RenderSystem.Material_SetTextures(hash_material, tx_hashs);
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_material });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_sky", mesh_mats);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
+		std::bitset<256> vkmask;
+		vkmask['W'] = true;
+		vkmask['A'] = true;
+		vkmask['S'] = true;
+		vkmask['D'] = true;
+		vkmask['Q'] = true;
+		vkmask['E'] = true;
+		_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+		size_t lookup_maincam = _CameraSystem.lookup_maincam;
+		const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+		_ECSSystem.AddComponent<C_Transform>(key, { {c_cam_main.fFar * 0.9f, c_cam_main.fFar * 0.9f, c_cam_main.fFar * 0.9f},  {}, {} });
+
+		std::array<unsigned char, E_Behavior::COUNT> behavior;
+		behavior[E_Behavior::MOVE_FORWARD] = 'W';
+		behavior[E_Behavior::MOVE_LEFT] = 'A';
+		behavior[E_Behavior::MOVE_BACKWARD] = 'S';
+		behavior[E_Behavior::MOVE_RIGHT] = 'D';
+		behavior[E_Behavior::MOVE_UP] = 'Q';
+		behavior[E_Behavior::MOVE_DOWN] = 'E';
+		_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
+
+		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+		*/
 	}
 
 	//Initialize RTV, DSV

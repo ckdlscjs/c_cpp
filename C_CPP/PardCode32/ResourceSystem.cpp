@@ -12,9 +12,14 @@
 //#if __cplusplus >= 201703L
 //#include <filesystem>
 //#endif
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/version.h>
 
 ResourceSystem::ResourceSystem()
 {
+	
 }
 
 ResourceSystem::~ResourceSystem()
@@ -25,12 +30,10 @@ ResourceSystem::~ResourceSystem()
 		iter = m_Resources.erase(iter);
 	}
 }
+
 void ResourceSystem::Init()
 {
-
 }
-
-
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tiny_obj_loader.h>
@@ -102,20 +105,104 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 		}
 	}
 }
+
+template<typename T, typename T_HASH>
+void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points, std::vector<std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+{
+	// Data to fill
+	//std::vector<Texture> textures;
+
+	for (UINT i = 0; i < mesh->mNumVertices; i++) 
+	{
+		float vx, vy, vz, tx, ty, nx, ny, nz;
+		vx = vy = vz = tx = ty = nx = ny = nz = 0.0f;
+		vx = mesh->mVertices[i].x;
+		vy = mesh->mVertices[i].y;
+		vz = mesh->mVertices[i].z;
+
+		if (mesh->mTextureCoords[0])
+		{
+			tx = (float)mesh->mTextureCoords[0][i].x;
+			ty = (float)mesh->mTextureCoords[0][i].y;
+		}
+
+		if (mesh->HasNormals())
+		{
+			nx = mesh->mNormals[i].x;
+			ny = mesh->mNormals[i].y;
+			nz = mesh->mNormals[i].z;
+		}
+
+		T vertex{ {vx, vy, vz}, {tx, ty}, {nx, ny, nz} };
+		if (vertexMaps[mesh->mMaterialIndex].find(vertex) == vertexMaps[mesh->mMaterialIndex].end())
+		{
+			vertexMaps[mesh->mMaterialIndex][vertex] = (UINT)vertices[mesh->mMaterialIndex].size();
+			vertices[mesh->mMaterialIndex].push_back(vertex);
+			points[mesh->mMaterialIndex].push_back({vx, vy, vz});
+		}
+		//indices[mesh->mMaterialIndex].push_back(vertexMaps[mesh->mMaterialIndex][vertex].S);
+	}
+
+	for (UINT i = 0; i < mesh->mNumFaces; i++) 
+	{
+		aiFace face = mesh->mFaces[i];
+		for (UINT j = 0; j < face.mNumIndices; j++)
+			indices[mesh->mMaterialIndex].push_back(face.mIndices[j]);
+	}
+
+	/*if (mesh->mMaterialIndex >= 0) {
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		std::vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
+		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+	}*/
+}
+
+template<typename T, typename T_HASH>
+void ProcessNode(aiNode* node, const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points, std::vector<std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+{
+	for (UINT i = 0; i < node->mNumMeshes; i++) 
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		ProcessMesh<T, T_HASH>(mesh, scene, vertices, indices, points, vertexMaps);
+	}
+
+	for (UINT i = 0; i < node->mNumChildren; i++) 
+	{
+		ProcessNode<T, T_HASH>(node->mChildren[i], scene, vertices, indices, points, vertexMaps);
+	}
+}
+
+template<typename T, typename T_HASH>
+inline void ParseScene(const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points)
+{
+	size_t numMaterials = std::max((size_t)1, (size_t)scene->mNumMaterials);
+	_ASEERTION_NULCHK(scene, "aiScene nullptr");
+	
+	vertices.resize(numMaterials);
+	indices.resize(numMaterials);
+	points.resize(numMaterials);
+	//해시를 이용한 중복체크
+	std::vector<std::unordered_map<T, UINT, T_HASH>> vertexMaps(numMaterials);
+
+	ProcessNode<T, T_HASH>(scene->mRootNode, scene, vertices, indices, points, vertexMaps);
+	int a = 0;
+}
+
 template<typename T> 
 Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 {
 	std::string szFullPath = _towm(szFilePath);
 	std::string szMtlBasePath = szFullPath.substr(0, szFullPath.find_last_of('/'));
 	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
-
+	
 	Mesh<T>* newResource = nullptr;
 	std::vector<std::vector<T>> verticesByMaterial;
 	std::vector<std::vector<UINT>> indicesByMaterial;
 	std::vector<std::vector<Vector3>> pointsByMaterial;
+	using HASH_TYPE = std::conditional_t<std::is_same_v<T, Vertex_PTN>, Vertex_PTN_Hash, Vertex_PTNTB_Hash>;
 	if (extension == ".obj")
 	{
-		using HASH_TYPE = std::conditional_t<std::is_same_v<T, Vertex_PTN>, Vertex_PTN_Hash, Vertex_PTNTB_Hash>;
 		ParseObj<T, HASH_TYPE>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
 		std::vector<T> vertices;
 		std::vector<UINT> indices;
@@ -143,20 +230,48 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 
 		newResource = new Mesh<T>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
 		_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
-		return newResource;
 	}
 	else if (extension == ".fbx")
 	{
-		return newResource;
+		Assimp::Importer importer;
+		unsigned int readFlag = aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_MakeLeftHanded | aiProcess_FlipUVs;
+		const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
+		ParseScene<T, HASH_TYPE>(scene, verticesByMaterial, indicesByMaterial, pointsByMaterial);
+		std::vector<T> vertices;
+		std::vector<UINT> indices;
+		std::vector<RenderCounts> countsVertices;
+		std::vector<RenderCounts> countsIndices;
+
+		UINT psum = 0, idx = 0;
+		for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
+		{
+			countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
+			idx = (UINT)verticesByMaterial[vidx].size();
+			vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
+		}
+
+		idx = 0;
+		for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
+		{
+			countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
+			idx += (UINT)indicesByMaterial[iidx].size();
+			for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
+			psum += (UINT)verticesByMaterial[iidx].size();
+		}
+		if constexpr (std::is_same_v<T, Vertex_PTNTB>)
+			ComputeTangentBinormal(indices, vertices);
+
+		newResource = new Mesh<T>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
+		_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
 	}
 	return newResource;
 }
-std::wstring szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
-std::wstring szMesh_PTNTB = _tomw(typeid(Mesh<Vertex_PTNTB>).name());
+std::wstring g_szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
+std::wstring g_szMesh_PTNTB = _tomw(typeid(Mesh<Vertex_PTNTB>).name());
 template<>
 Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
 {
-	size_t hash = Hasing_wstring(szFilePath + szMesh_PTN);
+	size_t hash = Hasing_wstring(szFilePath + g_szMesh_PTN);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
 	Mesh<Vertex_PTN>* newResource = CreateMeshFromFile<Vertex_PTN>(hash, szFilePath);
 	m_Resources[hash] = newResource;
@@ -166,7 +281,7 @@ Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const
 template<>
 Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath)
 {
-	size_t hash = Hasing_wstring(szFilePath + szMesh_PTNTB);
+	size_t hash = Hasing_wstring(szFilePath + g_szMesh_PTNTB);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTNTB>*>(m_Resources[hash]);
 	Mesh<Vertex_PTNTB>* newResource = CreateMeshFromFile<Vertex_PTNTB>(hash, szFilePath);
 	m_Resources[hash] = newResource;
