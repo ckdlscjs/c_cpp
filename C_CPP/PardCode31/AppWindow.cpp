@@ -328,6 +328,35 @@ void AppWindow::OnCreate()
 		}
 	}
 
+	//MechaGirl
+	{
+		size_t hash_mesh = _RenderSystem.CreateMesh<Vertex_PTNTB>(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/obj/OBJ/SK_MechanicGirl_AllPartsTogether.obj");
+
+		size_t hash_material = _RenderSystem.CreateMaterial<Vertex_PTNTB>(L"Mat_mg", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
+
+		std::vector<TX_HASH> tx_hashs[1];
+		tx_hashs[0].push_back({ E_Texture::Diffuse, _RenderSystem.CreateTexture(L"../Assets/Textures/butter.dds", WIC_FLAGS_NONE) });
+		_RenderSystem.Material_SetTextures(hash_material, tx_hashs[0]);
+
+		std::vector<Mesh_Material> mesh_mats;
+		mesh_mats.push_back({ hash_mesh, hash_material });
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_mg", mesh_mats);
+
+		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders<Vertex_PTN>(hash_mesh, E_Collider::SPHERE);
+		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_mg", hash_CLs);
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
+
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
+
+		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+		}
+
 	//Initialize RTV, DSV
 	{
 		//Init TargetView geometry

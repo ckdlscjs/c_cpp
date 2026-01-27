@@ -107,11 +107,12 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 }
 
 template<typename T, typename T_HASH>
-void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points, std::vector<std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
 {
+	if (mesh->mNumVertices <= 0) return;
 	// Data to fill
 	//std::vector<Texture> textures;
-
+	std::vector<unsigned int> idxs(mesh->mNumVertices);
 	for (UINT i = 0; i < mesh->mNumVertices; i++) 
 	{
 		float vx, vy, vz, tx, ty, nx, ny, nz;
@@ -134,32 +135,35 @@ void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::vector<std::vector<T>>
 		}
 
 		T vertex{ {vx, vy, vz}, {tx, ty}, {nx, ny, nz} };
-		if (vertexMaps[mesh->mMaterialIndex].find(vertex) == vertexMaps[mesh->mMaterialIndex].end())
+		auto it = vertexMaps[mesh->mMaterialIndex].find(vertex);
+		if (it == vertexMaps[mesh->mMaterialIndex].end())
 		{
+			idxs[i] = (UINT)vertices[mesh->mMaterialIndex].size();
 			vertexMaps[mesh->mMaterialIndex][vertex] = (UINT)vertices[mesh->mMaterialIndex].size();
 			vertices[mesh->mMaterialIndex].push_back(vertex);
 			points[mesh->mMaterialIndex].push_back({vx, vy, vz});
 		}
-		//indices[mesh->mMaterialIndex].push_back(vertexMaps[mesh->mMaterialIndex][vertex].S);
+		else
+		{
+			idxs[i] = it->second;
+		}
 	}
 
 	for (UINT i = 0; i < mesh->mNumFaces; i++) 
 	{
 		aiFace face = mesh->mFaces[i];
 		for (UINT j = 0; j < face.mNumIndices; j++)
-			indices[mesh->mMaterialIndex].push_back(face.mIndices[j]);
+			indices[mesh->mMaterialIndex].push_back(idxs[face.mIndices[j]]);
 	}
 
-	/*if (mesh->mMaterialIndex >= 0) {
+	if (mesh->mMaterialIndex >= 0) 
+	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-		std::vector<Texture> diffuseMaps = this->loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse", scene);
-		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-	}*/
+	}
 }
 
 template<typename T, typename T_HASH>
-void ProcessNode(aiNode* node, const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points, std::vector<std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+void ProcessNode(aiNode* node, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
 {
 	for (UINT i = 0; i < node->mNumMeshes; i++) 
 	{
@@ -174,19 +178,14 @@ void ProcessNode(aiNode* node, const aiScene* scene, std::vector<std::vector<T>>
 }
 
 template<typename T, typename T_HASH>
-inline void ParseScene(const aiScene* scene, std::vector<std::vector<T>>& vertices, std::vector<std::vector<UINT>>& indices, std::vector<std::vector<Vector3>>& points)
+inline void ParseScene(const std::string& szFullPath, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
 {
-	size_t numMaterials = std::max((size_t)1, (size_t)scene->mNumMaterials);
+	Assimp::Importer importer;
+	unsigned int readFlag = aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_ConvertToLeftHanded;
+	const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
 	_ASEERTION_NULCHK(scene, "aiScene nullptr");
-	
-	vertices.resize(numMaterials);
-	indices.resize(numMaterials);
-	points.resize(numMaterials);
-	//해시를 이용한 중복체크
-	std::vector<std::unordered_map<T, UINT, T_HASH>> vertexMaps(numMaterials);
 
 	ProcessNode<T, T_HASH>(scene->mRootNode, scene, vertices, indices, points, vertexMaps);
-	int a = 0;
 }
 
 template<typename T> 
@@ -197,73 +196,68 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
 	
 	Mesh<T>* newResource = nullptr;
-	std::vector<std::vector<T>> verticesByMaterial;
-	std::vector<std::vector<UINT>> indicesByMaterial;
-	std::vector<std::vector<Vector3>> pointsByMaterial;
+	std::map<UINT, std::vector<T>> verticesByMaterial;
+	std::map<UINT, std::vector<UINT>> indicesByMaterial;
+	std::map<UINT, std::vector<Vector3>> pointsByMaterial;
 	using HASH_TYPE = std::conditional_t<std::is_same_v<T, Vertex_PTN>, Vertex_PTN_Hash, Vertex_PTNTB_Hash>;
-	if (extension == ".obj")
+	//해시를 이용한 중복체크
+	std::map<UINT, std::unordered_map<T, UINT, HASH_TYPE>> vertexMaps;
+	ParseScene<T, HASH_TYPE>(szFullPath, verticesByMaterial, indicesByMaterial, pointsByMaterial, vertexMaps);
+	/*if (extension == ".obj")
 	{
 		ParseObj<T, HASH_TYPE>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-		std::vector<T> vertices;
-		std::vector<UINT> indices;
-		std::vector<RenderCounts> countsVertices;
-		std::vector<RenderCounts> countsIndices;
-
-		UINT psum = 0, idx = 0;
-		for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
-		{
-			countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
-			idx = (UINT)verticesByMaterial[vidx].size();
-			vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
-		}
-
-		idx = 0;
-		for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
-		{
-			countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
-			idx += (UINT)indicesByMaterial[iidx].size();
-			for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
-			psum += (UINT)verticesByMaterial[iidx].size();
-		}
-		if constexpr(std::is_same_v<T, Vertex_PTNTB>)
-			ComputeTangentBinormal(indices, vertices);
-
-		newResource = new Mesh<T>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-		_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
 	}
 	else if (extension == ".fbx")
 	{
-		Assimp::Importer importer;
-		unsigned int readFlag = aiProcess_CalcTangentSpace | aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType | aiProcess_MakeLeftHanded | aiProcess_FlipUVs;
-		const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
-		ParseScene<T, HASH_TYPE>(scene, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-		std::vector<T> vertices;
-		std::vector<UINT> indices;
-		std::vector<RenderCounts> countsVertices;
-		std::vector<RenderCounts> countsIndices;
-
-		UINT psum = 0, idx = 0;
-		for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
-		{
-			countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
-			idx = (UINT)verticesByMaterial[vidx].size();
-			vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
-		}
-
-		idx = 0;
-		for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
-		{
-			countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
-			idx += (UINT)indicesByMaterial[iidx].size();
-			for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
-			psum += (UINT)verticesByMaterial[iidx].size();
-		}
-		if constexpr (std::is_same_v<T, Vertex_PTNTB>)
-			ComputeTangentBinormal(indices, vertices);
-
-		newResource = new Mesh<T>(hash, szFilePath, std::move(pointsByMaterial), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-		_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
+		ParseScene<T, HASH_TYPE>(szFullPath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
+	}*/
+	std::vector<T> vertices;
+	std::vector<UINT> indices;
+	std::vector<std::vector<Vector3>> points;
+	std::vector<RenderCounts> countsVertices;
+	std::vector<RenderCounts> countsIndices;
+	UINT psum = 0, idx = 0;
+	for (const auto& iter : verticesByMaterial)
+	{
+		countsVertices.push_back({ (UINT)iter.second.size(), idx });
+		idx = (UINT)iter.second.size();
+		vertices.insert(vertices.end(), iter.second.begin(), iter.second.end());
 	}
+
+	idx = 0;
+	for (const auto& iter : indicesByMaterial)
+	{
+		countsIndices.push_back({ (UINT)iter.second.size(), idx });
+		idx += (UINT)iter.second.size();
+		for (auto& vidx : iter.second) indices.push_back(psum + vidx);
+		psum += (UINT)verticesByMaterial[iter.first].size();
+	}
+
+	for (const auto& iter : pointsByMaterial)
+	{
+		points.push_back(iter.second);
+	}
+	/*for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
+	{
+		countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
+		idx = (UINT)verticesByMaterial[vidx].size();
+		vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
+	}
+
+	idx = 0;
+	for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
+	{
+		countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
+		idx += (UINT)indicesByMaterial[iidx].size();
+		for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
+		psum += (UINT)verticesByMaterial[iidx].size();
+	}*/
+	if constexpr (std::is_same_v<T, Vertex_PTNTB>)
+		ComputeTangentBinormal(indices, vertices);
+
+	newResource = new Mesh<T>(hash, szFilePath, std::move(points), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
+	_ASEERTION_NULCHK(newResource, typeid(Mesh<T>).name());
+
 	return newResource;
 }
 std::wstring g_szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
