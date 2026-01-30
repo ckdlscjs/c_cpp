@@ -54,11 +54,13 @@ public:
 	template<typename T>
 	size_t CreateMesh(const std::wstring& szFilePath);
 	template<typename T>
-	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
-	template<typename T>
 	size_t CreateMaterial(const std::wstring& szFilePath);
 	template<typename T>
+	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+	/*
+	template<typename T>
 	std::vector<size_t> CreateMaterialsFromFile(const std::wstring& szFilePath);
+	*/
 	void CreateCubeMapTexture(int iSize);
 	size_t CreateShadowMapTexture(const int width, const int height);
 
@@ -192,8 +194,10 @@ template void RenderSystem::Material_SetIL<Vertex_PC>(size_t hash_material, cons
 template void RenderSystem::Material_SetIL<Vertex_PT>(size_t hash_material, const std::wstring& vsName);
 template void RenderSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, const std::wstring& vsName);
 template void RenderSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName);
+/*
 template std::vector<size_t> RenderSystem::CreateMaterialsFromFile<Vertex_PTN>(const std::wstring& szFilePath);
 template std::vector<size_t> RenderSystem::CreateMaterialsFromFile<Vertex_PTNTB>(const std::wstring& szFilePath);
+*/
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PC>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PC>&& vertices, std::vector<UINT>&& indices);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PT>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PT>&& vertices, std::vector<UINT>&& indices);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<Vertex_PTN>&& vertices, std::vector<UINT>&& indices);

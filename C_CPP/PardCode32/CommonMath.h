@@ -622,3 +622,4 @@ inline Quarternion GetQuarternionFromDirection(const Vector3& direction)
 	float sinTheta = sinf(angle);
 	return Quarternion(cosTheta, rotateAxis * sinTheta);
 }
+

@@ -1760,17 +1760,17 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 	return hash;
 }
 
+// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag)
 {
-	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
 
+// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
 {
-	// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
 	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
@@ -1793,7 +1793,8 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vect
 template<typename T>
 size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
 {
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szFilePath);
+	std::map<UINT, MTL_TEXTURES> texturesByMaterial;
+	Mesh<T>* pMesh = _ResourceSystem.CreateMeshFromFile<T>(szFilePath, texturesByMaterial);
 	std::wstring szTypename = _tomw(typeid(T).name());
 	pMesh->SetVB(CreateVertexBuffer(szFilePath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szFilePath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
@@ -1819,6 +1820,7 @@ size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath)
 	return pMaterial->GetHash();
 }
 
+/*
 template<typename T>
 std::vector<size_t> RenderSystem::CreateMaterialsFromFile(const std::wstring& szFilePath)
 {
@@ -1828,7 +1830,7 @@ std::vector<size_t> RenderSystem::CreateMaterialsFromFile(const std::wstring& sz
 		rets.push_back(iter->GetHash());
 	return rets;
 }
-
+*/
 void RenderSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);

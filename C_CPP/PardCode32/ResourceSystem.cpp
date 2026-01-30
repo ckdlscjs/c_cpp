@@ -1,6 +1,6 @@
 #include "ResourceSystem.h"
 #include "Resource.h"
-#include "Material.h"
+//#include "Material.h"
 //#include "Mesh.h" //템플릿 클래스화로 인해 h에포함
  
 //// FileSystem
@@ -12,10 +12,9 @@
 //#if __cplusplus >= 201703L
 //#include <filesystem>
 //#endif
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/version.h>
+
+std::wstring g_szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
+std::wstring g_szMesh_PTNTB = _tomw(typeid(Mesh<Vertex_PTNTB>).name());
 
 ResourceSystem::ResourceSystem()
 {
@@ -106,12 +105,34 @@ inline void ParseObj(const std::string& szFullPath, const std::string& szMtlBase
 	}
 }
 
+/*
+template<>
+std::vector<Material*> ResourceSystem::CreateResourcesFromFile<Material>(const std::wstring& szFilePath)
+{
+	std::vector<Material*> rets;
+	std::string szFullPath = _towm(szFilePath);
+	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
+	_ASEERTION_NULCHK(extension == ".mtl", "not material file");
+	std::map<std::string, int> mtlidxs;
+	std::vector<tinyobj::material_t> materials;
+	std::ifstream matIStream(szFullPath.c_str());
+	std::string warning;
+	std::string error;
+	tinyobj::LoadMtl(&mtlidxs, &materials, &matIStream, &warning, &error);
+	for (const auto& iter : materials)
+	{
+		std::wstring matName = szFilePath + _tomw(iter.name);
+		Material* pMaterial = CreateResourceFromFile<Material>(matName);
+		pMaterial->SetTexturePath({ E_Texture::Diffuse, iter.diffuse_texname });
+		rets.push_back(pMaterial);
+	}
+	return rets;
+}
+
 template<typename T, typename T_HASH>
-void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps, std::map<UINT, MTL_TEXTURES>& textures)
 {
 	if (mesh->mNumVertices <= 0) return;
-	// Data to fill
-	//std::vector<Texture> textures;
 	std::vector<unsigned int> idxs(mesh->mNumVertices);
 	for (UINT i = 0; i < mesh->mNumVertices; i++) 
 	{
@@ -121,7 +142,7 @@ void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::map<UINT, std::vector<
 		vy = mesh->mVertices[i].y;
 		vz = mesh->mVertices[i].z;
 
-		if (mesh->mTextureCoords[0])
+		if (mesh->HasTextureCoords(0))
 		{
 			tx = (float)mesh->mTextureCoords[0][i].x;
 			ty = (float)mesh->mTextureCoords[0][i].y;
@@ -159,37 +180,42 @@ void ProcessMesh(aiMesh* mesh, const aiScene* scene, std::map<UINT, std::vector<
 	if (mesh->mMaterialIndex >= 0) 
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		//aiTextureType_GLTF_METALLIC_ROUGHNESS is last(27)
+		for (UINT type = 0; type <= aiTextureType_GLTF_METALLIC_ROUGHNESS; type++)
+		{
+			aiTextureType texType = (aiTextureType)type;
+			for (UINT idx = 0; idx < material->GetTextureCount(texType); idx++)
+			{
+				aiString texPath;
+				if (material->GetTexture(texType, idx, &texPath) == aiReturn_SUCCESS)
+					textures[mesh->mMaterialIndex][texType].push_back(texPath.C_Str());
+			}
+		}
 	}
 }
 
 template<typename T, typename T_HASH>
-void ProcessNode(aiNode* node, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+void ProcessNode(aiNode* node, const aiScene* scene, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps, std::map<UINT, MTL_TEXTURES>& textures)
 {
 	for (UINT i = 0; i < node->mNumMeshes; i++) 
-	{
-		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		ProcessMesh<T, T_HASH>(mesh, scene, vertices, indices, points, vertexMaps);
-	}
+		ProcessMesh<T, T_HASH>(scene->mMeshes[node->mMeshes[i]], scene, vertices, indices, points, vertexMaps, textures);
 
 	for (UINT i = 0; i < node->mNumChildren; i++) 
-	{
-		ProcessNode<T, T_HASH>(node->mChildren[i], scene, vertices, indices, points, vertexMaps);
-	}
+		ProcessNode<T, T_HASH>(node->mChildren[i], scene, vertices, indices, points, vertexMaps, textures);
 }
 
 template<typename T, typename T_HASH>
-inline void ParseScene(const std::string& szFullPath, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps)
+inline void ParseScene(const std::string& szFullPath, std::map<UINT, std::vector<T>>& vertices, std::map<UINT, std::vector<UINT>>& indices, std::map<UINT, std::vector<Vector3>>& points, std::map<UINT, std::unordered_map<T, UINT, T_HASH>>& vertexMaps, std::map<UINT, MTL_TEXTURES>& textures)
 {
 	Assimp::Importer importer;
 	unsigned int readFlag = aiProcess_Triangulate | aiProcess_SortByPType | aiProcess_ConvertToLeftHanded;
 	const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
 	_ASEERTION_NULCHK(scene, "aiScene nullptr");
-
-	ProcessNode<T, T_HASH>(scene->mRootNode, scene, vertices, indices, points, vertexMaps);
+	ProcessNode<T, T_HASH>(scene->mRootNode, scene, vertices, indices, points, vertexMaps, textures);
 }
 
 template<typename T> 
-Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
+Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
 {
 	std::string szFullPath = _towm(szFilePath);
 	std::string szMtlBasePath = szFullPath.substr(0, szFullPath.find_last_of('/'));
@@ -200,17 +226,10 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 	std::map<UINT, std::vector<UINT>> indicesByMaterial;
 	std::map<UINT, std::vector<Vector3>> pointsByMaterial;
 	using HASH_TYPE = std::conditional_t<std::is_same_v<T, Vertex_PTN>, Vertex_PTN_Hash, Vertex_PTNTB_Hash>;
-	//해시를 이용한 중복체크
 	std::map<UINT, std::unordered_map<T, UINT, HASH_TYPE>> vertexMaps;
-	ParseScene<T, HASH_TYPE>(szFullPath, verticesByMaterial, indicesByMaterial, pointsByMaterial, vertexMaps);
-	/*if (extension == ".obj")
-	{
-		ParseObj<T, HASH_TYPE>(szFullPath, szMtlBasePath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-	}
-	else if (extension == ".fbx")
-	{
-		ParseScene<T, HASH_TYPE>(szFullPath, verticesByMaterial, indicesByMaterial, pointsByMaterial);
-	}*/
+	ParseScene<T, HASH_TYPE>(szFullPath, verticesByMaterial, indicesByMaterial, pointsByMaterial, vertexMaps, texturesByMaterial);
+
+	//Mesh로 정렬해 넣기위해 순서대로 Material에 따른 인덱싱을 재계산해 집어넣는다
 	std::vector<T> vertices;
 	std::vector<UINT> indices;
 	std::vector<std::vector<Vector3>> points;
@@ -229,29 +248,14 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 	{
 		countsIndices.push_back({ (UINT)iter.second.size(), idx });
 		idx += (UINT)iter.second.size();
-		for (auto& vidx : iter.second) indices.push_back(psum + vidx);
+		for (auto& vidx : iter.second) 
+			indices.push_back(psum + vidx);
 		psum += (UINT)verticesByMaterial[iter.first].size();
 	}
 
 	for (const auto& iter : pointsByMaterial)
-	{
 		points.push_back(iter.second);
-	}
-	/*for (UINT vidx = 0; vidx < verticesByMaterial.size(); vidx++)
-	{
-		countsVertices.push_back({ (UINT)verticesByMaterial[vidx].size(), idx });
-		idx = (UINT)verticesByMaterial[vidx].size();
-		vertices.insert(vertices.end(), verticesByMaterial[vidx].begin(), verticesByMaterial[vidx].end());
-	}
 
-	idx = 0;
-	for (UINT iidx = 0; iidx < indicesByMaterial.size(); iidx++)
-	{
-		countsIndices.push_back({ (UINT)indicesByMaterial[iidx].size(), idx });
-		idx += (UINT)indicesByMaterial[iidx].size();
-		for (auto& iter : indicesByMaterial[iidx]) indices.push_back(psum + iter);
-		psum += (UINT)verticesByMaterial[iidx].size();
-	}*/
 	if constexpr (std::is_same_v<T, Vertex_PTNTB>)
 		ComputeTangentBinormal(indices, vertices);
 
@@ -260,47 +264,25 @@ Mesh<T>* CreateMeshFromFile(size_t hash, const std::wstring& szFilePath)
 
 	return newResource;
 }
-std::wstring g_szMesh_PTN = _tomw(typeid(Mesh<Vertex_PTN>).name());
-std::wstring g_szMesh_PTNTB = _tomw(typeid(Mesh<Vertex_PTNTB>).name());
+
 template<>
-Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath)
+Mesh<Vertex_PTN>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTN>>(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
 {
 	size_t hash = Hasing_wstring(szFilePath + g_szMesh_PTN);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTN>*>(m_Resources[hash]);
-	Mesh<Vertex_PTN>* newResource = CreateMeshFromFile<Vertex_PTN>(hash, szFilePath);
+	Mesh<Vertex_PTN>* newResource = CreateMeshFromFile<Vertex_PTN>(hash, szFilePath, texturesByMaterial);
 	m_Resources[hash] = newResource;
 	return newResource;
 }
 
 template<>
-Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath)
+Mesh<Vertex_PTNTB>* ResourceSystem::CreateResourceFromFile<Mesh<Vertex_PTNTB>>(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
 {
 	size_t hash = Hasing_wstring(szFilePath + g_szMesh_PTNTB);
 	if (m_Resources.find(hash) != m_Resources.end()) return static_cast<Mesh<Vertex_PTNTB>*>(m_Resources[hash]);
-	Mesh<Vertex_PTNTB>* newResource = CreateMeshFromFile<Vertex_PTNTB>(hash, szFilePath);
+	Mesh<Vertex_PTNTB>* newResource = CreateMeshFromFile<Vertex_PTNTB>(hash, szFilePath, texturesByMaterial);
 	m_Resources[hash] = newResource;
 	return newResource;
 }
+*/
 
-template<>
-std::vector<Material*> ResourceSystem::CreateResourcesFromFile<Material>(const std::wstring& szFilePath)
-{
-	std::vector<Material*> rets;
-	std::string szFullPath = _towm(szFilePath);
-	std::string extension = szFullPath.substr(szFullPath.find_last_of('.'));
-	_ASEERTION_NULCHK(extension == ".mtl", "not material file");
-	std::map<std::string, int> mtlidxs;
-	std::vector<tinyobj::material_t> materials;
-	std::ifstream matIStream(szFullPath.c_str());
-	std::string warning;
-	std::string error;
-	tinyobj::LoadMtl(&mtlidxs, &materials, &matIStream, &warning, &error);
-	for (const auto& iter : materials)
-	{
-		std::wstring matName = szFilePath + _tomw(iter.name);
-		Material* pMaterial = CreateResourceFromFile<Material>(matName);
-		pMaterial->SetTexturePath({ E_Texture::Diffuse, iter.diffuse_texname });
-		rets.push_back(pMaterial);
-	}
-	return rets;
-}

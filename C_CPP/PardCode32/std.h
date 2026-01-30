@@ -44,6 +44,10 @@
 
 //assimp
 #pragma comment(lib, "assimp-vc145-mtd.lib")
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/version.h>
 
 using namespace DirectX;
 
