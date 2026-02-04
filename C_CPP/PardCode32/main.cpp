@@ -21,6 +21,7 @@ BOOL WINAPI ConsoleHandler(DWORD signal)
 int main()
 {
 	//메모리 릭 체크
+	//_CrtSetBreakAlloc(134493);
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	SetConsoleCtrlHandler(ConsoleHandler, TRUE);
 

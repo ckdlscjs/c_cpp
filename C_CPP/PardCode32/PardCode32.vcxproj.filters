@@ -199,6 +199,9 @@
     <ClInclude Include="Assets.h">
       <Filter>Engine\GraphicSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Geometry.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">

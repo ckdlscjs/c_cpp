@@ -86,6 +86,7 @@ enum class E_Texture
 	Metalic,
 	AmbientOcclusion,
 	Emissive,
+	None,
 	count,
 };
 
@@ -228,8 +229,41 @@ struct TX_PATH
 	std::string szPath;
 };
 
-using MTL_TEXTURES = std::unordered_map<aiTextureType, std::vector<std::string>>;
-
+struct MTL_TEXTURES
+{
+	std::string szMatName;
+	std::unordered_map<aiTextureType, std::vector<std::string>> type_textures;
+};
+inline E_Texture ConvETexture(const aiTextureType& aiTextype)
+{
+	/*
+	* aiTextureType_REFLECTION = 11,
+				aiTextureType_BASE_COLOR = 12,
+				aiTextureType_NORMAL_CAMERA = 13,
+				aiTextureType_EMISSION_COLOR = 14,
+				aiTextureType_METALNESS = 15,
+				aiTextureType_DIFFUSE_ROUGHNESS = 16,
+				aiTextureType_AMBIENT_OCCLUSION = 17,
+	*/
+	switch (aiTextype)
+	{
+		case aiTextureType_DIFFUSE: 
+			return E_Texture::Diffuse;
+		case aiTextureType_SPECULAR: 
+			return E_Texture::Specular;
+		//case aiTextureType_AMBIENT: return E_Texture::
+		//case aiTextureType_EMISSIVE: return E_Texture::Emissive;
+		//case aiTextureType_HEIGHT: return E_Texture::
+		case aiTextureType_NORMALS: 
+			return E_Texture::Normal;
+		//case aiTextureType_SHININESS: return E_Texture::Diffuse;
+		//case aiTextureType_OPACITY: return E_Texture::
+		//case aiTextureType_DISPLACEMENT: return E_Texture::Diffuse;
+		//case aiTextureType_LIGHTMAP: return E_Texture::Diffuse;
+		default:
+			return E_Texture::None;
+	}
+}
 struct Mesh_Material
 {
 	size_t hash_mesh;

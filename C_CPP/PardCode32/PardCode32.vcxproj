@@ -165,6 +165,7 @@
     <ClInclude Include="ECSSystem.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="BehaviorSystem.h" />
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="States.h" />
     <ClInclude Include="Frustum.h" />

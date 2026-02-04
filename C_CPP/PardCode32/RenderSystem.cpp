@@ -16,6 +16,7 @@
 #include "Views.h"
 #include "ECSSystem.h"
 #include "Assets.h"
+#include "Geometry.h"
 
 #include "TestBlockMacro.h"
 
@@ -1761,23 +1762,20 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 }
 
 // DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
-size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::WIC_FLAGS flag)
+size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 {
-	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
-	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
-	return pTexture->GetHash();
-}
-
-// DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
-size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
-{
-	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, flag);
+	std::wstring extension = szFilePath.substr(szFilePath.find_last_of('.'));
+	Texture* pTexture = nullptr;
+	if (extension == L".dds") 
+		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
+	else
+		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, DirectX::WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB);
 	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
 
 template<typename T>
-size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices)
+size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices)
 {
 	std::vector<RenderCounts> countsVertices;
 	countsVertices.push_back({ (UINT)vertices.size(), 0 });
@@ -1787,17 +1785,6 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring szName, std::vect
 	std::wstring szTypename = _tomw(typeid(T).name());
 	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	return pMesh->GetHash();
-}
-
-template<typename T>
-size_t RenderSystem::CreateMesh(const std::wstring& szFilePath)
-{
-	std::map<UINT, MTL_TEXTURES> texturesByMaterial;
-	Mesh<T>* pMesh = _ResourceSystem.CreateMeshFromFile<T>(szFilePath, texturesByMaterial);
-	std::wstring szTypename = _tomw(typeid(T).name());
-	pMesh->SetVB(CreateVertexBuffer(szFilePath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szFilePath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	return pMesh->GetHash();
 }
 
@@ -1813,24 +1800,79 @@ const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh
 	return pMesh->GetCL();
 }
 
-template<typename T>
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath)
 {
 	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
 	return pMaterial->GetHash();
 }
 
-/*
-template<typename T>
-std::vector<size_t> RenderSystem::CreateMaterialsFromFile(const std::wstring& szFilePath)
+std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
 {
-	std::vector<size_t> rets;
-	std::vector<Material*> materials = _ResourceSystem.CreateResourcesFromFile<Material>(szFilePath);
-	for (const auto& iter : materials)
-		rets.push_back(iter->GetHash());
-	return rets;
+	std::vector<size_t> hashs_material;
+	for (const auto& matInfo : texturesByMaterial)
+	{
+		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
+		Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(matName);
+
+		UINT materialFlag = 0;
+		//Parsing Texture
+		for (const auto& type_textures : matInfo.second.type_textures)
+		{
+			E_Texture curType = ConvETexture(type_textures.first);
+			materialFlag |= (UINT)curType;
+			std::vector<TX_HASH> tx_hashs;
+			for (const auto& tex_path : type_textures.second)
+			{
+				tx_hashs.push_back({ curType, _RenderSystem.CreateTexture(_tomw(tex_path)) });
+			}
+			_RenderSystem.Material_SetTextures(pMaterial->GetHash(), tx_hashs);
+			hashs_material.push_back(pMaterial->GetHash());
+		}
+
+		//Set Use Shaders
+		Material_SetShaders(pMaterial->GetHash(), materialFlag);
+	}
+	return hashs_material;
 }
-*/
+
+size_t RenderSystem::CreateGeometry(const std::wstring& szFilePath)
+{
+	Geometry* pGeometry = _ResourceSystem.CreateResourceFromFile<Geometry>(szFilePath);
+	return pGeometry->GetHash();
+}
+
+std::vector<size_t> RenderSystem::CreateMaterialsFromGeometry(size_t hash_geometry)
+{
+	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+	return CreateMaterials(pGeometry->GetPath(), pGeometry->GetTextures());
+}
+template<typename T>
+size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
+{
+	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(pGeometry->GetPath() + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
+	std::wstring szTypename = _tomw(typeid(T).name());
+	pMesh->SetVB(CreateVertexBuffer(pGeometry->GetPath() + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(pGeometry->GetPath() + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	return pMesh->GetHash();
+}
+
+void RenderSystem::Material_SetShaders(size_t hash_material, const UINT flag)
+{
+	
+	_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
+	_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+	_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
+	
+	/*
+	* 텍스쳐 분류에따른 쉐이더선택
+	*/
+	if (flag == ((UINT)E_Texture::Diffuse | (UINT)E_Texture::Normal | (UINT)E_Texture::Specular))
+	{
+
+	}
+}
+
 void RenderSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
@@ -1862,6 +1904,7 @@ void RenderSystem::Material_SetTextures(size_t hash_material, const std::vector<
 	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
 }
+
 
 void RenderSystem::CreateCubeMapTexture(int iSize)
 {
