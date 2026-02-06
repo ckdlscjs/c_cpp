@@ -1761,6 +1761,14 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 	return hash;
 }
 
+
+size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, ScratchImage&& image)
+{
+	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, std::move(image));
+	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
+	return pTexture->GetHash();
+}
+
 // DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 {
@@ -1806,31 +1814,51 @@ size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath)
 	return pMaterial->GetHash();
 }
 
-std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, const std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
+std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
 {
 	std::vector<size_t> hashs_material;
-	for (const auto& matInfo : texturesByMaterial)
+	for (auto& matInfo : texturesByMaterial)
 	{
 		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
 		Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(matName);
-
+		size_t matHash = pMaterial->GetHash();
 		UINT materialFlag = 0;
 		//Parsing Texture
-		for (const auto& type_textures : matInfo.second.type_textures)
+		if (matInfo.second.type_textures_image.size())
 		{
-			E_Texture curType = ConvETexture(type_textures.first);
-			materialFlag |= (UINT)curType;
-			std::vector<TX_HASH> tx_hashs;
-			for (const auto& tex_path : type_textures.second)
+			//생성된스크래치이미지가있을경우
+			for (auto& type_textures_image : matInfo.second.type_textures_image)
 			{
-				tx_hashs.push_back({ curType, _RenderSystem.CreateTexture(_tomw(tex_path)) });
+				E_Texture curType = ConvETexture(type_textures_image.first);
+				materialFlag |= (UINT)curType;
+				std::vector<TX_HASH> tx_hashs;
+				for (auto& scratchImage : type_textures_image.second)
+				{
+					tx_hashs.push_back({ curType, _RenderSystem.CreateTexture(matName + GetTexType(curType),  std::move(scratchImage))});
+				}
+				_RenderSystem.Material_SetTextures(matHash, tx_hashs);
 			}
-			_RenderSystem.Material_SetTextures(pMaterial->GetHash(), tx_hashs);
-			hashs_material.push_back(pMaterial->GetHash());
 		}
-
+		else
+		{
+			//경로만있을경우
+			for (const auto& type_textures_path : matInfo.second.type_textures_path)
+			{
+				E_Texture curType = ConvETexture(type_textures_path.first);
+				materialFlag |= (UINT)curType;
+				std::vector<TX_HASH> tx_hashs;
+				for (const auto& tex_path : type_textures_path.second)
+				{
+					tx_hashs.push_back({ curType, _RenderSystem.CreateTexture(_tomw(tex_path)) });
+				}
+				_RenderSystem.Material_SetTextures(matHash, tx_hashs);
+			}
+		}
+		
 		//Set Use Shaders
-		Material_SetShaders(pMaterial->GetHash(), materialFlag);
+		Material_SetShaders(matHash, materialFlag);
+
+		hashs_material.push_back(matHash);
 	}
 	return hashs_material;
 }
@@ -1846,12 +1874,13 @@ std::vector<size_t> RenderSystem::CreateMaterialsFromGeometry(size_t hash_geomet
 	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
 	return CreateMaterials(pGeometry->GetPath(), pGeometry->GetTextures());
 }
+
 template<typename T>
 size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
 {
-	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(pGeometry->GetPath() + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
 	std::wstring szTypename = _tomw(typeid(T).name());
+	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(pGeometry->GetPath() + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
 	pMesh->SetVB(CreateVertexBuffer(pGeometry->GetPath() + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(pGeometry->GetPath() + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	return pMesh->GetHash();
@@ -1859,11 +1888,15 @@ size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
 
 void RenderSystem::Material_SetShaders(size_t hash_material, const UINT flag)
 {
-	
 	_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 	_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 	_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
-	
+	if (flag > 0)
+	{
+		_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
+		_RenderSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
+		_RenderSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
+	}
 	/*
 	* 텍스쳐 분류에따른 쉐이더선택
 	*/

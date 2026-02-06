@@ -47,17 +47,22 @@ public:
 	
 
 	//응용프로그램부 접근
+	size_t CreateTexture(const std::wstring& szFilePath, ScratchImage&& image);
 	size_t CreateTexture(const std::wstring& szFilePath);
-	template<typename T>
-	size_t CreateMeshFromGeometry(const std::wstring& szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices);
-	size_t CreateMaterial(const std::wstring& szFilePath);
-	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, const std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
+
 	size_t CreateGeometry(const std::wstring& szFilePath);
 	template<typename T>
+	size_t CreateMeshFromGeometry(const std::wstring& szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices);
+	template<typename T>
 	size_t CreateMeshFromGeometry(size_t hash_geometry);
+
+	size_t CreateMaterial(const std::wstring& szFilePath);
+	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
 	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);
+
 	template<typename T>
 	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+
 	void CreateCubeMapTexture(int iSize);
 	size_t CreateShadowMapTexture(const int width, const int height);
 

@@ -39,8 +39,13 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")		//d3dcomplie, 쉐이더사용을위한추가
 
-#include <DirectXTex.h>						//Include/DXTEX, 텍스쳐사용을위한추가
+#include <directXTex/DirectXTex.h>			
 #pragma comment(lib, "DirectXTex.lib")
+
+#include <directXTK/DDSTextureLoader.h>
+#include <directXTK/WICTextureLoader.h>
+#pragma comment(lib, "DirectXTK.lib")
+
 
 //assimp
 #pragma comment(lib, "assimp-vc145-mtd.lib")

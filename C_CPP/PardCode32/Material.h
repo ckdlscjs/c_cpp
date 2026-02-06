@@ -79,10 +79,8 @@ map_ao Sci_Fi_Container_AO.png
 # 물체 자체가 빛을 내는 부분을 표현합니다.
 map_Ke Sci_Fi_Container_Emissive.png
 */
-inline Material::Material(size_t hash, const std::wstring& szFilePath)
+inline Material::Material(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
-	SetHash(hash);
-	SetFilePath(szFilePath);
 }
 
 inline void Material::SetVS(size_t hashVS)

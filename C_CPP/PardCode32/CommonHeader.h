@@ -232,7 +232,8 @@ struct TX_PATH
 struct MTL_TEXTURES
 {
 	std::string szMatName;
-	std::unordered_map<aiTextureType, std::vector<std::string>> type_textures;
+	std::unordered_map<aiTextureType, std::vector<DirectX::ScratchImage>> type_textures_image;
+	std::unordered_map<aiTextureType, std::vector<std::string>> type_textures_path;
 };
 inline E_Texture ConvETexture(const aiTextureType& aiTextype)
 {
@@ -247,23 +248,38 @@ inline E_Texture ConvETexture(const aiTextureType& aiTextype)
 	*/
 	switch (aiTextype)
 	{
-		case aiTextureType_DIFFUSE: 
+		case aiTextureType_DIFFUSE:
 			return E_Texture::Diffuse;
-		case aiTextureType_SPECULAR: 
+		case aiTextureType_SPECULAR:
 			return E_Texture::Specular;
-		//case aiTextureType_AMBIENT: return E_Texture::
-		//case aiTextureType_EMISSIVE: return E_Texture::Emissive;
-		//case aiTextureType_HEIGHT: return E_Texture::
-		case aiTextureType_NORMALS: 
+			//case aiTextureType_AMBIENT: return E_Texture::
+			//case aiTextureType_EMISSIVE: return E_Texture::Emissive;
+			//case aiTextureType_HEIGHT: return E_Texture::
+		case aiTextureType_NORMALS:
 			return E_Texture::Normal;
-		//case aiTextureType_SHININESS: return E_Texture::Diffuse;
-		//case aiTextureType_OPACITY: return E_Texture::
-		//case aiTextureType_DISPLACEMENT: return E_Texture::Diffuse;
-		//case aiTextureType_LIGHTMAP: return E_Texture::Diffuse;
+			//case aiTextureType_SHININESS: return E_Texture::Diffuse;
+			//case aiTextureType_OPACITY: return E_Texture::
+			//case aiTextureType_DISPLACEMENT: return E_Texture::Diffuse;
+			//case aiTextureType_LIGHTMAP: return E_Texture::Diffuse;
 		default:
 			return E_Texture::None;
 	}
 }
+inline const std::wstring GetTexType(E_Texture eTexture)
+{
+	switch (eTexture)
+	{
+		case E_Texture::Diffuse:
+			return L"Diffuse";
+		case E_Texture::Specular:
+			return L"Specular";
+		case E_Texture::Normal:
+			return L"Normal";
+		default:
+			return L"None";
+	}
+}
+
 struct Mesh_Material
 {
 	size_t hash_mesh;

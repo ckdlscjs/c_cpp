@@ -14,7 +14,7 @@ public:
 	const std::map<UINT, std::vector<Vertex_PTNTB>>& GetVertices() { return m_verticesByMaterial; }
 	const std::map<UINT, std::vector<UINT>>& GetIndices() { return m_indicesByMaterial; }
 	const std::vector<std::vector<Vector3>>& GetPoints() { return m_pointsByMeshs; }
-	const std::map<UINT, MTL_TEXTURES>& GetTextures() { return m_texturesByMaterial; }
+	std::map<UINT, MTL_TEXTURES>& GetTextures() { return m_texturesByMaterial; }
 private:
 	void ProcessMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB, UINT, Vertex_PTNTB_Hash>>& verticesIdentical);
 	void ProcessNode(const aiScene* scene, const aiNode* node, std::map<UINT, std::unordered_map<Vertex_PTNTB, UINT, Vertex_PTNTB_Hash>>& verticesIdentical);
@@ -41,7 +41,7 @@ inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath)
 		aiProcess_CalcTangentSpace | 
 		aiProcess_OptimizeMeshes |
 		aiProcess_OptimizeGraph |
-		aiProcess_LimitBoneWeights | 
+		aiProcess_LimitBoneWeights |
 		aiProcess_ConvertToLeftHanded;
 	const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
 	_ASEERTION_NULCHK(scene, "aiScene nullptr");
@@ -122,12 +122,28 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				aiString texPath;
 				if (material->GetTexture(texType, idx, &texPath) == aiReturn_SUCCESS)
 				{
-					//const aiTexture* embeddedTexture = scene->GetEmbeddedTexture(texPath.C_Str());
-					//if (embeddedTexture)
-					//{
-					//	//내장텍스쳐가 있을경우 처리방식
-					//}
-					m_texturesByMaterial[mesh->mMaterialIndex].type_textures[texType].push_back(texPath.C_Str());
+					const aiTexture* embeddedTexture = scene->GetEmbeddedTexture(texPath.C_Str());
+					if (embeddedTexture)
+					{
+						/*
+						* mHeight가 0이면 데이터가 압축된 상태(png, jpg 등)임을 의미
+						* mHeight == 0일 때: mWidth = Byte Size (파일 용량)
+						* mHeight > 0일 때 : mWidth = Pixel Width(이미지 너비)
+						*/
+						if (embeddedTexture->mHeight == 0)
+						{
+							ScratchImage srcatchImage;
+							LoadFromWICMemory(
+								reinterpret_cast<const uint8_t*>(embeddedTexture->pcData), 
+								static_cast<size_t>(embeddedTexture->mWidth), 
+								DirectX::WIC_FLAGS_NONE,
+								nullptr,
+								srcatchImage);
+							m_texturesByMaterial[mesh->mMaterialIndex].type_textures_image[texType].push_back(std::move(srcatchImage));
+						}
+					}
+					//외부경로저장
+					m_texturesByMaterial[mesh->mMaterialIndex].type_textures_path[texType].push_back(texPath.C_Str());
 				}
 			}
 		}

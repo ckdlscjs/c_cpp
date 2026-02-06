@@ -5,13 +5,12 @@ class Texture : public BaseResource<Texture>
 {
 	friend class BaseResource<Texture>;
 public:
+	Texture(size_t hash, const std::wstring& szFilePath, ScratchImage&& scratchIamge);
 	Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag);
 	Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag);
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
 	Texture(Texture&&) = delete;
-	Texture& operator=(Texture&&) = delete;
-
 	void SetSRV(size_t hashSRV);
 	size_t GetSRV() const;
 	const ScratchImage* GetImage() const;
@@ -20,10 +19,14 @@ private:
 	ScratchImage m_ScratchImage;
 };
 
-inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag)
+//우측값이동으로 원본객체(scratchImage)를 복사없이 경량비용으로 가져온다
+inline Texture::Texture(size_t hash, const std::wstring& szFilePath, ScratchImage&& scratchIamge) : BaseResource(hash, szFilePath)
 {
-	SetHash(hash);
-	SetFilePath(szFilePath);
+	m_ScratchImage = std::move(scratchIamge);
+}
+
+inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::WIC_FLAGS flag) : BaseResource(hash, szFilePath)
+{
 	/*
 	WIC_FLAGS_NONE(0x0) :
 	설명: 아무 플래그도 설정하지 않습니다.WIC가 파일의 메타데이터를 기반으로 최선의 판단을 내려 텍스처를 로드합니다.
@@ -42,13 +45,22 @@ inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::WI
 	대부분의 ColorMap에 이 플래그를 사용하거나, WIC_FLAGS_DEFAULT_SRGB를 사용합니다.
 	*/
 	// 라이브러리의 함수에 파일주소만을 넘겨 객체포인터를 받아와 이를 이용한다
-	_ASEERTION_CREATE(DirectX::LoadFromWICFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage), "LoadTexture not successfully");
+	HRESULT hr;
+	 hr = DirectX::LoadFromWICFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage);
+	if (hr != S_OK)
+	{
+		hr = DirectX::LoadFromWICFile(L"../Assets/Textures/brick.png", WIC_FLAGS_IGNORE_SRGB, nullptr, m_ScratchImage);
+	}
+	_ASEERTION_CREATE(FAILED(hr), "LoadTexture not successfully");
 }
-inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag)
+inline Texture::Texture(size_t hash, const std::wstring& szFilePath, DirectX::DDS_FLAGS flag) : BaseResource(hash, szFilePath)
 {
-	SetHash(hash);
-	SetFilePath(szFilePath);
-	_ASEERTION_CREATE(DirectX::LoadFromDDSFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage), "LoadTexture not successfully");
+	HRESULT hr = DirectX::LoadFromDDSFile(szFilePath.c_str(), flag, nullptr, m_ScratchImage);
+	if (hr != S_OK)
+	{
+		hr = DirectX::LoadFromWICFile(L"../Assets/Textures/brick.png", WIC_FLAGS_IGNORE_SRGB, nullptr, m_ScratchImage);
+	}
+	_ASEERTION_CREATE(FAILED(hr), "LoadTexture not successfully");
 }
 
 inline void Texture::SetSRV(size_t hashSRV)

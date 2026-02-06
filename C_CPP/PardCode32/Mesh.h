@@ -33,13 +33,12 @@ protected:
 	size_t m_lVB;
 	size_t m_lIB;
 };
-inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath)
+inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
-	this->SetHash(hash);
-	this->SetFilePath(szFilePath);
 }
 
 inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countsIndices) :
+	BaseResource(hash, szFilePath),
 	m_Points(std::move(points)),
 	m_RenderVertices(std::move(countsVertices)),
 	m_Indices(std::move(indices)),

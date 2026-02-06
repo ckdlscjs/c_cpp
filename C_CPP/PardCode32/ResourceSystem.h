@@ -17,7 +17,6 @@ public:
 	void Init();
 	template<typename T, typename... Types>
 	T* CreateResourceFromFile(const std::wstring& szFilePath, Types&&... args);
-
 	template<typename T>
 	T* GetResource(size_t hash);
 private:

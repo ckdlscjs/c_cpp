@@ -20,6 +20,7 @@ template<typename T>
 class BaseResource : public Resource
 {
 protected:
+	BaseResource(const size_t hash, const std::wstring& szFilePath);
 	BaseResource();
 	~BaseResource();
 	BaseResource(const BaseResource&) = delete;
@@ -27,7 +28,7 @@ protected:
 	BaseResource(BaseResource&&) = delete;
 	BaseResource& operator=(BaseResource&&) = delete;
 	void SetHash(size_t hash) override;
-	void SetFilePath(const std::wstring& szFilepath) override;
+	void SetFilePath(const std::wstring& szFilePath) override;
 public:
 	const size_t GetHash() const override;
 	const std::wstring& GetPath() const override;
@@ -35,6 +36,11 @@ private:
 	std::wstring m_szFilePath;
 	size_t m_lResourceID;
 };
+template<typename T>
+inline BaseResource<T>::BaseResource(const size_t hash, const std::wstring& szFilePath) : m_lResourceID(hash), m_szFilePath(szFilePath)
+{
+	std::cout << "Initialize : " << "BaseResource <" << typeid(T).name() << "> Class" << '\n';
+}
 
 template<typename T>
 inline BaseResource<T>::BaseResource()
@@ -55,9 +61,9 @@ inline void BaseResource<T>::SetHash(size_t hash)
 }
 
 template<typename T>
-inline void BaseResource<T>::SetFilePath(const std::wstring& szFilepath)
+inline void BaseResource<T>::SetFilePath(const std::wstring& szFilePath)
 {
-	m_szFilePath = szFilepath;
+	m_szFilePath = szFilePath;
 }
 
 template<typename T>
