@@ -202,6 +202,9 @@
     <ClInclude Include="Geometry.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">

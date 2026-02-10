@@ -54,7 +54,7 @@ public:
 		m_vec = DirectX::XMVectorScale(m_vec, 1.0f / scalar);
 		return *this;
 	}
-	inline bool operator==(const Vector4& other) { return DirectX::XMVector4NearEqual(m_vec, other.m_vec, DirectX::XMVectorSplatEpsilon()); }
+	inline bool operator==(const Vector4& other) const { return DirectX::XMVector4NearEqual(m_vec, other.m_vec, DirectX::XMVectorSplatEpsilon()); }
 
 	//유틸함수들
 

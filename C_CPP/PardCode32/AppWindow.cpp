@@ -113,20 +113,6 @@ void AppWindow::OnCreate()
 	//Light Initialize
 	{
 		//Directional Light
-#ifdef _MoveDirecionalLight
-		{
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Light, C_Light_Direction, T_Light_Directional>();
-			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
-			
-			size_t lookup_maincam = _CameraSystem.lookup_maincam;
-			const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
-			Vector3 dir = -c_cam_transform.vPosition;
-			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
-			_ECSSystem.AddComponent<C_Light_Direction>(key, { dir.Normalize()});
-		}
-#endif // _MoveDirecionalLight
-
-#ifndef _MoveDirecionalLight
 		{
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Light, C_Light_Direction, T_Light_Directional>();
 			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
@@ -134,7 +120,6 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
 			_ECSSystem.AddComponent<C_Light_Direction>(key, { Vector3(0.0f, -1.0f, 1.0f) });
 		}
-#endif // !_MoveDirecionalLight
 
 		//Point Light
 		{
@@ -162,14 +147,14 @@ void AppWindow::OnCreate()
 	{
 		//gizmo
 		{
-			std::vector<std::vector<Vector3>> points;
+			/*std::vector<std::vector<Vector3>> points;
 			std::vector<Vertex_PC> vertices;
 			std::vector<UINT> indices;
 			GeometryGenerate_Gizmo(points, vertices, indices);
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(vertices), std::move(indices));
 			{
 
-			}
+			}*/
 		}
 
 
@@ -218,12 +203,12 @@ void AppWindow::OnCreate()
 
 		//floor
 		{
-			std::vector<std::vector<Vector3>> points;
-			std::vector<Vertex_PTN> vertices;
-			std::vector<UINT> indices;
-			GeometryGenerate_Plane(points, vertices, indices);
+			std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> verticesByMaterial;
+			std::map<UINT, std::vector<UINT>> indicesByMaterial;
+			std::vector<std::vector<Vector3>> pointsByMeshs;
+			GeometryGenerate_Plane<Vertex_PTN>(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
 
-			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"floor", std::move(points), std::move(vertices), std::move(indices));
+			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(L"floor", verticesByMaterial, indicesByMaterial, pointsByMeshs);
 			size_t hash_material = _RenderSystem.CreateMaterial(L"Mat_floor");
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
@@ -611,7 +596,7 @@ void AppWindow::OnCreate()
 	//_MutantWalk
 	{
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
-		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
 		for (const auto& iter : hashs_material)
@@ -627,7 +612,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -50.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -815,11 +800,11 @@ void AppWindow::OnCreate()
 	//Initialize RTV, DSV
 	{
 		//Init TargetView geometry
-		std::vector<std::vector<Vector3>> points;
-		std::vector<Vertex_PT> vertices;
-		std::vector<UINT> indices;
-		GeometryGenerate_Plane(points, vertices, indices);
-		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", std::move(points), std::move(vertices), std::move(indices));
+		std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> verticesByMaterial;
+		std::map<UINT, std::vector<UINT>> indicesByMaterial;
+		std::vector<std::vector<Vector3>> pointsByMeshs;
+		GeometryGenerate_Plane<Vertex_PT>(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
+		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", verticesByMaterial, indicesByMaterial, pointsByMeshs);
 		//RTV
 		{
 			size_t hash_material = _RenderSystem.CreateMaterial(L"Mat_RTV");

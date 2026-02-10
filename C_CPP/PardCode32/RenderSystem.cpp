@@ -17,6 +17,7 @@
 #include "ECSSystem.h"
 #include "Assets.h"
 #include "Geometry.h"
+#include "Animation.h"
 
 #include "TestBlockMacro.h"
 
@@ -173,7 +174,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 #ifdef _EnviornmentMap
 	RenderCubeMap();
 #endif // _EnviornmentMap
-
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
 	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
 	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
@@ -1783,20 +1783,6 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 }
 
 template<typename T>
-size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<UINT>&& indices)
-{
-	std::vector<RenderCounts> countsVertices;
-	countsVertices.push_back({ (UINT)vertices.size(), 0 });
-	std::vector<RenderCounts> countsIndices;
-	countsIndices.push_back({ (UINT)indices.size(), 0 });
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szName, std::move(points), std::move(vertices), std::move(countsVertices), std::move(indices), std::move(countsIndices));
-	std::wstring szTypename = _tomw(typeid(T).name());
-	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
-	return pMesh->GetHash();
-}
-
-template<typename T>
 const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh, E_Collider collider)
 {
 	Mesh<T>* pMesh = _ResourceSystem.GetResource<Mesh<T>>(hash_mesh);
@@ -1872,17 +1858,29 @@ size_t RenderSystem::CreateGeometry(const std::wstring& szFilePath)
 std::vector<size_t> RenderSystem::CreateMaterialsFromGeometry(size_t hash_geometry)
 {
 	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
-	return CreateMaterials(pGeometry->GetPath(), pGeometry->GetTextures());
+	std::wstring szPath = pGeometry->GetPath();
+	return CreateMaterials(szPath + L"Material", pGeometry->GetTextures());
+}
+
+template<typename T>
+size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs)
+{
+	std::wstring szTypename = _tomw(typeid(T).name());
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szName + szTypename + L"Mesh", verticesByMaterial, indicesByMaterial, pointsByMeshs);
+	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	return pMesh->GetHash();
 }
 
 template<typename T>
 size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
 {
-	std::wstring szTypename = _tomw(typeid(T).name());
 	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(pGeometry->GetPath() + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
-	pMesh->SetVB(CreateVertexBuffer(pGeometry->GetPath() + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(pGeometry->GetPath() + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	std::wstring szPath = pGeometry->GetPath();
+	std::wstring szTypename = _tomw(typeid(T).name());
+	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szPath + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
+	pMesh->SetVB(CreateVertexBuffer(szPath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	return pMesh->GetHash();
 }
 

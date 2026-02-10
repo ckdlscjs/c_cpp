@@ -30,6 +30,15 @@ struct Matrix4x4
     // DirectX::XMMATRIX에서 직접 초기화
     inline Matrix4x4(const DirectX::XMMATRIX& m) : m_mat(m) {}
 
+    // Convert to aiMat
+    inline Matrix4x4(const aiMatrix4x4& aiMat)
+    {
+        r[0] = Vector4(aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1);
+        r[1] = Vector4(aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2);
+        r[2] = Vector4(aiMat.a3, aiMat.b3, aiMat.c3, aiMat.d3);
+        r[3] = Vector4(aiMat.a4, aiMat.b4, aiMat.c4, aiMat.d4);
+    }
+
     // 연산자재정의
     // 행렬 덧셈
     inline Matrix4x4 operator+(const Matrix4x4& other) const {

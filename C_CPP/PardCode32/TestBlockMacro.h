@@ -11,6 +11,6 @@
 //#define _HOUSE
 //#define _NORMALMAP
 #define _MutantWalk
-#define _Praying
+//#define _Praying
 //#define _DRAGON
-#define _MoveDirecionalLight
+//#define _MoveDirecionalLight

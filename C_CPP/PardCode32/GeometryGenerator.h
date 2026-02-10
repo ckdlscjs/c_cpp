@@ -710,8 +710,8 @@
 
 #pragma once
 #include "CommonHeader.h"
- 
-inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PT>& vertices, std::vector<UINT>& indices)
+template<typename T>
+inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTNTB_Skinned>& vertices, std::vector<UINT>& indices)
 {
 	/*
 	* 0 1
@@ -730,33 +730,20 @@ inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& poi
 
 	vertices[3].pos0 = points[0][3] = Vector3(0.5f, -0.5f, 0.0f);
 	vertices[3].tex0 = Vector2(1.0f, 1.0f);
-
-	indices = { 0, 1, 2, 2, 1, 3 };
-}
-
-inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTN>& vertices, std::vector<UINT>& indices)
-{
-	/*
-	* 0 1
-	* 2 3
-	*/
-	points.resize(1, std::vector<Vector3>(4));
-	vertices.resize(4);
-	vertices[0].pos0 = points[0][0] = Vector3(-0.5f, 0.5f, 0.0f);
-	vertices[0].tex0 = Vector2(0.0f, 0.0f);
-	vertices[0].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-
-	vertices[1].pos0 = points[0][1] = Vector3(0.5f, 0.5f, 0.0f);
-	vertices[1].tex0 = Vector2(1.0f, 0.0f);
-	vertices[1].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-
-	vertices[2].pos0 = points[0][2] = Vector3(-0.5f, -0.5f, 0.0f);
-	vertices[2].tex0 = Vector2(0.0f, 1.0f);
-	vertices[2].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-
-	vertices[3].pos0 = points[0][3] = Vector3(0.5f, -0.5f, 0.0f);
-	vertices[3].tex0 = Vector2(1.0f, 1.0f);
-	vertices[3].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	if constexpr (std::is_same_v<T, Vertex_PTN>)
+	{
+		vertices[0].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[1].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[2].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[3].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	}
+	else if constexpr (std::is_same_v<T, Vertex_PTNTB>)
+	{
+		vertices[0].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[1].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[2].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+		vertices[3].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	}
 
 	indices = { 0, 1, 2, 2, 1, 3 };
 }

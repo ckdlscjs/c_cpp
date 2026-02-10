@@ -98,6 +98,8 @@ enum class E_InputLayout
 	PPCC,
 	PTN,
 	PTNTB,
+	PTN_Skinned,
+	PTNTB_Skinned,
 };
 /*
 * 1. MAP_DATA     : 일반적인 모델 텍스처(Diffuse, Normal, Specular)
@@ -235,6 +237,46 @@ struct MTL_TEXTURES
 	std::unordered_map<aiTextureType, std::vector<DirectX::ScratchImage>> type_textures_image;
 	std::unordered_map<aiTextureType, std::vector<std::string>> type_textures_path;
 };
+
+//뼈대
+struct Bone
+{
+	UINT idx;
+	Matrix4x4 matOffset;
+};
+//키프레임 데이터
+struct KeyFrame_Scale
+{
+	float fTime;
+	Vector3 vScale;
+};
+struct KeyFrame_Rotate
+{
+	float fTime;
+	Quarternion qRotate;
+};
+struct KeyFrame_Position
+{
+	float fTime;
+	Vector3 vPosition;
+};
+struct IWInfo
+{
+	UINT boneIdx;
+	float weight;
+};
+
+//애니메이션클립(Sort by Bones)
+struct AnimationClip
+{
+	std::string szName;
+	float fDuration;
+	float fTicksPerSecond;
+	std::unordered_map<std::string, std::vector<KeyFrame_Scale>> boneFrames_Scale;
+	std::unordered_map<std::string, std::vector<KeyFrame_Rotate>> boneFrames_Rotate;
+	std::unordered_map<std::string, std::vector<KeyFrame_Position>> boneFrames_Translation;
+};
+
 inline E_Texture ConvETexture(const aiTextureType& aiTextype)
 {
 	/*
@@ -495,6 +537,164 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB[] =
 	{"BINORMAL",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
 };
 
+struct Vertex_PTN_Skinned
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	std::array<UINT, 4> bones;
+	std::array<float, 4> weights;
+	bool operator==(const Vertex_PTN_Skinned& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && bones == other.bones && weights == other.weights);
+	}
+};
+struct Vertex_PTN_Skinned_Hash
+{
+	size_t operator()(const Vertex_PTN_Skinned& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[0]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[1]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[2]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[3]));
+		hash_combine(hash, std::hash<float>{}(v.weights[0]));
+		hash_combine(hash, std::hash<float>{}(v.weights[1]));
+		hash_combine(hash, std::hash<float>{}(v.weights[2]));
+		hash_combine(hash, std::hash<float>{}(v.weights[3]));
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+		hash_combine(hash, HashingFloat(v.bones[0]));
+		hash_combine(hash, HashingFloat(v.bones[1]));
+		hash_combine(hash, HashingFloat(v.bones[2]));
+		hash_combine(hash, HashingFloat(v.bones[3]));
+		hash_combine(hash, HashingFloat(v.weights[0]));
+		hash_combine(hash, HashingFloat(v.weights[1]));
+		hash_combine(hash, HashingFloat(v.weights[2]));
+		hash_combine(hash, HashingFloat(v.weights[3]));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTN_Skinned[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BONES",		0, DXGI_FORMAT_R32G32B32A32_UINT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"WEIGHTS",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PTNTB_Skinned
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	Vector3 tangent0;
+	Vector3 binormal0;
+	std::array<UINT, 4> bones;
+	std::array<float, 4> weights;
+	bool operator==(const Vertex_PTNTB_Skinned& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && tangent0 == other.tangent0 && binormal0 == other.binormal0 && bones == other.bones && weights == other.weights);
+	}
+};
+struct Vertex_PTNTB_Skinned_Hash
+{
+	size_t operator()(const Vertex_PTNTB_Skinned& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetZ()));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[0]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[1]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[2]));
+		hash_combine(hash, std::hash<UINT>{}(v.bones[3]));
+		hash_combine(hash, std::hash<float>{}(v.weights[0]));
+		hash_combine(hash, std::hash<float>{}(v.weights[1]));
+		hash_combine(hash, std::hash<float>{}(v.weights[2]));
+		hash_combine(hash, std::hash<float>{}(v.weights[3]));
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetX()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetY()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetZ()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetX()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetY()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetZ()));
+		hash_combine(hash, HashingFloat(v.bones[0]));
+		hash_combine(hash, HashingFloat(v.bones[1]));
+		hash_combine(hash, HashingFloat(v.bones[2]));
+		hash_combine(hash, HashingFloat(v.bones[3]));
+		hash_combine(hash, HashingFloat(v.weights[0]));
+		hash_combine(hash, HashingFloat(v.weights[1]));
+		hash_combine(hash, HashingFloat(v.weights[2]));
+		hash_combine(hash, HashingFloat(v.weights[3]));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB_Skinned[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TANGENT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BINORMAL",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BONES",		0, DXGI_FORMAT_R32G32B32A32_UINT,		0, 80,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"WEIGHTS",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 96,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+
+
 static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
 {
 	{InputLayout_VertexPC,		(UINT)ARRAYSIZE(InputLayout_VertexPC)},
@@ -503,6 +703,8 @@ static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
 	{InputLayout_VertexPPCC,	(UINT)ARRAYSIZE(InputLayout_VertexPPCC)},
 	{InputLayout_VertexPTN,		(UINT)ARRAYSIZE(InputLayout_VertexPTN)},
 	{InputLayout_VertexPTNTB,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB)},
+	{InputLayout_VertexPTN_Skinned,		(UINT)ARRAYSIZE(InputLayout_VertexPTN_Skinned)},
+	{InputLayout_VertexPTNTB_Skinned,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB_Skinned)},
 };
 
 //TMP를 이용한 추론
@@ -546,6 +748,26 @@ struct Traits_InputLayout<Vertex_PTNTB> {
 	}
 	static constexpr UINT GetSize() {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTN_Skinned> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN_Skinned].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN_Skinned].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTNTB_Skinned> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB_Skinned].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB_Skinned].second;
 	}
 };
 

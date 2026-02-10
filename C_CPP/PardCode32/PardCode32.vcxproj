@@ -149,6 +149,7 @@
     <ClInclude Include="..\Include\ImGui\imstb_rectpack.h" />
     <ClInclude Include="..\Include\ImGui\imstb_textedit.h" />
     <ClInclude Include="..\Include\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="AppWindow.h" />
     <ClInclude Include="Archetype.h" />
     <ClInclude Include="Assets.h" />

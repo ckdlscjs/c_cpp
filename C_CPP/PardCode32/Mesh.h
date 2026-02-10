@@ -5,7 +5,6 @@ class BaseMesh : public BaseResource<BaseMesh>
 	friend class BaseResource<BaseMesh>;
 protected:
 	BaseMesh(size_t hash, const std::wstring& szFilePath);
-	BaseMesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countsIndices);
 	BaseMesh(const BaseMesh&) = delete;
 	BaseMesh& operator=(const BaseMesh&) = delete;
 	BaseMesh(BaseMesh&&) = delete;
@@ -27,22 +26,13 @@ public:
 protected:
 	std::vector<std::vector<Vector3>> m_Points;
 	std::vector<UINT> m_Indices;
-	std::unordered_set<size_t> m_lCL;
 	std::vector<RenderCounts> m_RenderVertices;
 	std::vector<RenderCounts> m_RenderIndices;
 	size_t m_lVB;
 	size_t m_lIB;
+	std::unordered_set<size_t> m_lCL;
 };
-inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
-{
-}
-
-inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countsIndices) :
-	BaseResource(hash, szFilePath),
-	m_Points(std::move(points)),
-	m_RenderVertices(std::move(countsVertices)),
-	m_Indices(std::move(indices)),
-	m_RenderIndices(std::move(countsIndices))
+inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath), m_lVB(0), m_lIB(0)
 {
 }
 
@@ -109,8 +99,7 @@ template<typename T>
 class Mesh : public BaseMesh
 {
 public:
-	Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
-	Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countIndices);
+	Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 	Mesh(Mesh&&) = delete;
@@ -121,9 +110,9 @@ public:
 private:
 	std::vector<T> m_Vertices;
 };
-//정점 재계산후 우측값참조를 통해 Mesh쪽으로 넘겨받아 전달로 빠르게 값을 이동시킨다
+
 template<typename T>
-inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs) 
+inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs)
 	: BaseMesh(hash, szFilePath)
 {
 	//Mesh로 정렬해 넣기위해 순서대로 Material에 따른 인덱싱을 재계산
@@ -132,7 +121,17 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 	{
 		m_RenderVertices.push_back({ (UINT)iter.second.size(), vertexIdx });
 		vertexIdx = (UINT)iter.second.size();
-		if constexpr (std::is_same_v<T, Vertex_PTN>)
+		if constexpr (std::is_same_v<T, Vertex_PT>)
+		{
+			for (const auto& v : iter.second)
+			{
+				Vertex_PT vPT;
+				vPT.pos0 = v.pos0;
+				vPT.tex0 = v.tex0;
+				m_Vertices.push_back(vPT);
+			}
+		}
+		else if constexpr (std::is_same_v<T, Vertex_PTN>)
 		{
 			for (const auto& v : iter.second)
 			{
@@ -141,6 +140,30 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 				vPTN.tex0 = v.tex0;
 				vPTN.normal0 = v.normal0;
 				m_Vertices.push_back(vPTN);
+			}
+		}
+		else if constexpr (std::is_same_v<T, Vertex_PTNTB>)
+		{
+			for (const auto& v : iter.second)
+			{
+				Vertex_PTNTB vPTNTB;
+				vPTNTB.pos0 = v.pos0;
+				vPTNTB.tex0 = v.tex0;
+				vPTNTB.normal0 = v.normal0;
+				m_Vertices.push_back(vPTNTB);
+			}
+		}
+		else if constexpr (std::is_same_v<T, Vertex_PTN_Skinned>)
+		{
+			for (const auto& v : iter.second)
+			{
+				Vertex_PTN_Skinned vPTN_Skin;
+				vPTN_Skin.pos0 = v.pos0;
+				vPTN_Skin.tex0 = v.tex0;
+				vPTN_Skin.normal0 = v.normal0;
+				vPTN_Skin.bones = v.bones;
+				vPTN_Skin.weights = v.weights;
+				m_Vertices.push_back(vPTN_Skin);
 			}
 		}
 		else
@@ -161,16 +184,6 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 	}
 
 	m_Points = pointsByMeshs;
-}
-
-//정점 재계산후 우측값참조를 통해 Mesh쪽으로 넘겨받아 전달로 빠르게 값을 이동시킨다
-template<typename T>
-inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, std::vector<std::vector<Vector3>>&& points, std::vector<T>&& vertices, std::vector<RenderCounts>&& countsVertices, std::vector<UINT>&& indices, std::vector<RenderCounts>&& countsIndices) :
-	BaseMesh(hash, szFilePath, std::move(points), std::move(countsVertices), std::move(indices), std::move(countsIndices)),
-	m_Vertices(std::move(vertices))
-{
-	this->SetHash(hash);
-	this->SetFilePath(szFilePath);
 }
 
 template<typename T>
