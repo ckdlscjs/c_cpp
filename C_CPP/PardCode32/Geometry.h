@@ -15,13 +15,13 @@ public:
 	const std::map<UINT, std::vector<UINT>>& GetIndices() { return m_indicesByMaterial; }
 	const std::vector<std::vector<Vector3>>& GetPoints() { return m_pointsByMeshs; }
 	std::map<UINT, MTL_TEXTURES>& GetTextures() { return m_texturesByMaterial; }
-	std::vector<AnimationClip>& GetAnimationClip() { return m_AnimationClip; }
 	std::unordered_map<std::string, Bone>& GetBones() { return m_BoneMap; }
-	std::vector<std::tuple<int, std::string, std::string>>& GetBonesHierarchy() { return m_BoneHierarchy; }
+	std::vector<NodeHierarchy>& GetBonesHierarchy() { return m_Hierarchy; }
+	std::unordered_map<std::string, AnimationClip>& GetAnimationClip() { return m_AnimationClip; }
 		
 private:
 	void ProcessMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
-	void ProcessNode(const aiScene* scene, const aiNode* node, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
+	void ProcessNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
 	void ProcessAnim(const aiScene* scene);
 
 private:
@@ -29,15 +29,17 @@ private:
 	std::map<UINT, std::vector<UINT>> m_indicesByMaterial;
 	std::vector<std::vector<Vector3>> m_pointsByMeshs;
 	std::map<UINT, MTL_TEXTURES> m_texturesByMaterial;
-	std::vector<AnimationClip> m_AnimationClip;
+	std::unordered_map<std::string, AnimationClip> m_AnimationClip;
 	std::unordered_map<std::string, Bone> m_BoneMap;
-	std::vector<std::tuple<int, std::string, std::string>> m_BoneHierarchy;
+	std::vector<NodeHierarchy> m_Hierarchy;
 };
 
 inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 	Assimp::Importer importer;
-	importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
+
+	//importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+	//importer.SetPropertyInteger(AI_CONFIG_PP_LBW_MAX_WEIGHTS, 4);
 	std::string szFullPath = _towm(szFilePath);
 	unsigned int readFlag =
 		aiProcess_Triangulate |
@@ -48,32 +50,12 @@ inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath) : BaseRes
 		aiProcess_OptimizeMeshes |
 		aiProcess_OptimizeGraph |
 		aiProcess_LimitBoneWeights |
+		aiProcess_PopulateArmatureData|
 		aiProcess_ConvertToLeftHanded;
 	const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
 	_ASEERTION_NULCHK(scene, "aiScene nullptr");
 	std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>> verticesIdentical;
-	ProcessNode(scene, scene->mRootNode, verticesIdentical);
-	if (m_BoneMap.size())
-	{
-		m_BoneHierarchy.resize(m_BoneMap.size());
-		std::function<void(const aiNode*, int)> traverse = [&](const aiNode* node, int idx)
-			{
-				std::string curName = node->mName.C_Str();
-				if (m_BoneMap.find(curName) != m_BoneMap.end())
-				{
-					std::get<0>(m_BoneHierarchy[m_BoneMap[curName].idx]) = idx;
-					std::get<1>(m_BoneHierarchy[m_BoneMap[curName].idx]) = idx == -1 ? "root" : std::get<2>(m_BoneHierarchy[idx]);
-					std::get<2>(m_BoneHierarchy[m_BoneMap[curName].idx]) = curName;
-					idx = m_BoneMap[curName].idx;
-				}
-				for (UINT i = 0; i < node->mNumChildren; i++)
-				{
-					traverse(node->mChildren[i], idx);
-				}
-			};
-		traverse(scene->mRootNode, -1);
-	}
-
+	ProcessNode(scene, scene->mRootNode, -1, verticesIdentical);
 	ProcessAnim(scene);
 }
 
@@ -82,7 +64,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 {
 	if (mesh->mNumVertices <= 0) return;
 	UINT matIdx = mesh->mMaterialIndex;
-	std::vector<unsigned int> vertexLookup(mesh->mNumVertices);
+	std::vector<UINT> vertexLookup(mesh->mNumVertices);
 	std::vector<Vector3> points;
 	
 	//Vertices, Points, Indicies
@@ -145,7 +127,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 	if (mesh->mNumBones > 0)
 	{
 		//본을 순회하면서 정점별로 사용될 본의인덱싱, 가중치값 초기화
-		std::vector<std::vector<IWInfo>> influenceIWs(m_verticesByMaterial[matIdx].size(), std::vector<IWInfo>());
+		std::vector<std::vector<IWInfo>> influenceIWs(mesh->mNumVertices, std::vector<IWInfo>());
 		for (UINT i = 0; i < mesh->mNumBones; i++)
 		{
 			aiBone* pBone = mesh->mBones[i];
@@ -157,24 +139,26 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 			{
 				boneIndex = (UINT)m_BoneMap.size();
 				m_BoneMap[boneName].idx = boneIndex;
-				m_BoneMap[boneName].matOffset = Matrix4x4(pBone->mOffsetMatrix);
+				m_BoneMap[boneName].matOffset = pBone->mOffsetMatrix;
 			}
 			else
 			{
 				boneIndex = m_BoneMap[boneName].idx;
 			}
 
+
 			// 해당 뼈가 영향을 주는 정점들을 순회하며 가중치 기입
 			for (UINT j = 0; j < pBone->mNumWeights; j++)
 			{
 				UINT vertexID = pBone->mWeights[j].mVertexId;
 				float weight = pBone->mWeights[j].mWeight;
-				influenceIWs[vertexLookup[vertexID]].push_back({ boneIndex, weight });
+				influenceIWs[vertexID].push_back({ boneIndex, weight });
 			}
 		}
 
+
 		//수집된 데이터를 정규화(최대4, 가중치합1.0)
-		for (UINT i = 0; i < m_verticesByMaterial[matIdx].size(); i++)
+		for (UINT i = 0; i < influenceIWs.size(); i++)
 		{
 			auto& weightList = influenceIWs[i];
 
@@ -183,7 +167,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				[](const IWInfo& a, const IWInfo& b) {
 					return a.weight > b.weight;
 				});
-
+			
 			float totalWeight = 0.0f;
 
 			//최대 4개의 뼈 영향력만 선택하여 임시 합계 계산
@@ -203,25 +187,25 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				{
 					if (j < activeBones)
 					{
-						m_verticesByMaterial[matIdx][i].bones[j] = weightList[j].boneIdx;
-						m_verticesByMaterial[matIdx][i].weights[j] = weightList[j].weight / totalWeight;
+						m_verticesByMaterial[matIdx][vertexLookup[i]].bones[j] = weightList[j].boneIdx;
+						m_verticesByMaterial[matIdx][vertexLookup[i]].weights[j] = weightList[j].weight / totalWeight;
 					}
 					else
 					{
-						m_verticesByMaterial[matIdx][i].bones[j] = 0;
-						m_verticesByMaterial[matIdx][i].weights[j] = 0.0f;
+						m_verticesByMaterial[matIdx][vertexLookup[i]].bones[j] = 0;
+						m_verticesByMaterial[matIdx][vertexLookup[i]].weights[j] = 0.0f;
 					}
 				}
 			}
 			else
 			{
 				// 만약 가중치 정보가 아예 없는 정점이라면 기본값 설정 (첫 번째 뼈에 100%)
-				m_verticesByMaterial[matIdx][i].bones[0] = 0;
-				m_verticesByMaterial[matIdx][i].weights[0] = 1.0f;
-				for (int j = 1; j < 4; ++j) 
+				m_verticesByMaterial[matIdx][vertexLookup[i]].bones[0] = 0;
+				m_verticesByMaterial[matIdx][vertexLookup[i]].weights[0] = 1.0f;
+				for (int j = 1; j < 4; j++) 
 				{
-					m_verticesByMaterial[matIdx][i].bones[j] = 0;
-					m_verticesByMaterial[matIdx][i].weights[j] = 0.0f;
+					m_verticesByMaterial[matIdx][vertexLookup[i]].bones[j] = 0;
+					m_verticesByMaterial[matIdx][vertexLookup[i]].weights[j] = 0.0f;
 				}
 			}
 		}
@@ -269,9 +253,15 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 	}
 }
 
-inline void Geometry::ProcessNode(const aiScene* scene, const aiNode* node, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
+inline void Geometry::ProcessNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
 {
-	Matrix4x4 matRelative(node->mTransformation);
+	NodeHierarchy curNode;
+	int curidx = m_Hierarchy.size();
+	curNode.idx_parent = idx;
+	curNode.matRelative = node->mTransformation;
+	curNode.szName_Parent = idx == -1 ? "Ancestor" : m_Hierarchy[idx].szName_Cur;
+	curNode.szName_Cur = node->mName.C_Str();
+	m_Hierarchy.push_back(curNode);
 	for (UINT i = 0; i < node->mNumMeshes; i++)
 	{
 		ProcessMesh(scene, scene->mMeshes[node->mMeshes[i]], verticesIdentical);
@@ -279,7 +269,7 @@ inline void Geometry::ProcessNode(const aiScene* scene, const aiNode* node, std:
 
 	for (UINT i = 0; i < node->mNumChildren; i++)
 	{
-		ProcessNode(scene, node->mChildren[i], verticesIdentical);
+		ProcessNode(scene, node->mChildren[i], curidx, verticesIdentical);
 	}
 }
 
@@ -301,29 +291,29 @@ inline void Geometry::ProcessAnim(const aiScene* scene)
 
 			for (UINT k = 0; k < channel->mNumScalingKeys; k++)
 			{
-				KeyFrame_Scale kfScale;
+				KeyFrame_Vector kfScale;
 				kfScale.fTime = (float)channel->mScalingKeys[k].mTime;
-				kfScale.vScale = Vector3(channel->mScalingKeys[k].mValue.x, channel->mScalingKeys[k].mValue.y, channel->mScalingKeys[k].mValue.z);
+				kfScale.vValue = Vector3(channel->mScalingKeys[k].mValue.x, channel->mScalingKeys[k].mValue.y, channel->mScalingKeys[k].mValue.z);
 				animClip.boneFrames_Scale[boneName].push_back(kfScale);
 			}
 
 			for (UINT k = 0; k < channel->mNumRotationKeys; k++)
 			{
-				KeyFrame_Rotate kfRotate;
+				KeyFrame_Quarternion kfRotate;
 				kfRotate.fTime = (float)channel->mRotationKeys[k].mTime;
-				kfRotate.qRotate = Quarternion(channel->mRotationKeys[k].mValue.w, channel->mRotationKeys[k].mValue.x, channel->mRotationKeys[k].mValue.y, channel->mRotationKeys[k].mValue.z);
+				kfRotate.qValue = Quarternion(channel->mRotationKeys[k].mValue.w, channel->mRotationKeys[k].mValue.x, channel->mRotationKeys[k].mValue.y, channel->mRotationKeys[k].mValue.z);
 				animClip.boneFrames_Rotate[boneName].push_back(kfRotate);
 			}
 			
 			for (UINT k = 0; k < channel->mNumPositionKeys; k++)
 			{
-				KeyFrame_Position kfPosition;
+				KeyFrame_Vector kfPosition;
 				kfPosition.fTime = (float)channel->mPositionKeys[k].mTime;
-				kfPosition.vPosition = Vector3(channel->mPositionKeys[k].mValue.x, channel->mPositionKeys[k].mValue.y, channel->mPositionKeys[k].mValue.z);
+				kfPosition.vValue = Vector3(channel->mPositionKeys[k].mValue.x, channel->mPositionKeys[k].mValue.y, channel->mPositionKeys[k].mValue.z);
 				animClip.boneFrames_Translation[boneName].push_back(kfPosition);
 			}
 		}
-		m_AnimationClip.push_back(animClip);
+		m_AnimationClip[animClip.szName] = animClip;
 	}
 }
 

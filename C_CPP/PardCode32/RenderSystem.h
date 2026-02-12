@@ -45,27 +45,26 @@ public:
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 	
-
-	//응용프로그램부 접근
+	/////////////////////////////
+	//응용프로그램 부 접근
+	/////////////////////////////
+	//Texture
 	size_t CreateTexture(const std::wstring& szFilePath, ScratchImage&& image);
 	size_t CreateTexture(const std::wstring& szFilePath);
 
+	//Geometry(Parsing)
 	size_t CreateGeometry(const std::wstring& szFilePath);
+
+	//Mesh
 	template<typename T>
 	size_t CreateMeshFromGeometry(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
 	template<typename T>
 	size_t CreateMeshFromGeometry(size_t hash_geometry);
 
+	//Material
 	size_t CreateMaterial(const std::wstring& szFilePath);
 	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
 	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);
-
-	template<typename T>
-	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
-
-	void CreateCubeMapTexture(int iSize);
-	size_t CreateShadowMapTexture(const int width, const int height);
-
 	void Material_SetShaders(size_t hash_material, const UINT flag);
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
 	template<typename T>
@@ -73,11 +72,23 @@ public:
 	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
 	void Material_SetPS(size_t hash_material, const std::wstring& psName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
-	
+
+	//Animation
+	size_t CreateAnimaitonFromGeometry(size_t hash_geometry);
+
+	//Collider
+	template<typename T>
+	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
 	const ColliderAsset* GetColliderAsset(size_t hash);
+
+	//기법
+	void CreateCubeMapTexture(int iSize);
+	size_t CreateShadowMapTexture(const int width, const int height);
+
 
 private:
 	//API리소스 생성
@@ -96,8 +107,8 @@ private:
 	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
 	std::vector<size_t> CreateCubeMapView(const int width, const int height);
 
-private:
 	//API 파이프라인
+private:
 	void ClearRenderViews(float red, float green, float blue, float alpha);
 
 	void SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology);

@@ -33,10 +33,10 @@ struct Matrix4x4
     // Convert to aiMat
     inline Matrix4x4(const aiMatrix4x4& aiMat)
     {
-        r[0] = Vector4(aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1);
-        r[1] = Vector4(aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2);
-        r[2] = Vector4(aiMat.a3, aiMat.b3, aiMat.c3, aiMat.d3);
-        r[3] = Vector4(aiMat.a4, aiMat.b4, aiMat.c4, aiMat.d4);
+        m_mat.r[0] = DirectX::XMVectorSet(aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1);
+        m_mat.r[1] = DirectX::XMVectorSet(aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2);
+        m_mat.r[2] = DirectX::XMVectorSet(aiMat.a3, aiMat.b3, aiMat.c3, aiMat.d3);
+        m_mat.r[3] = DirectX::XMVectorSet(aiMat.a4, aiMat.b4, aiMat.c4, aiMat.d4);
     }
 
     // 연산자재정의

@@ -229,7 +229,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
 		SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
 		SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		UINT renderCnt = 0;
 		for (auto& archetype : queries)

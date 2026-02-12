@@ -75,7 +75,7 @@ public:
 	size_t hash_ra = 0;
 };
 struct T_Render_Sky {};
-struct T_Render_Geometry {};
+struct T_Render_Geometry_Static {};
 struct T_Render_UI {};
 
 #ifdef _RENDERPASS

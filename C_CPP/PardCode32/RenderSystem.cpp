@@ -29,6 +29,7 @@ size_t g_hash_cbwvpitmat = typeid(CB_WVPITMatrix).hash_code();
 size_t g_hash_cbtime = typeid(CB_Time).hash_code();
 size_t g_hash_cbcampos = typeid(CB_Campos).hash_code();
 size_t g_hash_cblightmat = typeid(CB_LightMatrix).hash_code();
+size_t g_hash_cbbonemat = typeid(CB_BoneMatrix).hash_code();
 
 RenderSystem::RenderSystem()
 {
@@ -69,6 +70,7 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
 	_RenderSystem.CreateConstantBuffer(typeid(CB_LightMatrix), sizeof(CB_LightMatrix));
+	_RenderSystem.CreateConstantBuffer(typeid(CB_BoneMatrix), sizeof(CB_BoneMatrix));
 	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
 	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
 	OnResize(m_iWidth, m_iHeight);
@@ -1092,65 +1094,146 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::POINT_CLAMP_COMPARISON), 6);
 	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
-	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 	UINT renderCnt = 0;
-	for (auto& archetype : queries)
+	//static
 	{
-		size_t st_row = 0;
-		size_t st_col = 0;
-		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
 		{
-			auto& transforms = archetype->GetComponents<C_Transform>(row);
-			auto& renders = archetype->GetComponents<C_Render>(row);
-			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
-				if (!renders[col].bRenderable) continue;
-				renderCnt++;
-				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
-				const Vector3& position = transforms[col].vPosition;
-				CB_WVPITMatrix cb_wvpitmat;
-				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-				cb_wvpitmat.matView = matView;
-				cb_wvpitmat.matProj = matProj;
-				cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
-				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
-
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
-				for (UINT j = 0; j < MeshMats.size(); j++)
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
-					auto& iter = MeshMats[j];
-					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-					SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
-					SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+					if (!renders[col].bRenderable) continue;
+					renderCnt++;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = matView;
+					cb_wvpitmat.matProj = matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-					SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-					SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-					if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
-						SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
-					else
-						SetGS_Shader(nullptr);
-					SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
-
-					const std::vector<size_t>* texs = pMaterial->GetTextures();
-					int cnt = 0;
-					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
-						for (const auto& hashTx : texs[idxTex])
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
+							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
+						else
+							SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 						{
-							auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
-							SetPS_ShaderResourceView(pSrv, cnt++);
+							for (const auto& hashTx : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
 						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
+				st_col = 0;
 			}
-			st_col = 0;
 		}
 	}
+	
+	//Skeletal
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& animations = archetype->GetComponents<C_Animation>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					if (!renders[col].bRenderable) continue;
+					renderCnt++;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = matView;
+					cb_wvpitmat.matProj = matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
+
+					static float dt = 0.0f;
+					dt += 0.05f;
+					if (dt >= 30.0f)
+						dt = 0.0f;
+					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
+					std::vector<Matrix4x4> curAnim;
+					pAnimation->GetFinalTransform(pAnimation->m_AnimationClip.begin()->second.szName, dt, curAnim);
+					CB_BoneMatrix cb_bonemat;
+					for (int i = 0; i < curAnim.size(); i++)
+						cb_bonemat.bones[i] = curAnim[i];
+					m_pCCBs[g_hash_cbbonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbbonemat]->GetBuffer(), 2);
+
+					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
+							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
+						else
+							SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+						{
+							for (const auto& hashTx : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
+						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					}
+				}
+				st_col = 0;
+			}
+		}
+	}
+	
 	std::cout << "렌더링된객체수 : " << renderCnt << '\n';
 }
 
@@ -1241,7 +1324,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 
 	//Render Geometry
 	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		UINT renderCnt = 0;
 		for (auto& archetype : queries)
@@ -1862,6 +1945,14 @@ std::vector<size_t> RenderSystem::CreateMaterialsFromGeometry(size_t hash_geomet
 	return CreateMaterials(szPath + L"Material", pGeometry->GetTextures());
 }
 
+size_t RenderSystem::CreateAnimaitonFromGeometry(size_t hash_geometry)
+{
+	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+	std::wstring szPath = pGeometry->GetPath();
+	Animation* pAnimation = _ResourceSystem.CreateResourceFromFile<Animation>(szPath + L"Animation", pGeometry->GetBones(), pGeometry->GetBonesHierarchy(), pGeometry->GetAnimationClip());
+	return pAnimation->GetHash();
+}
+
 template<typename T>
 size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs)
 {
@@ -1894,6 +1985,12 @@ void RenderSystem::Material_SetShaders(size_t hash_material, const UINT flag)
 		_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
 		_RenderSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 		_RenderSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
+	}
+	if (flag == 3)
+	{
+		_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB_Skinned.hlsl");
+		_RenderSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
+		_RenderSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_PTNTB_Skinned.hlsl");
 	}
 	/*
 	* 텍스쳐 분류에따른 쉐이더선택

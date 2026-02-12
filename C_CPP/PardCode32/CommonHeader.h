@@ -244,26 +244,31 @@ struct Bone
 	UINT idx;
 	Matrix4x4 matOffset;
 };
-//키프레임 데이터
-struct KeyFrame_Scale
+struct NodeHierarchy
 {
-	float fTime;
-	Vector3 vScale;
+	int idx_parent;
+	Matrix4x4 matRelative;
+	std::string szName_Parent;
+	std::string szName_Cur;
 };
-struct KeyFrame_Rotate
-{
-	float fTime;
-	Quarternion qRotate;
-};
-struct KeyFrame_Position
-{
-	float fTime;
-	Vector3 vPosition;
-};
+
+//가중치데이터
 struct IWInfo
 {
 	UINT boneIdx;
 	float weight;
+};
+
+//키프레임 데이터
+struct KeyFrame_Vector
+{
+	float fTime;
+	Vector3 vValue;
+};
+struct KeyFrame_Quarternion
+{
+	float fTime;
+	Quarternion qValue;
 };
 
 //애니메이션클립(Sort by Bones)
@@ -272,9 +277,9 @@ struct AnimationClip
 	std::string szName;
 	float fDuration;
 	float fTicksPerSecond;
-	std::unordered_map<std::string, std::vector<KeyFrame_Scale>> boneFrames_Scale;
-	std::unordered_map<std::string, std::vector<KeyFrame_Rotate>> boneFrames_Rotate;
-	std::unordered_map<std::string, std::vector<KeyFrame_Position>> boneFrames_Translation;
+	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Scale;
+	std::unordered_map<std::string, std::vector<KeyFrame_Quarternion>> boneFrames_Rotate;
+	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Translation;
 };
 
 inline E_Texture ConvETexture(const aiTextureType& aiTextype)
@@ -546,7 +551,7 @@ struct Vertex_PTN_Skinned
 	std::array<float, 4> weights;
 	bool operator==(const Vertex_PTN_Skinned& other) const
 	{
-		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && bones == other.bones && weights == other.weights);
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0);
 	}
 };
 struct Vertex_PTN_Skinned_Hash
@@ -564,14 +569,7 @@ struct Vertex_PTN_Skinned_Hash
 		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
 		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
 		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[0]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[1]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[2]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[3]));
-		hash_combine(hash, std::hash<float>{}(v.weights[0]));
-		hash_combine(hash, std::hash<float>{}(v.weights[1]));
-		hash_combine(hash, std::hash<float>{}(v.weights[2]));
-		hash_combine(hash, std::hash<float>{}(v.weights[3]));
+
 #endif // !_FNV1A
 
 #ifdef _FNV1A
@@ -584,14 +582,6 @@ struct Vertex_PTN_Skinned_Hash
 		hash_combine(hash, HashingFloat(v.normal0.GetX()));
 		hash_combine(hash, HashingFloat(v.normal0.GetY()));
 		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
-		hash_combine(hash, HashingFloat(v.bones[0]));
-		hash_combine(hash, HashingFloat(v.bones[1]));
-		hash_combine(hash, HashingFloat(v.bones[2]));
-		hash_combine(hash, HashingFloat(v.bones[3]));
-		hash_combine(hash, HashingFloat(v.weights[0]));
-		hash_combine(hash, HashingFloat(v.weights[1]));
-		hash_combine(hash, HashingFloat(v.weights[2]));
-		hash_combine(hash, HashingFloat(v.weights[3]));
 #endif // _FNV1A
 		return hash;
 	}
@@ -614,11 +604,11 @@ struct Vertex_PTNTB_Skinned
 	Vector3 normal0;
 	Vector3 tangent0;
 	Vector3 binormal0;
-	std::array<UINT, 4> bones;
-	std::array<float, 4> weights;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
 	bool operator==(const Vertex_PTNTB_Skinned& other) const
 	{
-		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && tangent0 == other.tangent0 && binormal0 == other.binormal0 && bones == other.bones && weights == other.weights);
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && tangent0 == other.tangent0 && binormal0 == other.binormal0);
 	}
 };
 struct Vertex_PTNTB_Skinned_Hash
@@ -642,14 +632,6 @@ struct Vertex_PTNTB_Skinned_Hash
 		hash_combine(hash, std::hash<float>{}(v.binormal0.GetX()));
 		hash_combine(hash, std::hash<float>{}(v.binormal0.GetY()));
 		hash_combine(hash, std::hash<float>{}(v.binormal0.GetZ()));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[0]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[1]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[2]));
-		hash_combine(hash, std::hash<UINT>{}(v.bones[3]));
-		hash_combine(hash, std::hash<float>{}(v.weights[0]));
-		hash_combine(hash, std::hash<float>{}(v.weights[1]));
-		hash_combine(hash, std::hash<float>{}(v.weights[2]));
-		hash_combine(hash, std::hash<float>{}(v.weights[3]));
 #endif // !_FNV1A
 
 #ifdef _FNV1A
@@ -668,14 +650,6 @@ struct Vertex_PTNTB_Skinned_Hash
 		hash_combine(hash, HashingFloat(v.binormal0.GetX()));
 		hash_combine(hash, HashingFloat(v.binormal0.GetY()));
 		hash_combine(hash, HashingFloat(v.binormal0.GetZ()));
-		hash_combine(hash, HashingFloat(v.bones[0]));
-		hash_combine(hash, HashingFloat(v.bones[1]));
-		hash_combine(hash, HashingFloat(v.bones[2]));
-		hash_combine(hash, HashingFloat(v.bones[3]));
-		hash_combine(hash, HashingFloat(v.weights[0]));
-		hash_combine(hash, HashingFloat(v.weights[1]));
-		hash_combine(hash, HashingFloat(v.weights[2]));
-		hash_combine(hash, HashingFloat(v.weights[3]));
 #endif // _FNV1A
 		return hash;
 	}
@@ -850,6 +824,12 @@ struct CB_Fog
 	float fFogDensity;
 	float padding;
 	Vector4 vFogColor;
+};
+
+__declspec(align(16))
+struct CB_BoneMatrix
+{
+	Matrix4x4 bones[256];
 };
 
 /*

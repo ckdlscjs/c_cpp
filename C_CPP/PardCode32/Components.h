@@ -76,6 +76,18 @@ public:
 	size_t hash_ra = 0;
 };
 
+struct C_Collider
+{
+public:
+	size_t hash_ca = 0;
+};
+
+struct C_Animation
+{
+public:
+	size_t hash_ai = 0;
+};
+
 #ifdef _RENDERPASS
 /**
  * @brief 깊이 프리패스 및 섀도우 맵 생성 대상 태그
@@ -139,7 +151,8 @@ struct T_Render_DeferredLight {};
 #endif // _GUBFFER
 
 struct T_Render_Sky {};
-struct T_Render_Geometry {};
+struct T_Render_Geometry_Static {};
+struct T_Render_Geometry_Skeletal {};
 struct T_Render_Billboard {};
 struct T_Render_UI {};
 struct T_Render_CubeMap {};
@@ -181,8 +194,3 @@ struct T_Light_Directional {};
 struct T_Light_Point {};
 struct T_Light_Spot {};
 
-struct C_Collider
-{
-public:
-	size_t hash_ca = 0;
-};

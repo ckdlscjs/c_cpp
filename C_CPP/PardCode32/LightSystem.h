@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseSystem.h"
 
+//not need LightSys?
 class BaseLight;
 
 class LightSystem : public BaseSystem<LightSystem>
