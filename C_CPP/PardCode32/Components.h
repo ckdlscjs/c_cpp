@@ -86,6 +86,8 @@ struct C_Animation
 {
 public:
 	size_t hash_ai = 0;
+	std::string szCurClip;
+	float elapsedTime;
 };
 
 #ifdef _RENDERPASS

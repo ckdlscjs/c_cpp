@@ -61,5 +61,5 @@ float4 psmain(PS_INPUT input) : SV_Target
     
     float4 lightIntensity = DL.intensity.Ambient + (DL.intensity.Diffuse + DL.intensity.Specular) * shadowFactor;
     
-    return saturate(lightIntensity) * M; //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
+    return saturate(lightIntensity * M); //마지막에 텍스쳐컬러를 곱해도 분배법칙에의해 같은결과가 나온다
 }

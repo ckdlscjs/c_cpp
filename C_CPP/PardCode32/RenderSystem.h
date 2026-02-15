@@ -147,7 +147,7 @@ private:
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
 	void RenderUI(const Matrix4x4& matOrtho);
-
+ 
 private:
 	UINT m_iWidth = 800;
 	UINT m_iHeight = 600;

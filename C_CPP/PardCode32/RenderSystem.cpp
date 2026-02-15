@@ -1186,16 +1186,23 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-					static float dt = 0.0f;
-					dt += 0.05f;
-					if (dt >= 30.0f)
-						dt = 0.0f;
 					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
+					if (animations[col].szCurClip.empty())
+					{
+						animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
+						animations[col].elapsedTime = 0.0f;
+					}
+					animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.003f;
+					if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
+						animations[col].elapsedTime = 0.0f;
+
 					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(pAnimation->m_AnimationClip.begin()->second.szName, dt, curAnim);
+					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
 					CB_BoneMatrix cb_bonemat;
 					for (int i = 0; i < curAnim.size(); i++)
+					{
 						cb_bonemat.bones[i] = curAnim[i];
+					}
 					m_pCCBs[g_hash_cbbonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbbonemat]->GetBuffer(), 2);
 
@@ -1358,10 +1365,12 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
-						Material* pMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
 
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
@@ -1370,6 +1379,88 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 			}
 		}
 		std::cout << "렌더링된객체수 : " << renderCnt << '\n';
+	}
+
+	//Skeletal
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& animations = archetype->GetComponents<C_Animation>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					if (!renders[col].bRenderable) continue;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = matView;
+					cb_wvpitmat.matProj = matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
+
+					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
+					if (animations[col].szCurClip.empty())
+					{
+						animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
+						animations[col].elapsedTime = 0.0f;
+					}
+					animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.01f;
+					if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
+						animations[col].elapsedTime = 0.0f;
+
+					std::vector<Matrix4x4> curAnim;
+					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
+					CB_BoneMatrix cb_bonemat;
+					for (int i = 0; i < curAnim.size(); i++)
+					{
+						cb_bonemat.bones[i] = curAnim[i];
+					}
+					m_pCCBs[g_hash_cbbonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbbonemat]->GetBuffer(), 2);
+
+					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+
+						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
+
+						const std::vector<size_t>* texs = pMaterial->GetTextures();
+						int cnt = 0;
+						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+						{
+							for (const auto& hashTx : texs[idxTex])
+							{
+								auto pSrv = m_pCSRVs[_ResourceSystem.GetResource<Texture>(hashTx)->GetSRV()]->GetView();
+								SetPS_ShaderResourceView(pSrv, cnt++);
+							}
+						}
+						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					}
+				}
+				st_col = 0;
+			}
+		}
 	}
 
 	//Render RTV_CubeMap
@@ -1469,10 +1560,12 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
-						Material* pMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+
+						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
 
 						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
@@ -1851,17 +1944,20 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, ScratchImage&
 	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
-
+std::wstring g_textures_initpath = L"../Assets/Textures/";
 // DirectXTex의 함수를 이용하여 image_data로 리턴, imageData로부터 ID3D11Resource 객체를 생성한다
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
-{
-	std::wstring extension = szFilePath.substr(szFilePath.find_last_of('.'));
+{	
+	std::wstring filePath = szFilePath;
+	if (szFilePath.find('/') == std::string::npos)
+		filePath = g_textures_initpath + szFilePath;
+	std::wstring extension = filePath.substr(filePath.find_last_of('.'));
 	Texture* pTexture = nullptr;
 	if (extension == L".dds") 
-		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
+		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(filePath, DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	else
-		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, DirectX::WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB);
-	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
+		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(filePath, DirectX::WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB);
+	pTexture->SetSRV(CreateShaderResourceView(filePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
 
@@ -2101,7 +2197,7 @@ size_t RenderSystem::CreateColliderAsset(const std::wstring& szName, const std::
 	if (m_pCCAs.find(hash) != m_pCCAs.end()) return hash;
 
 	ColliderAsset* pColliderAsset = new ColliderAsset(szName);
-	_ASEERTION_NULCHK(pColliderAsset, "RA is nullptr");
+	_ASEERTION_NULCHK(pColliderAsset, "CA is nullptr");
 	pColliderAsset->m_hColliders = hashs;
 	m_pCCAs[hash] = pColliderAsset;
 	return hash;

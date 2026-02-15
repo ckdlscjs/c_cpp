@@ -13,12 +13,12 @@ public:
 
 public:
 	void GetFinalTransform(const std::string& szName, const float t, std::vector<Matrix4x4>& mats);
-
+	const std::unordered_map<std::string, AnimationClip>& GetAnimations();
 private:
 	Vector3		FrameInterpolate_Vector(const std::vector<KeyFrame_Vector>& frames, const float t);
 	Quarternion FrameInterpolate_Quarternion(const std::vector<KeyFrame_Quarternion>& frames, const float t);
 
-public:
+private:
 	std::unordered_map<std::string, AnimationClip> m_AnimationClip;
 	std::vector<NodeHierarchy> m_Hierarchy;
 	std::unordered_map<std::string, Bone> m_BoneMap;
@@ -80,6 +80,11 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 			mats[m_BoneMap[curName].idx] = m_BoneMap[curName].matOffset * toRoot[idx];
 		}
 	}
+}
+
+inline const std::unordered_map<std::string, AnimationClip>& Animation::GetAnimations()
+{
+	return m_AnimationClip;
 }
 
 

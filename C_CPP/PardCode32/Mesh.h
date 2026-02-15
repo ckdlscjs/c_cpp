@@ -150,6 +150,8 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 				vPTNTB.pos0 = v.pos0;
 				vPTNTB.tex0 = v.tex0;
 				vPTNTB.normal0 = v.normal0;
+				vPTNTB.tangent0 = v.tangent0;
+				vPTNTB.binormal0 = v.binormal0;
 				m_Vertices.push_back(vPTNTB);
 			}
 		}
