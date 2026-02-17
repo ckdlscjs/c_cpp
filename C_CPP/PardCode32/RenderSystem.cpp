@@ -21,15 +21,15 @@
 
 #include "TestBlockMacro.h"
 
-size_t g_hash_cbdirectionalLight = typeid(CB_DirectionalLight).hash_code();
-size_t g_hash_cbpointlight = typeid(CB_PointLight).hash_code();
-size_t g_hash_cbspotlight = typeid(CB_SpotLight).hash_code();
-size_t g_hash_cbwvpmat = typeid(CB_WVPMatrix).hash_code();
-size_t g_hash_cbwvpitmat = typeid(CB_WVPITMatrix).hash_code();
-size_t g_hash_cbtime = typeid(CB_Time).hash_code();
-size_t g_hash_cbcampos = typeid(CB_Campos).hash_code();
-size_t g_hash_cblightmat = typeid(CB_LightMatrix).hash_code();
-size_t g_hash_cbbonemat = typeid(CB_BoneMatrix).hash_code();
+size_t g_hash_cbdirectionalLight;
+size_t g_hash_cbpointlight;
+size_t g_hash_cbspotlight;
+size_t g_hash_cbwvpitmat;
+size_t g_hash_cbtime;
+size_t g_hash_cbcampos;
+size_t g_hash_cblightmat;
+size_t g_hash_cbbonemat;
+size_t g_hash_cbfog;
 
 RenderSystem::RenderSystem()
 {
@@ -37,11 +37,12 @@ RenderSystem::RenderSystem()
 
 void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 {
+	m_iWidth = width;
+	m_iHeight = height;
+
 	//COM객체 사용을 위한 초기화, 텍스쳐사용에필요
 	_ASEERTION_CREATE(CoInitialize(nullptr), "Coninitialize not successfully");
 	
-	m_iWidth = width;
-	m_iHeight = height;
 	m_pCDirect3D = new Direct3D();
 	_ASEERTION_NULCHK(m_pCDirect3D, "D3D is nullptr");
 
@@ -61,16 +62,17 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	_ASEERTION_NULCHK(m_pCDepthStencils, "DepthStencil is nullptr");
 
 	//상수버퍼 기본세팅
-	_RenderSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_PointLight), sizeof(CB_PointLight));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_SpotLight), sizeof(CB_SpotLight));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_WVPMatrix), sizeof(CB_WVPMatrix));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_WVPITMatrix), sizeof(CB_WVPITMatrix));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_LightMatrix), sizeof(CB_LightMatrix));
-	_RenderSystem.CreateConstantBuffer(typeid(CB_BoneMatrix), sizeof(CB_BoneMatrix));
+	g_hash_cbdirectionalLight	= _RenderSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
+	g_hash_cbpointlight			= _RenderSystem.CreateConstantBuffer(typeid(CB_PointLight), sizeof(CB_PointLight));
+	g_hash_cbspotlight			= _RenderSystem.CreateConstantBuffer(typeid(CB_SpotLight), sizeof(CB_SpotLight));
+	g_hash_cbwvpitmat			= _RenderSystem.CreateConstantBuffer(typeid(CB_WVPITMatrix), sizeof(CB_WVPITMatrix));
+	g_hash_cbtime				= _RenderSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
+	g_hash_cbcampos				= _RenderSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
+	g_hash_cblightmat			= _RenderSystem.CreateConstantBuffer(typeid(CB_LightMatrix), sizeof(CB_LightMatrix));
+	g_hash_cbbonemat			= _RenderSystem.CreateConstantBuffer(typeid(CB_BoneMatrix), sizeof(CB_BoneMatrix));
+	g_hash_cbfog				= _RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
+	
+	
 	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
 	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
 	OnResize(m_iWidth, m_iHeight);
@@ -79,21 +81,7 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
 	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
-	std::cout << "deltatime : " << deltatime << '\n';
-#ifdef _ECS
-	Vector3& dir = static_cast<DirectionalLight*>(_LightSystem.GetLight(0))->m_vDirection;
-	dir = dir * GetMat_RotYaw(deltatime * 30.0f);
 
-	Vector3& pos = static_cast<PointLight*>(_LightSystem.GetLight(1))->m_vPosition;
-	pos = pos * GetMat_RotYaw(deltatime * 50.0f);
-
-	SkyObj->m_vPosition = _CameraSystem.GetCamera(0)->GetPosition();
-
-	for (const auto& iter : objs)
-	{
-		iter->Frame(deltatime);
-	}
-#endif // _ECS
 }
 
 void RenderSystem::PreRender(float deltatime, float elapsedtime)
@@ -234,7 +222,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				SetVS(m_pCVSs[pMaterial->GetVS()]->GetShader());
 				SetPS(m_pCPSs[pMaterial->GetPS()]->GetShader());
 
-				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 			SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 			SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
@@ -284,7 +272,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 				//drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
 			}
@@ -332,7 +320,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 					//drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
 				}
@@ -380,7 +368,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 						SetPS_ShaderResourceView(pSrv, cnt++);
 					}
 				}
-				Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+				Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 			}
 			drawgizmo(GetMat_Scale(obj->m_vScale * 3.0f) * mat_rotate_obj * mat_translation_obj);
 		}
@@ -429,7 +417,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 					drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * GetMat_RotFromMatrix(matWorld) * mat_translation_obj);
 				}
@@ -476,7 +464,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 				drawgizmo(GetMat_Scale(obj->m_vScale * 5.0f) * mat_rotate_obj * mat_translation_obj);
 			}
@@ -532,7 +520,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 								else SetPS_ShaderResourceView(m_pCSRVs[m_hash_DSV_0]->GetView(), cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 			}
@@ -1079,7 +1067,7 @@ void RenderSystem::RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& ma
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 			st_col = 0;
@@ -1149,7 +1137,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1233,7 +1221,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1309,7 +1297,7 @@ void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matVi
 							SetPS_ShaderResourceView(pSrv, cnt++);
 						}
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 			st_col = 0;
@@ -1372,7 +1360,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
 						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
 
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1418,6 +1406,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.01f;
 					if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
 						animations[col].elapsedTime = 0.0f;
+					
 
 					std::vector<Matrix4x4> curAnim;
 					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
@@ -1455,7 +1444,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 								SetPS_ShaderResourceView(pSrv, cnt++);
 							}
 						}
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1500,16 +1489,18 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
 						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
 
-						Material* pMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
 						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
 						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
 						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
 							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
 						else
 							SetGS_Shader(nullptr);
-						SetPS_Shader(m_pCPSs[pMaterial->GetPS()]->GetShader());
+						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
+						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
 
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1567,7 +1558,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
 						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
 
-						Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
@@ -1642,7 +1633,7 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 						}
 					}
 					SetPS_ShaderResourceView(m_pCSRVs[_RenderSystem.m_hash_SRV_CubeMap]->GetView(), cnt++);
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 			st_col = 0;
@@ -1763,7 +1754,7 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 							SetPS_ShaderResourceView(m_pCSRVs[hashTx]->GetView(), cnt++);
 						}
 					}
-					Draw_Indices(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 				}
 			}
 		}
@@ -1883,7 +1874,7 @@ void RenderSystem::Draw_Vertices(UINT vertexCount, UINT startIdx)
 	m_pCDirect3D->GetDeviceContext()->Draw(vertexCount, startIdx);
 }
 
-void RenderSystem::Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset)
+void RenderSystem::Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset)
 {
 	m_pCDirect3D->GetDeviceContext()->DrawIndexed(indexCount, startIdx, vertexOffset);
 }
@@ -1949,8 +1940,15 @@ std::wstring g_textures_initpath = L"../Assets/Textures/";
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 {	
 	std::wstring filePath = szFilePath;
-	if (szFilePath.find('/') == std::string::npos)
+	size_t lastSlash = szFilePath.find_last_of(L"\\/");
+	if (lastSlash == std::wstring::npos)
+	{
 		filePath = g_textures_initpath + szFilePath;
+	}
+	else
+	{
+		filePath = g_textures_initpath + szFilePath.substr(lastSlash + 1);
+	}
 	std::wstring extension = filePath.substr(filePath.find_last_of('.'));
 	Texture* pTexture = nullptr;
 	if (extension == L".dds") 
@@ -1961,10 +1959,9 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 	return pTexture->GetHash();
 }
 
-template<typename T>
 const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh, E_Collider collider)
 {
-	Mesh<T>* pMesh = _ResourceSystem.GetResource<Mesh<T>>(hash_mesh);
+	BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hash_mesh);
 	if (pMesh->GetCL().empty())	//Vertex 자료형에 따른 중복정의에서 중복된 컬라이더생성을 방지
 	{
 		for (UINT idx = 0; idx < pMesh->GetPoints().size(); idx++)
@@ -2076,11 +2073,17 @@ void RenderSystem::Material_SetShaders(size_t hash_material, const UINT flag)
 	_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 	_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 	_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
-	if (flag > 0)
+	if (flag == 1)
 	{
 		_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
 		_RenderSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 		_RenderSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
+	}
+	if (flag == 2)
+	{
+		_RenderSystem.Material_SetVS(hash_material, L"VS_PTN_Skinned.hlsl");
+		_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+		_RenderSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_PTN_Skinned.hlsl");
 	}
 	if (flag == 3)
 	{

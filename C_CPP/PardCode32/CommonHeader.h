@@ -547,8 +547,8 @@ struct Vertex_PTN_Skinned
 	Vector3 pos0;
 	Vector2 tex0;
 	Vector3 normal0;
-	std::array<UINT, 4> bones;
-	std::array<float, 4> weights;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
 	bool operator==(const Vertex_PTN_Skinned& other) const
 	{
 		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0);

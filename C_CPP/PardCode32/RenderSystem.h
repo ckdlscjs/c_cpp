@@ -5,21 +5,25 @@
 class Window;
 class SwapChain;
 class Direct3D;
+
 class VertexBuffer;
-class InputLayout;
-class VertexShader;
-class GeometryShader;
-class PixelShader;
 class ConstantBuffer;
 class IndexBuffer;
+
+class VertexShader;
+class InputLayout;
+class GeometryShader;
+class PixelShader;
+
 class ShaderResourceView;
 class RenderTargetView;
 class DepthStencilView;
+
 class SamplerState;
 class RasterizerState;
 class DepthStencilState;
 class BlendState;
-class TempObj;
+
 class RenderAsset;
 class ColliderAsset;
 
@@ -77,7 +81,6 @@ public:
 	size_t CreateAnimaitonFromGeometry(size_t hash_geometry);
 
 	//Collider
-	template<typename T>
 	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
 
 	//Asset(Components <-> API) 府家胶 积己
@@ -134,7 +137,7 @@ private:
 	void SetOM_BlendState(ID3D11BlendState* pState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
 
 	void Draw_Vertices(UINT vertexCount, UINT startIdx);
-	void Draw_Indices(UINT indexCount, UINT startIdx, INT vertexOffset);
+	void Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset);
 	void SwapchainPresent(bool vsync);
 
 	//RenderPass
@@ -204,10 +207,9 @@ template void RenderSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, con
 template void RenderSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName);
 
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(size_t hash_geometry);
+template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN_Skinned>(size_t hash_geometry);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTNTB>(size_t hash_geometry);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(size_t hash_geometry);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PT>(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTN>(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
 template size_t RenderSystem::CreateMeshFromGeometry<Vertex_PTNTB>(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
-template const std::unordered_set<size_t>& RenderSystem::CreateColliders<Vertex_PTN>(size_t hash_mesh, E_Collider collider);
-template const std::unordered_set<size_t>& RenderSystem::CreateColliders<Vertex_PTNTB>(size_t hash_mesh, E_Collider collider);
