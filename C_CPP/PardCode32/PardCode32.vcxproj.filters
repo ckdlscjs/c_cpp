@@ -133,9 +133,6 @@
     <ClInclude Include="CommonMath.h">
       <Filter>Math</Filter>
     </ClInclude>
-    <ClInclude Include="Position.h">
-      <Filter>Math</Filter>
-    </ClInclude>
     <ClInclude Include="Mesh.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>

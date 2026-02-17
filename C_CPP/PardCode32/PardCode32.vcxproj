@@ -177,7 +177,6 @@
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Plane.h" />
-    <ClInclude Include="Position.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="TestBlockMacro.h" />
