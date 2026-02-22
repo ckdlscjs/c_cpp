@@ -57,7 +57,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
-		//키보드관련
+		//입력관련
+		
 		case WM_KEYDOWN:
 		{
 			if (wParam == VK_ESCAPE)
@@ -75,36 +76,44 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 
+		case WM_LBUTTONDOWN:
+		{
+			_InputSystem.SetMousePos(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			return 0;
+		}
+		case WM_LBUTTONUP:
+		{
+		
+			return 0;
+		}
+
+		case WM_RBUTTONDOWN:
+		{
+			SetCapture(hWnd);
+			_InputSystem.OnKeyDown((unsigned char)VK_RBUTTON);
+		
+			return 0;
+		}
+		case WM_RBUTTONUP:
+		{
+			ReleaseCapture();
+			_InputSystem.OnKeyUp((unsigned char)VK_RBUTTON);
+			return 0;
+		}
+
 		//마우스관련
 		case WM_MOUSEMOVE:
 		{
 			//좌상단0,0~우하단증가
+			//_InputSystem.OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			//_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
-			_InputSystem.OnMouseMoveCenter(hWnd, LOWORD(lParam), HIWORD(lParam));
+			//_InputSystem.OnMouseMoveCenter(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			_InputSystem.OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				
 			return 0;
 		}
 
 		/*
-		case WM_LBUTTONDOWN:
-		{
-			std::cout << "btn";
-		}break;
-
-		case WM_LBUTTONUP:
-		{
-			std::cout << "btn";
-		}break;
-
-		case WM_RBUTTONDOWN:
-		{
-			std::cout << "btn";
-		}break;
-
-		case WM_RBUTTONUP:
-		{
-			std::cout << "btn";
-		}break;
-		
 		case WM_SETFOCUS:
 		{
 		}break;

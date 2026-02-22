@@ -55,7 +55,7 @@ void BehaviorSystem::Frame(float deltatime)
 					transforms[col].vPosition += (transforms[col].qRotate * moveDir.Normalize()) * 100.0f * deltatime;	//speed * dt
 
 					//MouseRotate
-					if (inputs[col].bVKMask[VK_MOUSE_MOVE])
+					if (_InputSystem.IsPressed_RBTN() && inputs[col].bVKMask[VK_MOUSE_MOVE])
 					{
 						Vector3 eulerRotate = transforms[col].qRotate.ToRotate();
 						//std::cout << eulerRotate.GetX() << ' ' << eulerRotate.GetY() << '\n';

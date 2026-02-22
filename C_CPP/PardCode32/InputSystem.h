@@ -21,15 +21,19 @@ public:
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
 	const E_InputEvent* GetKeysState();
+	void SetMousePos(int curX, int curY);
 	void OnMouseMove(int curX, int curY);
 	void OnMouseMoveCenter(HWND hWnd, int curX, int curY);
 	void SetMouseCenter(HWND hWnd);
 	Vector2 GetMouseDelta() const;
+	bool IsPressed_LBTN() const;
+	bool IsPressed_RBTN() const;
 private:
 	std::unordered_map<E_InputEvent, std::unordered_map<size_t, EventCallBack>> m_Listners;
 	size_t m_CallbackID = 1;	//0은 오류체크
 	Vector2 m_OldMousePos;
 	Vector2 m_CurMousePos;
+	Vector2 m_MouseDelta;
 	std::bitset<256> m_bOldKeyStates;
 	std::bitset<256> m_bCurKeyStates;
 	E_InputEvent m_eKeyStates[256];

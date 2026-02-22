@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <crtdbg.h>
 #include <Windows.h>
+#include <windowsx.h>						// GET_X_LPARAM, GET_Y_LPARAM 매크로 사용을 위해 권장
 #include <string>
 #include <iostream>
 #include <vector>

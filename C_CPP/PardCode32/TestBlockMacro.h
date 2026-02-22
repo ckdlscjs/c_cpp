@@ -15,7 +15,7 @@
 //#define _DRAGON
 //#define _MoveDirecionalLight
 #define _Rapunzel
-#define _Doro
+//#define _Doro
 
 //#define _SPACESHIP
 //#define _TESTBLOCK
