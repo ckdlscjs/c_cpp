@@ -1,0 +1,6 @@
+#include "CommonMath.h"
+
+int main()
+{
+	return 0;
+}
