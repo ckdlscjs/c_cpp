@@ -47,8 +47,9 @@ void InputSystem::Frame()
 	//Mouse Delta
 	m_MouseDelta = m_CurMousePos - m_OldMousePos;
 
-	for (unsigned char vk_key = 0; vk_key < 255; vk_key++)	//255번은 마우스체크(임시)
+	for (unsigned char vk_key = 0; vk_key < 255; vk_key++)	
 	{
+		//255번은 마우스체크(임시)
 		if (m_bOldKeyStates[vk_key] && m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_PRESSED;
 		else if (!m_bOldKeyStates[vk_key] && m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_DOWN;
 		else if (m_bOldKeyStates[vk_key] && !m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_UP;
@@ -88,6 +89,7 @@ void InputSystem::OnKeyDown(unsigned char VK_KEY)
 	if (m_bOldKeyStates[VK_KEY]) return;
 	//std::cout << "OnKeyDown " << VK_KEY << '\n';
 	m_bCurKeyStates[VK_KEY] = true;
+
 	InputEvent event;
 	event.type = E_InputEvent::KEY_DOWN;
 	event.keyCode = VK_KEY;
@@ -98,6 +100,7 @@ void InputSystem::OnKeyPressed(unsigned char VK_KEY)
 {
 	_ASEERTION_NULCHK(0 <= VK_KEY && VK_KEY <= 255, "VK_KEY Invalid");
 	//std::cout << "OnKeyPressed " << VK_KEY << '\n';
+
 	InputEvent event;
 	event.type = E_InputEvent::KEY_PRESSED;
 	event.keyCode = VK_KEY;
@@ -110,6 +113,7 @@ void InputSystem::OnKeyUp(unsigned char VK_KEY)
 	if (!m_bOldKeyStates[VK_KEY]) return;
 	//std::cout << "OnKeyUp " << VK_KEY << '\n';
 	m_bCurKeyStates[VK_KEY] = false;
+
 	InputEvent event;
 	event.type = E_InputEvent::KEY_UP;
 	event.keyCode = VK_KEY;
@@ -122,9 +126,77 @@ const E_InputEvent* InputSystem::GetKeysState()
 	return m_eKeyStates;
 }
 
-void InputSystem::SetMousePos(int curX, int curY)
+//MousePicking pos, 마우스피킹등에 사용할 화면상의 x, y좌표값
+void InputSystem::SetPickingPos(int curX, int curY)
 {
-	int a = 0;
+	m_PickingPos.Set(curX, curY);
+	/*
+	XMMATRIX P = mCam.Proj();
+
+	// Compute picking ray in view space.
+	// 2장과 같은 이유로 P(0,0) -> P.r[0].m128_f32[0]
+	// 2장과 같은 이유로 P(1,1) -> P.r[1].m128_f32[1]
+	float vx = (+2.0f * sx / mClientWidth - 1.0f) / P.r[0].m128_f32[0];
+	float vy = (-2.0f * sy / mClientHeight + 1.0f) / P.r[1].m128_f32[1];
+
+	// Ray definition in view space.
+	XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	XMVECTOR rayDir = XMVectorSet(vx, vy, 1.0f, 0.0f);
+
+	// Tranform ray to local space of Mesh.
+	XMMATRIX V = mCam.View();
+	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(V), V);
+
+	XMMATRIX W = XMLoadFloat4x4(&mMeshWorld);
+	XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(W), W);
+
+	XMMATRIX toLocal = XMMatrixMultiply(invView, invWorld);
+
+	rayOrigin = XMVector3TransformCoord(rayOrigin, toLocal);
+	rayDir = XMVector3TransformNormal(rayDir, toLocal);
+
+	// Make the ray direction unit length for the intersection tests.
+	rayDir = XMVector3Normalize(rayDir);
+
+	// If we hit the bounding box of the Mesh, then we might have picked a Mesh triangle,
+	// so do the ray/triangle tests.
+	//
+	// If we did not hit the bounding box, then it is impossible that we hit
+	// the Mesh, so do not waste effort doing ray/triangle tests.
+
+	// Assume we have not picked anything yet, so init to -1.
+	mPickedTriangle = -1;
+	float tmin = 0.0f;
+	if (XNA::IntersectRayAxisAlignedBox(rayOrigin, rayDir, &mMeshBox, &tmin))
+	{
+		// Find the nearest ray/triangle intersection.
+		tmin = MathHelper::Infinity;
+		for (UINT i = 0; i < mMeshIndices.size() / 3; ++i)
+		{
+			// Indices for this triangle.
+			UINT i0 = mMeshIndices[i * 3 + 0];
+			UINT i1 = mMeshIndices[i * 3 + 1];
+			UINT i2 = mMeshIndices[i * 3 + 2];
+
+			// Vertices for this triangle.
+			XMVECTOR v0 = XMLoadFloat3(&mMeshVertices[i0].Pos);
+			XMVECTOR v1 = XMLoadFloat3(&mMeshVertices[i1].Pos);
+			XMVECTOR v2 = XMLoadFloat3(&mMeshVertices[i2].Pos);
+
+			// We have to iterate over all the triangles in order to find the nearest intersection.
+			float t = 0.0f;
+			if (XNA::IntersectRayTriangle(rayOrigin, rayDir, v0, v1, v2, &t))
+			{
+				if (t < tmin)
+				{
+					// This is the new nearest picked triangle.
+					tmin = t;
+					mPickedTriangle = i;
+				}
+			}
+		}
+	}
+	*/
 }
 
 void InputSystem::OnMouseMove(int curX, int curY)
@@ -201,6 +273,11 @@ void InputSystem::SetMouseCenter(HWND hWnd)
 Vector2 InputSystem::GetMouseDelta() const
 {
 	return m_MouseDelta;
+}
+
+Vector2 InputSystem::GetPickingPos() const
+{
+	return m_PickingPos;
 }
 
 bool InputSystem::IsPressed_LBTN() const

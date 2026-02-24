@@ -86,7 +86,6 @@ public:
 	//Asset(Components <-> API) 府家胶 积己
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
-	const ColliderAsset* GetColliderAsset(size_t hash);
 
 	//扁过
 	void CreateCubeMapTexture(int iSize);
@@ -173,10 +172,6 @@ private:
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
-
-	//AssetSystem盒府鞘夸?
-	std::unordered_map<size_t, RenderAsset*>			m_pCRAs;
-	std::unordered_map<size_t, ColliderAsset*>			m_pCCAs;
 
 public:
 	size_t												m_hash_RTV_BB;

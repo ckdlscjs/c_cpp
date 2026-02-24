@@ -78,12 +78,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 		case WM_LBUTTONDOWN:
 		{
-			_InputSystem.SetMousePos(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			_InputSystem.OnKeyDown((unsigned char)VK_LBUTTON);
+			_InputSystem.SetPickingPos(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			return 0;
 		}
 		case WM_LBUTTONUP:
 		{
-		
+			_InputSystem.OnKeyUp((unsigned char)VK_LBUTTON);
 			return 0;
 		}
 

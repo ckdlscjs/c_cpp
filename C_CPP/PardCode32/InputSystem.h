@@ -21,11 +21,12 @@ public:
 	void OnKeyPressed(unsigned char VK_KEY);
 	void OnKeyUp(unsigned char VK_KEY);
 	const E_InputEvent* GetKeysState();
-	void SetMousePos(int curX, int curY);
+	void SetPickingPos(int curX, int curY);
 	void OnMouseMove(int curX, int curY);
 	void OnMouseMoveCenter(HWND hWnd, int curX, int curY);
 	void SetMouseCenter(HWND hWnd);
 	Vector2 GetMouseDelta() const;
+	Vector2 GetPickingPos() const;
 	bool IsPressed_LBTN() const;
 	bool IsPressed_RBTN() const;
 private:
@@ -34,6 +35,7 @@ private:
 	Vector2 m_OldMousePos;
 	Vector2 m_CurMousePos;
 	Vector2 m_MouseDelta;
+	Vector2 m_PickingPos;
 	std::bitset<256> m_bOldKeyStates;
 	std::bitset<256> m_bCurKeyStates;
 	E_InputEvent m_eKeyStates[256];

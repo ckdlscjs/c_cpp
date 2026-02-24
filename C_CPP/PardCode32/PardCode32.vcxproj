@@ -205,7 +205,6 @@
     <ClCompile Include="..\Include\ImGui\imgui_tables.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="AppWindow.cpp" />
-    <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="CollisionSystem.cpp" />

@@ -332,7 +332,7 @@ inline Matrix4x4 GetMat_Reflect(const Vector4& plane)
 }
 
 /*
-* 스크린좌표행렬
+* 스크린좌표(뷰포트)행렬
 * [스크린 좌표 행렬 (Viewport Matrix)]
 * - (0.0, 0.0) ~ (width, height) (픽셀 단위)
 * - GPU 하드웨어가 3D 점을 실제 모니터의 어느 '픽셀'에 점을 찍을지 결정할 때 사용.

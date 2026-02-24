@@ -599,18 +599,6 @@ RenderSystem::~RenderSystem()
 		iter = m_pCRTVs.erase(iter);
 	}
 
-	for (auto iter = m_pCRAs.begin(); iter != m_pCRAs.end();)
-	{
-		delete iter->second;
-		iter = m_pCRAs.erase(iter);
-	}
-
-	for (auto iter = m_pCCAs.begin(); iter != m_pCCAs.end();)
-	{
-		delete iter->second;
-		iter = m_pCCAs.erase(iter);
-	}
-
 	/*if (SkyObj)
 		delete SkyObj;
 
@@ -1044,7 +1032,7 @@ void RenderSystem::RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& ma
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -1110,7 +1098,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1194,7 +1182,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					m_pCCBs[g_hash_cbbonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbbonemat]->GetBuffer(), 2);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1270,7 +1258,7 @@ void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matVi
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -1345,7 +1333,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1418,7 +1406,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					m_pCCBs[g_hash_cbbonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbbonemat]->GetBuffer(), 2);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1543,7 +1531,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1605,7 +1593,7 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -1731,7 +1719,7 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 				m_pCCBs[g_hash_cbwvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 				SetVS_ConstantBuffer(m_pCCBs[g_hash_cbwvpitmat]->GetBuffer(), 0);
 
-				const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -1931,7 +1919,7 @@ size_t RenderSystem::CreatePixelShader(std::wstring shaderName, std::string entr
 
 size_t RenderSystem::CreateTexture(const std::wstring& szFilePath, ScratchImage&& image)
 {
-	Texture* pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(szFilePath, std::move(image));
+	Texture* pTexture = _ResourceSystem.CreateResource<Texture>(szFilePath, std::move(image));
 	pTexture->SetSRV(CreateShaderResourceView(szFilePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
@@ -1952,9 +1940,9 @@ size_t RenderSystem::CreateTexture(const std::wstring& szFilePath)
 	std::wstring extension = filePath.substr(filePath.find_last_of('.'));
 	Texture* pTexture = nullptr;
 	if (extension == L".dds") 
-		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(filePath, DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
+		pTexture = _ResourceSystem.CreateResource<Texture>(filePath, DirectX::DDS_FLAGS::DDS_FLAGS_NONE);
 	else
-		pTexture = _ResourceSystem.CreateResourceFromFile<Texture>(filePath, DirectX::WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB);
+		pTexture = _ResourceSystem.CreateResource<Texture>(filePath, DirectX::WIC_FLAGS::WIC_FLAGS_IGNORE_SRGB);
 	pTexture->SetSRV(CreateShaderResourceView(filePath + L"VW", pTexture->GetImage()));
 	return pTexture->GetHash();
 }
@@ -1972,7 +1960,7 @@ const std::unordered_set<size_t>& RenderSystem::CreateColliders(size_t hash_mesh
 
 size_t RenderSystem::CreateMaterial(const std::wstring& szFilePath)
 {
-	Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(szFilePath);
+	Material* pMaterial = _ResourceSystem.CreateResource<Material>(szFilePath);
 	return pMaterial->GetHash();
 }
 
@@ -1982,7 +1970,7 @@ std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath
 	for (auto& matInfo : texturesByMaterial)
 	{
 		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
-		Material* pMaterial = _ResourceSystem.CreateResourceFromFile<Material>(matName);
+		Material* pMaterial = _ResourceSystem.CreateResource<Material>(matName);
 		size_t matHash = pMaterial->GetHash();
 		UINT materialFlag = 0;
 		//Parsing Texture
@@ -2027,7 +2015,7 @@ std::vector<size_t> RenderSystem::CreateMaterials(const std::wstring& szFilePath
 
 size_t RenderSystem::CreateGeometry(const std::wstring& szFilePath)
 {
-	Geometry* pGeometry = _ResourceSystem.CreateResourceFromFile<Geometry>(szFilePath);
+	Geometry* pGeometry = _ResourceSystem.CreateResource<Geometry>(szFilePath);
 	return pGeometry->GetHash();
 }
 
@@ -2042,7 +2030,7 @@ size_t RenderSystem::CreateAnimaitonFromGeometry(size_t hash_geometry)
 {
 	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
 	std::wstring szPath = pGeometry->GetPath();
-	Animation* pAnimation = _ResourceSystem.CreateResourceFromFile<Animation>(szPath + L"Animation", pGeometry->GetBones(), pGeometry->GetBonesHierarchy(), pGeometry->GetAnimationClip());
+	Animation* pAnimation = _ResourceSystem.CreateResource<Animation>(szPath + L"Animation", pGeometry->GetBones(), pGeometry->GetBonesHierarchy(), pGeometry->GetAnimationClip());
 	return pAnimation->GetHash();
 }
 
@@ -2050,7 +2038,7 @@ template<typename T>
 size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs)
 {
 	std::wstring szTypename = _tomw(typeid(T).name());
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szName + szTypename + L"Mesh", verticesByMaterial, indicesByMaterial, pointsByMeshs);
+	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szName + szTypename + L"Mesh", verticesByMaterial, indicesByMaterial, pointsByMeshs);
 	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	return pMesh->GetHash();
@@ -2062,7 +2050,7 @@ size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
 	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
 	std::wstring szPath = pGeometry->GetPath();
 	std::wstring szTypename = _tomw(typeid(T).name());
-	Mesh<T>* pMesh = _ResourceSystem.CreateResourceFromFile<Mesh<T>>(szPath + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
+	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szPath + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPoints());
 	pMesh->SetVB(CreateVertexBuffer(szPath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
 	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
 	return pMesh->GetHash();
@@ -2184,31 +2172,16 @@ size_t RenderSystem::CreateShadowMapTexture(const int width, const int height)
 
 size_t RenderSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs)
 {
-	size_t hash = Hasing_wstring(szName);
-	if (m_pCRAs.find(hash) != m_pCRAs.end()) return hash;
-
-	RenderAsset* pRenderAsset = new RenderAsset(szName);
-	_ASEERTION_NULCHK(pRenderAsset, "RA is nullptr");
+	RenderAsset* pRenderAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
 	pRenderAsset->m_hMeshMats = hashs;
-	m_pCRAs[hash] = pRenderAsset;
-	return hash;
+	return pRenderAsset->GetHash();
 }
 
 size_t RenderSystem::CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs)
 {
-	size_t hash = Hasing_wstring(szName);
-	if (m_pCCAs.find(hash) != m_pCCAs.end()) return hash;
-
-	ColliderAsset* pColliderAsset = new ColliderAsset(szName);
-	_ASEERTION_NULCHK(pColliderAsset, "CA is nullptr");
+	ColliderAsset* pColliderAsset = _ResourceSystem.CreateResource<ColliderAsset>(szName);
 	pColliderAsset->m_hColliders = hashs;
-	m_pCCAs[hash] = pColliderAsset;
-	return hash;
-}
-
-const ColliderAsset* RenderSystem::GetColliderAsset(size_t hash)
-{
-	return m_pCCAs[hash];
+	return pColliderAsset->GetHash();
 }
 
 ID3DBlob* RenderSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)

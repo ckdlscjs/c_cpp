@@ -4,10 +4,11 @@
 #include "Sphere.h"
 #include "Box.h"
 #include "ECSSystem.h"
+#include "Assets.h"
 //밑부분은 책임분리 고려필요
 #include "CameraSystem.h"
-#include "RenderSystem.h"	//Asset을받아온다
-#include "Assets.h"
+#include "ResourceSystem.h"
+#include "Inputsystem.h"	//Picking
 //#include "ResourceSystem.h"
 
 CollisionSystem::CollisionSystem()
@@ -56,7 +57,7 @@ void CollisionSystem::Frame(float deltatime)
 				const Quarternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
 				Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
-				const ColliderAsset* pColliderAsset = _RenderSystem.GetColliderAsset(colliders[col].hash_ca);
+				const ColliderAsset* pColliderAsset = _ResourceSystem.GetResource<ColliderAsset>(colliders[col].hash_ca);
 				for (const auto& iter : pColliderAsset->m_hColliders)
 				{
 					if (CheckBound(frustum, iter, matWorld))

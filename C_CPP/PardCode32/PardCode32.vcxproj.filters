@@ -193,13 +193,13 @@
     <ClInclude Include="BehaviorSystem.h">
       <Filter>Engine\ECSSystem</Filter>
     </ClInclude>
-    <ClInclude Include="Assets.h">
-      <Filter>Engine\GraphicSystem</Filter>
-    </ClInclude>
     <ClInclude Include="Geometry.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
     <ClInclude Include="Animation.h">
+      <Filter>Engine\ResourceSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Assets.h">
       <Filter>Engine\ResourceSystem</Filter>
     </ClInclude>
   </ItemGroup>
@@ -284,9 +284,6 @@
     </ClCompile>
     <ClCompile Include="BehaviorSystem.cpp">
       <Filter>Engine\ECSSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="Assets.cpp">
-      <Filter>Engine\GraphicSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
