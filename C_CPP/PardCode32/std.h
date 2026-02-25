@@ -59,6 +59,9 @@ using namespace DirectX;
 
 //#include "bits/stdc++.h"
 
+extern UINT g_iWidth;
+extern UINT g_iHeight;
+
 //공용함수들
 template<typename T>
 inline const T& Clamp(const T& val, const T& low, const T& high)

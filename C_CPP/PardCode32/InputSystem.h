@@ -41,6 +41,7 @@ private:
 	E_InputEvent m_eKeyStates[256];
 	bool m_bCenterMouse = true;
 	bool m_bChkPosFirst = true;
+	bool m_bRenderDebug = false;
 };
 #define _InputSystem InputSystem::GetInstance()
 

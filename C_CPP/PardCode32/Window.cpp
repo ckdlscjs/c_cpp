@@ -186,8 +186,8 @@ bool Window::Init(UINT width, UINT height)
 	::UpdateWindow(m_hWnd);
 	::SetFocus(m_hWnd);
 	RECT rect = GetClientWindowRect();
-	m_iWidth = rect.right - rect.left;
-	m_iHeight = rect.bottom - rect.top;
+	g_iWidth = rect.right - rect.left;
+	g_iHeight = rect.bottom - rect.top;
 	g_pWindow->OnCreate();
 	return m_bIsRun = true;
 }

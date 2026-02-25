@@ -36,6 +36,8 @@ AppWindow::~AppWindow()
 const std::wstring g_szName_mat = L"Mat_";
 const std::wstring g_szName_ra = L"Ra_";
 const std::wstring g_szName_ca = L"Ca_";
+UINT g_iWidth = 800.0f;
+UINT g_iHeight = 600.0f;
 
 void AppWindow::OnCreate()
 {
@@ -44,7 +46,7 @@ void AppWindow::OnCreate()
 	_InputSystem.Init();
 	_ResourceSystem.Init();
 	_CollisionSystem.Init();
-	_RenderSystem.Init(m_hWnd, m_iWidth, m_iHeight);
+	_RenderSystem.Init(m_hWnd, g_iWidth, g_iHeight);
 	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
 	_LightSystem.Init();
@@ -77,8 +79,11 @@ void AppWindow::OnCreate()
 	{
 		//기본카메라 세팅
 		{
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, C_Orthographic, T_Camera_Ortho_LT>();
-			_CameraSystem.lookup_maincam = _ECSSystem.CreateEntity<C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, C_Orthographic, T_Camera_Ortho_LT>();
+			const std::wstring szName = L"MainCam";
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, C_Orthographic, T_Camera_Ortho_LT>();
+			_CameraSystem.lookup_maincam = _ECSSystem.CreateEntity<C_Info, C_Input, C_Transform, C_Behavior, C_Camera, C_Projection, C_Orthographic, T_Camera_Ortho_LT>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName });
 
 			std::bitset<256> vkmask;
 			vkmask['W'] = true;
@@ -104,8 +109,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 			C_Camera camera;
-			camera.fScreenWidth = m_iWidth;
-			camera.fScreenHeight = m_iHeight;
+			camera.fScreenWidth = g_iWidth;
+			camera.fScreenHeight = g_iHeight;
 			camera.fFov = 75.0f;
 			camera.fNear = 0.1f;
 			camera.fFar = 10000.0f;
@@ -179,8 +184,11 @@ void AppWindow::OnCreate()
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName });
+
 			std::bitset<256> vkmask;
 			vkmask['W'] = true;
 			vkmask['A'] = true;
@@ -189,6 +197,7 @@ void AppWindow::OnCreate()
 			vkmask['Q'] = true;
 			vkmask['E'] = true;
 			_ECSSystem.AddComponent<C_Input>(key, { vkmask });
+
 			size_t lookup_maincam = _CameraSystem.lookup_maincam;
 			const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
 			_ECSSystem.AddComponent<C_Transform>(key, { {c_cam_main.fFar * 0.9f, c_cam_main.fFar * 0.9f, c_cam_main.fFar * 0.9f},  {}, {} });
@@ -214,6 +223,8 @@ void AppWindow::OnCreate()
 			GeometryGenerate_Plane<Vertex_PTN>(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(szName, verticesByMaterial, indicesByMaterial, pointsByMeshs);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
@@ -226,17 +237,14 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			_ECSSystem.AddComponent<C_Info>(key, { szName });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quarternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #ifdef _RandOBJ
 		const size_t cnt = 500;
@@ -245,7 +253,10 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"RandCube";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/cube.obj");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_RenderSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
@@ -259,15 +270,13 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+			
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			{
 				for (int i = 0; i < cnt; i++)
 				{
-					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, T_Collider, T_Render_Geometry_Static>();
 					std::bitset<256> vkmask;
 					vkmask[VK_UP] = true;
 					//vkmask[VK_LEFT] = true;
@@ -285,8 +294,6 @@ void AppWindow::OnCreate()
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-					_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 				}
 			}
 		}
@@ -294,7 +301,10 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"RandSphere";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
@@ -306,16 +316,14 @@ void AppWindow::OnCreate()
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+			
 
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			{
 				for (int i = 0; i < cnt; i++)
 				{
-					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, T_Collider, T_Render_Geometry_Static>();
 					std::bitset<256> vkmask;
 					//vkmask[VK_UP] = true;
 					vkmask[VK_LEFT] = true;
@@ -333,8 +341,6 @@ void AppWindow::OnCreate()
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-					_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 				}
 			}
 		}
@@ -348,7 +354,10 @@ void AppWindow::OnCreate()
 			std::map<UINT, std::vector<UINT>> indicesByMaterial;
 			std::vector<std::vector<Vector3>> pointsByMeshs;
 			GeometryGenerate_Plane<Vertex_PTN>(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(szName, verticesByMaterial, indicesByMaterial, pointsByMeshs);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
@@ -360,18 +369,14 @@ void AppWindow::OnCreate()
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+			
 
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Billboard>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Billboard>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _Billboard
 
@@ -379,7 +384,10 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"NormalMap";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
 			_RenderSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
@@ -392,19 +400,14 @@ void AppWindow::OnCreate()
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
+			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static >();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static >();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {230.0f, 100.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _NORMALMAP
 
@@ -412,7 +415,10 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"House";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/house.obj");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 
 			std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -437,19 +443,14 @@ void AppWindow::OnCreate()
 
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {150.0f, 0.0f, 50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _HOUSE
 
@@ -457,7 +458,9 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"Sponza";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sponza_basic.obj");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 			std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 			std::vector<Mesh_Material> mesh_mats;
@@ -466,12 +469,12 @@ void AppWindow::OnCreate()
 		
 			std::vector<std::wstring> paths =
 			{
-				L"../Assets/Textures/Sponza/sponza_bricks_a_diff.jpg",
-				L"../Assets/Textures/Sponza/sponza_arch_diff.jpg",
-				L"../Assets/Textures/Sponza/sponza_column_a_diff.jpg",
-				L"../Assets/Textures/Sponza/sponza_column_b_diff.jpg",
-				L"../Assets/Textures/Sponza/sponza_column_c_diff.jpg",
-				L"../Assets/Textures/Sponza/sponza_flagpole_diff.jpg"
+				L"../Assets/Textures/sponza_bricks_a_diff.jpg",
+				L"../Assets/Textures/sponza_arch_diff.jpg",
+				L"../Assets/Textures/sponza_column_a_diff.jpg",
+				L"../Assets/Textures/sponza_column_b_diff.jpg",
+				L"../Assets/Textures/sponza_column_c_diff.jpg",
+				L"../Assets/Textures/sponza_flagpole_diff.jpg"
 			};
 			for (int i = 0; i < hashs_material.size(); i++)
 			{
@@ -481,20 +484,15 @@ void AppWindow::OnCreate()
 			}
 
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
+			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _SPONZA
 
@@ -503,7 +501,9 @@ void AppWindow::OnCreate()
 		{
 			const std::wstring szName = L"MechaGirl";
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/fbx/FBX/SK_MechanicGirl_AllPartsTogether.fbx");
+
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 			std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 			std::vector<Mesh_Material> mesh_mats;
@@ -530,20 +530,15 @@ void AppWindow::OnCreate()
 			}
 			
 			size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-			const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-			size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
+			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _MECHAGIRL
 	}
@@ -552,57 +547,52 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"Nene";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/nene.obj");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
 		for (const auto& iter : hashs_material)
 			mesh_mats.push_back({ hash_mesh, iter });
 
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
+		
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 		}
 #endif // _NENE
 
 #ifdef _GIRL
 	//girl fbx
 	{
+		const std::wstring szName = L"Girl";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/girl.obj");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
 		for (const auto& iter : hashs_material)
 			mesh_mats.push_back({ hash_mesh, iter });
 	
-		size_t hash_ra = _RenderSystem.CreateRenderAsset(L"ra_girl", mesh_mats);
-
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(L"ca_girl", hash_CLs);
+		size_t hash_ra = _RenderSystem.CreateRenderAsset(szName, mesh_mats);
 
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, Quarternion(0.0f, 0.0f, 0.0f), {-100.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 	}
 #endif // _GIRL
 
@@ -611,7 +601,10 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"MutantWalk";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -621,22 +614,16 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, iter });
 		}
 			
-
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
+	
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 	}
@@ -648,7 +635,10 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"Praying";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -660,19 +650,14 @@ void AppWindow::OnCreate()
 
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 	}
@@ -683,7 +668,10 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"Herald";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Herald.fbx");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -695,19 +683,14 @@ void AppWindow::OnCreate()
 
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 	}
@@ -718,7 +701,10 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"Rapunzel";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Rapunzel.fbx");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN_Skinned>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -730,19 +716,16 @@ void AppWindow::OnCreate()
 
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+
+		_ECSSystem.AddComponent<C_Info>(key, { szName });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(0.0f, 180.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 	}
@@ -753,7 +736,10 @@ void AppWindow::OnCreate()
 	{
 		const std::wstring szName = L"Doro";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Doro.fbx");
+
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -765,19 +751,16 @@ void AppWindow::OnCreate()
 
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		const std::unordered_set<size_t>& hash_CLs = _RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-		size_t hash_ca = _RenderSystem.CreateColliderAsset(g_szName_ca + szName, hash_CLs);
-
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Static>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Static>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Collider, C_Animation, T_Render_Geometry_Static>();
+
+		_ECSSystem.AddComponent<C_Info>(key, { szName });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
-
-		_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 	}
@@ -923,7 +906,7 @@ void AppWindow::OnCreate()
 	//ShadowMap
 	{
 		const std::wstring szName = L"ShadowMap";
-		_RenderSystem.m_hash_DSV_ShadowMap = _RenderSystem.CreateShadowMapTexture(m_iWidth, m_iHeight);
+		_RenderSystem.m_hash_DSV_ShadowMap = _RenderSystem.CreateShadowMapTexture(g_iWidth, g_iHeight);
 		size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 		_RenderSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 		_RenderSystem.m_hash_Mat_ShadowMap = hash_material;
@@ -955,7 +938,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_UI>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Render_UI>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {(float)m_iWidth, (float)m_iHeight, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {(float)g_iWidth, (float)g_iHeight, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 		}
 		//DSV
@@ -1123,8 +1106,10 @@ void AppWindow::OnUpdate()
 	//RenderIntent
 	{
 		_RenderSystem.PreRender(deltaTime, elpasedTime);
+
 		_RenderSystem.Render(deltaTime, elpasedTime);
 		_ImguiSystem.Render();
+
 		_RenderSystem.PostRender();
 	}
 	

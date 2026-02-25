@@ -15,6 +15,7 @@ inline RenderAsset::RenderAsset(size_t hash, const std::wstring& szFilePath) : B
 {
 }
 
+/*
 class ColliderAsset : public BaseResource<ColliderAsset>
 {
 	friend class BaseResource<ColliderAsset>;
@@ -29,3 +30,4 @@ public:
 inline ColliderAsset::ColliderAsset(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 }
+*/

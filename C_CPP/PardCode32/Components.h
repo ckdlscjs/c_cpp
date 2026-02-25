@@ -7,6 +7,11 @@ public:
 	std::bitset<256> bVKMask;
 };
 
+struct C_Info
+{
+	std::wstring szName;
+};
+
 struct C_Transform
 {
 public:
@@ -75,12 +80,14 @@ public:
 	bool bRenderable = false;
 	size_t hash_ra = 0;
 };
-
+struct T_Collider {};
+/*
 struct C_Collider
 {
 public:
 	size_t hash_ca = 0;
 };
+*/
 
 struct C_Animation
 {

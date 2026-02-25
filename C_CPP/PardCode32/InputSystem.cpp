@@ -1,6 +1,7 @@
 #include "InputSystem.h"
 #include "Components.h"
 #include "ECSSystem.h"
+
 InputSystem::InputSystem()
 {
 }
@@ -55,6 +56,10 @@ void InputSystem::Frame()
 		else if (m_bOldKeyStates[vk_key] && !m_bCurKeyStates[vk_key]) m_eKeyStates[vk_key] = E_InputEvent::KEY_UP;
 		else m_eKeyStates[vk_key] = E_InputEvent::NOTHING;
 	}
+	
+	//RenderDebug
+	if (m_eKeyStates['V'] == E_InputEvent::KEY_UP)
+		m_bRenderDebug = !m_bRenderDebug;
 
 	//상태전이(다음프레임에반영)
 	m_OldMousePos = m_CurMousePos;
@@ -130,73 +135,6 @@ const E_InputEvent* InputSystem::GetKeysState()
 void InputSystem::SetPickingPos(int curX, int curY)
 {
 	m_PickingPos.Set(curX, curY);
-	/*
-	XMMATRIX P = mCam.Proj();
-
-	// Compute picking ray in view space.
-	// 2장과 같은 이유로 P(0,0) -> P.r[0].m128_f32[0]
-	// 2장과 같은 이유로 P(1,1) -> P.r[1].m128_f32[1]
-	float vx = (+2.0f * sx / mClientWidth - 1.0f) / P.r[0].m128_f32[0];
-	float vy = (-2.0f * sy / mClientHeight + 1.0f) / P.r[1].m128_f32[1];
-
-	// Ray definition in view space.
-	XMVECTOR rayOrigin = XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-	XMVECTOR rayDir = XMVectorSet(vx, vy, 1.0f, 0.0f);
-
-	// Tranform ray to local space of Mesh.
-	XMMATRIX V = mCam.View();
-	XMMATRIX invView = XMMatrixInverse(&XMMatrixDeterminant(V), V);
-
-	XMMATRIX W = XMLoadFloat4x4(&mMeshWorld);
-	XMMATRIX invWorld = XMMatrixInverse(&XMMatrixDeterminant(W), W);
-
-	XMMATRIX toLocal = XMMatrixMultiply(invView, invWorld);
-
-	rayOrigin = XMVector3TransformCoord(rayOrigin, toLocal);
-	rayDir = XMVector3TransformNormal(rayDir, toLocal);
-
-	// Make the ray direction unit length for the intersection tests.
-	rayDir = XMVector3Normalize(rayDir);
-
-	// If we hit the bounding box of the Mesh, then we might have picked a Mesh triangle,
-	// so do the ray/triangle tests.
-	//
-	// If we did not hit the bounding box, then it is impossible that we hit
-	// the Mesh, so do not waste effort doing ray/triangle tests.
-
-	// Assume we have not picked anything yet, so init to -1.
-	mPickedTriangle = -1;
-	float tmin = 0.0f;
-	if (XNA::IntersectRayAxisAlignedBox(rayOrigin, rayDir, &mMeshBox, &tmin))
-	{
-		// Find the nearest ray/triangle intersection.
-		tmin = MathHelper::Infinity;
-		for (UINT i = 0; i < mMeshIndices.size() / 3; ++i)
-		{
-			// Indices for this triangle.
-			UINT i0 = mMeshIndices[i * 3 + 0];
-			UINT i1 = mMeshIndices[i * 3 + 1];
-			UINT i2 = mMeshIndices[i * 3 + 2];
-
-			// Vertices for this triangle.
-			XMVECTOR v0 = XMLoadFloat3(&mMeshVertices[i0].Pos);
-			XMVECTOR v1 = XMLoadFloat3(&mMeshVertices[i1].Pos);
-			XMVECTOR v2 = XMLoadFloat3(&mMeshVertices[i2].Pos);
-
-			// We have to iterate over all the triangles in order to find the nearest intersection.
-			float t = 0.0f;
-			if (XNA::IntersectRayTriangle(rayOrigin, rayDir, v0, v1, v2, &t))
-			{
-				if (t < tmin)
-				{
-					// This is the new nearest picked triangle.
-					tmin = t;
-					mPickedTriangle = i;
-				}
-			}
-		}
-	}
-	*/
 }
 
 void InputSystem::OnMouseMove(int curX, int curY)

@@ -15,7 +15,7 @@ public:
 	UINT* GetIndices();
 	size_t GetIndicesSize();
 	void SetCL(size_t hashCL);
-	const std::unordered_set<size_t>& GetCL() const;
+	const std::vector<size_t>& GetCLs() const;
 	const std::vector<RenderCounts>& GetRendVertices() const;
 	const std::vector<RenderCounts>& GetRendIndices() const;
 	void SetVB(size_t hashVB);
@@ -30,7 +30,7 @@ protected:
 	std::vector<RenderCounts> m_RenderIndices;
 	size_t m_lVB;
 	size_t m_lIB;
-	std::unordered_set<size_t> m_lCL;
+	std::vector<size_t> m_lCLs;
 };
 inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath), m_lVB(0), m_lIB(0)
 {
@@ -77,12 +77,12 @@ inline size_t BaseMesh::GetIB() const
 
 inline void BaseMesh::SetCL(size_t hashCL)
 {
-	m_lCL.insert(hashCL);
+	m_lCLs.push_back(hashCL);
 }
 
-inline const std::unordered_set<size_t>& BaseMesh::GetCL() const
+inline const std::vector<size_t>& BaseMesh::GetCLs() const
 {
-	return m_lCL;
+	return m_lCLs;
 }
 
 inline const std::vector<RenderCounts>& BaseMesh::GetRendVertices() const

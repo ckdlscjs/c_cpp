@@ -18,8 +18,8 @@ public:
 	virtual void OnDestroy() = 0;
 
 protected:
-	UINT m_iWidth;
-	UINT m_iHeight;
+	UINT g_iWidth;
+	UINT g_iHeight;
 	HWND m_hWnd;
 	bool m_bIsRun;
 };

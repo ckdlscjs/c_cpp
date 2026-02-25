@@ -24,9 +24,10 @@ public:
 private:
 	template<typename T, typename... Types>
 	size_t AddCollider(const std::wstring& szName, Types&&... args);
-	bool CheckBound(const Frustum& frustum, size_t hash, const Matrix4x4& matWorld);
-	bool CheckBound(const Frustum& frustum, const Sphere& sphere, const Matrix4x4& matWorld);
-	bool CheckBound(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld);
+	bool IsCollision(const Frustum& frustum, size_t hash, const Matrix4x4& matWorld);
+	bool IsCollision(const Frustum& frustum, const Sphere& sphere, const Matrix4x4& matWorld);
+	bool IsCollision(const Frustum& frustum, const Box& box, const Matrix4x4& matWorld);
+	bool IsCollision(const Vector4& rayOrigin, const Vector4& rayDir);
 
 	std::unordered_map<size_t, Collider*> m_Colliders;
 };

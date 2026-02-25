@@ -81,11 +81,11 @@ public:
 	size_t CreateAnimaitonFromGeometry(size_t hash_geometry);
 
 	//Collider
-	const std::unordered_set<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+	const std::vector<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
 
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
-	size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
+	//size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
 
 	//기법
 	void CreateCubeMapTexture(int iSize);
@@ -149,10 +149,8 @@ private:
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
 	void RenderUI(const Matrix4x4& matOrtho);
- 
-private:
-	UINT m_iWidth = 800;
-	UINT m_iHeight = 600;
+	void RenderGSDebugGeometry(const Matrix4x4& matWorld, const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider);
+
 
 	//사용을위해 분할한 클래스객체들
 private:
@@ -172,6 +170,7 @@ private:
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
+	
 
 public:
 	size_t												m_hash_RTV_BB;
