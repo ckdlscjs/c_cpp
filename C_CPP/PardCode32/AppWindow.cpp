@@ -303,7 +303,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
@@ -386,7 +386,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
@@ -503,7 +503,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/fbx/FBX/SK_MechanicGirl_AllPartsTogether.fbx");
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 			std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 			std::vector<Mesh_Material> mesh_mats;
@@ -549,7 +549,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/nene.obj");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -576,7 +576,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/girl.obj");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -603,7 +603,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -637,7 +637,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -670,7 +670,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Herald.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -703,7 +703,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Rapunzel.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -737,15 +737,15 @@ void AppWindow::OnCreate()
 		const std::wstring szName = L"Doro";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Doro.fbx");
 
-		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
 		for (auto& iter : hashs_material)
 		{
-			_RenderSystem.Material_SetShaders(iter, 1);
+			_RenderSystem.Material_SetShaders(iter, 0);
 			mesh_mats.push_back({ hash_mesh, iter });
 		}
 

@@ -124,6 +124,7 @@ private:
 	void SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
 
 	void SetGS_Shader(ID3D11GeometryShader* pGS);
+	void SetGS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 
 	void SetPS_Shader(ID3D11PixelShader* pPS);
 	void SetPS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
@@ -149,7 +150,8 @@ private:
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
 	void RenderUI(const Matrix4x4& matOrtho);
-	void RenderGSDebugGeometry(const Matrix4x4& matWorld, const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider);
+
+	void RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider);
 
 
 	//사용을위해 분할한 클래스객체들

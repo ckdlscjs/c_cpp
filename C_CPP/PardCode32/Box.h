@@ -164,7 +164,7 @@ public:
 		if (vertices->size() <= 0) return;
 		float minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = FLT_MAX;
-		maxX = maxY = maxZ = FLT_MIN;
+		maxX = maxY = maxZ = -FLT_MAX;
 		for (auto iter = vertices->begin(); iter != vertices->end(); iter++)
 		{
 			minX = std::min(minX, iter->GetX()); maxX = std::max(maxX, iter->GetX());
@@ -199,7 +199,7 @@ public:
         //해당 코너를 기반으로 하는 AABB를 생성해서 반환한다
         float minX, minY, minZ, maxX, maxY, maxZ;
         minX = minY = minZ = FLT_MAX;
-        maxX = maxY = maxZ = FLT_MIN;
+        maxX = maxY = maxZ = -FLT_MAX;
         for (const auto& iter : corners)
         {
             minX = std::min(minX, iter.GetX()); maxX = std::max(maxX, iter.GetX());
@@ -224,6 +224,16 @@ public:
         // 로컬 크기를 계산
         extent = ((m_vMax - m_vMin) * 0.5f).ABS();  //extent의 양수화를 위한 절대값처리
         extent *= GetScaleFromWorld(matWorld);      //scale은 length로 처리되어 나오기때문에 양수값이 나온다
+    }
+
+    inline Vector3 GetMin()
+    {
+        return m_vMin;
+    }
+
+    inline Vector3 GetMax()
+    {
+        return m_vMax;
     }
 	
 private:

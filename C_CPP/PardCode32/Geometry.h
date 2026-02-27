@@ -13,7 +13,8 @@ public:
 public:
 	const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& GetVertices() { return m_verticesByMaterial; }
 	const std::map<UINT, std::vector<UINT>>& GetIndices() { return m_indicesByMaterial; }
-	const std::vector<std::vector<Vector3>>& GetPoints() { return m_pointsByMeshs; }
+	const std::vector<std::vector<Vector3>>& GetPointsByBones() { return m_pointsByBones; }
+	const std::vector<std::vector<Vector3>>& GetPointsByMeshs() { return m_pointsByMeshs; }
 	std::map<UINT, MTL_TEXTURES>& GetTextures() { return m_texturesByMaterial; }
 	std::unordered_map<std::string, Bone>& GetBones() { return m_BoneMap; }
 	std::vector<NodeHierarchy>& GetBonesHierarchy() { return m_Hierarchy; }
@@ -25,13 +26,17 @@ private:
 	void ProcessAnim(const aiScene* scene);
 
 private:
-	std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> m_verticesByMaterial;
-	std::map<UINT, std::vector<UINT>> m_indicesByMaterial;
-	std::vector<std::vector<Vector3>> m_pointsByMeshs;
-	std::map<UINT, MTL_TEXTURES> m_texturesByMaterial;
-	std::unordered_map<std::string, AnimationClip> m_AnimationClip;
-	std::unordered_map<std::string, Bone> m_BoneMap;
-	std::vector<NodeHierarchy> m_Hierarchy;
+	//Mesh
+	std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>			m_verticesByMaterial;
+	std::map<UINT, std::vector<UINT>>							m_indicesByMaterial;
+	std::vector<std::vector<Vector3>>							m_pointsByMeshs;
+	std::vector<std::vector<Vector3>>							m_pointsByBones;
+	std::map<UINT, MTL_TEXTURES>								m_texturesByMaterial;
+
+	//Animation
+	std::unordered_map<std::string, AnimationClip>				m_AnimationClip;
+	std::unordered_map<std::string, Bone>						m_BoneMap;
+	std::vector<NodeHierarchy>									m_Hierarchy;
 };
 
 inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
@@ -44,7 +49,7 @@ inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath) : BaseRes
 	unsigned int readFlag =
 		aiProcess_Triangulate |
 		aiProcess_SortByPType |
-		//aiProcess_JoinIdenticalVertices |
+		//aiProcess_JoinIdenticalVertices |			//hash기반 구현사용
 		aiProcess_GenSmoothNormals |
 		aiProcess_CalcTangentSpace |
 		aiProcess_OptimizeMeshes |
@@ -140,6 +145,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				boneIndex = (UINT)m_BoneMap.size();
 				m_BoneMap[boneName].idx = boneIndex;
 				m_BoneMap[boneName].matOffset = pBone->mOffsetMatrix;
+				m_pointsByBones.push_back(std::vector<Vector3>());
 			}
 			else
 			{
@@ -153,6 +159,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				UINT vertexID = pBone->mWeights[j].mVertexId;
 				float weight = pBone->mWeights[j].mWeight;
 				influenceIWs[vertexID].push_back({ boneIndex, weight });
+				m_pointsByBones[boneIndex].push_back(m_verticesByMaterial[matIdx][vertexLookup[vertexID]].pos0);	//컬라이더구성을위한 본별 pos정보
 			}
 		}
 

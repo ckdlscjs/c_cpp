@@ -36,8 +36,6 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 	std::vector<Matrix4x4> toRoot(m_Hierarchy.size());
 	mats.resize(m_BoneMap.size());
 
-	const auto& animClip = m_AnimationClip[szName];
-
 	// 2. 계층 구조 순회 (m_Hierarchy가 부모가 항상 자식보다 앞에 있다는 가정 하에)
 	for (UINT idx = 0; idx < m_Hierarchy.size(); idx++)
 	{
@@ -45,20 +43,22 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 		std::string curName = m_Hierarchy[idx].szName_Cur;
 		Matrix4x4 toParent = m_Hierarchy[idx].matRelative;
 		
-		
-		// 해당 노드에 애니메이션 키값이 있다면 덮어쓰거나 결합
-		if (animClip.boneFrames_Scale.find(curName) != animClip.boneFrames_Scale.end())
+		if(m_AnimationClip.find(szName) != m_AnimationClip.end())
 		{
-			Vector3 vScale = FrameInterpolate_Vector(animClip.boneFrames_Scale.at(curName), t);
-			Quarternion qRotate = FrameInterpolate_Quarternion(animClip.boneFrames_Rotate.at(curName), t);
-			Vector3 vTranslation = FrameInterpolate_Vector(animClip.boneFrames_Translation.at(curName), t);
+			const auto& animClip = m_AnimationClip[szName];
+			// 해당 노드에 애니메이션 키값이 있다면 덮어쓰거나 결합
+			if (animClip.boneFrames_Scale.find(curName) != animClip.boneFrames_Scale.end())
+			{
+				Vector3 vScale = FrameInterpolate_Vector(animClip.boneFrames_Scale.at(curName), t);
+				Quarternion qRotate = FrameInterpolate_Quarternion(animClip.boneFrames_Rotate.at(curName), t);
+				Vector3 vTranslation = FrameInterpolate_Vector(animClip.boneFrames_Translation.at(curName), t);
 
-			// 보통 애니메이션이 있으면 초기 상대행렬(matRelative)을 '대체'합니다.
-			toParent = GetMat_World(vScale, qRotate, vTranslation);
+				// 보통 애니메이션이 있으면 초기 상대행렬(matRelative)을 '대체'합니다.
+				toParent = GetMat_World(vScale, qRotate, vTranslation);
+			}
 		}
-		
 
-		// 3. 부모의 '이미 계산된' 전역 행렬을 가져와 곱함 (누적의 핵심)
+		// 3. 부모의 '이미 계산된' 전역 행렬을 가져와 곱함
 		if (idx_parent == -1) // 루트 노드인 경우
 		{
 			toRoot[idx] = toParent;

@@ -244,6 +244,7 @@ struct Bone
 	UINT idx;
 	Matrix4x4 matOffset;
 };
+
 struct NodeHierarchy
 {
 	int idx_parent;
@@ -830,6 +831,19 @@ __declspec(align(16))
 struct CB_BoneMatrix
 {
 	Matrix4x4 bones[256];
+};
+
+__declspec(align(16))
+struct CB_Debug_Box
+{
+	Vector3 vMin;
+	Vector3 vMax;
+};
+
+__declspec(align(16))
+struct CB_Debug_Sphere
+{
+	Vector4 vInfo; //center(float3), radius
 };
 
 /*

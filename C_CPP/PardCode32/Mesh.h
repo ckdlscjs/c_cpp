@@ -11,7 +11,8 @@ protected:
 	BaseMesh& operator=(BaseMesh&&) = delete;
 public:
 	virtual ~BaseMesh();
-	const std::vector<std::vector<Vector3>>& GetPoints() const;
+	const std::vector<std::vector<Vector3>>& GetPointsByMeshs() const;
+	const std::vector<std::vector<Vector3>>& GetPointsByBones() const;
 	UINT* GetIndices();
 	size_t GetIndicesSize();
 	void SetCL(size_t hashCL);
@@ -24,13 +25,14 @@ public:
 	size_t GetIB() const;
 
 protected:
-	std::vector<std::vector<Vector3>> m_Points;
-	std::vector<UINT> m_Indices;
-	std::vector<RenderCounts> m_RenderVertices;
-	std::vector<RenderCounts> m_RenderIndices;
-	size_t m_lVB;
-	size_t m_lIB;
-	std::vector<size_t> m_lCLs;
+	std::vector<std::vector<Vector3>>							m_Points_Bones;
+	std::vector<std::vector<Vector3>>							m_Points_Meshs;
+	std::vector<UINT>											m_Indices;
+	std::vector<RenderCounts>									m_RenderVertices;
+	std::vector<RenderCounts>									m_RenderIndices;
+	size_t														m_lVB;
+	size_t														m_lIB;
+	std::vector<size_t>											m_lCLs;
 };
 inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath), m_lVB(0), m_lIB(0)
 {
@@ -40,9 +42,14 @@ inline BaseMesh::~BaseMesh()
 {
 }
 
-inline const std::vector<std::vector<Vector3>>& BaseMesh::GetPoints() const
+inline const std::vector<std::vector<Vector3>>& BaseMesh::GetPointsByMeshs() const
 {
-	return m_Points;
+	return m_Points_Meshs;
+}
+
+inline const std::vector<std::vector<Vector3>>& BaseMesh::GetPointsByBones() const
+{
+	return m_Points_Bones;
 }
 
 inline UINT* BaseMesh::GetIndices()
@@ -99,7 +106,7 @@ template<typename T>
 class Mesh : public BaseMesh
 {
 public:
-	Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs);
+	Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs, const std::vector<std::vector<Vector3>>& pointsByBones);
 	Mesh(const Mesh&) = delete;
 	Mesh& operator=(const Mesh&) = delete;
 	Mesh(Mesh&&) = delete;
@@ -112,7 +119,7 @@ private:
 };
 
 template<typename T>
-inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs)
+inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map<UINT, std::vector<Vertex_PTNTB_Skinned>>& verticesByMaterial, const std::map<UINT, std::vector<UINT>>& indicesByMaterial, const std::vector<std::vector<Vector3>>& pointsByMeshs, const std::vector<std::vector<Vector3>>& pointsByBones)
 	: BaseMesh(hash, szFilePath)
 {
 	//Mesh로 정렬해 넣기위해 순서대로 Material에 따른 인덱싱을 재계산
@@ -185,7 +192,8 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 		psumOffset += (UINT)verticesByMaterial.find(iter.first)->second.size();
 	}
 
-	m_Points = pointsByMeshs;
+	m_Points_Meshs = pointsByMeshs;
+	m_Points_Bones = pointsByBones;
 }
 
 template<typename T>

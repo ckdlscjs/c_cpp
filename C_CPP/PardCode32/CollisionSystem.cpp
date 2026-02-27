@@ -150,6 +150,8 @@ void CollisionSystem::Frame(float deltatime)
 				const Quarternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
 				Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
+				
+				//MousePicking Variable
 				Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
 				Matrix4x4 matToLocal = matInvView * matInvWorld;
 				Vector4	localRayOrigin = rayOrigin * matToLocal;
@@ -178,9 +180,7 @@ void CollisionSystem::Frame(float deltatime)
 		}
 		st_col = 0;
 	}
-
 }
-
 
 
 size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Collider collider)
@@ -268,5 +268,12 @@ bool CollisionSystem::IsCollision(const Frustum& frustum, const Box& box, const 
 			return false;
 	}
 	return true;
+}
+
+void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Box& cb)
+{
+	_ASEERTION_NULCHK(m_Colliders.find(hash) != m_Colliders.end(), "Collider Not exist");
+	cb.vMin = static_cast<Box*>(m_Colliders[hash])->GetMin();
+	cb.vMax = static_cast<Box*>(m_Colliders[hash])->GetMax();
 }
 

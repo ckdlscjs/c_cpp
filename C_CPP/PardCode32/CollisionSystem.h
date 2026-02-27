@@ -20,7 +20,7 @@ public:
 	void Init();
 	void Frame(float deltatime);
 	size_t CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Collider collider);	//컬라이더 템플릿 혹은 인자를 받아서 형에맞게끔 제작해줄것인가 분기함수
-	
+	void SetColliderDebugData(const size_t hash, CB_Debug_Box& cb);
 private:
 	template<typename T, typename... Types>
 	size_t AddCollider(const std::wstring& szName, Types&&... args);
