@@ -150,13 +150,13 @@
     <ClInclude Include="..\Include\ImGui\imstb_textedit.h" />
     <ClInclude Include="..\Include\ImGui\imstb_truetype.h" />
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="AnimationSystem.h" />
     <ClInclude Include="AppWindow.h" />
     <ClInclude Include="Archetype.h" />
     <ClInclude Include="Assets.h" />
     <ClInclude Include="BaseSystem.h" />
     <ClInclude Include="Box.h" />
     <ClInclude Include="Buffers.h" />
-    <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraSystem.h" />
     <ClInclude Include="Collider.h" />
     <ClInclude Include="CollisionSystem.h" />
@@ -172,7 +172,6 @@
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="ImguiSystem.h" />
-    <ClInclude Include="LightSystem.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Matrix4x4.h" />
     <ClInclude Include="Mesh.h" />
@@ -204,13 +203,13 @@
     <ClCompile Include="..\Include\ImGui\imgui_impl_win32.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_tables.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="AnimationSystem.cpp" />
     <ClCompile Include="AppWindow.cpp" />
     <ClCompile Include="Buffers.cpp" />
     <ClCompile Include="CameraSystem.cpp" />
     <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="ECSSystem.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
-    <ClCompile Include="LightSystem.cpp" />
     <ClCompile Include="BehaviorSystem.cpp" />
     <FxCompile Include="GS_CubeMap.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

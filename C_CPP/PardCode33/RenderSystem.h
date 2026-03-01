@@ -149,9 +149,8 @@ private:
 	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
-	void RenderUI(const Matrix4x4& matOrtho);
-
 	void RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider);
+	void RenderUI(const Matrix4x4& matOrtho);
 
 
 	//사용을위해 분할한 클래스객체들
@@ -174,7 +173,12 @@ private:
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
 	
 
+	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요
 public:
+	size_t												m_hash_light_directional;
+	size_t												m_hash_light_point;
+	size_t												m_hash_light_spot;
+
 	size_t												m_hash_RTV_BB;
 	size_t												m_hash_RTV_0;
 	size_t												m_hash_DSV_0;
@@ -184,8 +188,8 @@ public:
 	size_t												m_hash_RTV_CubeMap[6];
 	size_t												m_hash_SRV_CubeMap;
 	size_t												m_hash_DSV_CubeMap;
-	D3D11_VIEWPORT										m_vp_CubeMap;
 	size_t												m_hash_CubemapLookup;
+	D3D11_VIEWPORT										m_vp_CubeMap;
 
 	//그림자맵 렌더링을 위한 변수들
 	size_t												m_hash_DSV_ShadowMap;

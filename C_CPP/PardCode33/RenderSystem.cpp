@@ -3,7 +3,7 @@
 #include "ResourceSystem.h"
 #include "ECSSystem.h"
 #include "CameraSystem.h"
-#include "LightSystem.h"
+//#include "LightSystem.h"
 #include "CollisionSystem.h"
 
 //D3D Wrappers
@@ -26,6 +26,7 @@
 
 #include "TestBlockMacro.h"
 
+//해시, 상수버퍼
 size_t g_hash_cb_directionalLight;
 size_t g_hash_cb_pointlight;
 size_t g_hash_cb_spotlight;
@@ -38,6 +39,7 @@ size_t g_hash_cb_fog;
 size_t g_hash_cb_debug_box;
 size_t g_hash_cb_debug_sphere;
 
+//해시, 디버그렌더
 size_t g_hash_VS_Debug;
 size_t g_hash_GS_Debug_Box;
 size_t g_hash_GS_Debug_Sphere;
@@ -118,7 +120,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	CB_DirectionalLight cb_directional;
 	{
-		size_t lookup = _LightSystem.lookup_directional;
+		size_t lookup = _RenderSystem.m_hash_light_directional;
 		const auto& lightDir = _ECSSystem.GetComponent<C_Light_Direction>(lookup);
 		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
 		cb_directional.mAmbient = c_light.vAmbient;
@@ -131,7 +133,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	CB_PointLight cb_point;
 	{
-		size_t lookup = _LightSystem.lookup_point;
+		size_t lookup = _RenderSystem.m_hash_light_point;
 		const auto& c_transform = _ECSSystem.GetComponent<C_Transform>(lookup);
 		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
 		const auto& c_attenuation = _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
@@ -146,7 +148,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	CB_SpotLight cb_spot;
 	{
-		size_t lookup = _LightSystem.lookup_spot;
+		size_t lookup = _RenderSystem.m_hash_light_spot;
 		const auto& c_transform = _ECSSystem.GetComponent<C_Transform>(lookup);
 		const auto& c_light = _ECSSystem.GetComponent<C_Light>(lookup);
 		const auto& c_attenuation = _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
@@ -164,7 +166,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	CB_LightMatrix cb_lightMat;
 	{
-		size_t lookup = _LightSystem.lookup_directional;
+		size_t lookup = _RenderSystem.m_hash_light_directional;
 		const auto& lightDir = _ECSSystem.GetComponent<C_Light_Direction>(lookup);
 		const auto& c_cam = _ECSSystem.GetComponent<C_Camera>(_CameraSystem.lookup_maincam);
 		Vector4 pos = -lightDir.dir * 5000.0f;
@@ -1184,26 +1186,9 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
-					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
-					if (pAnimation->GetAnimations().size())
-					{
-						if (animations[col].szCurClip.empty())
-						{
-							animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
-							animations[col].elapsedTime = 0.0f;
-						}
-						animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.01f;
-						if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
-							animations[col].elapsedTime = 0.0f;
-					}
-
-					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
 					CB_BoneMatrix cb_bonemat;
-					for (int i = 0; i < curAnim.size(); i++)
-					{
-						cb_bonemat.bones[i] = curAnim[i];
-					}
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
+				
 					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
 
@@ -1410,26 +1395,8 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
-					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
-					if (pAnimation->GetAnimations().size())
-					{
-						if (animations[col].szCurClip.empty())
-						{
-							animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
-							animations[col].elapsedTime = 0.0f;
-						}
-						animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.01f;
-						if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
-							animations[col].elapsedTime = 0.0f;
-					}
-					
-					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
 					CB_BoneMatrix cb_bonemat;
-					for (int i = 0; i < curAnim.size(); i++)
-					{
-						cb_bonemat.bones[i] = curAnim[i];
-					}
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
 					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
 
@@ -1863,31 +1830,6 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 				{
 					if (!renders[col].bRenderable) continue;
 
-					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
-					if (pAnimation->GetAnimations().size())
-					{
-						if (animations[col].szCurClip.empty())
-						{
-							animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
-							animations[col].elapsedTime = 0.0f;
-						}
-						animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * 0.01f;
-						if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
-							animations[col].elapsedTime = 0.0f;
-					}
-
-					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
-					/*
-					CB_BoneMatrix cb_bonemat;
-					for (int i = 0; i < curAnim.size(); i++)
-					{
-						cb_bonemat.bones[i] = curAnim[i];
-					}
-					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
-					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
-					*/
-
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -1895,7 +1837,6 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					cb_wvpitmat.matView = matView;
 					cb_wvpitmat.matProj = matProj;
 					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-					
 
 					SetIA_VertexBuffer(nullptr, 1);
 					SetIA_IndexBuffer(nullptr);
@@ -1911,7 +1852,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 						{
-							cb_wvpitmat.matWorld = curAnim[idx] * GetMat_World(scale, rotate, position);
+							cb_wvpitmat.matWorld = animations[col].matAnims[idx] * GetMat_World(scale, rotate, position);
 							m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
 							SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 

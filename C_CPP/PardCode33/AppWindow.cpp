@@ -4,12 +4,13 @@
 #include "CameraSystem.h"
 #include "ResourceSystem.h"
 #include "ImguiSystem.h"
-#include "LightSystem.h"
+//#include "LightSystem.h"
 #include "TimerSystem.h"
 #include "CollisionSystem.h"
 #include "GeometryGenerator.h"
 #include "ECSSystem.h"
 #include "BehaviorSystem.h"
+#include "AnimationSystem.h"
 
 #include "TestBlockMacro.h"
 
@@ -25,7 +26,7 @@ AppWindow::AppWindow()
 	_ECSSystem;
 	_RenderSystem;
 	_ImguiSystem;
-	_LightSystem;
+	_AnimationSystem;
 	_BehaviorSystem;
 }
 
@@ -49,9 +50,9 @@ void AppWindow::OnCreate()
 	_RenderSystem.Init(m_hWnd, g_iWidth, g_iHeight);
 	_ImguiSystem.Init(m_hWnd, _RenderSystem.GetD3DDevice(), _RenderSystem.GetD3DDeviceContext());
 	_CameraSystem.Init();
-	_LightSystem.Init();
 	_ECSSystem.Init();
 	_BehaviorSystem.Init();
+	_AnimationSystem.Init();
 
 	// 1. 난수 시드(seed)를 설정합니다.
 		// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
@@ -123,7 +124,7 @@ void AppWindow::OnCreate()
 		//Directional Light
 		{
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Light, C_Light_Direction, T_Light_Directional>();
-			_LightSystem.lookup_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
+			_RenderSystem.m_hash_light_directional = _ECSSystem.CreateEntity<C_Light, C_Light_Direction, T_Light_Directional>();
 
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.3f, 0.3f, 0.3f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
 			_ECSSystem.AddComponent<C_Light_Direction>(key, { Vector3(0.0f, -1.0f, 1.0f) });
@@ -132,7 +133,7 @@ void AppWindow::OnCreate()
 		//Point Light
 		{
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
-			_LightSystem.lookup_point = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
+			_RenderSystem.m_hash_light_point = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, T_Light_Point>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {}, {}, Vector3(10.0f, 10.0f, 0.0f) });
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.5f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
@@ -142,7 +143,7 @@ void AppWindow::OnCreate()
 		//Spot Light
 		{
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
-			_LightSystem.lookup_spot = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
+			_RenderSystem.m_hash_light_spot = _ECSSystem.CreateEntity<C_Transform, C_Light, C_Light_Attenuation, C_Light_Spot, T_Light_Spot>();
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {}, (Vector3(0.0f, 0.0f, 0.0f) - Vector3(-250.0f, 500.0f, -5.0f)).Normalize(), Vector3(-250.0f, 500.0f, -5.0f) });
 			_ECSSystem.AddComponent<C_Light>(key, { Vector4(0.2f, 0.2f, 0.2f, 1.0f) , Vector4(0.7f, 0.7f, 0.7f, 1.0f), Vector4(1.0f, 1.0f, 1.0f, 1.0f), 100.0f });
@@ -1100,6 +1101,7 @@ void AppWindow::OnUpdate()
 		_CameraSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
 		_CollisionSystem.Frame(deltaTime);
+		_AnimationSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);
 	}
 	
