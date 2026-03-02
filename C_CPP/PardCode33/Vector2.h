@@ -80,6 +80,12 @@ public:
 		return result;
 	}
 
+	//¹è¿­Ã·ÀÚÀçÁ¤ÀÇ
+	inline float& operator[](size_t i) {
+		_ASEERTION_NULCHK(i < 2, "Out Of Index");
+		return reinterpret_cast<float*>(&m_vec)[i];
+	}
+
 private:
 		DirectX::XMVECTOR m_vec;
 
@@ -93,3 +99,4 @@ inline float CrossProduct(const Vector2& v1, const Vector2& v2) { return DirectX
 
 // ¿ÜºÎ ½ºÄ®¶ó °ö¼À (float * Vector2)
 inline Vector2 operator*(float scalar, const Vector2& vec) { return vec * scalar; }
+inline Vector2 operator/(float scalar, const Vector2& vec) { return vec / scalar; }

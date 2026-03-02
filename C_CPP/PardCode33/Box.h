@@ -226,12 +226,12 @@ public:
         extent *= GetScaleFromWorld(matWorld);      //scale은 length로 처리되어 나오기때문에 양수값이 나온다
     }
 
-    inline Vector3 GetMin()
+    inline Vector3 GetMin() const
     {
         return m_vMin;
     }
 
-    inline Vector3 GetMax()
+    inline Vector3 GetMax() const
     {
         return m_vMax;
     }

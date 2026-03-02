@@ -162,17 +162,30 @@ void CollisionSystem::Frame(float deltatime)
 				{
 					auto& iter = MeshMats[j];
 					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+
 					//Frustum Culling
-					for (const auto& iter : pMesh->GetCLs())
 					{
-						if (IsCollision(frustum, iter, matWorld))
+						for (const auto& iter : pMesh->GetCLs())
 						{
-							renders[col].bRenderable = true;
-							RenderAbles.push_back({ row, col });
+							if (IsCollision(frustum, iter, matWorld))
+							{
+								renders[col].bRenderable = true;
+								//RenderAbles.push_back({ row, col });
+								break;
+							}
+						}
+						if (!renders[col].bRenderable) break;
+					}
 
-
-
-							break;
+					//Picking
+					{
+						if (!_InputSystem.IsPressed_LBTN()) continue;
+						for (const auto& iter : pMesh->GetCLs())
+						{
+							if (IsCollision(localRayOrigin, localRayDir, iter))
+							{
+								std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
+							}
 						}
 					}
 				}
@@ -268,6 +281,70 @@ bool CollisionSystem::IsCollision(const Frustum& frustum, const Box& box, const 
 			return false;
 	}
 	return true;
+}
+
+bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, size_t hash)
+{
+	switch (m_Colliders[hash]->GetType())
+	{
+		case E_Collider::SPHERE:
+		{
+			return IsCollision(rayOrigin, rayDir, *static_cast<Sphere*>(m_Colliders[hash]));
+		}break;
+
+		//로컬공간상으로 돌려서 판별하므로 obb,aabb를 동일하게처리한다
+		case E_Collider::OBB:
+		case E_Collider::AABB:
+		{
+			return IsCollision(rayOrigin, rayDir, *static_cast<Box*>(m_Colliders[hash]));
+		}break;
+
+		case E_Collider::RAY:
+			break;
+		default:
+			return false;
+	}
+	return false;
+}
+
+/*
+* Ray to BOX(OBB로컬에서판별하므로 둘다가능), using slab method
+* ray = o + td, 박스에 교차하는 지점 두곳까지의 거리비스칼라값이 근단점s, 원단점t라 할때 각각의 지점을 vMin, vMax로 가정한다
+* vMin = o + sd, vMax = o + td, 고로 s/t로 치환해 스칼라값을 구한다, 이때 구한 평면별 vMin, vMax의 값들중 min들의최대 <= max들의최소 가 존재한다면
+* 레이는 교차함을 의미하므로 이중 가장 작은 s값까지의 거리를 dist로본다
+*/
+bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Box& box)
+{
+	if (rayDir.Length() <= _EPSILON) return false;
+	Vector3 vExtent = (box.GetMax() - box.GetMin()) * 0.5f;								//extent
+	Vector3 vOrigin = rayOrigin.ToVector3() - ((box.GetMax() + box.GetMin()) * 0.5f);	//레이의 중심에서 박스의 중심(상대좌표)를 감산
+	float dirs[3] = { rayDir.GetX(), rayDir.GetY(), rayDir.GetZ() };
+	float origins[3] = { vOrigin.GetX(), vOrigin.GetY(), vOrigin.GetZ() };
+	float extents[3] = { vExtent.GetX(), vExtent.GetY(), vExtent.GetZ() };
+
+	float tMin = -FLT_MAX;
+	float tMax = +FLT_MAX;
+	//x, y, z axis
+	for (int i = 0; i < 3; i++)
+	{
+		if (std::abs(dirs[i]) <= _EPSILON && (origins[i] < -extents[i] || extents[i] < origins[i])) return false;	//평행이면서 범위밖이면 만날수없다
+		float invD = 1.0f / dirs[i];
+		float s = (-extents[i] - origins[i]) * invD;
+		float t = (+extents[i] - origins[i]) * invD;
+		if (s > t) std::swap(s, t);
+		tMin = std::max(tMin, s);
+		tMax = std::min(tMax, t);
+	}
+
+	if (tMin > tMax) return false;
+	if (tMax < 0.0f) return false;
+	
+	return true;
+}
+
+bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Sphere& sphere)
+{
+	return false;
 }
 
 void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Box& cb)

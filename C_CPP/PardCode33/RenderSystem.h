@@ -92,8 +92,8 @@ public:
 	size_t CreateShadowMapTexture(const int width, const int height);
 
 
-private:
 	//API府家胶 积己
+private:
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
 	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);

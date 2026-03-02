@@ -422,6 +422,11 @@ inline Matrix4x4 GetMat_Cofactor(const Matrix4x4& mat4x4)
 	Vector4 r2(mat4x4[1].GetX(), mat4x4[1].GetY(), mat4x4[1].GetZ(), mat4x4[1].GetW());
 	Vector4 r3(mat4x4[2].GetX(), mat4x4[2].GetY(), mat4x4[2].GetZ(), mat4x4[2].GetW());
 	Vector4 r4(mat4x4[3].GetX(), mat4x4[3].GetY(), mat4x4[3].GetZ(), mat4x4[3].GetW());
+	/*Matrix4x4 origin = mat4x4;
+	Vector4 r1(origin[0][0], origin[0][1], origin[0][2], origin[0][3]);
+	Vector4 r2(origin[1][0], origin[1][1], origin[1][2], origin[1][3]);
+	Vector4 r3(origin[2][0], origin[2][1], origin[2][2], origin[2][3]);
+	Vector4 r4(origin[3][0], origin[3][1], origin[3][2], origin[3][3]);*/
 	// 1행의 여인수(Cofactor) 계산 (Getters 사용)
 	float m11 = (float)std::pow(-1, 1 + 1) * GetDeterminant3x3(r2.GetY(), r2.GetZ(), r2.GetW(), r3.GetY(), r3.GetZ(), r3.GetW(), r4.GetY(), r4.GetZ(), r4.GetW());
 	float m12 = (float)std::pow(-1, 1 + 2) * GetDeterminant3x3(r2.GetX(), r2.GetZ(), r2.GetW(), r3.GetX(), r3.GetZ(), r3.GetW(), r4.GetX(), r4.GetZ(), r4.GetW());

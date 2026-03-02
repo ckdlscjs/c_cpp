@@ -70,6 +70,8 @@ public:
 	friend inline Vector3 CrossProduct(const Vector3& v1, const Vector3& v2);
 	friend inline Vector3 operator*(float scalar, const Vector3& vec);
 
+	
+
 	// 변환 함수
 	inline DirectX::XMVECTOR ToXMVECTOR() const { return m_vec; }
 	inline DirectX::XMFLOAT3 ToXMFLOAT3() const
@@ -80,6 +82,11 @@ public:
 	}
 	inline Vector2 ToVector2() const { return Vector2(GetX(), GetY()); }
 
+	//배열첨자재정의
+	inline float& operator[](size_t i) {
+		_ASEERTION_NULCHK(i < 3, "Out Of Index");
+		return reinterpret_cast<float*>(&m_vec)[i];
+	}
 private:
 	DirectX::XMVECTOR m_vec;
 };
@@ -87,3 +94,4 @@ private:
 inline float DotProduct(const Vector3& v1, const Vector3& v2) { return DirectX::XMVectorGetX(DirectX::XMVector3Dot(v1.m_vec, v2.m_vec)); }
 inline Vector3 CrossProduct(const Vector3& v1, const Vector3& v2) { return Vector3(DirectX::XMVector3Cross(v1.m_vec, v2.m_vec)); }
 inline Vector3 operator*(float scalar, const Vector3& vec) { return vec * scalar; }
+inline Vector3 operator/(float scalar, const Vector3& vec) { return vec / scalar; }

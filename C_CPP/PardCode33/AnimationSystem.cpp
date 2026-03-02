@@ -18,7 +18,6 @@ void AnimationSystem::Init()
 void AnimationSystem::Frame(float deltatime)
 {
 	std::cout << "Frame : " << "AnimationSystem" << " Class" << '\n';
-	//Skeletal
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);

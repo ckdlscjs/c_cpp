@@ -75,6 +75,12 @@ public:
 	}
 	inline Vector3 ToVector3() const { return Vector3(GetX(), GetY(), GetZ()); }
 	inline Vector2 ToVector2() const { return Vector2(GetX(), GetY()); }
+
+	//배열첨자재정의
+	inline float& operator[](size_t i) {
+		_ASEERTION_NULCHK(i < 4, "Out Of Index");
+		return reinterpret_cast<float*>(&m_vec)[i];
+	}
 private:
 	DirectX::XMVECTOR m_vec;
 };
@@ -85,3 +91,4 @@ inline float DotProduct(const Vector4& v1, const Vector4& v2)
 	return DirectX::XMVectorGetX(DirectX::XMVector4Dot(v1.m_vec, v2.m_vec));
 }
 inline Vector4 operator*(float scalar, const Vector4& vec) { return vec * scalar; }
+inline Vector4 operator/(float scalar, const Vector4& vec) { return vec / scalar; }
