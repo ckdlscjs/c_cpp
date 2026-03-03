@@ -353,7 +353,13 @@
     <FxCompile Include="GS_Debug_Box.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="GS_Debug_Sphere.hlsl">
+    <FxCompile Include="VS_Debug_Sphere.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="HS_Debug_Sphere.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DS_Debug_Sphere.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

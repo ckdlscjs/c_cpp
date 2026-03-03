@@ -42,8 +42,10 @@ size_t g_hash_cb_debug_sphere;
 //해시, 디버그렌더
 size_t g_hash_VS_Debug;
 size_t g_hash_GS_Debug_Box;
-size_t g_hash_GS_Debug_Sphere;
 size_t g_hash_PS_Debug_PC;
+size_t g_hash_VS_Debug_Sphere;
+size_t g_hash_HS_Debug_Sphere;
+size_t g_hash_DS_Debug_Sphere;
 
 RenderSystem::RenderSystem()
 {
@@ -87,12 +89,14 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	g_hash_cb_fog				= _RenderSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
 	g_hash_cb_debug_box			= _RenderSystem.CreateConstantBuffer(typeid(CB_Debug_Box), sizeof(CB_Debug_Box));
 	g_hash_cb_debug_sphere		= _RenderSystem.CreateConstantBuffer(typeid(CB_Debug_Sphere), sizeof(CB_Debug_Sphere));
-	
 
 	//디버그용 셰이더
 	g_hash_VS_Debug				= _RenderSystem.CreateVertexShader(L"VS_Debug.hlsl", "vsmain", "vs_5_0");
-	g_hash_GS_Debug_Box			= _RenderSystem.CreateGeometryShader(L"GS_Debug_Box.hlsl","gsmain", "gs_5_0");
+	g_hash_GS_Debug_Box			= _RenderSystem.CreateGeometryShader(L"GS_Debug_Box.hlsl", "gsmain", "gs_5_0");
 	g_hash_PS_Debug_PC			= _RenderSystem.CreatePixelShader(L"PS_PC.hlsl", "psmain", "ps_5_0");
+	g_hash_VS_Debug_Sphere		= _RenderSystem.CreateVertexShader(L"VS_Debug_Sphere.hlsl", "vsmain", "vs_5_0");
+	g_hash_HS_Debug_Sphere		= _RenderSystem.CreateHullShader(L"HS_Debug_Sphere.hlsl", "hsmain", "hs_5_0");
+	g_hash_DS_Debug_Sphere		= _RenderSystem.CreateDomainShader(L"DS_Debug_Sphere.hlsl", "dsmain", "ds_5_0");
 
 	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
 	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
@@ -215,7 +219,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
 
 	//Render DebugGeometry
-	RenderGSDebugGeometry(cam_matView, cam_matProj, E_Collider::AABB);
+	if(_InputSystem.IsDebugRender())
+		RenderGSDebugGeometry(cam_matView, cam_matProj);
 
 	//Render UI
 	RenderUI(cam_matOrhto);
@@ -585,6 +590,18 @@ RenderSystem::~RenderSystem()
 	{
 		delete iter->second;
 		iter = m_pCVSs.erase(iter);
+	}
+
+	for (auto iter = m_pCHSs.begin(); iter != m_pCHSs.end();)
+	{
+		delete iter->second;
+		iter = m_pCHSs.erase(iter);
+	}
+
+	for (auto iter = m_pCDSs.begin(); iter != m_pCDSs.end();)
+	{
+		delete iter->second;
+		iter = m_pCDSs.erase(iter);
 	}
 
 	for (auto iter = m_pCGSs.begin(); iter != m_pCGSs.end();)
@@ -1749,9 +1766,8 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 	}
 }
 
-void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider)
+void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj)
 {
-	SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 	SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
@@ -1759,7 +1775,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 
 	//Static
 	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Collider, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
 		{
@@ -1769,6 +1785,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 			{
 				auto& transforms = archetype->GetComponents<C_Transform>(row);
 				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
 	
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
@@ -1782,14 +1799,29 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					cb_wvpitmat.matProj = matProj;
 					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
 					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
-					SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
-
-					SetIA_VertexBuffer(nullptr, 1);
+					
+					SetIA_VertexBuffer(nullptr, 0);
 					SetIA_IndexBuffer(nullptr);
 					SetIA_InputLayout(nullptr);
-					SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
-					SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
-					SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+					
+					if (colliders[col].type == E_Collider::AABB)
+					{
+						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+						SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
+						SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
+						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+						SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+					}
+					else if (colliders[col].type == E_Collider::SPHERE)
+					{
+						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+						SetVS_Shader(m_pCVSs[g_hash_VS_Debug_Sphere]->GetShader());
+						SetHS_Shader(m_pCHSs[g_hash_HS_Debug_Sphere]->GetShader());
+						SetDS_Shader(m_pCDSs[g_hash_DS_Debug_Sphere]->GetShader());
+						SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+						SetDS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+					}
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
@@ -1799,11 +1831,26 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 
 						for (const auto& hash_collider : pMesh->GetCLs())
 						{
-							CB_Debug_Box cb_debugBox;
-							_CollisionSystem.SetColliderDebugData(hash_collider, cb_debugBox);
-							m_pCCBs[g_hash_cb_debug_box]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debugBox);
-							SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_box]->GetBuffer(), 1);
-							Draw_Vertices(1, 0);
+							UINT drawCount = 0;
+							if (colliders[col].type == E_Collider::AABB)
+							{
+								CB_Debug_Box cb_debug_box;
+								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
+								m_pCCBs[g_hash_cb_debug_box]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debug_box);
+								SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_box]->GetBuffer(), 1);
+								drawCount = 1;
+							}
+							else if (colliders[col].type == E_Collider::SPHERE)
+							{
+								CB_Debug_Sphere cb_debug_sphere;
+								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
+								m_pCCBs[g_hash_cb_debug_sphere]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debug_sphere);
+								SetHS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_sphere]->GetBuffer(), 1);
+								SetDS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_sphere]->GetBuffer(), 1);
+								drawCount = 60;
+							}
+							
+							Draw_Vertices(drawCount, 0);
 						}
 					}
 				}
@@ -1814,7 +1861,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 
 	//Skeletal
 	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Collider, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, C_Collider, T_Render_Geometry_Skeletal>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
 		{
@@ -1825,6 +1872,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 				auto& transforms = archetype->GetComponents<C_Transform>(row);
 				auto& renders = archetype->GetComponents<C_Render>(row);
 				auto& animations = archetype->GetComponents<C_Animation>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
 
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
@@ -1841,9 +1889,23 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					SetIA_VertexBuffer(nullptr, 1);
 					SetIA_IndexBuffer(nullptr);
 					SetIA_InputLayout(nullptr);
-					SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
-					SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
-					SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+
+					if (colliders[col].type == E_Collider::AABB)
+					{
+						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
+						SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
+						SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
+						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+					}
+					else if (colliders[col].type == E_Collider::SPHERE)
+					{
+						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+						SetVS_Shader(m_pCVSs[g_hash_VS_Debug_Sphere]->GetShader());
+						SetHS_Shader(m_pCHSs[g_hash_HS_Debug_Sphere]->GetShader());
+						SetDS_Shader(m_pCDSs[g_hash_DS_Debug_Sphere]->GetShader());
+						SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
+					}
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
@@ -1854,15 +1916,31 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 						{
 							cb_wvpitmat.matWorld = animations[col].matAnims[idx] * GetMat_World(scale, rotate, position);
 							m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
-							SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
 							size_t hash_collider = pMesh->GetCLs()[idx];
-							CB_Debug_Box cb_debugBox;
-							_CollisionSystem.SetColliderDebugData(hash_collider, cb_debugBox);
-							m_pCCBs[g_hash_cb_debug_box]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debugBox);
-							SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_box]->GetBuffer(), 1);
 
-							Draw_Vertices(1, 0);
+							UINT drawCount = 0;
+							if (colliders[col].type == E_Collider::AABB)
+							{
+								CB_Debug_Box cb_debug_box;
+								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
+								m_pCCBs[g_hash_cb_debug_box]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debug_box);
+								SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+								SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_box]->GetBuffer(), 1);
+								drawCount = 1;
+							}
+							else if (colliders[col].type == E_Collider::SPHERE)
+							{
+								CB_Debug_Sphere cb_debug_sphere;
+								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
+								m_pCCBs[g_hash_cb_debug_sphere]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_debug_sphere);
+								SetHS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_sphere]->GetBuffer(), 1);
+								SetDS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+								SetDS_ConstantBuffer(m_pCCBs[g_hash_cb_debug_sphere]->GetBuffer(), 1);
+								drawCount = 60;
+							}
+
+							Draw_Vertices(drawCount, 0);
 						}
 					}
 				}
@@ -1932,6 +2010,26 @@ void RenderSystem::SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 void RenderSystem::SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx)
 {
 	m_pCDirect3D->GetDeviceContext()->VSSetSamplers(startIdx, 1, &pState);
+}
+
+void RenderSystem::SetHS_Shader(ID3D11HullShader* pHS)
+{
+	m_pCDirect3D->GetDeviceContext()->HSSetShader(pHS, nullptr, 0);
+}
+
+void RenderSystem::SetHS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
+{
+	m_pCDirect3D->GetDeviceContext()->DSSetConstantBuffers(startIdx, 1, &pBuffer);
+}
+
+void RenderSystem::SetDS_Shader(ID3D11DomainShader* pDS)
+{
+	m_pCDirect3D->GetDeviceContext()->DSSetShader(pDS, nullptr, 0);
+}
+
+void RenderSystem::SetDS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
+{
+	m_pCDirect3D->GetDeviceContext()->DSSetConstantBuffers(startIdx, 1, &pBuffer);
 }
 
 void RenderSystem::SetGS_Shader(ID3D11GeometryShader* pGS)
@@ -2018,6 +2116,28 @@ size_t RenderSystem::CreateVertexShader(std::wstring shaderName, std::string ent
 	VertexShader* pVertexShader = new VertexShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
 	_ASEERTION_NULCHK(pVertexShader, "VS is nullptr");
 	m_pCVSs[hash] = pVertexShader;
+	return hash;
+}
+
+size_t RenderSystem::CreateHullShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCHSs.find(hash) != m_pCHSs.end()) return hash;
+
+	HullShader* pHullShader = new HullShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pHullShader, "GS is nullptr");
+	m_pCHSs[hash] = pHullShader;
+	return hash;
+}
+
+size_t RenderSystem::CreateDomainShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCDSs.find(hash) != m_pCDSs.end()) return hash;
+
+	DomainShader* pDomainShader = new DomainShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pDomainShader, "GS is nullptr");
+	m_pCDSs[hash] = pDomainShader;
 	return hash;
 }
 
@@ -2220,6 +2340,18 @@ void RenderSystem::Material_SetIL(size_t hash_material, const std::wstring& vsNa
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
+}
+
+void RenderSystem::Material_SetHS(size_t hash_material, const std::wstring& hsName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetHS(CreateHullShader(hsName, "gsmain", "gs_5_0"));
+}
+
+void RenderSystem::Material_SetDS(size_t hash_material, const std::wstring& dsName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetDS(CreateDomainShader(dsName, "dsmain", "ds_5_0"));
 }
 
 void RenderSystem::Material_SetGS(size_t hash_material, const std::wstring& gsName)

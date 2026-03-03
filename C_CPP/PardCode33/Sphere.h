@@ -30,6 +30,9 @@ public:
 		float maxScale = std::max({ matWorld[0].GetX(), matWorld[1].GetY(), matWorld[2].GetZ() });
 		radius = m_vec.GetW() * maxScale;
 	}
+
+	inline Vector3 GetCenter() const { return Vector3(m_vec.GetX(), m_vec.GetY(), m_vec.GetZ()); }
+	inline float GetRadius() const { return m_vec.GetW(); }
 private:
 	Vector4 m_vec;	//Center, Radius
 };

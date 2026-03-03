@@ -12,6 +12,8 @@ class IndexBuffer;
 
 class VertexShader;
 class InputLayout;
+class HullShader;
+class DomainShader;
 class GeometryShader;
 class PixelShader;
 
@@ -73,6 +75,8 @@ public:
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
 	template<typename T>
 	void Material_SetIL(size_t hash_material, const std::wstring& vsName);
+	void Material_SetHS(size_t hash_material, const std::wstring& gsName);
+	void Material_SetDS(size_t hash_material, const std::wstring& gsName);
 	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
 	void Material_SetPS(size_t hash_material, const std::wstring& psName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
@@ -99,6 +103,8 @@ private:
 	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
+	size_t CreateHullShader(std::wstring shaderName, std::string entryName, std::string target);
+	size_t CreateDomainShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
@@ -117,11 +123,17 @@ private:
 	void SetIA_InputLayout(ID3D11InputLayout* pInputLayout);
 	void SetIA_VertexBuffer(ID3D11Buffer* pBuffer, UINT iSizeVertex, UINT offset = 0);
 	void SetIA_IndexBuffer(ID3D11Buffer* pBuffer, UINT offset = 0);
-
+	 
 	void SetVS_Shader(ID3D11VertexShader* pVS);
 	void SetVS_ShaderResourceView(ID3D11ShaderResourceView* pSRV, UINT startIdx = 0);
 	void SetVS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 	void SetVS_SamplerState(ID3D11SamplerState* pState, UINT startIdx = 0);
+
+	void SetHS_Shader(ID3D11HullShader* pHS);
+	void SetHS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
+
+	void SetDS_Shader(ID3D11DomainShader* pDS);
+	void SetDS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
 
 	void SetGS_Shader(ID3D11GeometryShader* pGS);
 	void SetGS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx = 0);
@@ -149,7 +161,7 @@ private:
 	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
-	void RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj, E_Collider collider);
+	void RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderUI(const Matrix4x4& matOrtho);
 
 
@@ -165,6 +177,8 @@ private:
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;
 	std::unordered_map<size_t, VertexShader*>			m_pCVSs;
+	std::unordered_map<size_t, HullShader*>				m_pCHSs;
+	std::unordered_map<size_t, DomainShader*>			m_pCDSs;
 	std::unordered_map<size_t, GeometryShader*>			m_pCGSs;
 	std::unordered_map<size_t, PixelShader*>			m_pCPSs;
 	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;

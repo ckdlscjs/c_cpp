@@ -80,14 +80,13 @@ public:
 	bool bRenderable = false;
 	size_t hash_ra = 0;
 };
-struct T_Collider {};
-/*
-struct C_Collider
+
+struct C_Collider 
 {
 public:
-	size_t hash_ca = 0;
+	E_Collider type;
 };
-*/
+
 
 struct C_Animation
 {

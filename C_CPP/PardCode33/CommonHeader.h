@@ -843,7 +843,8 @@ struct CB_Debug_Box
 __declspec(align(16))
 struct CB_Debug_Sphere
 {
-	Vector4 vInfo; //center(float3), radius
+	float fTessFactor;
+	float fRadius;
 };
 
 /*
@@ -863,7 +864,7 @@ struct CB_Debug_Sphere
 
 		invMat = denominator * adjMat
 */
-inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB>& vertices)
+inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB_Skinned>& vertices)
 {
 	//메쉬(세 정점)을 기준으로 tangent, binormal의 누적을 계산한다
 	for (UINT idx = 0; idx < indicies.size(); idx += 3)

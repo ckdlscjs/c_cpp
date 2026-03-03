@@ -29,6 +29,7 @@ public:
 	Vector2 GetPickingPos() const;
 	bool IsPressed_LBTN() const;
 	bool IsPressed_RBTN() const;
+	bool IsDebugRender() const;
 private:
 	std::unordered_map<E_InputEvent, std::unordered_map<size_t, EventCallBack>> m_Listners;
 	size_t m_CallbackID = 1;	//0은 오류체크

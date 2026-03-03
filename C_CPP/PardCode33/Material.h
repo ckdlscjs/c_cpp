@@ -12,20 +12,27 @@ public:
 	Material(Material&&) = delete;
 	Material& operator=(Material&&) = delete;
 
-	void SetVS(size_t hashVS);
-	size_t GetVS() const;
-	void SetGS(size_t hashGS);
-	size_t GetGS() const;
-	void SetPS(size_t hashPS);
-	size_t GetPS() const;
-	void SetIL(size_t hashIL);
-	size_t GetIL() const;
+	void SetVS(size_t hash) { m_lVS = hash; }
+	size_t GetVS() const { return m_lVS; }
+	void SetIL(size_t hash) { m_lIL = hash; }
+	size_t GetIL() const { return m_lIL; }
+	void SetHS(size_t hash) { m_lHS = hash; }
+	size_t GetHS() const { return m_lHS; }
+	void SetDS(size_t hash) { m_lDS = hash; }
+	size_t GetDS() const { return m_lDS; }
+	void SetGS(size_t hash) { m_lGS = hash; }
+	size_t GetGS() const { return m_lGS; }
+	void SetPS(size_t hash) { m_lPS = hash; }
+	size_t GetPS() const { return m_lPS; }
+	
 	void SetTexture(TX_HASH tx_hash);
 	const std::vector<size_t>* GetTextures() const;
 	void SetTexturePath(TX_PATH tx_path);
 	const std::vector<std::string>* GetTexturesPaths() const;
 private:
 	size_t m_lVS;
+	size_t m_lHS;
+	size_t m_lDS;
 	size_t m_lGS;
 	size_t m_lPS;
 	size_t m_lIL;
@@ -82,56 +89,6 @@ map_Ke Sci_Fi_Container_Emissive.png
 inline Material::Material(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 }
-
-inline void Material::SetVS(size_t hashVS)
-{
-	m_lVS = hashVS;
-}
-
-inline size_t Material::GetVS() const
-{
-	return m_lVS;
-}
-
-inline void Material::SetGS(size_t hashGS)
-{
-	m_lGS = hashGS;
-}
-
-inline size_t Material::GetGS() const
-{
-	return m_lGS;
-}
-
-inline void Material::SetPS(size_t hashPS)
-{
-	m_lPS = hashPS;
-}
-
-inline size_t Material::GetPS() const
-{
-	return m_lPS;
-}
-
-inline void Material::SetIL(size_t hashIL)
-{
-	m_lIL = hashIL;
-}
-
-inline size_t Material::GetIL() const
-{
-	return m_lIL;
-}
-
-//void Material::SetCB(size_t hashCB)
-//{
-//	m_lCBs.push_back(hashCB);
-//}
-//
-//size_t Material::GetCB(int idx) const
-//{
-//	return m_lCBs[idx];
-//}
 
 inline void Material::SetTexture(TX_HASH tx_hash)
 {

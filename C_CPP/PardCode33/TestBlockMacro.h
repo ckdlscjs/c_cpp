@@ -16,6 +16,7 @@
 //#define _MoveDirecionalLight
 //#define _Rapunzel
 //#define _Doro
+#define _GeoSphere
 
 //#define _SPACESHIP
 //#define _TESTBLOCK

@@ -228,3 +228,8 @@ bool InputSystem::IsPressed_RBTN() const
 	return m_bCurKeyStates[VK_RBUTTON];
 }
 
+bool InputSystem::IsDebugRender() const
+{
+	return m_bRenderDebug;
+}
+

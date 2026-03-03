@@ -55,14 +55,24 @@ public:
 	VertexShader& operator=(VertexShader&&) = delete;
 };
 
-class PixelShader : public BaseShader<ID3D11PixelShader>
+class HullShader : public BaseShader<ID3D11HullShader>
 {
 public:
-	PixelShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
-	PixelShader(const PixelShader&) = delete;
-	PixelShader& operator=(const PixelShader&) = delete;
-	PixelShader(PixelShader&&) = delete;
-	PixelShader& operator=(PixelShader&&) = delete;
+	HullShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
+	HullShader(const HullShader&) = delete;
+	HullShader& operator=(const HullShader&) = delete;
+	HullShader(HullShader&&) = delete;
+	HullShader& operator=(HullShader&&) = delete;
+};
+
+class DomainShader : public BaseShader<ID3D11DomainShader>
+{
+public:
+	DomainShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
+	DomainShader(const DomainShader&) = delete;
+	DomainShader& operator=(const DomainShader&) = delete;
+	DomainShader(DomainShader&&) = delete;
+	DomainShader& operator=(DomainShader&&) = delete;
 };
 
 class GeometryShader : public BaseShader<ID3D11GeometryShader>
@@ -74,3 +84,14 @@ public:
 	GeometryShader(GeometryShader&&) = delete;
 	GeometryShader& operator=(GeometryShader&&) = delete;
 };
+
+class PixelShader : public BaseShader<ID3D11PixelShader>
+{
+public:
+	PixelShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
+	PixelShader(const PixelShader&) = delete;
+	PixelShader& operator=(const PixelShader&) = delete;
+	PixelShader(PixelShader&&) = delete;
+	PixelShader& operator=(PixelShader&&) = delete;
+};
+
