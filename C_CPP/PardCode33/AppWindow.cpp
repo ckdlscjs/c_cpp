@@ -427,7 +427,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
@@ -449,6 +449,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {230.0f, 100.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 		}
 #endif // _NORMALMAP
 
@@ -592,7 +594,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/nene.obj");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -602,15 +604,17 @@ void AppWindow::OnCreate()
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 		
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+
+		_ECSSystem.AddComponent<C_Info>(key, { szName });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 		}
 #endif // _NENE
 
@@ -648,7 +652,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -672,7 +676,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
 
 #endif // _MutantWalk

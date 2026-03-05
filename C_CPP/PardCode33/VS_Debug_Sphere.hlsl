@@ -1,7 +1,7 @@
 
 struct VS_OUT
 {
-    float3 PosL : POSITION;
+    float3 Pos0 : POSITION;
 };
 
 //static 구성으로 해당 셰이더 로드시 정적으로 모든스레드가 공유하는 전역읽기 데이터취급을 하도록한다
@@ -25,10 +25,11 @@ static const uint IcoIndices[60] =
     4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1
 };
 
+//ControlPoint(60개, 십이방체구성)을 각 정점별로 제어점을 크기1로 정규화해 덮개셰이더로 보낸다
 VS_OUT vsmain(uint vID : SV_VertexID)
 {
     VS_OUT output;
     // 초기 정이십면체 정점 (정규화하여 반지름 1인 구체 초기 형태 생성)
-    output.PosL = normalize(IcoVertices[IcoIndices[vID]]);
+    output.Pos0 = normalize(IcoVertices[IcoIndices[vID]]);
     return output;
 }

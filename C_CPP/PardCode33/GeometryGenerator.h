@@ -738,7 +738,7 @@ inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& poi
 	indices = { 0, 1, 2, 2, 1, 3 };
 
 	//tangent, binormal재계산
-	ComputeTangentBinormal(indices, vertices);
+	//ComputeTangentBinormal(indices, vertices);
 }
 
 //폴리곤을 분할한다, subdivide

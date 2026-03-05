@@ -5,9 +5,11 @@ struct VS_OUT
 
 cbuffer CB_Tessellation : register(b1)
 {
-    float TessFactor; // 테셀레이션 분할 계수 (1.0 ~ 64.0)
+    float3 center;
     float radius;
+    float TessFactor; // 테셀레이션 분할 계수 (1.0 ~ 64.0)
 };
+
 
 // 2. Hull Shader (Patch Constant & Main)
 struct HS_CS_OUTPUT

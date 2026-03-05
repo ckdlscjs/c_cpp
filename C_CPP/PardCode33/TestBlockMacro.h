@@ -8,7 +8,7 @@
 //#define _EnviornmentMap
 //#define _SPONZA
 #define _HOUSE
-//#define _NORMALMAP
+#define _NORMALMAP
 #define _MutantWalk
 //#define _Praying
 #define _Herald

@@ -274,9 +274,57 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 	return true;
 }
 
+
+/*
+* ray, sphere의 교차판정
+* 중심점 center로부터 ray의 시작점을 뺀 벡터 l을 기준으로하여 이와 dir를 내적해 중심으로부터의 거리 스칼라값 s(투영거리)를 구한다
+* 이를 기반으로 교점이 없는 조건을 우선 판별한다
+* -거리 s가 0보다 작은경우(방향이반대)
+* -거리l2가 반지름보다 큰경우
+* -수선의발m이 반지름r보다큰경우
+* 이들이 부합한다면 방향도 반대이면서 레이가 원밖이므로 교차하지않는다
+* 이후 t1,t2를 구한다
+*/
 bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Sphere& sphere)
 {
-	return false;
+	Vector3 normalizeDir = rayDir.ToVector3().Normalize();
+
+	Vector3 Center = sphere.GetCenter();
+	float Radius = sphere.GetRadius();
+
+	//l벡터 -> 중심과 시작점사이의 벡터
+	Vector3 l = Center - rayOrigin.ToVector3();
+
+	//방향벡터에 투영
+	float s = l.DotProduct(normalizeDir);
+
+	float l2 = l.DotProduct(l);
+
+	float r2 = Radius * Radius;
+
+	//l^2 = m^2 + s^2 이므로 m -> 중심에서 s까지의 수직벡터
+	float m2 = l2 - s * s;
+
+	bool NoIntersection;
+
+	//s벡터가 영벡터보다 작으면 dir내적결과이므로 구의 중심이 광선과 반대방향
+	//l^2은 시작점부터 구중심까지 거리의제곱, r^2은 반지름, 즉 l^2>r^2이면 광선의 시작점이 구의 바깥에존재
+	//시작점이 구의바깥에 존재하면서 방향또한 구의반대방향, 즉 만날수없음b
+	bool oppositeCenter = s < 0;
+	bool rayOutSphere = l2 > r2;
+	NoIntersection = oppositeCenter && rayOutSphere;
+
+	//수선의발m이 r보다 크면 교점은 만날수없음
+	NoIntersection = NoIntersection || m2 > r2;
+	if (NoIntersection)
+		return false;
+
+	//t1, t2를 구성한다
+	float q = std::sqrt(r2 - m2);
+	float t1 = s - q;
+	float t2 = s + q;
+	float t = l2 > r2 ? s - q : s + q;
+	return true;
 }
 
 void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Box& cb)
@@ -289,7 +337,7 @@ void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Box& cb)
 void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Sphere& cb)
 {
 	_ASEERTION_NULCHK(m_Colliders.find(hash) != m_Colliders.end(), "Collider Not exist");
-	cb.fTessFactor = 10.0f;
-	cb.fRadius = static_cast<Sphere*>(m_Colliders[hash])->GetRadius();
+	Sphere* pSphere = static_cast<Sphere*>(m_Colliders[hash]);
+	cb.vInfo = Vector4(pSphere->GetCenter(), pSphere->GetRadius());
+	cb.fTessFactor = 4.0f;
 }
-

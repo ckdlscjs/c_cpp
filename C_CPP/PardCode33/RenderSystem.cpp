@@ -1886,7 +1886,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					cb_wvpitmat.matProj = matProj;
 					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
 
-					SetIA_VertexBuffer(nullptr, 1);
+					SetIA_VertexBuffer(nullptr, 0);
 					SetIA_IndexBuffer(nullptr);
 					SetIA_InputLayout(nullptr);
 
@@ -1894,6 +1894,8 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					{
 						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 						SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
+						SetHS_Shader(nullptr);
+						SetDS_Shader(nullptr);
 						SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
 						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 					}
@@ -1948,6 +1950,12 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 			}
 		}
 	}
+
+	SetVS_Shader(nullptr);
+	SetHS_Shader(nullptr);
+	SetDS_Shader(nullptr);
+	SetGS_Shader(nullptr);
+	SetPS_Shader(nullptr);
 }
 
 
@@ -2019,7 +2027,7 @@ void RenderSystem::SetHS_Shader(ID3D11HullShader* pHS)
 
 void RenderSystem::SetHS_ConstantBuffer(ID3D11Buffer* pBuffer, UINT startIdx)
 {
-	m_pCDirect3D->GetDeviceContext()->DSSetConstantBuffers(startIdx, 1, &pBuffer);
+	m_pCDirect3D->GetDeviceContext()->HSSetConstantBuffers(startIdx, 1, &pBuffer);
 }
 
 void RenderSystem::SetDS_Shader(ID3D11DomainShader* pDS)

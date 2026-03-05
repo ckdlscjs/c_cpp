@@ -843,8 +843,8 @@ struct CB_Debug_Box
 __declspec(align(16))
 struct CB_Debug_Sphere
 {
+	Vector4 vInfo;		//center, radius
 	float fTessFactor;
-	float fRadius;
 };
 
 /*

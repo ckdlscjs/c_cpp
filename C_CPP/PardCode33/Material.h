@@ -30,12 +30,12 @@ public:
 	void SetTexturePath(TX_PATH tx_path);
 	const std::vector<std::string>* GetTexturesPaths() const;
 private:
-	size_t m_lVS;
-	size_t m_lHS;
-	size_t m_lDS;
-	size_t m_lGS;
-	size_t m_lPS;
-	size_t m_lIL;
+	size_t m_lVS = -1;
+	size_t m_lHS = -1;
+	size_t m_lDS = -1;
+	size_t m_lGS = -1;
+	size_t m_lPS = -1;
+	size_t m_lIL = -1;
 	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
 	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
 };

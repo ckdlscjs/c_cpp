@@ -28,8 +28,9 @@ cbuffer CB_WVPIT : register(b0)
 
 cbuffer CB_Tessellation : register(b1)
 {
-    float TessFactor; // 테셀레이션 분할 계수 (1.0 ~ 64.0)
+    float3 center;
     float radius;
+    float TessFactor; // 테셀레이션 분할 계수 (1.0 ~ 64.0)
 };
 
 [domain("tri")]
@@ -41,10 +42,8 @@ DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation, const OutputPa
     float3 pos = patch[0].pos0 * uvw.x + patch[1].pos0 * uvw.y + patch[2].pos0 * uvw.z;
     
     // [중요] 다시 normalize를 수행하여 정점을 단위 구체 표면으로 밀어냄
-    pos = normalize(pos);
-    
-    //pos *= radius;
-    
+    pos = normalize(pos) * radius;
+    pos += center;
     // 최종 좌표 변환
     output.pos0 = mul(float4(pos, 1.0f), matWorld);
     output.pos0 = mul(output.pos0, matView);
