@@ -35,6 +35,8 @@ void CollisionSystem::Init()
 }
 void CollisionSystem::Frame(float deltatime)
 {
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "Frame : " << "CollisionSystem" << " Class" << '\n';
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
 	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
 	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
@@ -66,7 +68,7 @@ void CollisionSystem::Frame(float deltatime)
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-
+	UINT renderCnt = 0;
 	for (auto& archetype : queries)
 	{
 		size_t st_row = 0;
@@ -109,6 +111,7 @@ void CollisionSystem::Frame(float deltatime)
 						if (!renders[col].bRenderable) break;
 					}
 
+					renderCnt++;
 					//Picking
 					{
 						if (!_InputSystem.IsPressed_LBTN()) continue;
@@ -125,6 +128,8 @@ void CollisionSystem::Frame(float deltatime)
 		}
 		st_col = 0;
 	}
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "·»´õ¸µ µÈ °´Ã¼ ¼ö : " << renderCnt << '\n';
 }
 
 

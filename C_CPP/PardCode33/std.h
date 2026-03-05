@@ -61,6 +61,7 @@ using namespace DirectX;
 
 extern UINT g_iWidth;
 extern UINT g_iHeight;
+extern float g_fTime_Log;
 
 //공용함수들
 template<typename T>

@@ -7,11 +7,11 @@
 //#define _REFLECT
 //#define _EnviornmentMap
 //#define _SPONZA
-#define _HOUSE
-#define _NORMALMAP
-#define _MutantWalk
+//#define _HOUSE
+//#define _NORMALMAP
+//#define _MutantWalk
 //#define _Praying
-#define _Herald
+//#define _Herald
 //#define _DRAGON
 //#define _MoveDirecionalLight
 //#define _Rapunzel

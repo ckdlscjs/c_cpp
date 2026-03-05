@@ -60,7 +60,8 @@ void ImguiSystem::Init(HWND hWnd, ID3D11Device* pDevice, ID3D11DeviceContext* pD
 
 void ImguiSystem::Frame(float deltatime)
 {
-    std::cout << "Frame : " << "ImguiSystem" << " Class" << '\n';
+    if (g_fTime_Log >= 1.0f)
+        std::cout << "Frame : " << "ImguiSystem" << " Class" << '\n';
     // Our state, 수정필요
     bool show_demo_window = true;
     bool show_another_window = false;
@@ -110,7 +111,8 @@ void ImguiSystem::Frame(float deltatime)
 
 void ImguiSystem::Render()
 {
-    std::cout << "Render : " << "ImguiSystem" << " Class" << '\n';
+    if (g_fTime_Log >= 1.0f)
+        std::cout << "Render : " << "ImguiSystem" << " Class" << '\n';
     // Rendering
     ImGui::Render();
     /*const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };

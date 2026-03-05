@@ -30,15 +30,17 @@ AppWindow::AppWindow()
 	_BehaviorSystem;
 }
 
-AppWindow::~AppWindow()
-{
-	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
-}
 const std::wstring g_szName_mat = L"Mat_";
 const std::wstring g_szName_ra = L"Ra_";
 const std::wstring g_szName_ca = L"Ca_";
 UINT g_iWidth = 800.0f;
 UINT g_iHeight = 600.0f;
+float g_fTime_Log = 0.0f;
+AppWindow::~AppWindow()
+{
+	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
+}
+
 
 void AppWindow::OnCreate()
 {
@@ -1138,13 +1140,18 @@ void AppWindow::OnCreate()
 
 void AppWindow::OnUpdate()
 {
-	std::cout << "OnUpdate" << '\n';
 	_TimerSystem.Frame();
 	float deltaTime = _TimerSystem.GetDeltaTime();
 	float elpasedTime = _TimerSystem.GetElapsedTime();
 	float FPS = _TimerSystem.GetFps();
-	std::cout << "ElapsedTime : " << elpasedTime << '\n';
-	std::cout << "FPS : " << FPS << '\n';
+	g_fTime_Log += deltaTime;
+	if (g_fTime_Log >= 1.0f)
+	{
+		std::cout << "OnUpdate" << '\n';
+		std::cout << "ElapsedTime : " << elpasedTime << '\n';
+		std::cout << "FPS : " << FPS << '\n';
+		std::cout << '\n';
+	}
 
 	//FrameIntent
 	{
@@ -1167,7 +1174,8 @@ void AppWindow::OnUpdate()
 		_RenderSystem.PostRender();
 	}
 	
-	std::cout << '\n';
+	if (g_fTime_Log >= 1.0f)
+		g_fTime_Log = 0.0f;
 }
 
 void AppWindow::OnDestroy()

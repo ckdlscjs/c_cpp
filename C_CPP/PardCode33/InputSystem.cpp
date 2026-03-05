@@ -18,7 +18,8 @@ void InputSystem::Init()
 
 void InputSystem::Frame()
 {
-	std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
+	if(g_fTime_Log >= 1.0f)
+		std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);

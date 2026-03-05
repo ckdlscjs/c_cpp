@@ -105,13 +105,16 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 
 void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
-	std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 
 }
 
 void RenderSystem::PreRender(float deltatime, float elapsedtime)
 {
-	std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
+	
 	//RTVÃÊ±âÈ­
 	ClearRenderViews(0, 0.3f, 0.4f, 1);
 	SetRS_Viewport(&m_vp_BB);
@@ -119,7 +122,9 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 
 void RenderSystem::Render(float deltatime, float elapsedtime)
 {
-	std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
+	
 	SetIA_Topology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	CB_DirectionalLight cb_directional;
@@ -560,7 +565,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 void RenderSystem::PostRender()
 {
-	std::cout << "PostRender : " << "RenderSystem" << " Class" << '\n';
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "PostRender : " << "RenderSystem" << " Class" << '\n';
 	SwapchainPresent(false);
 }
 
@@ -1111,7 +1117,6 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::POINT_CLAMP_COMPARISON), 6);
 	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
-	UINT renderCnt = 0;
 	//static
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
@@ -1127,7 +1132,6 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					if (!renders[col].bRenderable) continue;
-					renderCnt++;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -1190,7 +1194,6 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					if (!renders[col].bRenderable) continue;
-					renderCnt++;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -1243,8 +1246,6 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 			}
 		}
 	}
-	
-	std::cout << "·»´õ¸µµÈ°´Ã¼¼ö : " << renderCnt << '\n';
 }
 
 void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj)
@@ -1336,7 +1337,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-		UINT renderCnt = 0;
 		for (auto& archetype : queries)
 		{
 			size_t st_row = 0;
@@ -1348,7 +1348,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					if (!renders[col].bRenderable) continue;
-					renderCnt++;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -1381,7 +1380,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				st_col = 0;
 			}
 		}
-		std::cout << "·»´õ¸µµÈ°´Ã¼¼ö : " << renderCnt << '\n';
 	}
 
 	//Skeletal
@@ -1456,7 +1454,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_CubeMap>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-		//UINT renderCnt = 0;
 		for (auto& archetype : queries)
 		{
 			size_t st_row = 0;
@@ -1468,7 +1465,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					if (!renders[col].bRenderable) continue;
-					//renderCnt++;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -1580,7 +1576,6 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_CubeMap>();
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-	//UINT renderCnt = 0;
 	for (auto& archetype : queries)
 	{
 		size_t st_row = 0;
@@ -1592,7 +1587,6 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
 				if (!renders[col].bRenderable) continue;
-				//renderCnt++;
 				const Vector3& scale = transforms[col].vScale;
 				const Quarternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
@@ -1638,7 +1632,6 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 			st_col = 0;
 		}
 	}
-	//std::cout << "·»´õ¸µµÈ°´Ã¼¼ö : " << renderCnt << '\n';
 }
 
 void RenderSystem::RenderCubeMap()
@@ -2102,7 +2095,6 @@ void RenderSystem::Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffse
 
 void RenderSystem::SwapchainPresent(bool vsync)
 {
-	std::cout << "SwapchainPreset, ¹é¹öÆÛ±³Ã¼" << '\n';
 	m_pCSwapChain->GetSwapChain()->Present(vsync, NULL);
 }
 

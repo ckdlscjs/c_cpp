@@ -15,7 +15,8 @@ void BehaviorSystem::Init()
 
 void BehaviorSystem::Frame(float deltatime)
 {
-	std::cout << "Frame : " << "BehaviorSystem" << " Class" << '\n';
+	if(g_fTime_Log >= 1.0f)
+		std::cout << "Frame : " << "BehaviorSystem" << " Class" << '\n';
 	float sensitivity = 0.1f;
 	Vector2 mouseDelta = _InputSystem.GetMouseDelta();
 	float dt_Pitch = mouseDelta.GetY() * sensitivity;	//sensitivity
