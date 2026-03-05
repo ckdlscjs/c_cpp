@@ -189,6 +189,7 @@ public:
              m_vMax * matWorld
         };
     }
+
     // 월드 AABB 계산
     inline void GetWorldAABB(const Matrix4x4& matWorld, Vector3& vMin, Vector3& vMax) const 
     {

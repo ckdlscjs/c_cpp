@@ -32,6 +32,7 @@ private:
 	std::vector<std::vector<Vector3>>							m_pointsByMeshs;
 	std::vector<std::vector<Vector3>>							m_pointsByBones;
 	std::map<UINT, MTL_TEXTURES>								m_texturesByMaterial;
+	float maxAbsVertex = -FLT_MAX;
 
 	//Animation
 	std::unordered_map<std::string, AnimationClip>				m_AnimationClip;
@@ -111,6 +112,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 			vertexLookup[i] = (UINT)m_verticesByMaterial[matIdx].size();
 			verticesIdentical[matIdx][vertex] = (UINT)m_verticesByMaterial[matIdx].size();
 			m_verticesByMaterial[matIdx].push_back(vertex);
+			maxAbsVertex = std::max({ maxAbsVertex, std::abs(vertex.pos0.GetX()), std::abs(vertex.pos0.GetY()), std::abs(vertex.pos0.GetZ()) });
 			points.push_back({ vx, vy, vz });
 		}
 		else

@@ -337,6 +337,8 @@ void AppWindow::OnCreate()
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 				}
 			}
 		}
@@ -346,7 +348,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/sphere.obj");
 
 			size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-			_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 			size_t hash_material = _RenderSystem.CreateMaterial(g_szName_mat + szName);
 			_RenderSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
@@ -384,6 +386,8 @@ void AppWindow::OnCreate()
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 				}
 			}
 		}
@@ -540,6 +544,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 		}
 #endif // _SPONZA
 
@@ -654,7 +660,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -678,7 +684,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 	}
 
 #endif // _MutantWalk
@@ -690,7 +696,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -713,17 +719,19 @@ void AppWindow::OnCreate()
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
 #endif // _Praying
 
 #ifdef _Herald
-	//_Herald
+	//_Herald, Collider 정밀판정문제
 	{
 		const std::wstring szName = L"Herald";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Herald.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -737,17 +745,19 @@ void AppWindow::OnCreate()
 		size_t hash_ra = _RenderSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -40.0f} });
+		_ECSSystem.AddComponent<C_Info>(key, { szName });
+
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
 #endif // _Praying
 
@@ -1155,12 +1165,14 @@ void AppWindow::OnUpdate()
 
 	//FrameIntent
 	{
-		_InputSystem.Frame();
-		_BehaviorSystem.Frame(deltaTime);
+		_InputSystem.Frame();						//선결조건1(입력)
+
+		_BehaviorSystem.Frame(deltaTime);			//선결조건2(개체들)
 		_CameraSystem.Frame(deltaTime);
-		_ImguiSystem.Frame(deltaTime);
-		_CollisionSystem.Frame(deltaTime);
 		_AnimationSystem.Frame(deltaTime);
+
+		_CollisionSystem.Frame(deltaTime);
+		_ImguiSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);
 	}
 	

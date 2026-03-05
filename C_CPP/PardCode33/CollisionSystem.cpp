@@ -12,11 +12,6 @@
 #include "Sphere.h"
 #include "Box.h"
 
-
-
-//밑부분은 책임분리 고려필요
-
-
 CollisionSystem::CollisionSystem()
 {
 
@@ -62,71 +57,144 @@ void CollisionSystem::Frame(float deltatime)
 	float vx = (+2.0f * pickingPos.GetX() / g_iWidth - 1.0f) / cam_matProj[0].GetX();
 	float vy = (-2.0f * pickingPos.GetY() / g_iHeight + 1.0f) / cam_matProj[1].GetY();
 	
-	Vector4 rayOrigin(0.0f, 0.0f, 0.0f, 1.0f);
-	Vector4 rayDir(vx, vy, 1.0f, 0.0f);
 	Matrix4x4 matInvView = GetMat_Inverse(cam_matView);
+	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
+	Vector4 rayDirWorld = Vector4(vx, vy, 1.0f, 0.0f) * matInvView;
 
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider>();
-	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+	std::unordered_set<std::wstring> pickingEntitys;
 	UINT renderCnt = 0;
-	for (auto& archetype : queries)
+	//Static
 	{
-		size_t st_row = 0;
-		size_t st_col = 0;
-		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
 		{
-			auto& transforms = archetype->GetComponents<C_Transform>(row);
-			auto& renders = archetype->GetComponents<C_Render>(row);
-			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
-				renders[col].bRenderable = false;
-				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
-				const Vector3& position = transforms[col].vPosition;
-				Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
-				
-				//MousePicking Variable
-				Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
-				Matrix4x4 matToLocal = matInvView * matInvWorld;
-				Vector4	localRayOrigin = rayOrigin * matToLocal;
-				Vector4 localRayDir = (rayDir * matToLocal).Normalize();
-
-				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
-				for (UINT j = 0; j < MeshMats.size(); j++)
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
-					auto& iter = MeshMats[j];
-					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+					renders[col].bRenderable = false;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
-					//Frustum Culling
+					//MousePicking Variable
+					Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
+					Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
+					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
+
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
-						for (const auto& iter : pMesh->GetCLs())
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+
+						//Frustum Culling
 						{
-							if (IsCollision(frustum, iter, matWorld))
+							for (const auto& iter : pMesh->GetCLs())
 							{
-								renders[col].bRenderable = true;
-								//RenderAbles.push_back({ row, col });
-								break;
+								if (IsCollision(frustum, iter, matWorld))
+								{
+									renders[col].bRenderable = true;
+									//RenderAbles.push_back({ row, col });
+									break;
+								}
 							}
+							if (!renders[col].bRenderable) break;
 						}
-						if (!renders[col].bRenderable) break;
-					}
 
-					renderCnt++;
-					//Picking
-					{
-						if (!_InputSystem.IsPressed_LBTN()) continue;
-						for (const auto& iter : pMesh->GetCLs())
+						renderCnt++;
+						//Picking
 						{
-							if (IsCollision(localRayOrigin, localRayDir, iter))
+							if (!_InputSystem.IsPressed_LBTN()) continue;
+							for (const auto& iter : pMesh->GetCLs())
 							{
-								std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
+								if (IsCollision(localRayOrigin, localRayDir, iter))
+								{
+									pickingEntitys.insert(pMesh->GetPath());
+									//std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
+								}
 							}
 						}
 					}
 				}
 			}
+			st_col = 0;
 		}
-		st_col = 0;
+	}
+	//Skeletal
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& animations = archetype->GetComponents<C_Animation>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					renders[col].bRenderable = false;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
+
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+
+						//Frustum Culling
+						{
+							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
+							{
+								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
+
+								auto iter = pMesh->GetCLs()[idx];
+								if (IsCollision(frustum, iter, matAnimWorld))
+								{
+									if (_InputSystem.IsPressed_LBTN())
+									{
+										//MousePicking Variable
+										Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
+										Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
+										Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
+										if (IsCollision(localRayOrigin, localRayDir, iter))
+										{
+											pickingEntitys.insert(pMesh->GetPath());
+											//std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
+										}
+									}
+
+									renders[col].bRenderable = true;
+									//RenderAbles.push_back({ row, col });
+									break;
+								}
+							}
+							if (!renders[col].bRenderable) break;
+						}
+						renderCnt++;
+					}
+				}
+			}
+			st_col = 0;
+		}
+	}
+	
+	if (g_fTime_Log >= 0.5f)
+	{
+		for (const auto& iter : pickingEntitys)
+			std::wcout << iter << '\n';
 	}
 	if (g_fTime_Log >= 1.0f)
 		std::cout << "렌더링 된 객체 수 : " << renderCnt << '\n';
@@ -344,5 +412,5 @@ void CollisionSystem::SetColliderDebugData(const size_t hash, CB_Debug_Sphere& c
 	_ASEERTION_NULCHK(m_Colliders.find(hash) != m_Colliders.end(), "Collider Not exist");
 	Sphere* pSphere = static_cast<Sphere*>(m_Colliders[hash]);
 	cb.vInfo = Vector4(pSphere->GetCenter(), pSphere->GetRadius());
-	cb.fTessFactor = 4.0f;
+	cb.fTessFactor = fSphereTesselateFactor;
 }

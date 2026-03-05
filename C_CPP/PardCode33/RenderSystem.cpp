@@ -1766,6 +1766,7 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
 	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::WIRE_CULLBACK_CW));
 
+	SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 	//Static
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
@@ -1801,8 +1802,9 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 					{
 						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 						SetVS_Shader(m_pCVSs[g_hash_VS_Debug]->GetShader());
+						SetHS_Shader(nullptr);
+						SetDS_Shader(nullptr);
 						SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
-						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 						SetGS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 					}
 					else if (colliders[col].type == E_Collider::SPHERE)
@@ -1812,7 +1814,6 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 						SetHS_Shader(m_pCHSs[g_hash_HS_Debug_Sphere]->GetShader());
 						SetDS_Shader(m_pCDSs[g_hash_DS_Debug_Sphere]->GetShader());
 						SetGS_Shader(nullptr);
-						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 						SetDS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 					}
 
@@ -1890,7 +1891,6 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 						SetHS_Shader(nullptr);
 						SetDS_Shader(nullptr);
 						SetGS_Shader(m_pCGSs[g_hash_GS_Debug_Box]->GetShader());
-						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 					}
 					else if (colliders[col].type == E_Collider::SPHERE)
 					{
@@ -1899,7 +1899,6 @@ void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4
 						SetHS_Shader(m_pCHSs[g_hash_HS_Debug_Sphere]->GetShader());
 						SetDS_Shader(m_pCDSs[g_hash_DS_Debug_Sphere]->GetShader());
 						SetGS_Shader(nullptr);
-						SetPS_Shader(m_pCPSs[g_hash_PS_Debug_PC]->GetShader());
 					}
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;

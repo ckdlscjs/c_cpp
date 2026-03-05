@@ -31,7 +31,8 @@ private:
 	bool IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, size_t hash);
 	bool IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Box& box);
 	bool IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Sphere& sphere);
-
+	
+	float fSphereTesselateFactor = 4.0f;
 	std::unordered_map<size_t, Collider*> m_Colliders;
 };
 #define _CollisionSystem CollisionSystem::GetInstance()
