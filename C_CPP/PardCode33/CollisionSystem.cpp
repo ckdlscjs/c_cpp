@@ -60,8 +60,9 @@ void CollisionSystem::Frame(float deltatime)
 	Matrix4x4 matInvView = GetMat_Inverse(cam_matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = Vector4(vx, vy, 1.0f, 0.0f) * matInvView;
+	using PickingOrder = std::tuple<float, C_Collider*>;
+	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
-	std::unordered_set<std::wstring> pickingEntitys;
 	UINT renderCnt = 0;
 	//Static
 	{
@@ -75,58 +76,78 @@ void CollisionSystem::Frame(float deltatime)
 			{
 				auto& transforms = archetype->GetComponents<C_Transform>(row);
 				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = false;
+					colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
 					//MousePicking Variable
+					float fDist = FLT_MAX;	//거리에따른 피킹판별
 					Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
 					Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
 					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
-
+		
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
-					for (UINT j = 0; j < MeshMats.size(); j++)
-					{
-						auto& iter = MeshMats[j];
-						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 
-						//Frustum Culling
+					for (UINT i = 0; i < MeshMats.size(); i++)
+					{
+						auto& iter = MeshMats[i];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						if (!renders[col].bRenderable)
 						{
-							for (const auto& iter : pMesh->GetCLs())
+							for (const auto& hash_collider : pMesh->GetCLs())
 							{
-								if (IsCollision(frustum, iter, matWorld))
+								if (IsCollision(frustum, hash_collider, matWorld))
 								{
 									renders[col].bRenderable = true;
-									//RenderAbles.push_back({ row, col });
-									break;
+									renderCnt++; 
+									break;	
 								}
 							}
-							if (!renders[col].bRenderable) break;
 						}
-
-						renderCnt++;
+						
+						//피킹 이전에 공간분할(octree등) 추후필요
 						//Picking
+						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN())
 						{
-							if (!_InputSystem.IsPressed_LBTN()) continue;
-							for (const auto& iter : pMesh->GetCLs())
+							for (const auto& hash_boundingVolume : pMesh->GetCLs())
 							{
-								if (IsCollision(localRayOrigin, localRayDir, iter))
+								//BoundingVolume
+								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume))
 								{
-									pickingEntitys.insert(pMesh->GetPath());
-									//std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
+									//TraversalTriangle                                                                                  
+									const auto& RenderCounts = pMesh->GetRendIndices();
+									const auto& Indices = pMesh->GetIndicies();
+									auto RenderCount = RenderCounts[i];
+									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
+									{
+										const auto& v0 = pMesh->GetPosition(idx + 0);
+										const auto& v1 = pMesh->GetPosition(idx + 1);
+										const auto& v2 = pMesh->GetPosition(idx + 2);
+										float dist = FLT_MAX;
+										if (IsCollision(localRayOrigin, localRayDir, v0, v1, v2, dist))
+										{
+											if (dist >= fDist) continue;
+											fDist = dist;
+											colliders[col].pickingIdx = idx;
+										}
+									}
 								}
 							}
 						}
 					}
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col] });
 				}
 			}
 			st_col = 0;
 		}
 	}
+	
 	//Skeletal
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
@@ -140,61 +161,98 @@ void CollisionSystem::Frame(float deltatime)
 				auto& transforms = archetype->GetComponents<C_Transform>(row);
 				auto& renders = archetype->GetComponents<C_Render>(row);
 				auto& animations = archetype->GetComponents<C_Animation>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = false;
+					colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
+					//MousePicking Variable
+					float fDist = FLT_MAX;	//거리에따른 피킹판별
+
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
-					for (UINT j = 0; j < MeshMats.size(); j++)
+					for (UINT i = 0; i < MeshMats.size(); i++)
 					{
-						auto& iter = MeshMats[j];
+						auto& iter = MeshMats[i];
 						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 
 						//Frustum Culling
+						if(!renders[col].bRenderable)
 						{
 							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 							{
-								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
-
 								auto iter = pMesh->GetCLs()[idx];
+								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
 								if (IsCollision(frustum, iter, matAnimWorld))
 								{
-									if (_InputSystem.IsPressed_LBTN())
-									{
-										//MousePicking Variable
-										Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
-										Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
-										Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
-										if (IsCollision(localRayOrigin, localRayDir, iter))
-										{
-											pickingEntitys.insert(pMesh->GetPath());
-											//std::wcout << "----------------" << pMesh->GetPath() << "----------------" << '\n';
-										}
-									}
-
 									renders[col].bRenderable = true;
-									//RenderAbles.push_back({ row, col });
+									renderCnt++;
 									break;
 								}
 							}
-							if (!renders[col].bRenderable) break;
 						}
-						renderCnt++;
+
+						//피킹 이전에 공간분할(octree등) 추후필요
+						//Picking
+						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN())
+						{
+							for (int idx_cl = 0; idx_cl < pMesh->GetCLs().size(); idx_cl++)
+							{
+								size_t iter = pMesh->GetCLs()[idx_cl];
+								Matrix4x4 matAnimWorld = animations[col].matAnims[idx_cl] * matWorld;
+
+								//MousePicking Variable
+								Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
+								Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
+								Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
+
+								//BoundingVolume
+								if (IsCollision(localRayOrigin, localRayDir, iter))
+								{
+									//TraversalTriangle                                                                                  
+									const auto& RenderCounts = pMesh->GetRendIndices();
+									const auto& Indices = pMesh->GetIndicies();
+									auto RenderCount = RenderCounts[i];
+									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
+									{
+										const auto& v0 = pMesh->GetPosition(idx + 0);
+										const auto& v1 = pMesh->GetPosition(idx + 1);
+										const auto& v2 = pMesh->GetPosition(idx + 2);
+										float dist = FLT_MAX;
+										if (IsCollision(localRayOrigin, localRayDir, v0, v1, v2, dist))
+										{
+											if (dist >= fDist) continue;
+											fDist = dist;
+											colliders[col].pickingIdx = idx;
+										}
+									}
+								}
+							}
+						}
 					}
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col] });
 				}
 			}
 			st_col = 0;
 		}
 	}
+
+	if (pq_picking.size())
+	{
+		auto top = pq_picking.top();
+		pq_picking.pop();
+		C_Collider* pCollider = std::get<1>(top);
+		pCollider->bPicking = true;
+	}
 	
 	if (g_fTime_Log >= 0.5f)
 	{
-		for (const auto& iter : pickingEntitys)
-			std::wcout << iter << '\n';
+		/*for (const auto& iter : pickingEntitys)
+			std::wcout << iter << '\n';*/
 	}
 	if (g_fTime_Log >= 1.0f)
 		std::cout << "렌더링 된 객체 수 : " << renderCnt << '\n';
@@ -305,7 +363,9 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 		}break;
 
 		case E_Collider::RAY:
-			break;
+		{
+
+		}break;
 		default:
 			return false;
 	}
@@ -349,7 +409,7 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 
 
 /*
-* ray, sphere의 교차판정
+* Ray to Sphere, 내적 및 피타고라스를 이용
 * 중심점 center로부터 ray의 시작점을 뺀 벡터 l을 기준으로하여 이와 dir를 내적해 중심으로부터의 거리 스칼라값 s(투영거리)를 구한다
 * 이를 기반으로 교점이 없는 조건을 우선 판별한다
 * -거리 s가 0보다 작은경우(방향이반대)
@@ -397,6 +457,77 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 	float t1 = s - q;
 	float t2 = s + q;
 	float t = l2 > r2 ? s - q : s + q;
+	return true;
+}
+
+/*
+* Ray to Triangle
+* 삼각형은 세개의 정점을 구성하는 두 벡터e0, e1으로 구성된다, 이때 e1, e2의 선형비율을 u, v라고 한다면 삼각형내의 한점, 즉 레이가 교차하는 지점을 
+* T(u, v) 로 볼수 있으므로 이는 벡터의 합으로 표현이 가능하기에 다음과같이 표현된다
+* ray(t), r(t) = T(u, v) = o(시작점) + t*dir(방향)
+* T(u, v) = v0 + u(v1 - v0) + v(v2 - v0) = o + t*dir, 이떄 t, u, v는 미지수값이므로 미지수들을 모으면 다음과같아진다
+* s, o - v0 = -t*dir + u(v1-v0) + v(v2-v0) 이는 삼중적과 최종적 치환을 통해 다음과같이 구성된다
+* t = e2 dot (s cross e1) / e1 dot (d cross e2)
+* u = s dot (d cross e2) / e1 dot (d cross e2)
+* v = d dot (s cross e1) / e1 dot (d cross e2)
+* 최종적인 t, u, v를 이용해 교차판별을 수행한다, 최종적으로 t는 벡터에서부터 교점까지의 스칼라배가된다(0 <= t, u, v 그리고 u+v <= 1)
+*/
+bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDir, const Vector3& v0, const Vector3& v1, const Vector3& v2, float& fDist)
+{
+	Vector3 o = rayOrigin.ToVector3();
+	Vector3 d = rayDir.ToVector3();
+	Vector3 e1 = v1 - v0;
+	Vector3 e2 = v2 - v0;
+	//계산식을위한 치환값
+	Vector3 s = o - v0;
+	Vector3 p = d.CrossProduct(e2);
+	Vector3 q = s.CrossProduct(e1);
+	
+	float det = e1.DotProduct(p);					//분모부
+	bool NoIntersection = false;
+	//0 <= t, u, v <= 1 을 판별하므로 양측에 det를 곱하는형태로 조건식을 제시해 최적화를 꾀한다, 최종조건을 통과할때 dist를 구하기위한 스칼라배 t에만 곱한다
+	if (det > _EPSILON)								//삼각형의 앞면을 관통하는 RAY
+	{
+		float u = s.DotProduct(p);					//s dot (d cross e2)
+		//u < 0, u > det라면, 즉 범위를 벗어난다면 첫번쨰 변을 벗어남(e1기준)
+		NoIntersection = u < 0;
+		NoIntersection = NoIntersection || (u > det);
+
+		//v < 0, v > det라면, 즉 범위를 벗어난다면 첫번쨰 변을 벗어남(e2기준)
+		float v = d.DotProduct(q);					//d dot (s cross e1)
+		NoIntersection = NoIntersection || (v < 0);
+		NoIntersection = NoIntersection || ((u + v) > det);
+
+		//t < 0 이라면 삼각형이 레이 뒤에있으므로 부합하지않음
+		float t = e2.DotProduct(q);					//e2 dot (s cross e1)
+		NoIntersection = NoIntersection || t < 0;
+	}
+	else if (det < -_EPSILON)			//삼각형의 뒷면을 관통하는 RAY, 논리는 위와 동일하나 부호가반전
+	{
+		float u = s.DotProduct(p);					//s dot (d cross e2)
+		//u > 0, u < det라면, 즉 범위를 벗어난다면 첫번째 변을 벗어남(e1기준)
+		NoIntersection = u > 0;
+		NoIntersection = NoIntersection || (u < det);
+
+		//v > 0, u+v < det라면, 즉 범위를 벗어난다면 첫번째 변을 벗어남(e2기준)
+		float v = d.DotProduct(q);					//d dot (s cross e1)
+		NoIntersection = NoIntersection || (v > 0);
+		NoIntersection = NoIntersection || ((u + v) < det);
+
+		//t > 0 이라면 삼각형이 레이 앞에있으므로 부합하지않음
+		float t = e2.DotProduct(q);					//e2 dot (s cross e1)
+		NoIntersection = NoIntersection || t > 0;
+	}
+	else
+	{
+		//해당 분모부, 즉 삼중적부분이 0에 가깝다면 이는 평행을 의미한다
+		NoIntersection = true;
+	}
+	if (NoIntersection) return false;
+
+	//실제t를 계산해야함, 역수를 구한뒤 곱해줌
+	float invDet = 1.0f / det;
+	fDist = e2.DotProduct(q) * invDet;
 	return true;
 }
 

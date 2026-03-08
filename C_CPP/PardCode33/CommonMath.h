@@ -466,7 +466,7 @@ inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 	float detA = GetDeterminant4x4(matOrigin);
 
 	// 행렬식을 이용한 역행렬 여부 판별 (허용 범위를 대폭 넓힘)
-	if (std::abs(detA) < 1e-20f)
+	if (std::abs(detA) < _EPSILON)
 	{
 		std::cerr << "InverseMatrix NotExist! Det: " << detA << '\n';
 		return GetMat_Identity();

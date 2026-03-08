@@ -217,7 +217,7 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 		}
 
-		//floor
+#ifdef _Floor
 		{
 			const std::wstring szName = L"floor";
 			std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> verticesByMaterial;
@@ -251,6 +251,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 		}
+#endif // _Floor
 
 #ifdef _GeoSphere
 		{
@@ -497,7 +498,7 @@ void AppWindow::OnCreate()
 
 			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {150.0f, 0.0f, 50.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
@@ -696,7 +697,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -720,7 +721,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 	}
 #endif // _Praying
 
@@ -803,7 +804,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Doro.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -828,6 +829,8 @@ void AppWindow::OnCreate()
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
 #endif // _Doro
 

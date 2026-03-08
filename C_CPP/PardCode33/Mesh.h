@@ -13,12 +13,12 @@ public:
 	virtual ~BaseMesh();
 	const std::vector<std::vector<Vector3>>& GetPointsByMeshs() const;
 	const std::vector<std::vector<Vector3>>& GetPointsByBones() const;
-	UINT* GetIndices();
-	size_t GetIndicesSize();
+	const std::vector<UINT>& GetIndicies();
 	void SetCL(size_t hashCL);
 	const std::vector<size_t>& GetCLs() const;
 	const std::vector<RenderCounts>& GetRendVertices() const;
 	const std::vector<RenderCounts>& GetRendIndices() const;
+	virtual const Vector3& GetPosition(UINT idx) const = 0;
 	void SetVB(size_t hashVB);
 	size_t GetVB() const;
 	void SetIB(size_t hashIB);
@@ -27,7 +27,7 @@ public:
 protected:
 	std::vector<std::vector<Vector3>>							m_Points_Bones;
 	std::vector<std::vector<Vector3>>							m_Points_Meshs;
-	std::vector<UINT>											m_Indices;
+	std::vector<UINT>											m_Indicies;
 	std::vector<RenderCounts>									m_RenderVertices;
 	std::vector<RenderCounts>									m_RenderIndices;
 	size_t														m_lVB;
@@ -52,14 +52,9 @@ inline const std::vector<std::vector<Vector3>>& BaseMesh::GetPointsByBones() con
 	return m_Points_Bones;
 }
 
-inline UINT* BaseMesh::GetIndices()
+inline const std::vector<UINT>& BaseMesh::GetIndicies()
 {
-	return m_Indices.data();
-}
-
-inline size_t BaseMesh::GetIndicesSize()
-{
-	return m_Indices.size();
+	return m_Indicies;
 }
 
 inline void BaseMesh::SetVB(size_t hashVB)
@@ -114,6 +109,7 @@ public:
 public:
 	T* GetVertices();
 	size_t GetVerticesSize();
+	const Vector3& GetPosition(UINT idx) const override;
 private:
 	std::vector<T> m_Vertices;
 };
@@ -188,7 +184,7 @@ inline Mesh<T>::Mesh(size_t hash, const std::wstring& szFilePath, const std::map
 		m_RenderIndices.push_back({ (UINT)iter.second.size(), indexIdx });
 		indexIdx += (UINT)iter.second.size();
 		for (auto& vidx : iter.second)
-			m_Indices.push_back(psumOffset + vidx);
+			m_Indicies.push_back(psumOffset + vidx);
 		psumOffset += (UINT)verticesByMaterial.find(iter.first)->second.size();
 	}
 
@@ -205,4 +201,11 @@ template<typename T>
 inline size_t Mesh<T>::GetVerticesSize()
 {
 	return m_Vertices.size();
+}
+
+template<typename T>
+inline const Vector3& Mesh<T>::GetPosition(UINT idx) const
+{
+	_ASEERTION_NULCHK(idx < m_Indicies.size(), "Out of Bound");
+	return m_Vertices[m_Indicies[idx]].pos0;
 }

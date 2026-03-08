@@ -46,6 +46,8 @@ size_t g_hash_PS_Debug_PC;
 size_t g_hash_VS_Debug_Sphere;
 size_t g_hash_HS_Debug_Sphere;
 size_t g_hash_DS_Debug_Sphere;
+size_t g_hash_PS_Picking;
+
 
 RenderSystem::RenderSystem()
 {
@@ -97,6 +99,7 @@ void RenderSystem::Init(HWND hWnd, UINT width, UINT height)
 	g_hash_VS_Debug_Sphere		= _RenderSystem.CreateVertexShader(L"VS_Debug_Sphere.hlsl", "vsmain", "vs_5_0");
 	g_hash_HS_Debug_Sphere		= _RenderSystem.CreateHullShader(L"HS_Debug_Sphere.hlsl", "hsmain", "hs_5_0");
 	g_hash_DS_Debug_Sphere		= _RenderSystem.CreateDomainShader(L"DS_Debug_Sphere.hlsl", "dsmain", "ds_5_0");
+	g_hash_PS_Picking		= _RenderSystem.CreatePixelShader(L"PS_Picking.hlsl", "psmain", "ps_5_0");
 
 	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
 	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
@@ -215,6 +218,9 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//Render Geometry
 	RenderGeometry(cam_matView, cam_matProj);
 
+	//Render Geometry
+	RenderGeometry_Picking(cam_matView, cam_matProj);
+
 	//Render RTV_CubeMap
 #ifdef  _EnviornmentMap
 	RenderEnviornmentMap(cam_matView, cam_matProj);
@@ -225,7 +231,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	//Render DebugGeometry
 	if(_InputSystem.IsDebugRender())
-		RenderGSDebugGeometry(cam_matView, cam_matProj);
+		RenderGeometry_Debug(cam_matView, cam_matProj);
 
 	//Render UI
 	RenderUI(cam_matOrhto);
@@ -1759,7 +1765,127 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 	}
 }
 
-void RenderSystem::RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj)
+void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix4x4& matProj)
+{
+	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
+	SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
+	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::LINEAR_WRAP));
+	SetPS_SamplerState(m_pCSamplers->GetState(E_Sampler::POINT_CLAMP_COMPARISON), 6);
+	SetRS_RasterizerState(m_pCRasterizers->GetState(E_RSState::SOLID_CULLBACK_CW));
+	//static
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					if (!renders[col].bRenderable) continue;
+					if (!colliders[col].bPicking) continue;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = matView;
+					cb_wvpitmat.matProj = matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetHS_Shader(nullptr);
+						SetDS_Shader(nullptr);
+						SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[g_hash_PS_Picking]->GetShader());
+						
+						Draw_Indicies(3, colliders[col].pickingIdx, 0);
+					}
+				}
+				st_col = 0;
+			}
+		}
+	}
+
+	//Skeletal
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, C_Collider, T_Render_Geometry_Skeletal>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& animations = archetype->GetComponents<C_Animation>(row);
+				auto& colliders = archetype->GetComponents<C_Collider>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					if (!renders[col].bRenderable) continue;
+					if (!colliders[col].bPicking) continue;
+					const Vector3& scale = transforms[col].vScale;
+					const Quarternion& rotate = transforms[col].qRotate;
+					const Vector3& position = transforms[col].vPosition;
+
+					CB_WVPITMatrix cb_wvpitmat;
+					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
+					cb_wvpitmat.matView = matView;
+					cb_wvpitmat.matProj = matProj;
+					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
+
+					CB_BoneMatrix cb_bonemat;
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
+
+					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
+					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
+
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					for (UINT j = 0; j < MeshMats.size(); j++)
+					{
+						auto& iter = MeshMats[j];
+						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
+						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
+						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+
+						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
+						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
+						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
+						SetHS_Shader(nullptr);
+						SetDS_Shader(nullptr);
+						SetGS_Shader(nullptr);
+						SetPS_Shader(m_pCPSs[g_hash_PS_Picking]->GetShader());
+
+						Draw_Indicies(3, colliders[col].pickingIdx, 0);
+					}
+				}
+				st_col = 0;
+			}
+		}
+	}
+}
+
+void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj)
 {
 	SetOM_BlendState(m_pCBlends->GetState(E_BSState::Opaque), NULL);
 	SetOM_DepthStenilState(m_pCDepthStencils->GetState(E_DSState::DEFAULT));
@@ -2280,7 +2406,7 @@ size_t RenderSystem::CreateMeshFromGeometry(const std::wstring& szName, const st
 	std::wstring szTypename = _tomw(typeid(T).name());
 	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szName + szTypename + L"Mesh", verticesByMaterial, indicesByMaterial, pointsByMeshs, std::vector<std::vector<Vector3>>());
 	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", (UINT*)pMesh->GetIndicies().data(), (UINT)pMesh->GetIndicies().size()));
 	return pMesh->GetHash();
 }
 
@@ -2292,7 +2418,7 @@ size_t RenderSystem::CreateMeshFromGeometry(size_t hash_geometry)
 	std::wstring szTypename = _tomw(typeid(T).name());
 	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szPath + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPointsByMeshs(), pGeometry->GetPointsByBones());
 	pMesh->SetVB(CreateVertexBuffer(szPath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", pMesh->GetIndices(), (UINT)pMesh->GetIndicesSize()));
+	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", (UINT*)pMesh->GetIndicies().data(), (UINT)pMesh->GetIndicies().size()));
 	return pMesh->GetHash();
 }
 

@@ -85,6 +85,8 @@ struct C_Collider
 {
 public:
 	E_Collider type;
+	bool bPicking = false;
+	UINT pickingIdx;
 };
 
 

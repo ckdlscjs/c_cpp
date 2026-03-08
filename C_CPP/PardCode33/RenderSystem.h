@@ -161,8 +161,9 @@ private:
 	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderCubeMap();
 	void RenderCubeMapTexture(UINT cubemapIdx);
-	void RenderGSDebugGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderUI(const Matrix4x4& matOrtho);
+	void RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderGeometry_Picking(const Matrix4x4& matView, const Matrix4x4& matProj);
 
 
 	//사용을위해 분할한 클래스객체들
