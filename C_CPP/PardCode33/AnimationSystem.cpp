@@ -38,19 +38,29 @@ void AnimationSystem::Frame(float deltatime)
 					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
 					if(pAnimation->GetAnimations().empty()) continue;
 						
-					if (animations[col].szCurClip.empty())
+					if (!animations[col].bInitialized)
 					{
-						animations[col].szCurClip = pAnimation->GetAnimations().begin()->first;
+						animations[col].clipIter = pAnimation->GetAnimations().begin();
 						animations[col].elapsedTime = 0.0f;
+						animations[col].bInitialized = true;
 					}
 
-					animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * deltatime;
+					animations[col].elapsedTime += animations[col].clipIter->second.fTicksPerSecond * deltatime;
 					//animations[col].elapsedTime = 0.0f;
-					if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
+					if (animations[col].elapsedTime >= animations[col].clipIter->second.fDuration)
+					{
 						animations[col].elapsedTime = 0.0f;
+						if (animations[col].clipIter != pAnimation->GetAnimations().end())
+							animations[col].clipIter++;
+						if (animations[col].clipIter == pAnimation->GetAnimations().end())
+						{
+							animations[col].clipIter = pAnimation->GetAnimations().begin();
+							animations[col].elapsedTime = 0.0f;
+						}
+					}
 
 					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(animations[col].szCurClip, animations[col].elapsedTime, curAnim);
+					pAnimation->GetFinalTransform(animations[col].clipIter->first, animations[col].elapsedTime, curAnim);
 					std::memcpy(animations[col].matAnims, curAnim.data(), curAnim.size() * sizeof(Matrix4x4));
 				}
 				st_col = 0;

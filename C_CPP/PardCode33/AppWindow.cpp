@@ -726,13 +726,13 @@ void AppWindow::OnCreate()
 #endif // _Praying
 
 #ifdef _Herald
-	//_Herald, Collider 정밀판정문제
+	//_Herald
 	{
 		const std::wstring szName = L"Herald";
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Herald.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -758,7 +758,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 	}
 #endif // _Praying
 
@@ -1170,12 +1170,12 @@ void AppWindow::OnUpdate()
 	{
 		_InputSystem.Frame();						//선결조건1(입력)
 
-		_BehaviorSystem.Frame(deltaTime);			//선결조건2(개체들)
-		_CameraSystem.Frame(deltaTime);
+		_CameraSystem.Frame(deltaTime);				//선결조건2(개체들)
+		_BehaviorSystem.Frame(deltaTime);			
 		_AnimationSystem.Frame(deltaTime);
 
-		_CollisionSystem.Frame(deltaTime);
 		_ImguiSystem.Frame(deltaTime);
+		_CollisionSystem.Frame(deltaTime);
 		_RenderSystem.Frame(deltaTime, elpasedTime);
 	}
 	

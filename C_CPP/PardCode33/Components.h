@@ -94,7 +94,9 @@ struct C_Animation
 {
 public:
 	size_t hash_ai = 0;
-	std::string szCurClip;
+	std::unordered_map<std::string, AnimationClip>::const_iterator clipIter;
+	bool bInitialized = false;
+	//std::string szCurClip;
 	float elapsedTime;
 	Matrix4x4 matAnims[256];
 };

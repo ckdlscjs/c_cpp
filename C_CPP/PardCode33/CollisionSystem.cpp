@@ -28,6 +28,7 @@ void CollisionSystem::Init()
 {
 
 }
+
 void CollisionSystem::Frame(float deltatime)
 {
 	if (g_fTime_Log >= 1.0f)
@@ -59,7 +60,7 @@ void CollisionSystem::Frame(float deltatime)
 	
 	Matrix4x4 matInvView = GetMat_Inverse(cam_matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
-	Vector4 rayDirWorld = Vector4(vx, vy, 1.0f, 0.0f) * matInvView;
+	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
 	using PickingOrder = std::tuple<float, C_Collider*>;
 	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
@@ -118,19 +119,22 @@ void CollisionSystem::Frame(float deltatime)
 							for (const auto& hash_boundingVolume : pMesh->GetCLs())
 							{
 								//BoundingVolume
-								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume))
+								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume)) //바운딩볼륨은 로컬에서 판별한다
 								{
-									//TraversalTriangle                                                                                  
+									//TraversalTriangle, skeletal과의 통일성을위해 월드에서 판별한다                                                              
 									const auto& RenderCounts = pMesh->GetRendIndices();
 									const auto& Indices = pMesh->GetIndicies();
 									auto RenderCount = RenderCounts[i];
 									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
 									{
-										const auto& v0 = pMesh->GetPosition(idx + 0);
-										const auto& v1 = pMesh->GetPosition(idx + 1);
-										const auto& v2 = pMesh->GetPosition(idx + 2);
+										Vector4 v0(pMesh->GetPosition(idx + 0), 1.0f);
+										Vector4 v1(pMesh->GetPosition(idx + 1), 1.0f);
+										Vector4 v2(pMesh->GetPosition(idx + 2), 1.0f);
+										Vector3 wv0 = (v0 * matWorld).ToVector3();
+										Vector3 wv1 = (v1 * matWorld).ToVector3();
+										Vector3 wv2	= (v2 * matWorld).ToVector3();
 										float dist = FLT_MAX;
-										if (IsCollision(localRayOrigin, localRayDir, v0, v1, v2, dist))
+										if (IsCollision(rayOriginWorld, rayDirWorld, wv0, wv1, wv2, dist))
 										{
 											if (dist >= fDist) continue;
 											fDist = dist;
@@ -164,7 +168,7 @@ void CollisionSystem::Frame(float deltatime)
 				auto& colliders = archetype->GetComponents<C_Collider>(row);
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
-					renders[col].bRenderable = false;
+					renders[col].bRenderable = true;
 					colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
@@ -214,10 +218,10 @@ void CollisionSystem::Frame(float deltatime)
 								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
 								{
 									//std::wcout << pMesh->GetPath() << '\n';
-									// 
-									//TraversalTriangle, CpuSkinning                                      
-									const auto& RenderCounts = pMesh->GetRendIndices();
-									const auto& Indices = pMesh->GetIndicies();
+									
+									//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
+									auto RenderCounts = pMesh->GetRendIndices();
+									auto Indices = pMesh->GetIndicies();
 									auto RenderCount = RenderCounts[i];
 									for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
 									{
@@ -225,10 +229,10 @@ void CollisionSystem::Frame(float deltatime)
 										for (int j = 0; j < 3; j++)
 										{
 											Vector4 pos;
-											const auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
-											const auto bw = pMesh->GetBW(iidx + j);
-											const auto bones = bw.first;
-											const auto weights = bw.second;
+											auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
+											auto bw = pMesh->GetBW(iidx + j);
+											auto bones = bw.first;
+											auto weights = bw.second;
 											for (int bwidx = 0; bwidx < 4; bwidx++)
 											{
 												pos += weights[bwidx] * (v * animations[col].matAnims[bones[bwidx]]);
@@ -238,7 +242,7 @@ void CollisionSystem::Frame(float deltatime)
 										}
 										
 										float dist = FLT_MAX;
-										if (IsCollision(rayOriginWorld, rayDirWorld.Normalize(), AnimPos[0], AnimPos[1], AnimPos[2], dist))
+										if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
 										{
 											if (dist >= fDist) continue;
 											fDist = dist;
@@ -263,12 +267,7 @@ void CollisionSystem::Frame(float deltatime)
 		C_Collider* pCollider = std::get<1>(top);
 		pCollider->bPicking = true;
 	}
-	
-	if (g_fTime_Log >= 0.5f)
-	{
-		/*for (const auto& iter : pickingEntitys)
-			std::wcout << iter << '\n';*/
-	}
+
 	if (g_fTime_Log >= 1.0f)
 		std::cout << "렌더링 된 객체 수 : " << renderCnt << '\n';
 }

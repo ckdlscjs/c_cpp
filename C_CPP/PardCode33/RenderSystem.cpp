@@ -218,9 +218,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//Render Geometry
 	RenderGeometry(cam_matView, cam_matProj);
 
-	//Render Geometry
-	RenderGeometry_Picking(cam_matView, cam_matProj);
-
 	//Render RTV_CubeMap
 #ifdef  _EnviornmentMap
 	RenderEnviornmentMap(cam_matView, cam_matProj);
@@ -232,6 +229,10 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//Render DebugGeometry
 	if(_InputSystem.IsDebugRender())
 		RenderGeometry_Debug(cam_matView, cam_matProj);
+
+	//Render Geometry
+	if(_InputSystem.IsPressed_LBTN())
+		RenderGeometry_Picking(cam_matView, cam_matProj);
 
 	//Render UI
 	RenderUI(cam_matOrhto);
@@ -1213,7 +1214,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
 					CB_BoneMatrix cb_bonemat;
-					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
 				
 					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
@@ -1417,7 +1418,8 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
 					CB_BoneMatrix cb_bonemat;
-					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
+
 					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);
 
@@ -1855,7 +1857,7 @@ void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 0);
 
 					CB_BoneMatrix cb_bonemat;
-					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(animations[col].matAnims));
+					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
 
 					m_pCCBs[g_hash_cb_bonemat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_bonemat);
 					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_bonemat]->GetBuffer(), 2);

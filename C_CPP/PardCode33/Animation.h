@@ -54,6 +54,7 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 
 				// 보통 애니메이션이 있으면 초기 상대행렬(matRelative)을 '대체'합니다.
 				toParent = GetMat_World(vScale, qRotate, vTranslation);
+				//_ASEERTION_NULCHK(!std::isnan(toParent[0].GetX()), "nan");
 			}
 		}
 
@@ -66,6 +67,7 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 		{
 			toRoot[idx] = toParent * toRoot[idx_parent];
 		}
+		//_ASEERTION_NULCHK(!std::isnan(toRoot[idx][0].GetX()), "nan");
 	}
 
 	// 4. 스키닝 행렬 완성: vertex * offset * toRoot(최종)
@@ -77,6 +79,8 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 			// 쉐이더로 보낼 최종 행렬 계산
 			// 순서: Offset(정점을 뼈 공간으로) -> toRoot(뼈 공간 정점을 애니메이션된 월드로)
 			mats[m_BoneMap[curName].idx] = m_BoneMap[curName].matOffset * toRoot[idx];
+			Matrix4x4 debug = mats[m_BoneMap[curName].idx];
+			//_ASEERTION_NULCHK(!std::isnan(debug[0].GetX()), "nan");
 		}
 	}
 }

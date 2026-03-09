@@ -575,6 +575,8 @@ inline Quarternion Slerp(Quarternion q1, Quarternion q2, float t)
 		q2 = -q2;
 		dot = -dot;
 	}
+	if (dot > 1.0f) dot = 1.0f;	//acosf, nan해결을 위한 추가예외처리(260309)
+
 	if (std::abs(dot - 1.0f) <= _EPSILON)
 	{
 		//선형보간 q' = (1-t)*q1 + t*q2
