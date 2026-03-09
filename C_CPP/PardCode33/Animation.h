@@ -29,7 +29,6 @@ inline Animation::Animation(size_t hash, const std::wstring& szFilePath, const s
 {
 
 }
-
 inline void Animation::GetFinalTransform(const std::string& szName, const float t, std::vector<Matrix4x4>& mats)
 {
 	// 1. 모든 노드(뼈 포함 모든 계층)의 Root 기준 전역 행렬을 저장할 공간
@@ -81,6 +80,7 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 		}
 	}
 }
+
 
 inline const std::unordered_map<std::string, AnimationClip>& Animation::GetAnimations()
 {

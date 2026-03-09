@@ -19,6 +19,7 @@ public:
 	const std::vector<RenderCounts>& GetRendVertices() const;
 	const std::vector<RenderCounts>& GetRendIndices() const;
 	virtual const Vector3& GetPosition(UINT idx) const = 0;
+	virtual const std::pair<std::array<UINT, 4>, std::array<float, 4>> GetBW(UINT idx) const = 0;
 	void SetVB(size_t hashVB);
 	size_t GetVB() const;
 	void SetIB(size_t hashIB);
@@ -110,6 +111,7 @@ public:
 	T* GetVertices();
 	size_t GetVerticesSize();
 	const Vector3& GetPosition(UINT idx) const override;
+	const std::pair<std::array<UINT, 4>, std::array<float, 4>> GetBW(UINT idx) const override;
 private:
 	std::vector<T> m_Vertices;
 };
@@ -209,3 +211,18 @@ inline const Vector3& Mesh<T>::GetPosition(UINT idx) const
 	_ASEERTION_NULCHK(idx < m_Indicies.size(), "Out of Bound");
 	return m_Vertices[m_Indicies[idx]].pos0;
 }
+
+template<typename T>
+inline const std::pair<std::array<UINT, 4>, std::array<float, 4>> Mesh<T>::GetBW(UINT idx) const
+{
+	_ASEERTION_NULCHK(idx < m_Indicies.size(), "Out of Bound");
+	if constexpr (std::is_same_v<T, Vertex_PT> || std::is_same_v<T, Vertex_PTN> || std::is_same_v<T, Vertex_PTNTB>)
+	{
+		return { {0, 0, 0, 0}, {1.0f, 0.0f, 0.0f, 0.0f} };
+	}
+	else if constexpr (std::is_same_v<T, Vertex_PTN_Skinned> || std::is_same_v<T, Vertex_PTNTB_Skinned>)
+	{
+		return { m_Vertices[m_Indicies[idx]].bones, m_Vertices[m_Indicies[idx]].weights };
+	}
+}
+

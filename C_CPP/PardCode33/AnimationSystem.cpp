@@ -45,6 +45,7 @@ void AnimationSystem::Frame(float deltatime)
 					}
 
 					animations[col].elapsedTime += pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fTicksPerSecond * deltatime;
+					//animations[col].elapsedTime = 0.0f;
 					if (animations[col].elapsedTime > pAnimation->GetAnimations().find(animations[col].szCurClip)->second.fDuration)
 						animations[col].elapsedTime = 0.0f;
 

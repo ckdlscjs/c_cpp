@@ -189,6 +189,7 @@ void CollisionSystem::Frame(float deltatime)
 								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
 								if (IsCollision(frustum, iter, matAnimWorld))
 								{
+									
 									renders[col].bRenderable = true;
 									renderCnt++;
 									break;
@@ -200,34 +201,48 @@ void CollisionSystem::Frame(float deltatime)
 						//Picking
 						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN())
 						{
-							for (int idx_cl = 0; idx_cl < pMesh->GetCLs().size(); idx_cl++)
+							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 							{
-								size_t iter = pMesh->GetCLs()[idx_cl];
-								Matrix4x4 matAnimWorld = animations[col].matAnims[idx_cl] * matWorld;
+								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
 
-								//MousePicking Variable
+								//MousePicking Variable, using local BoundingVolume Intersect
 								Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
 								Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
 								Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
 
 								//BoundingVolume
-								if (IsCollision(localRayOrigin, localRayDir, iter))
+								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
 								{
-									//TraversalTriangle                                                                                  
+									//std::wcout << pMesh->GetPath() << '\n';
+									// 
+									//TraversalTriangle, CpuSkinning                                      
 									const auto& RenderCounts = pMesh->GetRendIndices();
 									const auto& Indices = pMesh->GetIndicies();
 									auto RenderCount = RenderCounts[i];
-									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
+									for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
 									{
-										const auto& v0 = pMesh->GetPosition(idx + 0);
-										const auto& v1 = pMesh->GetPosition(idx + 1);
-										const auto& v2 = pMesh->GetPosition(idx + 2);
+										Vector3 AnimPos[3];
+										for (int j = 0; j < 3; j++)
+										{
+											Vector4 pos;
+											const auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
+											const auto bw = pMesh->GetBW(iidx + j);
+											const auto bones = bw.first;
+											const auto weights = bw.second;
+											for (int bwidx = 0; bwidx < 4; bwidx++)
+											{
+												pos += weights[bwidx] * (v * animations[col].matAnims[bones[bwidx]]);
+											}
+											pos.SetW(1.0f);
+											AnimPos[j] = (pos * matWorld).ToVector3();
+										}
+										
 										float dist = FLT_MAX;
-										if (IsCollision(localRayOrigin, localRayDir, v0, v1, v2, dist))
+										if (IsCollision(rayOriginWorld, rayDirWorld.Normalize(), AnimPos[0], AnimPos[1], AnimPos[2], dist))
 										{
 											if (dist >= fDist) continue;
 											fDist = dist;
-											colliders[col].pickingIdx = idx;
+											colliders[col].pickingIdx = iidx;
 										}
 									}
 								}

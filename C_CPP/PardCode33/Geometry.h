@@ -218,7 +218,6 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				}
 			}
 		}
-		
 	}
 
 	if (matIdx >= 0)

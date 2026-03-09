@@ -697,7 +697,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _RenderSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
 
 		size_t hash_mesh = _RenderSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_RenderSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_RenderSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _RenderSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _RenderSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -721,7 +721,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
 #endif // _Praying
 
