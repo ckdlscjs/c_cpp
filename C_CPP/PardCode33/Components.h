@@ -1,6 +1,9 @@
 #pragma once
 #include "CommonHeader.h"
 
+//C_ -> 컴포넌트	(변수O)
+//T_ -> 태그		(변수X)
+
 struct C_Input
 {
 public:
@@ -17,7 +20,6 @@ struct C_Transform
 public:
 	Vector3 vScale;
 	Quarternion qRotate;
-	//Vector3 vRotate;
 	Vector3 vPosition;
 };
 enum E_Behavior
@@ -94,10 +96,9 @@ struct C_Animation
 {
 public:
 	size_t hash_ai = 0;
-	std::unordered_map<std::string, AnimationClip>::const_iterator clipIter;
 	bool bInitialized = false;
-	//std::string szCurClip;
 	float elapsedTime;
+	std::unordered_map<std::string, AnimationClip>::const_iterator clipIter;
 	Matrix4x4 matAnims[256];
 };
 

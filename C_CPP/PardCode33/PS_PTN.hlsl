@@ -24,7 +24,8 @@ float4 psmain(PS_INPUT input) : SV_Target
     
     float4 M = Texture.Sample(TextureSampler, input.tex0.xy); //텍스쳐값
     float4 P = input.pos1; //변환된 월드의정점
-    clip(M.a - 0.5f);
+
+    clip(M.a - 0.1f);
     
 
     //투영 텍스쳐링을 위해 광원시점으로의 변환된 값을 텍스쳐좌표계로 변환

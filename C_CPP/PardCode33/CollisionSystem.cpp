@@ -48,8 +48,8 @@ void CollisionSystem::Frame(float deltatime)
 	//피킹
 	/*
 	* 화면좌표계->NDC->PROJ->VIEW->WORLD->LOCAL
-	* x(ndc) -> (x(screen) * 2.0f / width) - 1.0f
-	* y(ndc) -> -(y(screen) * 2.0f / height) + 1.0f
+	* x(ndc) -> +(	x(screen) * 2.0f / width	) - 1.0f
+	* y(ndc) -> -(	y(screen) * 2.0f / height	) + 1.0f
 	* x(v) -> x(p)로의 변환에서 r(종횡비)를 역수로 나눴으므로 이를 같이 계산한다, 이는 투영행렬의 요소에담겨있다(matP00)
 	* x' -> x / d -> x / cot(a/2) 
 	* y' -> y / d -> y / cot(a/2)
@@ -127,14 +127,14 @@ void CollisionSystem::Frame(float deltatime)
 									auto RenderCount = RenderCounts[i];
 									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
 									{
-										Vector4 v0(pMesh->GetPosition(idx + 0), 1.0f);
-										Vector4 v1(pMesh->GetPosition(idx + 1), 1.0f);
-										Vector4 v2(pMesh->GetPosition(idx + 2), 1.0f);
-										Vector3 wv0 = (v0 * matWorld).ToVector3();
-										Vector3 wv1 = (v1 * matWorld).ToVector3();
-										Vector3 wv2	= (v2 * matWorld).ToVector3();
+										Vector3 wv[3];
+										for (int j = 0; j < 3; j++)
+										{
+											Vector4 v(pMesh->GetPosition(idx + j), 1.0f);
+											wv[j] = (v * matWorld).ToVector3();
+										}
 										float dist = FLT_MAX;
-										if (IsCollision(rayOriginWorld, rayDirWorld, wv0, wv1, wv2, dist))
+										if (IsCollision(rayOriginWorld, rayDirWorld, wv[0], wv[1], wv[2], dist))
 										{
 											if (dist >= fDist) continue;
 											fDist = dist;

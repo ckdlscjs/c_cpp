@@ -2,9 +2,8 @@
 #include "BaseSystem.h"
 
 //클래스 전방선언
-class Window;
-class SwapChain;
 class Direct3D;
+class SwapChain;
 
 class VertexBuffer;
 class ConstantBuffer;
@@ -25,9 +24,6 @@ class SamplerState;
 class RasterizerState;
 class DepthStencilState;
 class BlendState;
-
-class RenderAsset;
-class ColliderAsset;
 
 class RenderSystem : public BaseSystem<RenderSystem>
 {

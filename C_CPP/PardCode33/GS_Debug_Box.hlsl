@@ -23,7 +23,6 @@ void gsmain(point uint input[1] : ANY_ID, inout TriangleStream<GS_OUTPUT> tristr
 {
     //local variable
     float3 pos = float3(0.0f, 0.0f, 0.0f);
-    //float3 extent = float3(0.5f, 0.5f, 0.5f);
     float3 center = (vMin + vMax) * 0.5f;
     pos += center;
     float3 extent = (vMax - vMin) * 0.5f;
@@ -55,8 +54,6 @@ void gsmain(point uint input[1] : ANY_ID, inout TriangleStream<GS_OUTPUT> tristr
     for (int i = 0; i < 36; ++i)
     {
         GS_OUTPUT output;
-        //float4x4 matTranslation = float4x4(float4(1.0f, 0.0f, 0.0f, 0.0f), float4(0.0f, 1.0f, 0.0f, 0.0f), float4(0.0f, 0.0f, 1.0f, 0.0f), float4(center, 1.0f));
-        //float4 transVert = mul(float4(vertices[indices[i]], 1.0f), matTranslation);
         output.pos = mul(float4(vertices[indices[i]], 1.0f), matWorld);
         output.pos = mul(output.pos, matView);
         output.pos = mul(output.pos, matProj);

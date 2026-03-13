@@ -62,7 +62,6 @@ public:
 	void Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc);
 };
 
-
 class DepthStencilView : public BaseView<ID3D11DepthStencilView>
 {
 public:
@@ -72,4 +71,15 @@ public:
 	DepthStencilView(DepthStencilView&&) = delete;
 	DepthStencilView& operator=(DepthStencilView&&) = delete;
 	void Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc);
+};
+
+class UnorderedAccessView : public BaseView<ID3D11UnorderedAccessView>
+{
+public:
+	UnorderedAccessView(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
+	UnorderedAccessView(const UnorderedAccessView&) = delete;
+	UnorderedAccessView& operator=(const UnorderedAccessView&) = delete;
+	UnorderedAccessView(UnorderedAccessView&&) = delete;
+	UnorderedAccessView& operator=(UnorderedAccessView&&) = delete;
+	void Resize(ID3D11Device* pDevice, ID3D11Texture2D* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
 };
