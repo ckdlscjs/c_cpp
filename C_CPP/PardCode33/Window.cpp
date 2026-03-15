@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "RenderSystem.h"
+#include "EngineSystem.h"
 #include "InputSystem.h"
 #include "ImguiSystem.h"
 Window* g_pWindow = nullptr;
@@ -44,7 +44,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			UINT width = LOWORD(lParam);
 			UINT height = HIWORD(lParam);
-			_RenderSystem.OnResize(width, height);
+			_EngineSystem.OnResize(width, height);
 			return 0;
 		}
 
@@ -164,7 +164,7 @@ bool Window::Init(UINT width, UINT height)
 
 	//윈도우 창을 만들고 핸들을 멤버변수 mHwnd에 넘긴다
 	//CreateWindowExW(0L, lpClassName, lpWindowName, dwStyle, x, y, nWidth, nHeight, hWndParent, hMenu, hInstance, lpParam)
-	m_hWnd = ::CreateWindowEx
+	g_hWnd = ::CreateWindowEx
 	(
 		WS_EX_OVERLAPPEDWINDOW,
 		L"PardCode",										//위의 창 클래스 이름과 꼭 같아야한다
@@ -179,17 +179,17 @@ bool Window::Init(UINT width, UINT height)
 		hInstance,
 		NULL
 	);
-	if (!m_hWnd)
+	if (!g_hWnd)
 		return false;
 	//윈도우창을띄운다
-	::ShowWindow(m_hWnd, SW_SHOW);
-	::UpdateWindow(m_hWnd);
-	::SetFocus(m_hWnd);
+	::ShowWindow(g_hWnd, SW_SHOW);
+	::UpdateWindow(g_hWnd);
+	::SetFocus(g_hWnd);
 	RECT rect = GetClientWindowRect();
 	g_iWidth = rect.right - rect.left;
 	g_iHeight = rect.bottom - rect.top;
 	g_pWindow->OnCreate();
-	return m_bIsRun = true;
+	return g_bIsRun = true;
 }
 
 bool Window::BroadCast()
@@ -209,17 +209,17 @@ bool Window::BroadCast()
 
 bool Window::IsRun()
 {
-	return m_bIsRun;
+	return g_bIsRun;
 }
 
 HWND Window::GetHwnd() const
 {
-	return m_hWnd;
+	return g_hWnd;
 }
 
 RECT Window::GetClientWindowRect()
 {
 	RECT rt;
-	::GetClientRect(m_hWnd, &rt);
+	::GetClientRect(g_hWnd, &rt);
 	return rt;
 }

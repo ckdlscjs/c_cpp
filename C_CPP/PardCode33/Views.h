@@ -13,7 +13,7 @@ protected:
 public:
 	T* GetView();
 protected:
-	T* m_pView;
+	T* m_pView = nullptr;
 };
 
 template<typename T>

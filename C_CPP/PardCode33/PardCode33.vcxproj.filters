@@ -190,7 +190,7 @@
     <ClInclude Include="ComputeSystem.h">
       <Filter>Engine\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="RendersSystem.h">
+    <ClInclude Include="EngineSystem.h">
       <Filter>Engine\Systems</Filter>
     </ClInclude>
   </ItemGroup>
@@ -277,6 +277,9 @@
       <Filter>Engine\Systems</Filter>
     </ClCompile>
     <ClCompile Include="ComputeSystem.cpp">
+      <Filter>Engine\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="EngineSystem.cpp">
       <Filter>Engine\Systems</Filter>
     </ClCompile>
   </ItemGroup>

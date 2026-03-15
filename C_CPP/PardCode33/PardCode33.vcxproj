@@ -165,10 +165,10 @@
     <ClInclude Include="Components.h" />
     <ClInclude Include="ComputeSystem.h" />
     <ClInclude Include="ECSSystem.h" />
+    <ClInclude Include="EngineSystem.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="BehaviorSystem.h" />
     <ClInclude Include="Geometry.h" />
-    <ClInclude Include="RendersSystem.h" />
     <ClInclude Include="Shaders.h" />
     <ClInclude Include="States.h" />
     <ClInclude Include="Frustum.h" />
@@ -212,6 +212,7 @@
     <ClCompile Include="CollisionSystem.cpp" />
     <ClCompile Include="ComputeSystem.cpp" />
     <ClCompile Include="ECSSystem.cpp" />
+    <ClCompile Include="EngineSystem.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="BehaviorSystem.cpp" />
     <FxCompile Include="DS_Debug_Sphere.hlsl">

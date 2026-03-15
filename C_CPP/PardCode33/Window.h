@@ -17,11 +17,6 @@ public:
 	virtual void OnUpdate() = 0;
 	virtual void OnDestroy() = 0;
 
-protected:
-	UINT g_iWidth;
-	UINT g_iHeight;
-	HWND m_hWnd;
-	bool m_bIsRun;
 };
 //실제정의->cpp
 extern Window* g_pWindow;

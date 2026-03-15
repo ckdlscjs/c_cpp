@@ -23,7 +23,7 @@ inline Texture::Texture(size_t hash, const std::wstring& szFilePath, ScratchImag
 {
 	m_ScratchImage = std::move(scratchIamge);
 }
-std::wstring g_texture_initpath = L"../Assets/Textures/";
+
 inline Texture::Texture(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 	std::wstring extension = szFilePath.substr(szFilePath.find_last_of('.'));
@@ -35,7 +35,7 @@ inline Texture::Texture(size_t hash, const std::wstring& szFilePath) : BaseResou
 	if (hr == S_OK) return;
 	
 	//파일명에따른 경로추가
-	std::wstring filePath = g_texture_initpath;
+	std::wstring filePath = g_initpath_Texture;
 	auto lastSlash = szFilePath.find_last_of(L"\\/");
 	if (lastSlash != std::wstring::npos)
 		filePath += szFilePath.substr(lastSlash + 1);
