@@ -107,7 +107,6 @@ public:
 
 	//API 파이프라인
 public:
-	//void ClearRenderViews(float red, float green, float blue, float alpha);
 	void ClearRenderTargetView(size_t hashRTV, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
 	void ClearDepthStencilView(size_t hashDSV);
 	void GenerateMipMaps(size_t hashSRV);
@@ -115,7 +114,6 @@ public:
 
 	void SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology);
 	void SetIA_InputLayout(size_t hashIL);
-	//void SetIA_VertexBuffer(size_t hashVB, UINT iSizeVertex, UINT offset = 0);
 	void SetIA_VertexBuffer(size_t hashVB, UINT offset = 0);
 	void SetIA_IndexBuffer(size_t hashIB, UINT offset = 0);
 
