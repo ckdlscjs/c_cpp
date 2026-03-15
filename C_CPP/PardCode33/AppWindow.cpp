@@ -996,8 +996,8 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_ra = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			const std::unordered_set<size_t>& hash_CLs = _EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-			size_t hash_ca = _EngineSystem.CreateColliderAsset(L"ca_Environment", hash_CLs);
+			const std::vector<size_t>& hash_CLs = _EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
 
@@ -1008,7 +1008,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 
-			_ECSSystem.AddComponent<C_Collider>(key, { hash_ca });
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 		}
 	}
 #endif //_EnvironmentMap

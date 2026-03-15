@@ -642,29 +642,27 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					cb_wvpitmat.matView = matView;
 					cb_wvpitmat.matProj = matProj;
 					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-					m_pCCBs[g_hash_cb_wvpitmat]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), &cb_wvpitmat);
-					SetVS_ConstantBuffer(m_pCCBs[g_hash_cb_wvpitmat]->GetBuffer(), 3);
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
+					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 3);
 
-					const auto& MeshMats = m_pCRAs[renders[col].hash_ra]->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
 						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-						SetIA_VertexBuffer(m_pCVBs[pMesh->GetVB()]->GetBuffer(), m_pCVBs[pMesh->GetVB()]->GetVertexSize());
-						SetIA_IndexBuffer(m_pCIBs[pMesh->GetIB()]->GetBuffer());
+						_EngineSystem.SetIA_VertexBuffer(pMesh->GetVB());
+						_EngineSystem.SetIA_IndexBuffer(pMesh->GetIB());
 
 
 						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-						SetIA_InputLayout(m_pCILs[pMaterial->GetIL()]->GetInputLayout());
-						SetVS_Shader(m_pCVSs[pMaterial->GetVS()]->GetShader());
-						if (m_pCGSs.find(pMaterial->GetGS()) != m_pCGSs.end())
-							SetGS_Shader(m_pCGSs[pMaterial->GetGS()]->GetShader());
-						else
-							SetGS_Shader(nullptr);
-						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(m_hash_Mat_ShadowMap);
-						SetPS_Shader(m_pCPSs[pShadowMapMaterial->GetPS()]->GetShader());
+						_EngineSystem.SetIA_InputLayout(pMaterial->GetIL());
+						_EngineSystem.SetVS_Shader(pMaterial->GetVS());
+						_EngineSystem.SetGS_Shader(pMaterial->GetGS());
+				
+						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
+						_EngineSystem.SetPS_Shader(pShadowMapMaterial->GetPS());
 
-						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
+						_EngineSystem.Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
 					}
 				}
 				st_col = 0;
