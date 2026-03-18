@@ -15,11 +15,10 @@ private:
 
 public:
 	~ComputeSystem();
-	UnorderedAccessView* CreateUnorderedAccessView(ID3D11Device* pDevice, UINT size_buffer, void* data);
+
 	void Init();
 	void Frame(float deltatime);
 
 private:
-	std::unordered_map<size_t, UnorderedAccessView*>		m_pCUAVs;
 };
 #define _ComputeSystem ComputeSystem::GetInstance()

@@ -8,6 +8,7 @@ class SwapChain;
 class VertexBuffer;
 class ConstantBuffer;
 class IndexBuffer;
+class StructBuffer;
 
 class VertexShader;
 class InputLayout;
@@ -19,6 +20,7 @@ class PixelShader;
 class ShaderResourceView;
 class RenderTargetView;
 class DepthStencilView;
+class UnorderedAccessView;
 
 class SamplerState;
 class RasterizerState;
@@ -34,22 +36,26 @@ private:
 	EngineSystem& operator=(const EngineSystem&) = delete;
 	EngineSystem(EngineSystem&&) = delete;
 	EngineSystem& operator=(EngineSystem&&) = delete;
+
 public:
 	~EngineSystem();
 	void Init();
-	void OnResize(UINT width, UINT height);
-	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
+	
+	/////////////////////////////
+	//응용프로그램 부 접근
+	/////////////////////////////
+	//Device/Context
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
 
 	/////////////////////////////
-	//응용프로그램 부 접근
+	//Create FromResources
 	/////////////////////////////
 	//Texture
 	size_t CreateTexture(const std::wstring& szFilePath, ScratchImage&& image);
 	size_t CreateTexture(const std::wstring& szFilePath);
 
-	//Geometry(Parsing)
+	//Geometry
 	size_t CreateGeometry(const std::wstring& szFilePath);
 
 	//Mesh
@@ -82,12 +88,11 @@ public:
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
 	//size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
 
-	//기법
-	void CreateCubeMapTexture(int iSize);
-	size_t CreateShadowMapTexture(const int width, const int height);
 
-
-	//API리소스 생성
+	/////////////////////////////
+	//Create APIResources
+	/////////////////////////////
+public:
 	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
 	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
@@ -98,15 +103,33 @@ public:
 	size_t CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
+
+	ID3D11Resource* CreateD3DBuffer(const ScratchImage* image);
+	ID3D11Texture2D* CreateD3DBuffer(UINT bindFlags, UINT width, UINT height);
+	size_t CreateShaderResourceView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
+	size_t CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
+	size_t CreateDepthStencilView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
+	size_t CreateView_UnorderedAccess();
+
+	size_t CreateViews(const std::wstring& szName, UINT bindFlags, UINT width, UINT height);
+
+	/*void CreateCubeMapTexture(int iSize);
+	size_t CreateShadowMapTexture(const int width, const int height);
 	size_t CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource);
 	size_t CreateRenderTargetView(const std::wstring& szName);
 	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
 	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
+	size_t CreateUnorderedAccessView(const std::wstring& szName);
 	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
-	std::vector<size_t> CreateCubeMapView(const int width, const int height);
+	std::vector<size_t> CreateCubeMapView(const int width, const int height);*/
 
-	//API 파이프라인
+	
+	/////////////////////////////
+	//API Usage
+	/////////////////////////////
 public:
+	void OnResize(UINT width, UINT height);
+	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
 	void ClearRenderTargetView(size_t hashRTV, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
 	void ClearDepthStencilView(size_t hashDSV);
 	void GenerateMipMaps(size_t hashSRV);
@@ -149,12 +172,12 @@ public:
 
 	//사용을위해 분할한 클래스객체들
 private:
-	Direct3D* m_pCDirect3D = nullptr;
-	SwapChain* m_pCSwapChain = nullptr;
-	SamplerState* m_pCSamplers = nullptr;
-	RasterizerState* m_pCRasterizers = nullptr;
-	DepthStencilState* m_pCDepthStencils = nullptr;
-	BlendState* m_pCBlends = nullptr;
+	Direct3D*											m_pCDirect3D = nullptr;
+	SwapChain*											m_pCSwapChain = nullptr;
+	SamplerState*										m_pCSamplers = nullptr;
+	RasterizerState*									m_pCRasterizers = nullptr;
+	DepthStencilState*									m_pCDepthStencils = nullptr;
+	BlendState*											m_pCBlends = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;
@@ -167,6 +190,7 @@ private:
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
+	std::unordered_map<size_t, UnorderedAccessView*>	m_pCUAVs;
 
 	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요
 public:

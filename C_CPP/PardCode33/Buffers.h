@@ -56,7 +56,7 @@ class ConstantBuffer : public BaseBuffer<ConstantBuffer>
 {
 	friend class BaseBuffer<ConstantBuffer>;
 public:
-	ConstantBuffer(ID3D11Device* pDevice, UINT size_buffer, void* data);
+	ConstantBuffer(ID3D11Device* pDevice, void* data, UINT iSize);
 	ConstantBuffer(const ConstantBuffer&) = delete;
 	ConstantBuffer& operator=(const ConstantBuffer&) = delete;
 	ConstantBuffer(ConstantBuffer&&) = delete;

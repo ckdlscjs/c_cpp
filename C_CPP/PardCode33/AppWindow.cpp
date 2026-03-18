@@ -406,7 +406,7 @@ void AppWindow::OnCreate()
 			std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> verticesByMaterial;
 			std::map<UINT, std::vector<UINT>> indicesByMaterial;
 			std::vector<std::vector<Vector3>> pointsByMeshs;
-			GeometryGenerate_Plane<Vertex_PTN>(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
+			GeometryGenerate_Plane(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(szName, verticesByMaterial, indicesByMaterial, pointsByMeshs);
 			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
@@ -430,6 +430,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 		}
 #endif // _Billboard
 
@@ -1016,7 +1018,7 @@ void AppWindow::OnCreate()
 	//ShadowMap
 	{
 		const std::wstring szName = L"ShadowMap";
-		_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateShadowMapTexture(g_iWidth, g_iHeight);
+		_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateViews(szName, _Target_ShadowMap, g_iWidth, g_iHeight);
 		size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 		_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 		_EngineSystem.m_hash_Mat_ShadowMap = hash_material;

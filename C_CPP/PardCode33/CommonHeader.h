@@ -101,26 +101,7 @@ enum class E_InputLayout
 	PTN_Skinned,
 	PTNTB_Skinned,
 };
-/*
-* 1. MAP_DATA     : 일반적인 모델 텍스처(Diffuse, Normal, Specular)
-* 2. RENDER_TARGET : 화면에 그려질 중간 복사본(HDR, G - Buffer, UI Overlay)
-* 3. DEPTH_STENCIL : 깊이 판정 및 그림자 생성용(Depth Buffer, Shadow Map)
-* 4. DYNAMIC_INPUT : CPU에서 매 프레임 갱신하는 데이터(Constant Buffer, Dynamic VB / IB)
-* 5. READ_BACK : GPU 데이터를 CPU로 가져오는 용도(Screenshot, Picking)
-* 
-*/
 
-enum class E_ResourcesUsage
-{
-	TextureMap,
-	RTV,
-	DSV,
-	RTV_CubeMap,
-	DSV_CubeMap,
-};
-
-inline D3D11_TEXTURE2D_DESC GetTex2DDesc(E_ResourcesUsage usage, UINT width, UINT height)
-{
 /*
 Usage (어떻게 갱신하는가?)
 
@@ -128,16 +109,16 @@ Usage (어떻게 갱신하는가?)
 	매 프레임 CPU에서 데이터를 넘겨준다 (Matrix, UI): DYNAMIC
 	GPU가 그리고 GPU가 다시 읽는다 (Post-process): DEFAULT
 	GPU가 그린 걸 CPU가 읽어야 한다 (Picking, Screenshot): STAGING
-	
+
 BindFlags (파이프라인 어디에 꽂히는가?)
 
 	셰이더 Texture2D 변수에 들어간다: SHADER_RESOURCE
 	OMSetRenderTargets의 첫 번째 인자다: RENDER_TARGET
 	OMSetRenderTargets의 마지막 인자(깊이)다: DEPTH_STENCIL
 	그림자 맵처럼 깊이를 기록하고 나중에 셰이더에서 읽는다: DEPTH_STENCIL | SHADER_RESOURCE
-	
+
 Format (무엇을 담는가?)
-	
+
 	일반 그림/색상: R8G8B8A8_UNORM (채널당 1바이트, 0~255)
 	정밀한 물리계산/광해석: R16G16B16A16_FLOAT (채널당 2바이트, 부동소수점)
 	단순 깊이 값: D24_UNORM_S8_UINT (일반 깊이 버퍼 전용)
@@ -154,61 +135,17 @@ Format (무엇을 담는가?)
 	UINT CPUAccessFlags;
 	UINT MiscFlags;
 */
-	//기본초기화, static
-	D3D11_TEXTURE2D_DESC desc;
-	desc.Width = width;
-	desc.Height = height;
-	desc.MipLevels = 1;
-	desc.ArraySize = 1;
-	desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.BindFlags = 0;
-	desc.CPUAccessFlags = 0;
-	desc.MiscFlags = 0;
-
-	switch (usage)
-	{
-		case E_ResourcesUsage::TextureMap :
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		}break;
-
-		case E_ResourcesUsage::RTV :
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		}break;
-
-		case E_ResourcesUsage::DSV :
-		{
-			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-		}break;
-
-		case E_ResourcesUsage::RTV_CubeMap :
-		{
-			desc.MipLevels = 0;
-			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
-		}break;
-
-		case E_ResourcesUsage::DSV_CubeMap:
-		{
-			desc.MipLevels = 1;
-			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
-		}break;
-	}
-
-	return desc;
-}
+#define _BB 1 << 0
+#define _SRV 1 << 1
+#define _RTV 1 << 2
+#define _DSV 1 << 3
+#define _UAV 1 << 4
+#define _TEX 1 << 5
+#define _CUBE 1 << 6
+#define _Target_ResourceView (_SRV | _RTV)
+#define _Target_ShadowMap (_SRV | _DSV)
+#define _Target_Compute (_SRV | _UAV)
+#define _Target_Cubemap (_SRV | _RTV | _CUBE)
 
 enum class E_RenderPass
 {

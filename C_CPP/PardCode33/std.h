@@ -65,7 +65,7 @@ extern UINT g_iHeight;
 extern HWND g_hWnd;
 extern bool g_bIsRun;
 extern float g_fTime_Log;
-const static std::wstring g_initpath_Texture = L"../Assets/Textures/";
+static const std::wstring g_initpath_Texture = L"../Assets/Textures/";
 
 //공용함수들
 template<typename T>

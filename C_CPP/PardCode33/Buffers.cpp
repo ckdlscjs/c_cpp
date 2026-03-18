@@ -3,13 +3,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // ConstantBuffer
 ////////////////////////////////////////////////////////////////////////////////
-ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, UINT size_buffer, void* data)
+ConstantBuffer::ConstantBuffer(ID3D11Device* pDevice, void* data, UINT iSize)
 {
 	_ASEERTION_NULCHK(!m_pBuffer, "ConstantBuffer NOTNULL");
 	D3D11_BUFFER_DESC buff_desc;
 	ZeroMemory(&buff_desc, sizeof(buff_desc));
 	buff_desc.Usage = D3D11_USAGE_DEFAULT;
-	buff_desc.ByteWidth = size_buffer;
+	buff_desc.ByteWidth = iSize;
 	buff_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;			//상수버퍼에 사용되므로 디스크립션의 플래그를 상수버퍼로 지정한다
 	buff_desc.CPUAccessFlags = 0;
 	buff_desc.MiscFlags = 0;
@@ -120,4 +120,3 @@ UINT IndexBuffer::GetCountIndices()
 {
 	return m_iSize_Indices;
 }
-
