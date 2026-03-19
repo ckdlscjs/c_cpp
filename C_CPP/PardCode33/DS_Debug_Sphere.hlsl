@@ -26,7 +26,7 @@ cbuffer CB_WVPIT : register(b0)
     row_major float4x4 matInvTrans;
 };
 
-cbuffer CB_Tessellation : register(b1)
+cbuffer CB_Tessellation : register(b5)
 {
     float3 center;
     float radius;

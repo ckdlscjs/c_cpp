@@ -13,6 +13,7 @@ struct PS_INPUT
     float4 normal0 : NORMAL0;
     float4 tangent0 : TANGENT0;
     float4 binormal0 : BINORMAL0;
+    uint rtvIdx : SV_RenderTargetArrayIndex; // GS에서 넘겨준 면 인덱스, 사용되지는않으나 시맨틱일치를 위한 선언이필요
     
     //LightResources
     float4 pos1 : WORLDP0;

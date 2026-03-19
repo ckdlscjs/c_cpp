@@ -15,7 +15,6 @@ struct VS_OUTPUT
 VS_OUTPUT vsmain(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;
-    input.pos0.w = 1.0f;
     output.pos0 = input.pos0;
     output.tex0 = input.tex0;
     output.normal0 = input.normal0;

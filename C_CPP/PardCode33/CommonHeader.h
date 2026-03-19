@@ -303,6 +303,18 @@ struct Vertex_PC
 	Vector4 color0;
 };
 
+enum class E_VerticesType
+{
+	Vertex_PC,
+	Vertex_PT,
+	Vertex_PCT,
+	Vertex_PPCC,
+	Vertex_PTN,
+	Vertex_PTNTB,
+	Vertex_PTN_Skinned,
+	Vertex_PTNTB_Skinned,
+};
+
 //align offset 을 D3D11_APPEND_ALIGNED_ELEMENT 로 대체 할 수 있다
 static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
 {
@@ -610,12 +622,12 @@ static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB_Skinned[] =
 
 static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
 {
-	{InputLayout_VertexPC,		(UINT)ARRAYSIZE(InputLayout_VertexPC)},
-	{InputLayout_VertexPT,		(UINT)ARRAYSIZE(InputLayout_VertexPT)},
-	{InputLayout_VertexPCT,		(UINT)ARRAYSIZE(InputLayout_VertexPCT)},
-	{InputLayout_VertexPPCC,	(UINT)ARRAYSIZE(InputLayout_VertexPPCC)},
-	{InputLayout_VertexPTN,		(UINT)ARRAYSIZE(InputLayout_VertexPTN)},
-	{InputLayout_VertexPTNTB,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB)},
+	{InputLayout_VertexPC,				(UINT)ARRAYSIZE(InputLayout_VertexPC)},
+	{InputLayout_VertexPT,				(UINT)ARRAYSIZE(InputLayout_VertexPT)},
+	{InputLayout_VertexPCT,				(UINT)ARRAYSIZE(InputLayout_VertexPCT)},
+	{InputLayout_VertexPPCC,			(UINT)ARRAYSIZE(InputLayout_VertexPPCC)},
+	{InputLayout_VertexPTN,				(UINT)ARRAYSIZE(InputLayout_VertexPTN)},
+	{InputLayout_VertexPTNTB,			(UINT)ARRAYSIZE(InputLayout_VertexPTNTB)},
 	{InputLayout_VertexPTN_Skinned,		(UINT)ARRAYSIZE(InputLayout_VertexPTN_Skinned)},
 	{InputLayout_VertexPTNTB_Skinned,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB_Skinned)},
 };
@@ -683,8 +695,6 @@ struct Traits_InputLayout<Vertex_PTNTB_Skinned> {
 		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB_Skinned].second;
 	}
 };
-
-
 
 //16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다, 최대 16바이트 * 4096 이 가능하다(하나의레지스터), 최대14레지스터까지가능(0~13)
 __declspec(align(16))
@@ -783,6 +793,12 @@ struct CB_Debug_Sphere
 {
 	Vector4 vInfo;		//center, radius
 	float fTessFactor;
+};
+
+__declspec(align(16))
+struct CB_CubeMap
+{
+	Matrix4x4 matViews[6];
 };
 
 /*

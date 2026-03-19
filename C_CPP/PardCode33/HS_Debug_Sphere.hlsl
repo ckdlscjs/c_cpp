@@ -3,7 +3,7 @@ struct VS_OUT
     float3 Pos0 : POSITION;
 };
 
-cbuffer CB_Tessellation : register(b1)
+cbuffer CB_Tessellation : register(b5)
 {
     float3 center;
     float radius;

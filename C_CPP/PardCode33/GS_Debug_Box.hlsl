@@ -12,7 +12,7 @@ cbuffer CB_WVPIT : register(b0)
     row_major float4x4 matInvTrans;
 };
 
-cbuffer CB_Box : register(b1)
+cbuffer CB_Box : register(b5)
 {
     float3 vMin;
     float3 vMax;

@@ -3,36 +3,79 @@ struct VS_OUTPUT
     float4 pos0 : SV_POSITION;
     float4 tex0 : TEXCOORD0;
     float4 normal0 : NORMAL0;
-    float4 pos1 : WORLDP0;
 };
 
-[maxvertexcount(8)]
-void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<VS_OUTPUT> tristream)
+struct GS_OUTPUT
 {
-    VS_OUTPUT m[6];
-    m[0] = input[0];
-    m[1].pos0 = 0.5f * (input[0].pos0 + input[1].pos0);
-    m[3].pos0 = 0.5f * (input[1].pos0 + input[2].pos0);
-    m[2].pos0 = 0.5f * (input[2].pos0 + input[0].pos0);
-    
-    m[1].normal0 = input[0].normal0;
-    m[3].normal0 = input[1].normal0;
-    m[2].normal0 = input[2].normal0;
-    
-    m[1].tex0 = 0.5f * (input[0].tex0 + input[1].tex0);
-    m[3].tex0 = 0.5f * (input[1].tex0 + input[2].tex0);
-    m[2].tex0 = 0.5f * (input[2].tex0 + input[0].tex0);
-    m[4] = input[2];
-    m[5] = input[1];
-    
-    [unroll]
-    for (int i = 0; i < 5; i++)
+    float4 pos0 : SV_POSITION; //로컬정점
+    float4 tex0 : TEXCOORD0; //텍스쳐좌표
+    float4 normal0 : NORMAL0; //노말값
+    uint rtvIdx : SV_RenderTargetArrayIndex; // 어느 큐브맵 면에 그릴지 결정 (0~5)
+    //LightResources
+    float4 pos1 : WORLDP0; //월드변환된정점
+    float4 lightPos0 : TEXCOORD1;
+    float3 lightNormal0 : NORMAL1;
+};
+
+cbuffer CB_WVPIT : register(b0)
+{
+    row_major float4x4 matWorld;
+    row_major float4x4 matView;
+    row_major float4x4 matProj;
+    row_major float4x4 matInvTrans;
+};
+
+cbuffer CB_LightMat : register(b1)
+{
+    row_major float4x4 matLightView;
+    row_major float4x4 matLightProj;
+    float4 LightPos;
+};
+
+cbuffer CB_CubeMap : register(b2)
+{
+    row_major float4x4 matView_Cube[6];
+};
+
+[maxvertexcount(18)] //3*6
+void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream)
+{
+    float4 worldPos[3];
+    float4 worldNormal[3];
+
+    for (int i = 0; i < 3; ++i)
     {
-        tristream.Append(m[i]);
+        worldPos[i] = mul(float4(input[i].pos0.xyz, 1.0f), matWorld);
+        worldNormal[i] = float4(normalize(mul(input[i].normal0.xyz, (float3x3) matInvTrans)), 0.0f);
     }
     
-    tristream.RestartStrip();
-    tristream.Append(m[1]);
-    tristream.Append(m[5]);
-    tristream.Append(m[3]);
+    for (int idx = 0; idx < 6; idx++)
+    {
+        for (int v = 0; v < 3; ++v)
+        {
+            GS_OUTPUT output;
+            // Render Target Array Index 설정 (0~5)
+            output.rtvIdx = idx;
+            
+            // 각 면의 View 및 Proj 행렬 적용
+            output.pos0 = output.pos1 = worldPos[v];
+            output.pos0 = mul(output.pos0, matView_Cube[idx]);
+            output.pos0 = mul(output.pos0, matProj);
+            
+            output.normal0 = worldNormal[v];
+            output.tex0 = input[v].tex0;
+            
+            //그림자맵 계산을 위한 광원 시점 행렬의 변환
+            output.lightPos0 = mul(output.pos1, matLightView);
+            output.lightPos0 = mul(output.lightPos0, matLightProj);
+    
+            //빛의방향계산
+            output.lightNormal0 = normalize(LightPos.xyz - output.pos1.xyz);
+            
+            outStream.Append(output);
+        }
+        
+        // 삼각형 하나(면 하나) 완료 후 스트립 재시작
+        outStream.RestartStrip();
+    }
 }

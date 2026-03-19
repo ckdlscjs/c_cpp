@@ -930,32 +930,10 @@ void AppWindow::OnCreate()
 #ifdef _EnviornmentMap
 	{
 		const std::wstring szName = L"CubeMap_Sphere";
+		Vector3 CamPos(0.0f, 50.0f, 100.0f);
+
 		//Initilze Cubemap
 		{
-			Vector3 pos(50.0f, 0.0f, 0.0f);
-			float x = pos.GetX();
-			float y = pos.GetY();
-			float z = pos.GetZ();
-			Vector3 targets[6] =
-			{
-				{ x + 1.0f, y, z }, // +X
-				{ x - 1.0f, y, z }, // -X
-				{ x, y + 1.0f, z }, // +Y
-				{ x, y - 1.0f, z }, // -Y
-				{ x, y, z + 1.0f }, // +Z
-				{ x, y, z - 1.0f }  // -Z
-			};
-
-			Vector3 ups[6] =
-			{
-				{ 0.0f,  1.0f,  0.0f}, // +X: Up is Y
-				{ 0.0f,  1.0f,  0.0f}, // -X: Up is Y
-				{ 0.0f,  0.0f, -1.0f}, // +Y: Up is -Z (중요)
-				{ 0.0f,  0.0f,  1.0f}, // -Y: Up is +Z (중요)
-				{ 0.0f,  1.0f,  0.0f}, // +Z: Up is Y
-				{ 0.0f,  1.0f,  0.0f}  // -Z: Up is Y
-			};
-
 			//큐브맵 텍스쳐
 			{
 				UINT cubemapsize = 256;
@@ -971,28 +949,28 @@ void AppWindow::OnCreate()
 				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTN.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_CubeMap_PTN.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTN.hlsl");
-				_EngineSystem.Material_SetPS(hash_material, L"PS_CubeMap_PTN.hlsl");		
+				_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");		
 				_EngineSystem.m_hash_Mat_CubeMap_PTN = hash_material;
 
 				hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
 				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTN.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_CubeMap_PTN.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTN_Skinned.hlsl");
-				_EngineSystem.Material_SetPS(hash_material, L"PS_CubeMap_PTN.hlsl");
+				_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 				_EngineSystem.m_hash_Mat_CubeMap_PTN_Skinned = hash_material;
 
 				hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
 				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTNTB.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_CubeMap_PTNTB.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTNTB.hlsl");
-				_EngineSystem.Material_SetPS(hash_material, L"PS_CubeMap_PTNTB.hlsl");
+				_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 				_EngineSystem.m_hash_Mat_CubeMap_PTNTB = hash_material;
 
 				hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
 				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTNTB.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_CubeMap_PTNTB.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTNTB_Skinned.hlsl");
-				_EngineSystem.Material_SetPS(hash_material, L"PS_CubeMap_PTNTB.hlsl");
+				_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 				_EngineSystem.m_hash_Mat_CubeMap_PTNTB_Skinned = hash_material;
 			}
 			
@@ -1001,7 +979,7 @@ void AppWindow::OnCreate()
 				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera, C_Projection, T_Camera_Cubemap>();
 				_CameraSystem.lookup_cubemapcam = _ECSSystem.CreateEntity<C_Transform, C_Camera, C_Projection, T_Camera_Cubemap>();
 
-				_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {50.0f, 0.0f, 0.0f} });
+				_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
 				C_Camera camera;
 				camera.fScreenWidth = _EngineSystem.m_vp_CubeMap.Width; 
@@ -1036,7 +1014,7 @@ void AppWindow::OnCreate()
 
 				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
 
-				_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, pos });
+				_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
 				_ECSSystem.AddComponent<C_Render>(key, { true, hash_ra });
 

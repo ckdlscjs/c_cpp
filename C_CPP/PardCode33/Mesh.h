@@ -18,6 +18,7 @@ public:
 	const std::vector<size_t>& GetCLs() const;
 	const std::vector<RenderCounts>& GetRendVertices() const;
 	const std::vector<RenderCounts>& GetRendIndices() const;
+	virtual const E_VerticesType GetVerticesType() const = 0;
 	virtual const Vector3& GetPosition(UINT idx) const = 0;
 	virtual const std::pair<std::array<UINT, 4>, std::array<float, 4>> GetBW(UINT idx) const = 0;
 	void SetVB(size_t hashVB);
@@ -110,6 +111,7 @@ public:
 public:
 	T* GetVertices();
 	size_t GetVerticesSize();
+	const E_VerticesType GetVerticesType() const override;
 	const Vector3& GetPosition(UINT idx) const override;
 	const std::pair<std::array<UINT, 4>, std::array<float, 4>> GetBW(UINT idx) const override;
 private:
@@ -203,6 +205,16 @@ template<typename T>
 inline size_t Mesh<T>::GetVerticesSize()
 {
 	return m_Vertices.size();
+}
+
+template<typename T>
+inline const E_VerticesType Mesh<T>::GetVerticesType() const
+{
+	if constexpr (std::is_same_v<T, Vertex_PTN>) return E_VerticesType::Vertex_PTN;
+	if constexpr (std::is_same_v<T, Vertex_PTN_Skinned>) return E_VerticesType::Vertex_PTN_Skinned;
+	if constexpr (std::is_same_v<T, Vertex_PTNTB>) return E_VerticesType::Vertex_PTNTB;
+	if constexpr (std::is_same_v<T, Vertex_PTNTB_Skinned>) return E_VerticesType::Vertex_PTNTB_Skinned;
+	return E_VerticesType::Vertex_PC;
 }
 
 template<typename T>
