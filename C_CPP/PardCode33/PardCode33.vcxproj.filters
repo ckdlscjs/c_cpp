@@ -338,13 +338,13 @@
     <FxCompile Include="GS_PTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="PS_CubeMap.hlsl">
+    <FxCompile Include="PS_CubeMap_PTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="VS_CubeMap.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="GS_CubeMap.hlsl">
+    <FxCompile Include="GS_CubeMap_PTN.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="VS_ShadowMap.hlsl">
@@ -375,6 +375,24 @@
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
     <FxCompile Include="PS_Picking.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_CubeMap_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VS_CubeMap_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GS_CubeMap_PTN_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GS_CubeMap_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GS_CubeMap_PTNTB_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PS_CubeMap_PTNTB.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
   </ItemGroup>

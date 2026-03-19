@@ -829,7 +829,7 @@ void EngineSystem::OnResize(UINT width, UINT height)
 
 	//RTT
 	m_hash_RTV_0 = CreateViews(L"RTV0", _Target_ResourceView, g_iWidth, g_iHeight);
-	m_hash_DSV_0 = CreateViews(L"DSV0", _Target_ShadowMap, g_iWidth, g_iHeight);
+	m_hash_DSV_0 = CreateViews(L"DSV0", _Target_DepthView, g_iWidth, g_iHeight);
 	SetViewportSize(&m_vp_BB, g_iWidth, g_iHeight);
 }
 
@@ -1074,7 +1074,6 @@ ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT 
 	if (bindFlags & _UAV) desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 
 	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.Format = DXGI_FORMAT_B8G8R8A8_TYPELESS;
 	desc.CPUAccessFlags = 0;
 	
 	switch (bindFlags)
@@ -1084,7 +1083,7 @@ ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT 
 			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
 		}break;
 
-		case _Target_ShadowMap :
+		case _Target_DepthView :
 		{
 			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
 		}break;
@@ -1094,13 +1093,22 @@ ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT 
 			desc.Format = DXGI_FORMAT_UNKNOWN;
 		}break;
 
-		case _Target_Cubemap:
+		case _Target_Cubemap_ResourceView:
 		{
 			desc.MipLevels = 0;
 			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
+		}break;
+
+		case _Target_Cubemap_DepthView:
+		{
+			desc.MipLevels = 0;
+			desc.ArraySize = 6;
+			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
 		}break;
 	}
 
@@ -1132,7 +1140,7 @@ size_t EngineSystem::CreateShaderResourceView(size_t hash, ID3D11Resource* pBuff
 			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
 		}break;
 
-		case _Target_ShadowMap:
+		case _Target_DepthView:
 		{
 			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -1144,9 +1152,17 @@ size_t EngineSystem::CreateShaderResourceView(size_t hash, ID3D11Resource* pBuff
 			desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
 		}break;
 
-		case _Target_Cubemap:
+		case _Target_Cubemap_ResourceView:
 		{
 			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+			desc.Texture2D.MostDetailedMip = 0;
+			desc.Texture2D.MipLevels = -1;
+		}break;
+
+		case _Target_Cubemap_DepthView:
+		{
+			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
 			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
 			desc.Texture2D.MostDetailedMip = 0;
 			desc.Texture2D.MipLevels = -1;
@@ -1193,10 +1209,12 @@ size_t EngineSystem::CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer
 			desc.Format = DXGI_FORMAT_UNKNOWN;
 		}break;
 
-		case _Target_Cubemap:
+		case _Target_Cubemap_ResourceView:
 		{
 			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			desc.Texture2DArray.FirstArraySlice = 0;
 			desc.Texture2DArray.ArraySize = 6;
+			desc.Texture2DArray.MipSlice = 0;
 		}break;
 	}
 
@@ -1225,15 +1243,17 @@ size_t EngineSystem::CreateDepthStencilView(size_t hash, ID3D11Resource* pBuffer
 	switch (bindFlags)
 	{
 		case _DSV:
-		case _Target_ShadowMap:
+		case _Target_DepthView:
 		{
 			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
 		}break;
 
-		case _Target_Cubemap:
+		case _Target_Cubemap_DepthView:
 		{
 			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+			desc.Texture2DArray.FirstArraySlice = 0;
 			desc.Texture2DArray.ArraySize = 6;
+			desc.Texture2DArray.MipSlice = 0;
 		}break;
 	}
 

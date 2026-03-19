@@ -24,9 +24,8 @@ private:
 	void RenderGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderCubeMap();
-	void RenderCubeMapTexture(UINT cubemapIdx);
+	void RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderUI(const Matrix4x4& matOrtho);
 	void RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderGeometry_Picking(const Matrix4x4& matView, const Matrix4x4& matProj);

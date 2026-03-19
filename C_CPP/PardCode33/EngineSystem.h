@@ -204,10 +204,13 @@ public:
 	D3D11_VIEWPORT										m_vp_BB;
 
 	//큐브맵 렌더링을 위한 변수들
-	size_t												m_hash_RTV_CubeMap[6];
+	size_t												m_hash_RTV_CubeMap;
 	size_t												m_hash_SRV_CubeMap;
 	size_t												m_hash_DSV_CubeMap;
-	size_t												m_hash_CubemapLookup;
+	size_t												m_hash_Mat_CubeMap_PTN;
+	size_t												m_hash_Mat_CubeMap_PTN_Skinned;
+	size_t												m_hash_Mat_CubeMap_PTNTB;
+	size_t												m_hash_Mat_CubeMap_PTNTB_Skinned;
 	D3D11_VIEWPORT										m_vp_CubeMap;
 
 	//그림자맵 렌더링을 위한 변수들

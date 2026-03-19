@@ -175,9 +175,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//ShadowMap
 	RenderShadowMap(cb_lightMat.matLightView, cb_lightMat.matLightProj);
 
-#ifdef _EnviornmentMap
+	
+#ifdef  _EnviornmentMap
+	//CubeMap
 	RenderCubeMap();
-#endif // _EnviornmentMap
+#endif //  _EnviornmentMap
 
 	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
 	CB_Campos cb_campos;
@@ -192,9 +194,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	RenderGeometry(cam_matView, cam_matProj);
 
 	//Render RTV_CubeMap
-#ifdef  _EnviornmentMap
 	RenderEnviornmentMap(cam_matView, cam_matProj);
-#endif //  _EnvironmentMap
 
 	//Render Billboard
 	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
@@ -801,51 +801,33 @@ void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x
 
 void RenderSystem::RenderCubeMap()
 {
-	//Render EnvironmentMap
-	{
-		_EngineSystem.SetRS_Viewport(&_EngineSystem.m_vp_CubeMap);
-		for (int i = 0; i < 6; i++)
-		{
-			RenderCubeMapTexture(i);
-		}
-		//¿øº¹
-		_EngineSystem.ClearRenderTargetView(_EngineSystem.m_hash_RTV_0, 0.0f, 0.3f, 0.4f, 1.0f);
-		_EngineSystem.ClearDepthStencilView(_EngineSystem.m_hash_DSV_0);
-		_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
-		_EngineSystem.SetRS_Viewport(&_EngineSystem.m_vp_BB);
-		// RTV, SRV¿¡ »ç¿ëÇÏ´Â ¹öÆÛÀÇ ¹Ó¸ÊÀ» Çü¼ºÇÑ´Ù(¾Ù¸®¾î½ÌÃ³¸®)
-		_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
-	}
-}
-
-void RenderSystem::RenderCubeMapTexture(UINT cubemapIdx)
-{
+	//ºäÆ÷Æ® ¹× ·»´õÅ¸°Ù ¼¼ÆÃ
 	FLOAT clearColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	_EngineSystem.ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap[cubemapIdx], 0.0f, 0.0f, 0.0f, 1.0f);
+	_EngineSystem.ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap, 0.0f, 0.0f, 0.0f, 1.0f);
 	_EngineSystem.ClearDepthStencilView(_EngineSystem.m_hash_DSV_CubeMap);
-	_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_CubeMap[cubemapIdx] }, _EngineSystem.m_hash_DSV_CubeMap);
+	_EngineSystem.SetRS_Viewport(&_EngineSystem.m_vp_CubeMap);
+	_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_CubeMap }, _EngineSystem.m_hash_DSV_CubeMap);
 
-	size_t lookup_cam = _CameraSystem.lookup_cubemapcam[cubemapIdx];
-	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_cam);
-	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_cam);
-	const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
-	const Matrix4x4& cam_matView = c_cam_main.matView;
-	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
 
-	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_cam);
-	CB_Campos cb_campos;
-	cb_campos.vPosition = c_cam_transform.vPosition;
-	_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
-	_EngineSystem.SetPS_ConstantBuffer(g_hash_cb_campos, 5);
+	//size_t lookup_cam = _CameraSystem.lookup_cubemapcam;
+	//const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_cam);
+	//const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_cam);
+	//const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
+	//const Matrix4x4& cam_matView = c_cam_main.matView;
+	//const Matrix4x4& cam_matProj = c_cam_proj.matProj;
 
-	//Render SkySphere
-	RenderSkySphere(cam_matView, cam_matProj);
+	//const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_cam);
+	//CB_Campos cb_campos;
+	//cb_campos.vPosition = c_cam_transform.vPosition;
+	//_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
+	//_EngineSystem.SetPS_ConstantBuffer(g_hash_cb_campos, 5);
 
-	//Render Geometry
-	RenderGeometry(cam_matView, cam_matProj);
 
-	//Render Billboard
-	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
+	////¿øº¹
+	//_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
+	//_EngineSystem.SetRS_Viewport(&_EngineSystem.m_vp_BB);
+	//// RTV, SRV¿¡ »ç¿ëÇÏ´Â ¹öÆÛÀÇ ¹Ó¸ÊÀ» Çü¼ºÇÑ´Ù(¾Ù¸®¾î½ÌÃ³¸®)
+	//_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
 }
 
 void RenderSystem::RenderUI(const Matrix4x4& matOrtho)

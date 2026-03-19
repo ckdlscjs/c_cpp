@@ -143,9 +143,10 @@ Format (무엇을 담는가?)
 #define _TEX 1 << 5
 #define _CUBE 1 << 6
 #define _Target_ResourceView (_SRV | _RTV)
-#define _Target_ShadowMap (_SRV | _DSV)
+#define _Target_DepthView (_SRV | _DSV)
 #define _Target_Compute (_SRV | _UAV)
-#define _Target_Cubemap (_SRV | _RTV | _CUBE)
+#define _Target_Cubemap_ResourceView (_SRV | _RTV | _CUBE)
+#define _Target_Cubemap_DepthView (_SRV | _DSV | _CUBE)
 
 enum class E_RenderPass
 {
