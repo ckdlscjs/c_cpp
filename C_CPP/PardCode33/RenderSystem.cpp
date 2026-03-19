@@ -195,8 +195,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//Render Geometry
 	RenderGeometry(cam_matView, cam_matProj);
 
-	//Render RTV_CubeMap
-	RenderEnviornmentMap(cam_matView, cam_matProj);
+	//Render CubeMap
+	//RenderEnviornmentMap(cam_matView, cam_matProj);
 
 	//Render Billboard
 	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
@@ -300,6 +300,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 	_EngineSystem.SetPS_SamplerState(E_Sampler::LINEAR_WRAP);
 	_EngineSystem.SetPS_SamplerState(E_Sampler::POINT_CLAMP_COMPARISON, 6);
 	_EngineSystem.SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
+	
 	//static
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
@@ -620,57 +621,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 		}
 	}
 
-	//RenderCubeMap
-	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_CubeMap>();
-		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-		for (auto& archetype : queries)
-		{
-			size_t st_row = 0;
-			size_t st_col = 0;
-			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-			{
-				auto& transforms = archetype->GetComponents<C_Transform>(row);
-				auto& renders = archetype->GetComponents<C_Render>(row);
-				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-				{
-					if (!renders[col].bRenderable) continue;
-					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
-					const Vector3& position = transforms[col].vPosition;
-					CB_WVPITMatrix cb_wvpitmat;
-					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-					cb_wvpitmat.matView = matView;
-					cb_wvpitmat.matProj = matProj;
-					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 3);
-
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
-					for (UINT j = 0; j < MeshMats.size(); j++)
-					{
-						auto& iter = MeshMats[j];
-						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-						_EngineSystem.SetIA_VertexBuffer(pMesh->GetVB());
-						_EngineSystem.SetIA_IndexBuffer(pMesh->GetIB());
-
-
-						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-						_EngineSystem.SetIA_InputLayout(pMaterial->GetIL());
-						_EngineSystem.SetVS_Shader(pMaterial->GetVS());
-						_EngineSystem.SetGS_Shader(pMaterial->GetGS());
-				
-						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
-						_EngineSystem.SetPS_Shader(pShadowMapMaterial->GetPS());
-
-						_EngineSystem.Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-					}
-				}
-				st_col = 0;
-			}
-		}
-	}
-
 	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(_CameraSystem.lookup_maincam);
 	//Render Billboard
 	{
@@ -735,71 +685,6 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 	_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
 	
 	_EngineSystem.SetPS_ShaderResourceView(_EngineSystem.m_hash_DSV_ShadowMap, 6);
-}
-
-void RenderSystem::RenderEnviornmentMap(const Matrix4x4& matView, const Matrix4x4& matProj)
-{
-	_EngineSystem.SetOM_BlendState(E_BSState::Opaque, NULL);
-	_EngineSystem.SetOM_DepthStenilState(E_DSState::DEFAULT);
-	_EngineSystem.SetPS_SamplerState(E_Sampler::ANISOTROPIC_WRAP);
-	_EngineSystem.SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-	_EngineSystem.SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
-
-	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_CubeMap>();
-	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-	for (auto& archetype : queries)
-	{
-		size_t st_row = 0;
-		size_t st_col = 0;
-		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-		{
-			auto& transforms = archetype->GetComponents<C_Transform>(row);
-			auto& renders = archetype->GetComponents<C_Render>(row);
-			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-			{
-				if (!renders[col].bRenderable) continue;
-				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
-				const Vector3& position = transforms[col].vPosition;
-				CB_WVPITMatrix cb_wvpitmat;
-				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-				cb_wvpitmat.matView = matView;
-				cb_wvpitmat.matProj = matProj;
-				cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-				_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-
-				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
-				for (UINT j = 0; j < MeshMats.size(); j++)
-				{
-					auto& iter = MeshMats[j];
-					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-					_EngineSystem.SetIA_VertexBuffer(pMesh->GetVB());
-					_EngineSystem.SetIA_IndexBuffer(pMesh->GetIB());
-
-					Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-					_EngineSystem.SetIA_InputLayout(pMaterial->GetIL());
-					_EngineSystem.SetVS_Shader(pMaterial->GetVS());
-					_EngineSystem.SetGS_Shader(pMaterial->GetGS());
-					_EngineSystem.SetPS_Shader(pMaterial->GetPS());
-
-					const std::vector<size_t>* texs = pMaterial->GetTextures();
-					int cnt = 0;
-					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-					{
-						for (const auto& hashTx : texs[idxTex])
-						{
-							size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-							_EngineSystem.SetPS_ShaderResourceView(hashSRV, cnt++);
-						}
-					}
-					_EngineSystem.SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, cnt++);
-					_EngineSystem.Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-				}
-			}
-			st_col = 0;
-		}
-	}
 }
 
 void RenderSystem::RenderCubeMap()
@@ -884,12 +769,14 @@ void RenderSystem::RenderCubeMap()
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
 		{
+			if (archetype->HasComponents<T_Render_CubeMap>()) continue;
 			size_t st_row = 0;
 			size_t st_col = 0;
 			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
 				auto& transforms = archetype->GetComponents<C_Transform>(row);
 				auto& renders = archetype->GetComponents<C_Render>(row);
+				
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					const Vector3& scale = transforms[col].vScale;
@@ -946,6 +833,7 @@ void RenderSystem::RenderCubeMap()
 			std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 			for (auto& archetype : queries)
 			{
+				if (archetype->HasComponents<T_Render_CubeMap>()) continue;
 				size_t st_row = 0;
 				size_t st_col = 0;
 				for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
@@ -1006,6 +894,7 @@ void RenderSystem::RenderCubeMap()
 			std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 			for (auto& archetype : queries)
 			{
+				if (archetype->HasComponents<T_Render_CubeMap>()) continue;
 				size_t st_row = 0;
 				size_t st_col = 0;
 				for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
@@ -1072,9 +961,11 @@ void RenderSystem::RenderCubeMap()
 
 	//RTV, SRV에 사용하는 버퍼의 밉맵을 형성한다(앨리어싱처리)
 	_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
+	
 	//원복
 	_EngineSystem.SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
 	_EngineSystem.SetRS_Viewport(&_EngineSystem.m_vp_BB);
+	_EngineSystem.SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
 }
 
 void RenderSystem::RenderUI(const Matrix4x4& matOrtho)

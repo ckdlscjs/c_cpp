@@ -222,6 +222,8 @@ public:
 	void AddComponent(T&& component);
 	template<typename T>
 	std::vector<T>& GetComponents(size_t idxRow);
+	template<typename T>
+	bool HasComponents();
 	std::pair<size_t, size_t> SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol);
 	size_t DeleteComponent(size_t idxRow, size_t idxCol);
 	size_t GetCapacity_Chunks() const;
@@ -316,6 +318,13 @@ inline std::vector<T>& Archetype::GetComponents(size_t idxRow)
 
 	ChunkData<T>* chunk = static_cast<ChunkData<T>*>(m_Components[type][idxRow]);
 	return chunk->m_data;
+}
+
+template<typename T>
+inline bool Archetype::HasComponents()
+{
+	std::type_index type = typeid(T);
+	return m_Components.find(type) != m_Components.end();
 }
 
 inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol)

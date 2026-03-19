@@ -26,21 +26,6 @@ RenderTargetView::RenderTargetView(ID3D11Device* pDevice, ID3D11Resource* pBuffe
 	Resize(pDevice, pBuffer, rtvDesc);
 }
 
-////백버퍼기반
-//void RenderTargetView::Resize(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain)
-//{
-//	HRESULT hResult;
-//	ID3D11Texture2D* pBuffer;
-//	hResult = pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBuffer);
-//	_ASEERTION_CREATE(hResult, "BackBuffer");
-//
-//	//넘겨받은 백버퍼를 기반으로 RendrTargetView를 생성
-//	hResult = pDevice->CreateRenderTargetView(pBuffer, NULL, &m_pView);
-//	_ASEERTION_CREATE(hResult, "RTV");
-//
-//	pBuffer->Release();
-//}
-
 void RenderTargetView::Resize(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc)
 {
 	ReleaseView();

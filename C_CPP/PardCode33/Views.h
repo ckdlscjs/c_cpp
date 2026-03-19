@@ -58,13 +58,11 @@ public:
 class RenderTargetView : public BaseView<ID3D11RenderTargetView>
 {
 public:
-	//RenderTargetView(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain);
 	RenderTargetView(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc);
 	RenderTargetView(const RenderTargetView&) = delete;
 	RenderTargetView& operator=(const RenderTargetView&) = delete;
 	RenderTargetView(RenderTargetView&&) = delete;
 	RenderTargetView& operator=(RenderTargetView&&) = delete;
-	//void Resize(ID3D11Device* pDevice, IDXGISwapChain* pSwapChain);
 	void Resize(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_RENDER_TARGET_VIEW_DESC rtvDesc);
 };
 

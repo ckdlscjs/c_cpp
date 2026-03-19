@@ -1010,9 +1010,9 @@ void AppWindow::OnCreate()
 				const std::vector<size_t>& hash_CLs = _EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 				_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
-				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
+				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
 
-				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_CubeMap>();
+				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
 
 				_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
