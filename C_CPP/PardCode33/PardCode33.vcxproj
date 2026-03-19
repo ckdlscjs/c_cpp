@@ -288,7 +288,10 @@
     <ClCompile Include="TimerSystem.cpp" />
     <ClCompile Include="Views.cpp" />
     <ClCompile Include="Window.cpp" />
-    <FxCompile Include="VS_CubeMap.hlsl">
+    <FxCompile Include="VS_CubeMap_PTNTB_Skinned.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="VS_CubeMap_PTN_Skinned.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>
     <FxCompile Include="VS_Debug.hlsl">

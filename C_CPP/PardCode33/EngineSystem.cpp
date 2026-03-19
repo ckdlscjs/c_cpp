@@ -1211,6 +1211,7 @@ size_t EngineSystem::CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer
 
 		case _Target_Cubemap_ResourceView:
 		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
 			desc.Texture2DArray.FirstArraySlice = 0;
 			desc.Texture2DArray.ArraySize = 6;

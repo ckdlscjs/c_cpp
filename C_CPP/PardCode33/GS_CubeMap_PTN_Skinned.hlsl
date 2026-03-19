@@ -3,6 +3,8 @@ struct VS_OUTPUT
     float4 pos0 : SV_POSITION;
     float4 tex0 : TEXCOORD0;
     float4 normal0 : NORMAL0;
+    uint4 bones : BONES0;
+    float4 weights : WEIGHTS0;
 };
 
 struct GS_OUTPUT
@@ -32,7 +34,7 @@ cbuffer CB_LightMat : register(b1)
     float4 LightPos;
 };
 
-cbuffer CB_CubeMap : register(b2)
+cbuffer CB_CubeMap : register(b7)
 {
     row_major float4x4 matView_Cube[6];
 };

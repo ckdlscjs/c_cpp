@@ -930,7 +930,7 @@ void AppWindow::OnCreate()
 #ifdef _EnviornmentMap
 	{
 		const std::wstring szName = L"CubeMap_Sphere";
-		Vector3 CamPos(0.0f, 50.0f, 100.0f);
+		Vector3 CamPos(0.0f, 50.0f, 30.0f);
 
 		//Initilze Cubemap
 		{
@@ -953,8 +953,8 @@ void AppWindow::OnCreate()
 				_EngineSystem.m_hash_Mat_CubeMap_PTN = hash_material;
 
 				hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
-				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTN.hlsl");
-				_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_CubeMap_PTN.hlsl");
+				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTN_Skinned.hlsl");
+				_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_CubeMap_PTN_Skinned.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTN_Skinned.hlsl");
 				_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 				_EngineSystem.m_hash_Mat_CubeMap_PTN_Skinned = hash_material;
@@ -967,8 +967,8 @@ void AppWindow::OnCreate()
 				_EngineSystem.m_hash_Mat_CubeMap_PTNTB = hash_material;
 
 				hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
-				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTNTB.hlsl");
-				_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_CubeMap_PTNTB.hlsl");
+				_EngineSystem.Material_SetVS(hash_material, L"VS_CubeMap_PTNTB_Skinned.hlsl");
+				_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_CubeMap_PTNTB_Skinned.hlsl");
 				_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTNTB_Skinned.hlsl");
 				_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 				_EngineSystem.m_hash_Mat_CubeMap_PTNTB_Skinned = hash_material;

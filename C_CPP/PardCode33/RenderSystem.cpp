@@ -620,8 +620,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 		}
 	}
 
-	//Render RTV_CubeMap
-#ifdef  _EnviornmentMap
+	//RenderCubeMap
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_CubeMap>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
@@ -671,7 +670,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 			}
 		}
 	}
-#endif //  _EnvironmentMap
+
 	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(_CameraSystem.lookup_maincam);
 	//Render Billboard
 	{
@@ -820,6 +819,13 @@ void RenderSystem::RenderCubeMap()
 
 	//큐브맵 뷰행렬
 	Vector3 pos = _ECSSystem.GetComponent<C_Transform>(lookup_cam).vPosition;
+	
+	//카메라위치세팅
+	CB_Campos cb_campos;
+	cb_campos.vPosition = pos;
+	_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
+	_EngineSystem.SetPS_ConstantBuffer(g_hash_cb_campos, 5);
+
 	float x = pos.GetX(), y = pos.GetY(), z = pos.GetZ();
 	Vector3 targets[6] =
 	{
@@ -846,13 +852,7 @@ void RenderSystem::RenderCubeMap()
 	for (int i = 0; i < 6; i++)
 		cb_cubemap.matViews[i] = GetMat_View(pos, targets[i], ups[i]);
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_cubemap, &cb_cubemap);
-	_EngineSystem.SetGS_ConstantBuffer(g_hash_cb_cubemap, 2);
-
-	//카메라위치세팅
-	CB_Campos cb_campos;
-	cb_campos.vPosition = pos;
-	_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
-	_EngineSystem.SetPS_ConstantBuffer(g_hash_cb_campos, 5);
+	_EngineSystem.SetGS_ConstantBuffer(g_hash_cb_cubemap, 7);
 
 	_EngineSystem.SetOM_BlendState(E_BSState::Opaque, NULL);
 	_EngineSystem.SetOM_DepthStenilState(E_DSState::DEFAULT);
@@ -1031,7 +1031,7 @@ void RenderSystem::RenderCubeMap()
 						CB_BoneMatrix cb_bonemat;
 						std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
 						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
-						_EngineSystem.SetGS_ConstantBuffer(g_hash_cb_bonemat, 2);
+						_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
 						for (UINT j = 0; j < MeshMats.size(); j++)

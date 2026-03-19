@@ -3,6 +3,10 @@ struct VS_OUTPUT
     float4 pos0 : SV_POSITION;
     float4 tex0 : TEXCOORD0;
     float4 normal0 : NORMAL0;
+    float4 tangent0 : TANGENT0;
+    float4 binormal0 : BINORMAL0;
+    uint4 bones : BONES0;
+    float4 weights : WEIGHTS0;
 };
 
 struct GS_OUTPUT
@@ -10,6 +14,8 @@ struct GS_OUTPUT
     float4 pos0 : SV_POSITION; //로컬정점
     float4 tex0 : TEXCOORD0; //텍스쳐좌표
     float4 normal0 : NORMAL0; //노말값
+    float4 tangent0 : TANGENT0;
+    float4 binormal0 : BINORMAL0;
     uint rtvIdx : SV_RenderTargetArrayIndex; // 어느 큐브맵 면에 그릴지 결정 (0~5)
     //LightResources
     float4 pos1 : WORLDP0; //월드변환된정점
@@ -32,21 +38,32 @@ cbuffer CB_LightMat : register(b1)
     float4 LightPos;
 };
 
-cbuffer CB_CubeMap : register(b2)
+cbuffer CB_Bone : register(b2)
+{
+    row_major float4x4 matBone[256];
+};
+
+
+cbuffer CB_CubeMap : register(b7)
 {
     row_major float4x4 matView_Cube[6];
 };
+
 
 [maxvertexcount(18)] //3*6
 void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream)
 {
     float4 worldPos[3];
     float4 worldNormal[3];
+    float4 worldTangent[3];
+    float4 worldBinormal[3];
 
     for (int i = 0; i < 3; ++i)
     {
         worldPos[i] = mul(float4(input[i].pos0.xyz, 1.0f), matWorld);
         worldNormal[i] = float4(normalize(mul(input[i].normal0.xyz, (float3x3) matInvTrans)), 0.0f);
+        worldTangent[i] = float4(normalize(mul(input[i].tangent0.xyz, (float3x3) matInvTrans)), 0.0f);
+        worldBinormal[i] = float4(normalize(mul(input[i].binormal0.xyz, (float3x3) matInvTrans)), 0.0f);
     }
     
     for (int idx = 0; idx < 6; idx++)
@@ -63,6 +80,8 @@ void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStre
             output.pos0 = mul(output.pos0, matProj);
             
             output.normal0 = worldNormal[v];
+            output.tangent0 = worldTangent[v];
+            output.binormal0 = worldBinormal[v];
             output.tex0 = input[v].tex0;
             
             //그림자맵 계산을 위한 광원 시점 행렬의 변환
