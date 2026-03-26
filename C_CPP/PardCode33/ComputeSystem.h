@@ -15,9 +15,9 @@ private:
 
 public:
 	~ComputeSystem();
-
 	void Init();
-	void Frame(float deltatime);
+	void Update();
+
 
 private:
 };

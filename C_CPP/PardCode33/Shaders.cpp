@@ -62,3 +62,14 @@ PixelShader::PixelShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
 	_ASEERTION_CREATE(hResult, "PixelShader");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// ComputeShader
+////////////////////////////////////////////////////////////////////////////////
+ComputeShader::ComputeShader(ID3D11Device* pDevice, ID3DBlob* pBlob)
+{
+	_ASEERTION_NULCHK(pBlob, "BlobNULL");
+
+	m_pBlob = pBlob;
+	HRESULT hResult = pDevice->CreateComputeShader(m_pBlob->GetBufferPointer(), m_pBlob->GetBufferSize(), nullptr, &m_pShader);
+	_ASEERTION_CREATE(hResult, "PixelShader");
+}

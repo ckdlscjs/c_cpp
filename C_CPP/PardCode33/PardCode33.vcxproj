@@ -215,6 +215,9 @@
     <ClCompile Include="EngineSystem.cpp" />
     <ClCompile Include="ImguiSystem.cpp" />
     <ClCompile Include="BehaviorSystem.cpp" />
+    <FxCompile Include="CS_Collision_Triangle.hlsl">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="DS_Debug_Sphere.hlsl">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </FxCompile>

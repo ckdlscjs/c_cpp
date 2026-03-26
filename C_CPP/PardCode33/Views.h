@@ -80,10 +80,10 @@ public:
 class UnorderedAccessView : public BaseView<ID3D11UnorderedAccessView>
 {
 public:
-	UnorderedAccessView(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
+	UnorderedAccessView(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
 	UnorderedAccessView(const UnorderedAccessView&) = delete;
 	UnorderedAccessView& operator=(const UnorderedAccessView&) = delete;
 	UnorderedAccessView(UnorderedAccessView&&) = delete;
 	UnorderedAccessView& operator=(UnorderedAccessView&&) = delete;
-	void Resize(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
+	void Resize(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc);
 };

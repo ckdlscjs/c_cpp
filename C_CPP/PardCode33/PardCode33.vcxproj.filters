@@ -398,6 +398,9 @@
     <FxCompile Include="VS_CubeMap_PTNTB_Skinned.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="CS_Collision_Triangle.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Include\ImGui\LICENSE.txt">

@@ -90,6 +90,16 @@ inline std::string _towm(std::wstring wstr)
 	return myconv.to_bytes(wstr);
 }
 
+inline std::string _tocm(const char* _cstr)
+{
+	return std::string(_cstr);
+}
+
+inline std::wstring _tocw(const char* _cstr)
+{
+	return _tomw(_tocm(_cstr));
+}
+
 inline size_t Hasing_wstring(const std::wstring& str)
 {
 	// FNV-1a (64비트) 구현 예시

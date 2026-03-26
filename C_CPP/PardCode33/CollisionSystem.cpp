@@ -1,6 +1,5 @@
 #include "CollisionSystem.h"
 #include "CameraSystem.h"
-#include "EngineSystem.h"
 #include "ResourceSystem.h"
 #include "ECSSystem.h"
 #include "Inputsystem.h"	//Picking
@@ -94,7 +93,7 @@ void CollisionSystem::Frame(float deltatime)
 					Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
 					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
 		
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 
 					for (UINT i = 0; i < MeshMats.size(); i++)
 					{
@@ -179,7 +178,7 @@ void CollisionSystem::Frame(float deltatime)
 					//MousePicking Variable
 					float fDist = FLT_MAX;	//거리에따른 피킹판별
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT i = 0; i < MeshMats.size(); i++)
 					{
 						auto& iter = MeshMats[i];
@@ -194,7 +193,6 @@ void CollisionSystem::Frame(float deltatime)
 								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
 								if (IsCollision(frustum, iter, matAnimWorld))
 								{
-									
 									renders[col].bRenderable = true;
 									renderCnt++;
 									break;

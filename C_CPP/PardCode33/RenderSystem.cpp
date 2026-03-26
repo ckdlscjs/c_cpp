@@ -261,7 +261,7 @@ void RenderSystem::RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& ma
 				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 				_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -327,7 +327,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -392,7 +392,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -463,7 +463,7 @@ void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matVi
 				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 				_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -532,7 +532,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -588,7 +588,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -656,7 +656,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -790,7 +790,7 @@ void RenderSystem::RenderCubeMap()
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					_EngineSystem.SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -854,7 +854,7 @@ void RenderSystem::RenderCubeMap()
 						_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 						_EngineSystem.SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 						for (UINT j = 0; j < MeshMats.size(); j++)
 						{
 							auto& iter = MeshMats[j];
@@ -922,7 +922,7 @@ void RenderSystem::RenderCubeMap()
 						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
 						_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
-						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 						for (UINT j = 0; j < MeshMats.size(); j++)
 						{
 							auto& iter = MeshMats[j];
@@ -1003,7 +1003,7 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 				_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 				for (UINT j = 0; j < MeshMats.size(); j++)
 				{
 					auto& iter = MeshMats[j];
@@ -1070,7 +1070,7 @@ void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1129,7 +1129,7 @@ void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
 					_EngineSystem.SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1212,7 +1212,7 @@ void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x
 						_EngineSystem.SetDS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 					}
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];
@@ -1296,7 +1296,7 @@ void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x
 						_EngineSystem.SetGS_Shader(NULL);
 					}
 
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_ra)->m_hMeshMats;
+					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT j = 0; j < MeshMats.size(); j++)
 					{
 						auto& iter = MeshMats[j];

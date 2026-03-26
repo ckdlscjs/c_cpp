@@ -54,12 +54,7 @@ void DepthStencilView::Resize(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3
 ////////////////////////////////////////////////////////////////////////////////
 // UnorderedAccessView
 ////////////////////////////////////////////////////////////////////////////////
-UnorderedAccessView::UnorderedAccessView(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc)
-{
-	Resize(pDevice, pBuffer, dsvDesc);
-}
-
-void UnorderedAccessView::Resize(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc)
+void UnorderedAccessView::Resize(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc)
 {
 	ReleaseView();
 	HRESULT hResult;
@@ -67,3 +62,7 @@ void UnorderedAccessView::Resize(ID3D11Device* pDevice, ID3D11Buffer* pBuffer, D
 	_ASEERTION_CREATE(hResult, "UAV");
 }
 
+UnorderedAccessView::UnorderedAccessView(ID3D11Device* pDevice, ID3D11Resource* pBuffer, D3D11_UNORDERED_ACCESS_VIEW_DESC dsvDesc)
+{
+	Resize(pDevice, pBuffer, dsvDesc);
+}

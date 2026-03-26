@@ -24,6 +24,8 @@ public:
 	size_t GetGS() const { return m_lGS; }
 	void SetPS(size_t hash) { m_lPS = hash; }
 	size_t GetPS() const { return m_lPS; }
+	void SetCS(size_t hash) { m_lCS = hash; }
+	size_t GetCS() const { return m_lCS; }
 	
 	void SetTexture(TX_HASH tx_hash);
 	const std::vector<size_t>* GetTextures() const;
@@ -36,6 +38,7 @@ private:
 	size_t m_lGS = 0;
 	size_t m_lPS = 0;
 	size_t m_lIL = 0;
+	size_t m_lCS = 0;
 	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
 	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
 };

@@ -95,3 +95,13 @@ public:
 	PixelShader& operator=(PixelShader&&) = delete;
 };
 
+class ComputeShader : public BaseShader<ID3D11ComputeShader>
+{
+public:
+	ComputeShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
+	ComputeShader(const ComputeShader&) = delete;
+	ComputeShader& operator=(const ComputeShader&) = delete;
+	ComputeShader(ComputeShader&&) = delete;
+	ComputeShader& operator=(ComputeShader&&) = delete;
+};
+

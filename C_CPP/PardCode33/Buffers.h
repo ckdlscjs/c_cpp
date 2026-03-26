@@ -12,8 +12,12 @@ public:
 	BaseBuffer& operator=(BaseBuffer&&) = delete;
 	void UpdateBufferData(ID3D11DeviceContext* pDeviceContext, void* data);
 	ID3D11Buffer* GetBuffer();
+	UINT GetSize();
+	UINT GetStride();
 protected:
 	ID3D11Buffer* m_pBuffer;
+	UINT m_iSize;
+	UINT m_iStride;
 };
 
 template<typename T>
@@ -52,11 +56,23 @@ inline ID3D11Buffer* BaseBuffer<T>::GetBuffer()
 	return m_pBuffer;
 }
 
+template<typename T>
+inline UINT BaseBuffer<T>::GetSize()
+{
+	return m_iSize;
+}
+
+template<typename T>
+inline UINT BaseBuffer<T>::GetStride()
+{
+	return m_iStride;
+}
+
 class ConstantBuffer : public BaseBuffer<ConstantBuffer>
 {
 	friend class BaseBuffer<ConstantBuffer>;
 public:
-	ConstantBuffer(ID3D11Device* pDevice, void* data, UINT iSize);
+	ConstantBuffer(ID3D11Device* pDevice, void* data, UINT stride);
 	ConstantBuffer(const ConstantBuffer&) = delete;
 	ConstantBuffer& operator=(const ConstantBuffer&) = delete;
 	ConstantBuffer(ConstantBuffer&&) = delete;
@@ -67,28 +83,48 @@ class VertexBuffer : public BaseBuffer<VertexBuffer>
 {
 	friend class BaseBuffer<VertexBuffer>;
 public:
-	VertexBuffer(ID3D11Device* pDevice, void* vertices, UINT size_vertex, UINT size_vertices);
+	VertexBuffer(ID3D11Device* pDevice, void* data, UINT stride, UINT count);
 	VertexBuffer(const VertexBuffer&) = delete;
 	VertexBuffer& operator=(const VertexBuffer&) = delete;
 	VertexBuffer(VertexBuffer&&) = delete;
 	VertexBuffer& operator=(VertexBuffer&&) = delete;
 	UINT GetCountVertices();
 	UINT GetVertexSize();
-private:
-	UINT m_iSize_vertex;
-	UINT m_iSize_vertices;
 };
 
 class IndexBuffer : public BaseBuffer<IndexBuffer>
 {
 	friend class BaseBuffer<IndexBuffer>;
 public:
-	IndexBuffer(ID3D11Device* pDevice, void* indices, UINT size_indices);
+	IndexBuffer(ID3D11Device* pDevice, void* data, UINT count);
 	IndexBuffer(const IndexBuffer&) = delete;
 	IndexBuffer& operator=(const IndexBuffer&) = delete;
 	IndexBuffer(IndexBuffer&&) = delete;
 	IndexBuffer& operator=(IndexBuffer&&) = delete;
 	UINT GetCountIndices();
-private:
-	UINT m_iSize_Indices;
+};
+
+
+class StructBuffer : public BaseBuffer<StructBuffer>
+{
+	friend class BaseBuffer<StructBuffer>;
+public:
+	StructBuffer(ID3D11Device* pDevice, void* data, UINT stride, UINT count);
+	StructBuffer(const StructBuffer&) = delete;
+	StructBuffer& operator=(const StructBuffer&) = delete;
+	StructBuffer(StructBuffer&&) = delete;
+	StructBuffer& operator=(StructBuffer&&) = delete;
+
+};
+
+
+class StagingBuffer : public BaseBuffer<StagingBuffer>
+{
+	friend class BaseBuffer<StagingBuffer>;
+public:
+	StagingBuffer(ID3D11Device* pDevice, UINT stride, UINT count);
+	StagingBuffer(const StagingBuffer&) = delete;
+	StagingBuffer& operator=(const StagingBuffer&) = delete;
+	StagingBuffer(StagingBuffer&&) = delete;
+	StagingBuffer& operator=(StagingBuffer&&) = delete;
 };

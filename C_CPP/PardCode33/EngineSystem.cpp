@@ -109,10 +109,28 @@ EngineSystem::~EngineSystem()
 		iter = m_pCPSs.erase(iter);
 	}
 
+	for (auto iter = m_pCCSs.begin(); iter != m_pCCSs.end();)
+	{
+		delete iter->second;
+		iter = m_pCCSs.erase(iter);
+	}
+
 	for (auto iter = m_pCCBs.begin(); iter != m_pCCBs.end();)
 	{
 		delete iter->second;
 		iter = m_pCCBs.erase(iter);
+	}
+
+	for (auto iter = m_pCSTBs.begin(); iter != m_pCSTBs.end();)
+	{
+		delete iter->second;
+		iter = m_pCSTBs.erase(iter);
+	}
+
+	for (auto iter = m_pCSGBs.begin(); iter != m_pCSGBs.end();)
+	{
+		delete iter->second;
+		iter = m_pCSGBs.erase(iter);
 	}
 
 	for (auto iter = m_pCSRVs.begin(); iter != m_pCSRVs.end();)
@@ -131,6 +149,12 @@ EngineSystem::~EngineSystem()
 	{
 		delete iter->second;
 		iter = m_pCRTVs.erase(iter);
+	}
+
+	for (auto iter = m_pCUAVs.begin(); iter != m_pCUAVs.end();)
+	{
+		delete iter->second;
+		iter = m_pCUAVs.erase(iter);
 	}
 
 	if (m_pCSamplers)
@@ -214,16 +238,40 @@ const std::vector<size_t>& EngineSystem::CreateColliders(size_t hash_mesh, E_Col
 			for (UINT idx = 0; idx < pMesh->GetPointsByMeshs().size(); idx++)
 				pMesh->SetCL(_CollisionSystem.CreateCollider(pMesh->GetPath() + std::to_wstring(idx), &pMesh->GetPointsByMeshs()[idx], collider));
 		}
-
 	}
 	return pMesh->GetCLs();
 }
 
+size_t EngineSystem::CreateComputeVertices(size_t hash_mesh)
+{
+	BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hash_mesh);
+	//Compute Collision을 위한 Buffer/View자원 구성
+	std::vector<STB_CollisionVertices> datas;
+	auto Indices = pMesh->GetIndicies();
+	for (UINT idx = 0; idx < Indices.size(); idx++)
+	{
+		auto pos = pMesh->GetPosition(idx);
+		auto bw = pMesh->GetBW(idx);
+		auto bones = bw.first;
+		auto weights = bw.second;
+		datas.push_back({ pos, bones, weights });
+	}
+	pMesh->SetSTB(CreateViews(pMesh->GetPath() + _tocw(typeid(STB_CollisionVertices).name()), sizeof(STB_CollisionVertices), Indices.size(), datas.data()));
+	return pMesh->GetSTB();
+}
+
 size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs)
 {
-	RenderAsset* pRenderAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
-	pRenderAsset->m_hMeshMats = hashs;
-	return pRenderAsset->GetHash();
+	RenderAsset* pAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
+	pAsset->m_hMeshMats = hashs;
+	return pAsset->GetHash();
+}
+
+size_t EngineSystem::CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs)
+{
+	ComputeAsset* pAsset = _ResourceSystem.CreateResource<ComputeAsset>(szName);
+	pAsset->m_hComputeMats = hashs;
+	return pAsset->GetHash();
 }
 
 size_t EngineSystem::CreateMaterial(const std::wstring& szFilePath)
@@ -307,8 +355,8 @@ size_t EngineSystem::CreateMeshFromGeometry(const std::wstring& szName, const st
 {
 	std::wstring szTypename = _tomw(typeid(T).name());
 	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szName + szTypename + L"Mesh", verticesByMaterial, indicesByMaterial, pointsByMeshs, std::vector<std::vector<Vector3>>());
-	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", (UINT*)pMesh->GetIndicies().data(), (UINT)pMesh->GetIndicies().size()));
+	pMesh->SetVB(CreateVertexBuffer(szName + szTypename + L"VB", sizeof(T), (UINT)pMesh->GetVerticesSize(), pMesh->GetVertices()));
+	pMesh->SetIB(CreateIndexBuffer(szName + szTypename + L"IB", (UINT)pMesh->GetIndicies().size(), (UINT*)pMesh->GetIndicies().data()));
 	return pMesh->GetHash();
 }
 
@@ -319,8 +367,8 @@ size_t EngineSystem::CreateMeshFromGeometry(size_t hash_geometry)
 	std::wstring szPath = pGeometry->GetPath();
 	std::wstring szTypename = _tomw(typeid(T).name());
 	Mesh<T>* pMesh = _ResourceSystem.CreateResource<Mesh<T>>(szPath + szTypename + L"Mesh", pGeometry->GetVertices(), pGeometry->GetIndices(), pGeometry->GetPointsByMeshs(), pGeometry->GetPointsByBones());
-	pMesh->SetVB(CreateVertexBuffer(szPath + szTypename + L"VB", pMesh->GetVertices(), sizeof(T), (UINT)pMesh->GetVerticesSize()));
-	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", (UINT*)pMesh->GetIndicies().data(), (UINT)pMesh->GetIndicies().size()));
+	pMesh->SetVB(CreateVertexBuffer(szPath + szTypename + L"VB", sizeof(T), (UINT)pMesh->GetVerticesSize(), pMesh->GetVertices()));
+	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", (UINT)pMesh->GetIndicies().size(), (UINT*)pMesh->GetIndicies().data()));
 	return pMesh->GetHash();
 }
 
@@ -393,11 +441,81 @@ void EngineSystem::Material_SetPS(size_t hash_material, const std::wstring& psNa
 	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
 }
 
+void EngineSystem::Material_SetCS(size_t hash_material, const std::wstring& csName)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetCS(CreateComputeShader(csName, "csmain", "cs_5_0"));
+}
+
 void EngineSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
 	for (const auto& iter : textures)
 		pMaterial->SetTexture(iter);
+}
+
+/////////////////////////////
+//Create APIResources
+/////////////////////////////
+size_t EngineSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCILs.find(hash) != m_pCILs.end()) return hash;
+	_ASEERTION_NULCHK(vsBlob, "Blob is nullptr");
+	InputLayout* pInputLayout = new InputLayout(m_pCDirect3D->GetDevice(), pInputElementDescs, size_layout, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize());
+	_ASEERTION_NULCHK(pInputLayout, "IL is nullptr");
+	m_pCILs[hash] = pInputLayout;
+	return hash;
+}
+
+size_t EngineSystem::CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* vertices)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCVBs.find(hash) != m_pCVBs.end()) return hash;
+	VertexBuffer* pBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), vertices, stride, count);
+	_ASEERTION_NULCHK(pBuffer, "VB is nullptr");
+	m_pCVBs[hash] = pBuffer;
+	return hash;
+}
+
+size_t EngineSystem::CreateIndexBuffer(const std::wstring& szName, UINT stride, void* indices)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCIBs.find(hash) != m_pCIBs.end()) return hash;
+	IndexBuffer* pBuffer = new IndexBuffer(m_pCDirect3D->GetDevice(), indices, stride);
+	_ASEERTION_NULCHK(pBuffer, "IB is nullptr");
+	m_pCIBs[hash] = pBuffer;
+	return hash;
+}
+
+size_t EngineSystem::CreateConstantBuffer(const type_info& typeinfo, UINT stride, void* data)
+{
+	size_t hash = typeinfo.hash_code();
+	if (m_pCCBs.find(hash) != m_pCCBs.end()) return hash;
+	ConstantBuffer* pBuffer = new ConstantBuffer(m_pCDirect3D->GetDevice(), data, stride);
+	_ASEERTION_NULCHK(pBuffer, "CB is nullptr");
+	m_pCCBs[hash] = pBuffer;
+	return hash;
+}
+
+size_t EngineSystem::CreateStructBuffer(const std::wstring& szName, UINT stride, UINT count, void* data)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCSTBs.find(hash) != m_pCSTBs.end()) return hash;
+	StructBuffer* pBuffer = new StructBuffer(m_pCDirect3D->GetDevice(), data, stride, count);
+	_ASEERTION_NULCHK(pBuffer, "STB is nullptr");
+	m_pCSTBs[hash] = pBuffer;
+	return hash;
+}
+
+size_t EngineSystem::CreateStagingBuffer(const std::wstring& szName, UINT stride, UINT count)
+{
+	size_t hash = Hasing_wstring(szName);
+	if (m_pCSGBs.find(hash) != m_pCSGBs.end()) return hash;
+	StagingBuffer* pBuffer = new StagingBuffer(m_pCDirect3D->GetDevice(), stride, count);
+	_ASEERTION_NULCHK(pBuffer, "SGB is nullptr");
+	m_pCSGBs[hash] = pBuffer;
+	return hash;
 }
 
 ID3DBlob* EngineSystem::CompileShader(std::wstring shaderName, std::string entryName, std::string target)
@@ -419,78 +537,386 @@ ID3DBlob* EngineSystem::CompileShader(std::wstring shaderName, std::string entry
 	return pBlob;
 }
 
-size_t EngineSystem::CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices)
+size_t EngineSystem::CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	size_t hash = Hasing_wstring(szName);
-	if (m_pCVBs.find(hash) != m_pCVBs.end()) return hash;
-	VertexBuffer* pVertexBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), vertices, size_vertex, size_vertices);
-	_ASEERTION_NULCHK(pVertexBuffer, "VB is nullptr");
-	m_pCVBs[hash] = pVertexBuffer;
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCVSs.find(hash) != m_pCVSs.end()) return hash;
+
+	VertexShader* pShader = new VertexShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "VS is nullptr");
+	m_pCVSs[hash] = pShader;
 	return hash;
 }
 
-size_t EngineSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob)
+size_t EngineSystem::CreateHullShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	size_t hash = Hasing_wstring(szName);
-	if (m_pCILs.find(hash) != m_pCILs.end()) return hash;
-	_ASEERTION_NULCHK(vsBlob, "Blob is nullptr");
-	InputLayout* pInputLayout = new InputLayout(m_pCDirect3D->GetDevice(), pInputElementDescs, size_layout, vsBlob->GetBufferPointer(), vsBlob->GetBufferSize());
-	_ASEERTION_NULCHK(pInputLayout, "IL is nullptr");
-	m_pCILs[hash] = pInputLayout;
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCHSs.find(hash) != m_pCHSs.end()) return hash;
+
+	HullShader* pShader = new HullShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "GS is nullptr");
+	m_pCHSs[hash] = pShader;
 	return hash;
 }
 
-size_t EngineSystem::CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices)
+size_t EngineSystem::CreateDomainShader(std::wstring shaderName, std::string entryName, std::string target)
 {
-	size_t hash = Hasing_wstring(szName);
-	if (m_pCIBs.find(hash) != m_pCIBs.end()) return hash;
-	IndexBuffer* pIndexBuffer = new IndexBuffer(m_pCDirect3D->GetDevice(), indices, size_indices);
-	_ASEERTION_NULCHK(pIndexBuffer, "IB is nullptr");
-	m_pCIBs[hash] = pIndexBuffer;
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCDSs.find(hash) != m_pCDSs.end()) return hash;
+
+	DomainShader* pShader = new DomainShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "GS is nullptr");
+	m_pCDSs[hash] = pShader;
 	return hash;
 }
 
-//size_t EngineSystem::CreateUnorderedAccessView(const std::wstring& szName)
-//{
-//	size_t hash = Hasing_wstring(szName);
-//	//UAV에 사용할 설정들
-//	HRESULT hResult;
-//	ID3D11Buffer* pBuffer;
-//
-//	D3D11_UNORDERED_ACCESS_VIEW_DESC desc_uav;
-//	ZeroMemory(&desc_uav, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
-//	desc_uav.Format = DXGI_FORMAT_UNKNOWN;
-//	desc_uav.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
-//	UnorderedAccessView* pUAV;
-//	if (m_pCUAVs.find(hash) != m_pCUAVs.end())
-//	{
-//		pUAV = m_pCUAVs[hash];
-//		pUAV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_uav);
-//	}
-//	else
-//	{
-//		pUAV = new UnorderedAccessView(m_pCDirect3D->GetDevice(), pBuffer, desc_uav);
-//		m_pCUAVs[hash] = pUAV;
-//	}
-//
-//	D3D11_SHADER_RESOURCE_VIEW_DESC desc_srv;
-//	desc_srv.Format = DXGI_FORMAT_UNKNOWN;
-//	desc_srv.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-//	desc_srv.Texture2D.MipLevels = 1;
-//	ShaderResourceView* pSRV;
-//	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
-//	{
-//		pSRV = m_pCSRVs[hash];
-//		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
-//	}
-//	else
-//	{
-//		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc_srv);
-//		m_pCSRVs[hash] = pSRV;
-//	}
-//	return hash;
-//}
+size_t EngineSystem::CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCGSs.find(hash) != m_pCGSs.end()) return hash;
 
+	GeometryShader* pShader = new GeometryShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "GS is nullptr");
+	m_pCGSs[hash] = pShader;
+	return hash;
+}
+
+size_t EngineSystem::CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCPSs.find(hash) != m_pCPSs.end()) return hash;
+
+	PixelShader* pShader = new PixelShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "PS is nullptr");
+	m_pCPSs[hash] = pShader;
+	return hash;
+}
+
+size_t EngineSystem::CreateComputeShader(std::wstring shaderName, std::string entryName, std::string target)
+{
+	size_t hash = Hasing_wstring(shaderName);
+	if (m_pCCSs.find(hash) != m_pCCSs.end()) return hash;
+
+	ComputeShader* pShader = new ComputeShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
+	_ASEERTION_NULCHK(pShader, "CS is nullptr");
+	m_pCCSs[hash] = pShader;
+	return hash;
+}
+
+ID3D11Resource* EngineSystem::CreateD3DBuffer(const ScratchImage* image)
+{
+	ID3D11Resource* pBuffer;
+	HRESULT hResult;
+	hResult = DirectX::CreateTexture(m_pCDirect3D->GetDevice(), image->GetImages(), image->GetImageCount(), image->GetMetadata(), &pBuffer);
+	_ASEERTION_CREATE(hResult, "Texture not create successfully");
+	return pBuffer;
+}
+
+ID3D11Resource* EngineSystem::CreateD3DBuffer(const std::wstring& szName, UINT stride, UINT count, void* data)
+{
+	size_t hash = CreateStructBuffer(szName, stride, count, data);
+	return m_pCSTBs[hash]->GetBuffer();
+}
+
+ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT height)
+{
+	HRESULT hResult;
+	// 렌더 타겟 텍스처 설명을 초기화합니다.
+	ID3D11Texture2D* pBuffer;
+	D3D11_TEXTURE2D_DESC desc;
+	desc.Width = width;
+	desc.Height = height;
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.SampleDesc.Count = 1;
+	desc.SampleDesc.Quality = 0;
+	desc.MiscFlags = 0;
+	desc.BindFlags = 0;
+	// 비트 연산을 통해 BindFlags 설정
+	if (bindFlags & _RTV) desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+	if (bindFlags & _SRV) desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+	if (bindFlags & _DSV) desc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+	if (bindFlags & _UAV) desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+
+	desc.Usage = D3D11_USAGE_DEFAULT;
+	desc.CPUAccessFlags = 0;
+
+	switch (bindFlags)
+	{
+		case _Target_Compute_Tex:
+		case _Target_ResourceView:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
+
+		}break;
+
+		case _Target_DepthView:
+		{
+			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+		}break;
+
+		case _Target_Cubemap_ResourceView:
+		{
+			desc.MipLevels = 0;
+			desc.ArraySize = 6;
+			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
+		}break;
+
+		case _Target_Cubemap_DepthView:
+		{
+			desc.MipLevels = 0;
+			desc.ArraySize = 6;
+			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
+			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
+		}break;
+	}
+
+	// 렌더 타겟 텍스처를 만듭니다.
+	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&desc, NULL, &pBuffer);
+	_ASEERTION_CREATE(hResult, "CreateResource");
+	return pBuffer;
+}
+
+size_t EngineSystem::CreateShaderResourceView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
+{
+	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
+	desc.Texture2D.MostDetailedMip = 0;
+	desc.Texture2D.MipLevels = 1;
+	switch (bindFlags)
+	{
+		case _TEX:
+		{
+			D3D11_TEXTURE2D_DESC texDesc;
+			static_cast<ID3D11Texture2D*>(pBuffer)->GetDesc(&texDesc);
+			desc.Format = texDesc.Format;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		}break;
+
+		case _Target_ResourceView:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		}break;
+
+		case _Target_DepthView:
+		{
+			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		}break;
+
+		case _Target_Compute_Buffer:
+		{
+			desc.Format = DXGI_FORMAT_UNKNOWN;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
+
+			//버퍼의 원소 카운팅을 구성한다
+			D3D11_BUFFER_DESC bufferDesc;
+			ID3D11Buffer* pBuf = static_cast<ID3D11Buffer*>(pBuffer);
+			pBuf->GetDesc(&bufferDesc);
+
+			// 원소 개수 = 전체바이트 / Stride
+			desc.BufferEx.FirstElement = 0;
+			desc.BufferEx.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;
+			desc.BufferEx.Flags = 0;
+		}break;
+
+		case _Target_Cubemap_ResourceView:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+			desc.Texture2D.MostDetailedMip = 0;
+			desc.Texture2D.MipLevels = -1;
+		}break;
+
+		case _Target_Cubemap_DepthView:
+		{
+			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+			desc.Texture2D.MostDetailedMip = 0;
+			desc.Texture2D.MipLevels = -1;
+		}break;
+	}
+
+	ShaderResourceView* pSRV;
+	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
+	{
+		pSRV = m_pCSRVs[hash];
+		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
+	}
+	else
+	{
+		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc);
+		m_pCSRVs[hash] = pSRV;
+	}
+	return hash;
+}
+
+size_t EngineSystem::CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
+{
+	D3D11_RENDER_TARGET_VIEW_DESC desc;
+	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	desc.Texture2DArray.ArraySize = 1;
+	desc.Texture2D.MipSlice = 0;
+
+	switch (bindFlags)
+	{
+		case _BB:
+		{
+			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		}break;
+
+		case _RTV:
+		case _Target_ResourceView:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		}break;
+
+		case _Target_Compute_Buffer:
+		{
+			desc.Format = DXGI_FORMAT_UNKNOWN;
+		}break;
+
+		case _Target_Cubemap_ResourceView:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+			desc.Texture2DArray.FirstArraySlice = 0;
+			desc.Texture2DArray.ArraySize = 6;
+			desc.Texture2DArray.MipSlice = 0;
+		}break;
+	}
+
+	RenderTargetView* pRTV;
+	if (m_pCRTVs.find(hash) != m_pCRTVs.end())
+	{
+		pRTV = m_pCRTVs[hash];
+		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
+	}
+	else
+	{
+		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, desc);
+		m_pCRTVs[hash] = pRTV;
+	}
+	return hash;
+}
+
+size_t EngineSystem::CreateDepthStencilView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
+{
+	D3D11_DEPTH_STENCIL_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
+	desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;													//깊이맵은 D24_UNROM_S8_UINT가정석
+	desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	desc.Texture2D.MipSlice = 0;
+
+	switch (bindFlags)
+	{
+		case _DSV:
+		case _Target_DepthView:
+		{
+			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		}break;
+
+		case _Target_Cubemap_DepthView:
+		{
+			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+			desc.Texture2DArray.FirstArraySlice = 0;
+			desc.Texture2DArray.ArraySize = 6;
+			desc.Texture2DArray.MipSlice = 0;
+		}break;
+	}
+
+	DepthStencilView* pDSV;
+	if (m_pCDSVs.find(hash) != m_pCDSVs.end())
+	{
+		pDSV = m_pCDSVs[hash];
+		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
+	}
+	else
+	{
+		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, desc);
+		m_pCDSVs[hash] = pDSV;
+	}
+	return hash;
+}
+
+size_t EngineSystem::CreateUnorderedAccessView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
+{
+	D3D11_UNORDERED_ACCESS_VIEW_DESC desc;
+	ZeroMemory(&desc, sizeof(D3D11_UNORDERED_ACCESS_VIEW_DESC));
+	
+	switch (bindFlags)
+	{
+		case _Target_Compute_Tex :
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+			desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+		}break;
+
+		case _Target_Compute_Buffer :
+		{
+			desc.Format = DXGI_FORMAT_UNKNOWN;
+			desc.ViewDimension = D3D11_UAV_DIMENSION_BUFFER;
+			//버퍼의 원소 카운팅을 구성한다
+			D3D11_BUFFER_DESC bufferDesc;
+			ID3D11Buffer* pBuf = static_cast<ID3D11Buffer*>(pBuffer);
+			pBuf->GetDesc(&bufferDesc);
+
+			// 원소 개수 = 전체바이트 / Stride
+			desc.Buffer.FirstElement = 0;
+			desc.Buffer.NumElements = bufferDesc.ByteWidth / bufferDesc.StructureByteStride;;
+			desc.Buffer.Flags = 0;
+		}break;
+	}
+
+	UnorderedAccessView* pUAV;
+	if (m_pCUAVs.find(hash) != m_pCUAVs.end())
+	{
+		pUAV = m_pCUAVs[hash];
+		pUAV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
+	}
+	else
+	{
+		pUAV = new UnorderedAccessView(m_pCDirect3D->GetDevice(), pBuffer, desc);
+		m_pCUAVs[hash] = pUAV;
+	}
+	return hash;
+}
+
+size_t EngineSystem::CreateViews(const std::wstring& szName, UINT bindFlags, UINT width, UINT height)
+{
+	size_t hash = Hasing_wstring(szName);
+	ID3D11Resource* pBuffer = CreateD3DBuffer(bindFlags, width, height);
+
+	if (bindFlags & _SRV)
+		CreateShaderResourceView(hash, pBuffer, bindFlags);
+	if (bindFlags & _RTV)
+		CreateRenderTargetView(hash, pBuffer, bindFlags);
+	if (bindFlags & _DSV)
+		CreateDepthStencilView(hash, pBuffer, bindFlags);
+	if (bindFlags & _UAV)
+		CreateUnorderedAccessView(hash, pBuffer, bindFlags);
+
+	pBuffer->Release();
+	return hash;
+}
+
+size_t EngineSystem::CreateViews(const std::wstring& szName, UINT stride, UINT count, void* data)
+{
+	size_t hash = Hasing_wstring(szName);
+	ID3D11Resource* pBuffer = CreateD3DBuffer(szName, stride, count, data);
+	CreateShaderResourceView(hash, pBuffer, _Target_Compute_Buffer);
+	CreateUnorderedAccessView(hash, pBuffer, _Target_Compute_Buffer);
+	return hash;
+}
+
+/////////////////////////////
+//API Usage
+/////////////////////////////
 void EngineSystem::OnResize(UINT width, UINT height)
 {
 	if (!m_pCDirect3D) return;
@@ -511,12 +937,12 @@ void EngineSystem::OnResize(UINT width, UINT height)
 	ID3D11Texture2D* pBuffer;
 	hResult = m_pCSwapChain->GetSwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBuffer);
 	_ASEERTION_CREATE(hResult, "BackBuffer");
-	m_hash_RTV_BB = CreateRenderTargetView(Hasing_wstring(L"BackBufferRTV"), pBuffer, _BB);
+	m_hash_RTV_BB = CreateRenderTargetView(Hasing_wstring(L"RTV_BB"), pBuffer, _BB);
 	pBuffer->Release();
 
 	//RTT
-	m_hash_RTV_0 = CreateViews(L"RTV0", _Target_ResourceView, g_iWidth, g_iHeight);
-	m_hash_DSV_0 = CreateViews(L"DSV0", _Target_DepthView, g_iWidth, g_iHeight);
+	m_hash_RTV_0 = CreateViews(L"RTV_BB_UI", _Target_ResourceView, g_iWidth, g_iHeight);
+	m_hash_DSV_0 = CreateViews(L"DSV_BB_UI", _Target_DepthView, g_iWidth, g_iHeight);
 	SetViewportSize(&m_vp_BB, g_iWidth, g_iHeight);
 }
 
@@ -539,16 +965,16 @@ void EngineSystem::ClearDepthStencilView(size_t hashDSV)
 	m_pCDirect3D->GetDeviceContext()->ClearDepthStencilView(m_pCDSVs[hashDSV]->GetView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
-void EngineSystem::GenerateMipMaps(size_t hashSRV)
-{
-	_ASEERTION_NULCHK(m_pCSRVs.find(hashSRV) != m_pCSRVs.end(), "NotExist");
-	m_pCDirect3D->GetDeviceContext()->GenerateMips(m_pCSRVs[hashSRV]->GetView());
-}
-
 void EngineSystem::UpdateConstantBuffer(size_t hashCB, void* pData)
 {
 	_ASEERTION_NULCHK(m_pCCBs.find(hashCB) != m_pCCBs.end(), "NotExist");
 	m_pCCBs[hashCB]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), pData);
+}
+
+void EngineSystem::GenerateMipMaps(size_t hashSRV)
+{
+	_ASEERTION_NULCHK(m_pCSRVs.find(hashSRV) != m_pCSRVs.end(), "NotExist");
+	m_pCDirect3D->GetDeviceContext()->GenerateMips(m_pCSRVs[hashSRV]->GetView());
 }
 
 void EngineSystem::SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology)
@@ -719,318 +1145,5 @@ void EngineSystem::Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffse
 void EngineSystem::SwapchainPresent(bool vsync)
 {
 	m_pCSwapChain->GetSwapChain()->Present(vsync, NULL);
-}
-
-size_t EngineSystem::CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data)
-{
-	size_t hash = typeinfo.hash_code();
-	if (m_pCCBs.find(hash) != m_pCCBs.end()) return hash;
-	ConstantBuffer* pConstantBuffer = new ConstantBuffer(m_pCDirect3D->GetDevice(), data, size_buffer);
-	_ASEERTION_NULCHK(pConstantBuffer, "CB is nullptr");
-	m_pCCBs[hash] = pConstantBuffer;
-	return hash;
-}
-
-ID3D11Resource* EngineSystem::CreateD3DBuffer(const ScratchImage* image)
-{
-	ID3D11Resource* pBuffer;
-	HRESULT hResult;
-	hResult = DirectX::CreateTexture(m_pCDirect3D->GetDevice(), image->GetImages(), image->GetImageCount(), image->GetMetadata(), &pBuffer);
-	_ASEERTION_CREATE(hResult, "Texture not create successfully");
-	return pBuffer;
-}
-
-ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT height)
-{
-	HRESULT hResult;
-	// 렌더 타겟 텍스처 설명을 초기화합니다.
-	ID3D11Texture2D* pBuffer;
-	D3D11_TEXTURE2D_DESC desc;
-	desc.Width = width;
-	desc.Height = height;
-	desc.MipLevels = 1;
-	desc.ArraySize = 1;
-	desc.SampleDesc.Count = 1;
-	desc.SampleDesc.Quality = 0;
-	desc.MiscFlags = 0;
-	desc.BindFlags = 0;
-	// 비트 연산을 통해 BindFlags 설정
-	if (bindFlags & _RTV) desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
-	if (bindFlags & _SRV) desc.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
-	if (bindFlags & _DSV) desc.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
-	if (bindFlags & _UAV) desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
-
-	desc.Usage = D3D11_USAGE_DEFAULT;
-	desc.CPUAccessFlags = 0;
-	
-	switch (bindFlags)
-	{
-		case _Target_ResourceView :
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
-		}break;
-
-		case _Target_DepthView :
-		{
-			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-		}break;
-
-		case _Target_Compute:
-		{
-			desc.Format = DXGI_FORMAT_UNKNOWN;
-		}break;
-
-		case _Target_Cubemap_ResourceView:
-		{
-			desc.MipLevels = 0;
-			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
-		}break;
-
-		case _Target_Cubemap_DepthView:
-		{
-			desc.MipLevels = 0;
-			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_DEPTH_STENCIL;
-			desc.MiscFlags = D3D11_RESOURCE_MISC_TEXTURECUBE;
-		}break;
-	}
-
-	// 렌더 타겟 텍스처를 만듭니다.
-	hResult = m_pCDirect3D->GetDevice()->CreateTexture2D(&desc, NULL, &pBuffer);
-	_ASEERTION_CREATE(hResult, "CreateResource");
-	return pBuffer;
-}
-
-size_t EngineSystem::CreateShaderResourceView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
-{
-	D3D11_SHADER_RESOURCE_VIEW_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-	desc.Texture2D.MostDetailedMip = 0;
-	desc.Texture2D.MipLevels = 1;
-	switch (bindFlags)
-	{
-		case _TEX:
-		{
-			D3D11_TEXTURE2D_DESC texDesc;
-			static_cast<ID3D11Texture2D*>(pBuffer)->GetDesc(&texDesc);
-			desc.Format = texDesc.Format;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		}break;
-
-		case _Target_ResourceView:
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		}break;
-
-		case _Target_DepthView:
-		{
-			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		}break;
-
-		case _Target_Compute:
-		{
-			desc.Format = DXGI_FORMAT_UNKNOWN;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-		}break;
-
-		case _Target_Cubemap_ResourceView:
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-			desc.Texture2D.MostDetailedMip = 0;
-			desc.Texture2D.MipLevels = -1;
-		}break;
-
-		case _Target_Cubemap_DepthView:
-		{
-			desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
-			desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-			desc.Texture2D.MostDetailedMip = 0;
-			desc.Texture2D.MipLevels = -1;
-		}break;
-	}
-
-	ShaderResourceView* pSRV;
-	if (m_pCSRVs.find(hash) != m_pCSRVs.end())
-	{
-		pSRV = m_pCSRVs[hash];
-		pSRV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
-	}
-	else
-	{
-		pSRV = new ShaderResourceView(m_pCDirect3D->GetDevice(), pBuffer, desc);
-		m_pCSRVs[hash] = pSRV;
-	}
-	return hash;
-}
-
-size_t EngineSystem::CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
-{
-	D3D11_RENDER_TARGET_VIEW_DESC desc;
-	desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-	desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	desc.Texture2DArray.ArraySize = 1;
-	desc.Texture2D.MipSlice = 0;
-
-	switch (bindFlags)
-	{
-		case _BB :
-		{
-			desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		}break;
-
-		case _RTV:
-		case _Target_ResourceView:
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		}break;
-
-		case _Target_Compute:
-		{
-			desc.Format = DXGI_FORMAT_UNKNOWN;
-		}break;
-
-		case _Target_Cubemap_ResourceView:
-		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-			desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-			desc.Texture2DArray.FirstArraySlice = 0;
-			desc.Texture2DArray.ArraySize = 6;
-			desc.Texture2DArray.MipSlice = 0;
-		}break;
-	}
-
-	RenderTargetView* pRTV;
-	if (m_pCRTVs.find(hash) != m_pCRTVs.end())
-	{
-		pRTV = m_pCRTVs[hash];
-		pRTV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
-	}
-	else
-	{
-		pRTV = new RenderTargetView(m_pCDirect3D->GetDevice(), pBuffer, desc);
-		m_pCRTVs[hash] = pRTV;
-	}
-	return hash;
-}
-
-size_t EngineSystem::CreateDepthStencilView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags)
-{
-	D3D11_DEPTH_STENCIL_VIEW_DESC desc;
-	ZeroMemory(&desc, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-	desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;													//깊이맵은 D24_UNROM_S8_UINT가정석
-	desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	desc.Texture2D.MipSlice = 0;
-
-	switch (bindFlags)
-	{
-		case _DSV:
-		case _Target_DepthView:
-		{
-			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		}break;
-
-		case _Target_Cubemap_DepthView:
-		{
-			desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
-			desc.Texture2DArray.FirstArraySlice = 0;
-			desc.Texture2DArray.ArraySize = 6;
-			desc.Texture2DArray.MipSlice = 0;
-		}break;
-	}
-
-	DepthStencilView* pDSV;
-	if (m_pCDSVs.find(hash) != m_pCDSVs.end())
-	{
-		pDSV = m_pCDSVs[hash];
-		pDSV->Resize(m_pCDirect3D->GetDevice(), pBuffer, desc);
-	}
-	else
-	{
-		pDSV = new DepthStencilView(m_pCDirect3D->GetDevice(), pBuffer, desc);
-		m_pCDSVs[hash] = pDSV;
-	}
-	return hash;
-}
-
-size_t EngineSystem::CreateViews(const std::wstring& szName, UINT bindFlags, UINT width, UINT height)
-{
-	size_t hash = Hasing_wstring(szName);
-	ID3D11Resource* pBuffer = CreateD3DBuffer(bindFlags, width, height);
-
-	if (bindFlags & _SRV)
-		CreateShaderResourceView(hash, pBuffer, bindFlags);
-	if (bindFlags & _RTV)
-		CreateRenderTargetView(hash, pBuffer, bindFlags);
-	if (bindFlags & _DSV)
-		CreateDepthStencilView(hash, pBuffer, bindFlags);
-	if (bindFlags & _UAV)
-	{
-
-	}
-
-	pBuffer->Release();
-	return hash;
-}
-
-size_t EngineSystem::CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target)
-{
-	size_t hash = Hasing_wstring(shaderName);
-	if (m_pCVSs.find(hash) != m_pCVSs.end()) return hash;
-
-	VertexShader* pVertexShader = new VertexShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pVertexShader, "VS is nullptr");
-	m_pCVSs[hash] = pVertexShader;
-	return hash;
-}
-
-size_t EngineSystem::CreateHullShader(std::wstring shaderName, std::string entryName, std::string target)
-{
-	size_t hash = Hasing_wstring(shaderName);
-	if (m_pCHSs.find(hash) != m_pCHSs.end()) return hash;
-
-	HullShader* pHullShader = new HullShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pHullShader, "GS is nullptr");
-	m_pCHSs[hash] = pHullShader;
-	return hash;
-}
-
-size_t EngineSystem::CreateDomainShader(std::wstring shaderName, std::string entryName, std::string target)
-{
-	size_t hash = Hasing_wstring(shaderName);
-	if (m_pCDSs.find(hash) != m_pCDSs.end()) return hash;
-
-	DomainShader* pDomainShader = new DomainShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pDomainShader, "GS is nullptr");
-	m_pCDSs[hash] = pDomainShader;
-	return hash;
-}
-
-size_t EngineSystem::CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target)
-{
-	size_t hash = Hasing_wstring(shaderName);
-	if (m_pCGSs.find(hash) != m_pCGSs.end()) return hash;
-
-	GeometryShader* pGeometryShader = new GeometryShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pGeometryShader, "GS is nullptr");
-	m_pCGSs[hash] = pGeometryShader;
-	return hash;
-}
-
-size_t EngineSystem::CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target)
-{
-	size_t hash = Hasing_wstring(shaderName);
-	if (m_pCPSs.find(hash) != m_pCPSs.end()) return hash;
-
-	PixelShader* pPixelShader = new PixelShader(m_pCDirect3D->GetDevice(), CompileShader(shaderName, entryName, target));
-	_ASEERTION_NULCHK(pPixelShader, "PS is nullptr");
-	m_pCPSs[hash] = pPixelShader;
-	return hash;
 }
 

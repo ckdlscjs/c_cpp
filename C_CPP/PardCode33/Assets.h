@@ -15,6 +15,24 @@ inline RenderAsset::RenderAsset(size_t hash, const std::wstring& szFilePath) : B
 {
 }
 
+
+class ComputeAsset : public BaseResource<ComputeAsset>
+{
+	friend class BaseResource<ComputeAsset>;
+public:
+	ComputeAsset(size_t hash, const std::wstring& szName);
+	ComputeAsset(const ComputeAsset&) = delete;
+	ComputeAsset& operator=(const ComputeAsset&) = delete;
+	ComputeAsset(ComputeAsset&&) = delete;
+	ComputeAsset& operator=(ComputeAsset&&) = delete;
+	std::vector<size_t> m_hComputeMats;
+};
+
+inline ComputeAsset::ComputeAsset(size_t hash, const std::wstring& szName)
+{
+}
+
+
 /*
 class ColliderAsset : public BaseResource<ColliderAsset>
 {
@@ -31,3 +49,4 @@ inline ColliderAsset::ColliderAsset(size_t hash, const std::wstring& szFilePath)
 {
 }
 */
+

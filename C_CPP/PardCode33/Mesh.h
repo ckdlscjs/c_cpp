@@ -25,6 +25,8 @@ public:
 	size_t GetVB() const;
 	void SetIB(size_t hashIB);
 	size_t GetIB() const;
+	void SetSTB(size_t hashSTB);
+	size_t GetSTB() const;
 
 protected:
 	std::vector<std::vector<Vector3>>							m_Points_Bones;
@@ -34,6 +36,7 @@ protected:
 	std::vector<RenderCounts>									m_RenderIndices;
 	size_t														m_lVB;
 	size_t														m_lIB;
+	size_t														m_lSTB;
 	std::vector<size_t>											m_lCLs;
 };
 inline BaseMesh::BaseMesh(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath), m_lVB(0), m_lIB(0)
@@ -77,6 +80,16 @@ inline void BaseMesh::SetIB(size_t hashIB)
 inline size_t BaseMesh::GetIB() const
 {
 	return m_lIB;
+}
+
+inline void BaseMesh::SetSTB(size_t hashSTB)
+{
+	m_lSTB = hashSTB;
+}
+
+inline size_t BaseMesh::GetSTB() const
+{
+	return m_lSTB;
 }
 
 inline void BaseMesh::SetCL(size_t hashCL)

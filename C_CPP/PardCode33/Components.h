@@ -80,7 +80,7 @@ struct C_Render
 {
 public:
 	bool bRenderable = false;
-	size_t hash_ra = 0;
+	size_t hash_asset_Render = 0;
 };
 
 struct C_Collider 
@@ -208,3 +208,8 @@ struct T_Light_Directional {};
 struct T_Light_Point {};
 struct T_Light_Spot {};
 
+struct C_Compute
+{
+public:
+	size_t hash_asset_Compute = 0;
+};

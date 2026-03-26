@@ -86,6 +86,7 @@ enum class E_Texture
 	Metalic,
 	AmbientOcclusion,
 	Emissive,
+	Compute,
 	None,
 	count,
 };
@@ -144,7 +145,8 @@ Format (무엇을 담는가?)
 #define _CUBE 1 << 6
 #define _Target_ResourceView (_SRV | _RTV)
 #define _Target_DepthView (_SRV | _DSV)
-#define _Target_Compute (_SRV | _UAV)
+#define _Target_Compute_Tex (_SRV | _UAV | _TEX)
+#define _Target_Compute_Buffer (_SRV | _UAV)
 #define _Target_Cubemap_ResourceView (_SRV | _RTV | _CUBE)
 #define _Target_Cubemap_DepthView (_SRV | _DSV | _CUBE)
 
@@ -800,6 +802,16 @@ struct CB_CubeMap
 {
 	Matrix4x4 matViews[6];
 };
+
+__declspec(align(16))
+struct STB_CollisionVertices
+{
+	Vector3 vPosition;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
+};
+
+
 
 /*
 		TBN구성에 사용할 tangent(접벡터), binormal(종벡터)를 계산한다

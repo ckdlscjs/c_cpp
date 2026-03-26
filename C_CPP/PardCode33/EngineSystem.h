@@ -9,6 +9,7 @@ class VertexBuffer;
 class ConstantBuffer;
 class IndexBuffer;
 class StructBuffer;
+class StagingBuffer;
 
 class VertexShader;
 class InputLayout;
@@ -16,6 +17,7 @@ class HullShader;
 class DomainShader;
 class GeometryShader;
 class PixelShader;
+class ComputeShader;
 
 class ShaderResourceView;
 class RenderTargetView;
@@ -72,10 +74,11 @@ public:
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
 	template<typename T>
 	void Material_SetIL(size_t hash_material, const std::wstring& vsName);
-	void Material_SetHS(size_t hash_material, const std::wstring& gsName);
-	void Material_SetDS(size_t hash_material, const std::wstring& gsName);
+	void Material_SetHS(size_t hash_material, const std::wstring& hsName);
+	void Material_SetDS(size_t hash_material, const std::wstring& dsName);
 	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
 	void Material_SetPS(size_t hash_material, const std::wstring& psName);
+	void Material_SetCS(size_t hash_material, const std::wstring& csName);
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
 	//Animation
@@ -83,46 +86,41 @@ public:
 
 	//Collider
 	const std::vector<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+	size_t CreateComputeVertices(size_t hash_mesh);
 
 	//Asset(Components <-> API) 리소스 생성
 	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
+	size_t CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs);
 	//size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
-
 
 	/////////////////////////////
 	//Create APIResources
 	/////////////////////////////
 public:
-	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
-	size_t CreateVertexBuffer(const std::wstring& szName, void* vertices, UINT size_vertex, UINT size_vertices);
-	size_t CreateIndexBuffer(const std::wstring& szName, void* indices, UINT size_indices);
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
+	size_t CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* vertices);
+	size_t CreateIndexBuffer(const std::wstring& szName, UINT stride, void* indices);
+	size_t CreateConstantBuffer(const type_info& typeinfo, UINT stride, void* data = nullptr);
+	size_t CreateStructBuffer(const std::wstring& szName, UINT stride, UINT count, void* data = nullptr);
+	size_t CreateStagingBuffer(const std::wstring& szName, UINT stride, UINT count);
+
+	ID3DBlob* CompileShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateVertexShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateHullShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateDomainShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreateGeometryShader(std::wstring shaderName, std::string entryName, std::string target);
 	size_t CreatePixelShader(std::wstring shaderName, std::string entryName, std::string target);
-	size_t CreateConstantBuffer(const type_info& typeinfo, UINT size_buffer, void* data = nullptr);
+	size_t CreateComputeShader(std::wstring shaderName, std::string entryName, std::string target);
 
 	ID3D11Resource* CreateD3DBuffer(const ScratchImage* image);
+	ID3D11Resource* CreateD3DBuffer(const std::wstring& szName, UINT stride, UINT count, void* data);
 	ID3D11Texture2D* CreateD3DBuffer(UINT bindFlags, UINT width, UINT height);
 	size_t CreateShaderResourceView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
 	size_t CreateRenderTargetView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
 	size_t CreateDepthStencilView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
-	size_t CreateView_UnorderedAccess();
-
+	size_t CreateUnorderedAccessView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
 	size_t CreateViews(const std::wstring& szName, UINT bindFlags, UINT width, UINT height);
-
-	/*void CreateCubeMapTexture(int iSize);
-	size_t CreateShadowMapTexture(const int width, const int height);
-	size_t CreateShaderResourceView(const std::wstring& szName, const ScratchImage* resource);
-	size_t CreateRenderTargetView(const std::wstring& szName);
-	size_t CreateRenderTargetView(const std::wstring& szName, UINT width, UINT height);
-	size_t CreateDepthStencilView(const std::wstring& szName, UINT width, UINT height);
-	size_t CreateUnorderedAccessView(const std::wstring& szName);
-	std::vector<size_t> CreateCubeMapViews(const int width, const int height);
-	std::vector<size_t> CreateCubeMapView(const int width, const int height);*/
-
+	size_t CreateViews(const std::wstring& szName, UINT stride, UINT count, void* data);
 	
 	/////////////////////////////
 	//API Usage
@@ -132,8 +130,10 @@ public:
 	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
 	void ClearRenderTargetView(size_t hashRTV, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
 	void ClearDepthStencilView(size_t hashDSV);
-	void GenerateMipMaps(size_t hashSRV);
+
 	void UpdateConstantBuffer(size_t hash, void* pData);
+
+	void GenerateMipMaps(size_t hashSRV);
 
 	void SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology);
 	void SetIA_InputLayout(size_t hashIL);
@@ -168,6 +168,7 @@ public:
 
 	void Draw_Vertices(UINT vertexCount, UINT startIdx);
 	void Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset);
+
 	void SwapchainPresent(bool vsync);
 
 	//사용을위해 분할한 클래스객체들
@@ -180,20 +181,23 @@ private:
 	BlendState*											m_pCBlends = nullptr;
 	std::unordered_map<size_t, VertexBuffer*>			m_pCVBs;
 	std::unordered_map<size_t, IndexBuffer*>			m_pCIBs;
+	std::unordered_map<size_t, StructBuffer*>			m_pCSTBs;
+	std::unordered_map<size_t, StagingBuffer*>			m_pCSGBs;
+	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;
 	std::unordered_map<size_t, InputLayout*>			m_pCILs;
 	std::unordered_map<size_t, VertexShader*>			m_pCVSs;
 	std::unordered_map<size_t, HullShader*>				m_pCHSs;
 	std::unordered_map<size_t, DomainShader*>			m_pCDSs;
 	std::unordered_map<size_t, GeometryShader*>			m_pCGSs;
 	std::unordered_map<size_t, PixelShader*>			m_pCPSs;
-	std::unordered_map<size_t, ConstantBuffer*>			m_pCCBs;
+	std::unordered_map<size_t, ComputeShader*>			m_pCCSs;
 	std::unordered_map<size_t, ShaderResourceView*>		m_pCSRVs;
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
 	std::unordered_map<size_t, UnorderedAccessView*>	m_pCUAVs;
 
-	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요
 public:
+	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요
 	size_t												m_hash_light_directional;
 	size_t												m_hash_light_point;
 	size_t												m_hash_light_spot;
