@@ -46,9 +46,9 @@ public:
 	/////////////////////////////
 	//응용프로그램 부 접근
 	/////////////////////////////
-	//Device/Context
 	ID3D11Device* GetD3DDevice() const;
 	ID3D11DeviceContext* GetD3DDeviceContext() const;
+	IDXGISwapChain* GetSwapChain() const;
 
 	/////////////////////////////
 	//Create FromResources
@@ -98,7 +98,7 @@ public:
 	/////////////////////////////
 public:
 	size_t CreateInputLayout(const std::wstring& szName, D3D11_INPUT_ELEMENT_DESC* pInputElementDescs, UINT size_layout, ID3DBlob* vsBlob);
-	size_t CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* vertices);
+	size_t CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* iTriangleCount);
 	size_t CreateIndexBuffer(const std::wstring& szName, UINT stride, void* indices);
 	size_t CreateConstantBuffer(const type_info& typeinfo, UINT stride, void* data = nullptr);
 	size_t CreateStructBuffer(const std::wstring& szName, UINT stride, UINT count, void* data = nullptr);
@@ -121,56 +121,42 @@ public:
 	size_t CreateUnorderedAccessView(size_t hash, ID3D11Resource* pBuffer, UINT bindFlags);
 	size_t CreateViews(const std::wstring& szName, UINT bindFlags, UINT width, UINT height);
 	size_t CreateViews(const std::wstring& szName, UINT stride, UINT count, void* data);
-	
-	/////////////////////////////
-	//API Usage
-	/////////////////////////////
-public:
-	void OnResize(UINT width, UINT height);
-	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
-	void ClearRenderTargetView(size_t hashRTV, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
-	void ClearDepthStencilView(size_t hashDSV);
-
-	void UpdateConstantBuffer(size_t hash, void* pData);
 
 	void GenerateMipMaps(size_t hashSRV);
+	void UpdateConstantBuffer(size_t hash, void* pData);
+	void CopyResource(ID3D11Resource* pSrc, ID3D11Resource* pDst);
+	void MappedBuffer(ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* mappedResource);
+	void UnMappedBuffer(ID3D11Resource* pResource);
 
-	void SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology);
-	void SetIA_InputLayout(size_t hashIL);
-	void SetIA_VertexBuffer(size_t hashVB, UINT offset = 0);
-	void SetIA_IndexBuffer(size_t hashIB, UINT offset = 0);
+public:
+	template<typename T>
+	T* GetAPIResource(const std::unordered_map<size_t, T*>& containter, size_t hash) const
+	{ 
+		auto iter = containter.find(hash);
+		return iter != containter.end() ? iter->second : nullptr;
+	}
+	VertexBuffer*				GetVB(size_t hash)	const { return GetAPIResource<VertexBuffer>(m_pCVBs, hash); }
+	IndexBuffer*				GetIB(size_t hash)	const { return GetAPIResource<IndexBuffer>(m_pCIBs, hash); }
+	StructBuffer*				GetSTB(size_t hash) const { return GetAPIResource<StructBuffer>(m_pCSTBs, hash); }
+	StagingBuffer*				GetSGB(size_t hash) const { return GetAPIResource<StagingBuffer>(m_pCSGBs, hash); }
+	ConstantBuffer*				GetCB(size_t hash)	const { return GetAPIResource<ConstantBuffer>(m_pCCBs, hash); }
+	InputLayout*				GetIL(size_t hash)	const { return GetAPIResource<InputLayout>(m_pCILs, hash); }
+	VertexShader*				GetVS(size_t hash)	const { return GetAPIResource<VertexShader>(m_pCVSs, hash); }
+	HullShader*					GetHS(size_t hash)	const { return GetAPIResource<HullShader>(m_pCHSs, hash); }
+	DomainShader*				GetDS(size_t hash)	const { return GetAPIResource<DomainShader>(m_pCDSs, hash); }
+	GeometryShader*				GetGS(size_t hash)	const { return GetAPIResource<GeometryShader>(m_pCGSs, hash); }
+	PixelShader*				GetPS(size_t hash)	const { return GetAPIResource<PixelShader>(m_pCPSs, hash); }
+	ComputeShader*				GetCS(size_t hash)	const { return GetAPIResource<ComputeShader>(m_pCCSs, hash); }
+	ShaderResourceView*			GetSRV(size_t hash) const { return GetAPIResource<ShaderResourceView>(m_pCSRVs, hash); }
+	RenderTargetView*			GetRTV(size_t hash) const { return GetAPIResource<RenderTargetView>(m_pCRTVs, hash); }
+	DepthStencilView*			GetDSV(size_t hash) const { return GetAPIResource<DepthStencilView>(m_pCDSVs, hash); }
+	UnorderedAccessView*		GetUAV(size_t hash) const { return GetAPIResource<UnorderedAccessView>(m_pCUAVs, hash); }
 
-	void SetVS_Shader(size_t hashVS);
-	void SetVS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
-	void SetVS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-	void SetVS_SamplerState(E_Sampler eSampler, UINT startIdx = 0);
-
-	void SetHS_Shader(size_t hashHS);
-	void SetHS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-
-	void SetDS_Shader(size_t hashDS);
-	void SetDS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-
-	void SetGS_Shader(size_t hashGS);
-	void SetGS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-
-	void SetPS_Shader(size_t hashPS);
-	void SetPS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
-	void SetPS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-	void SetPS_SamplerState(E_Sampler eSampler, UINT startIdx = 0);
-
-	void SetRS_RasterizerState(E_RSState eRSState);
-	void SetRS_Viewport(D3D11_VIEWPORT* pViewport);
-
-	void SetOM_RenderTargets(std::vector<size_t> hashRtvs, size_t hashDSV);
-	void SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef = 1);
-	void SetOM_BlendState(E_BSState eBSState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
-
-	void Draw_Vertices(UINT vertexCount, UINT startIdx);
-	void Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset);
-
-	void SwapchainPresent(bool vsync);
-
+	SamplerState*				GetState_SS() const { return m_pCSamplers; }
+	RasterizerState*			GetState_RS() const { return m_pCRasterizers; }
+	DepthStencilState*			GetState_DS() const { return m_pCDepthStencils; }
+	BlendState*					GetState_BS() const { return m_pCBlends; }
+	
 	//사용을위해 분할한 클래스객체들
 private:
 	Direct3D*											m_pCDirect3D = nullptr;

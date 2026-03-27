@@ -158,14 +158,14 @@ class Box : public Collider
 public:
 	inline Box() = default;
     inline ~Box() { std::cout << "Release : " << "Collider <" << "Box" << "> Class" << '\n'; }
-	inline Box(const std::vector<Vector3>* vertices)
+	inline Box(const std::vector<Vector3>* iTriangleCount)
 	{
         SetType(E_Collider::AABB);
-		if (vertices->size() <= 0) return;
+		if (iTriangleCount->size() <= 0) return;
 		float minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = FLT_MAX;
 		maxX = maxY = maxZ = -FLT_MAX;
-		for (auto iter = vertices->begin(); iter != vertices->end(); iter++)
+		for (auto iter = iTriangleCount->begin(); iter != iTriangleCount->end(); iter++)
 		{
 			minX = std::min(minX, iter->GetX()); maxX = std::max(maxX, iter->GetX());
 			minY = std::min(minY, iter->GetY()); maxY = std::max(maxY, iter->GetY());

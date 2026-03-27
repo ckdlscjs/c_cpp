@@ -86,7 +86,8 @@ enum class E_Texture
 	Metalic,
 	AmbientOcclusion,
 	Emissive,
-	Compute,
+	Compute_SRV,		//Input
+	Compute_UAV,		//Output
 	None,
 	count,
 };
@@ -811,6 +812,22 @@ struct STB_CollisionVertices
 	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
 };
 
+__declspec(align(16))
+struct STB_CollisionResults
+{
+	UINT iHitIdx;
+	float fDist;
+	UINT padding[2];
+};
+
+__declspec(align(16))
+struct CB_RayTriangle
+{
+	//worldRay
+	Vector3 vRayOrigin;
+	Vector3 vRayDir;
+	UINT iTriangleCount;
+};
 
 
 /*
@@ -830,7 +847,7 @@ struct STB_CollisionVertices
 
 		invMat = denominator * adjMat
 */
-inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB_Skinned>& vertices)
+inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB_Skinned>& iTriangleCount)
 {
 	//메쉬(세 정점)을 기준으로 tangent, binormal의 누적을 계산한다
 	for (UINT idx = 0; idx < indicies.size(); idx += 3)
@@ -838,10 +855,10 @@ inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vecto
 		UINT i0 = indicies[idx];
 		UINT i1 = indicies[idx + 1];
 		UINT i2 = indicies[idx + 2];
-		Vector3 e0 = vertices[i1].pos0 - vertices[i0].pos0;
-		Vector3 e1 = vertices[i2].pos0 - vertices[i0].pos0;
-		Vector2 uv_e0 = vertices[i1].tex0 - vertices[i0].tex0;	//a, b
-		Vector2 uv_e1 = vertices[i2].tex0 - vertices[i0].tex0;	//c, d
+		Vector3 e0 = iTriangleCount[i1].pos0 - iTriangleCount[i0].pos0;
+		Vector3 e1 = iTriangleCount[i2].pos0 - iTriangleCount[i0].pos0;
+		Vector2 uv_e0 = iTriangleCount[i1].tex0 - iTriangleCount[i0].tex0;	//a, b
+		Vector2 uv_e1 = iTriangleCount[i2].tex0 - iTriangleCount[i0].tex0;	//c, d
 		float det = uv_e0.GetX() * uv_e1.GetY() - uv_e0.GetY() * uv_e1.GetX();	//ad - bc
 		if (std::fabs(det) <= _EPSILON) continue;
 		det = 1.0f / det;
@@ -851,9 +868,9 @@ inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vecto
 		tz = (uv_e1.GetY() * e0.GetZ() - uv_e0.GetY() * e1.GetZ()) * det;
 
 		Vector3 tangent(tx, ty, tz);
-		vertices[i0].tangent0 += tangent;
-		vertices[i1].tangent0 += tangent;
-		vertices[i2].tangent0 += tangent;
+		iTriangleCount[i0].tangent0 += tangent;
+		iTriangleCount[i1].tangent0 += tangent;
+		iTriangleCount[i2].tangent0 += tangent;
 
 		//float bx, by, bz;
 		//bx = (-uv_e1.GetX() * e0.GetX() + uv_e0.GetX() * e1.GetX()) * det;
@@ -861,13 +878,13 @@ inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vecto
 		//bz = (-uv_e1.GetX() * e0.GetZ() + uv_e0.GetX() * e1.GetZ()) * det;
 		//Vector3 binormal(bx, by, bz);
 		////binormal = binormal.Normalize();
-		//vertices[i0].binormal0 += binormal;
-		//vertices[i1].binormal0 += binormal;
-		//vertices[i2].binormal0 += binormal;
+		//iTriangleCount[i0].binormal0 += binormal;
+		//iTriangleCount[i1].binormal0 += binormal;
+		//iTriangleCount[i2].binormal0 += binormal;
 	}
 
 	//그람슈미트직교화를이용
-	for (auto& vertex : vertices)
+	for (auto& vertex : iTriangleCount)
 	{
 		vertex.normal0 = vertex.normal0.Normalize();
 		vertex.tangent0 = (vertex.tangent0 - (vertex.normal0 * vertex.normal0.DotProduct(vertex.tangent0))).Normalize();

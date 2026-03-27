@@ -1418,7 +1418,7 @@ void    ImGui::EndTable()
     // Strip out dummy channel draw calls
     // We have no way to prevent user submitting direct ImDrawList calls into a hidden column (but ImGui:: calls will be clipped out)
     // Pros: remove draw calls which will have no effect. since they'll have zero-size cliprect they may be early out anyway.
-    // Cons: making it harder for users watching metrics/debugger to spot the wasted vertices.
+    // Cons: making it harder for users watching metrics/debugger to spot the wasted iTriangleCount.
     if (table->DummyDrawChannel != (ImGuiTableColumnIdx)-1)
     {
         ImDrawChannel* dummy_channel = &table->DrawSplitter._Channels[table->DummyDrawChannel];
@@ -4378,7 +4378,7 @@ void ImGui::BeginColumns(const char* str_id, int columns_count, ImGuiOldColumnFl
 
     for (int n = 0; n < columns_count; n++)
     {
-        // Compute clipping rectangle
+        // Compute_SRV clipping rectangle
         ImGuiOldColumnData* column = &columns->Columns[n];
         float clip_x1 = IM_ROUND(window->Pos.x + GetColumnOffset(n));
         float clip_x2 = IM_ROUND(window->Pos.x + GetColumnOffset(n + 1) - 1.0f);

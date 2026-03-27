@@ -18,7 +18,12 @@ public:
 	void Init();
 	void Update();
 
-
+public:
+	void SetCS_Shader(size_t hashCS);
+	void SetCS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
+	void SetCS_UnorderedAccessView(size_t hashUAV, UINT startIdx = 0);
+	void SetCS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
+	void Dispatch(UINT x, UINT y, UINT z);
 private:
 };
 #define _ComputeSystem ComputeSystem::GetInstance()

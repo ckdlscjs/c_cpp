@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "EngineSystem.h"
+#include "RenderSystem.h"
 #include "InputSystem.h"
 #include "ImguiSystem.h"
 Window* g_pWindow = nullptr;
@@ -44,7 +45,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			UINT width = LOWORD(lParam);
 			UINT height = HIWORD(lParam);
-			_EngineSystem.OnResize(width, height);
+			_RenderSystem.OnResize(width, height);
 			return 0;
 		}
 
@@ -110,7 +111,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//_InputSystem.OnMouseMove(LOWORD(lParam), HIWORD(lParam));
 			//_InputSystem.OnMouseMoveCenter(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			_InputSystem.OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				
+			_InputSystem.SetPickingPos(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 			return 0;
 		}
 

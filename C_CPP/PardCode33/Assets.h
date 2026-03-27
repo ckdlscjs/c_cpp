@@ -28,7 +28,7 @@ public:
 	std::vector<size_t> m_hComputeMats;
 };
 
-inline ComputeAsset::ComputeAsset(size_t hash, const std::wstring& szName)
+inline ComputeAsset::ComputeAsset(size_t hash, const std::wstring& szName) : BaseResource(hash, szName)
 {
 }
 

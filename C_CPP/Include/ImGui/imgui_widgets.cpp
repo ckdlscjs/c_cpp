@@ -5230,7 +5230,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     ImVec2 text_size(0.0f, 0.0f);
 
     // Set upper limit of single-line InputTextEx() at 2 million characters strings. The current pathological worst case is a long line
-    // without any carriage return, which would makes ImFont::RenderText() reserve too many vertices and probably crash. Avoid it altogether.
+    // without any carriage return, which would makes ImFont::RenderText() reserve too many iTriangleCount and probably crash. Avoid it altogether.
     // Note that we only use this limit on single-line InputText(), so a pathologically large line on a InputTextMultiline() would still crash.
     const int buf_display_max_length = 2 * 1024 * 1024;
     const char* buf_display = buf_display_from_state ? state->TextA.Data : buf; //-V595
@@ -6126,7 +6126,7 @@ bool ImGui::ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags fl
             draw_list->PathStroke(col_white, 0, wheel_thickness);
             const int vert_end_idx = draw_list->VtxBuffer.Size;
 
-            // Paint colors over existing vertices
+            // Paint colors over existing iTriangleCount
             ImVec2 gradient_p0(wheel_center.x + ImCos(a0) * wheel_r_inner, wheel_center.y + ImSin(a0) * wheel_r_inner);
             ImVec2 gradient_p1(wheel_center.x + ImCos(a1) * wheel_r_inner, wheel_center.y + ImSin(a1) * wheel_r_inner);
             ShadeVertsLinearColorGradientKeepAlpha(draw_list, vert_start_idx, vert_end_idx, gradient_p0, gradient_p1, col_hues[n], col_hues[n + 1]);
@@ -6674,7 +6674,7 @@ bool ImGui::TreeNodeBehavior(ImGuiID id, ImGuiTreeNodeFlags flags, const char* l
     if ((flags & (ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_SpanLabelWidth | ImGuiTreeNodeFlags_SpanAllColumns)) == 0)
         interact_bb.Max.x = frame_bb.Min.x + text_width + (label_size.x > 0.0f ? style.ItemSpacing.x * 2.0f : 0.0f);
 
-    // Compute open and multi-select states before ItemAdd() as it clear NextItem data.
+    // Compute_SRV open and multi-select states before ItemAdd() as it clear NextItem data.
     ImGuiID storage_id = (g.NextItemData.HasFlags & ImGuiNextItemDataFlags_HasStorageID) ? g.NextItemData.StorageId : id;
     bool is_open = TreeNodeUpdateNextOpen(storage_id, flags);
 
@@ -9626,7 +9626,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
     int shrink_buffer_indexes[3] = { 0, sections[0].TabCount + sections[2].TabCount, sections[0].TabCount };
     g.ShrinkWidthBuffer.resize(tab_bar->Tabs.Size);
 
-    // Compute ideal tabs widths + store them into shrink buffer
+    // Compute_SRV ideal tabs widths + store them into shrink buffer
     ImGuiTabItem* most_recently_selected_tab = NULL;
     int curr_section_n = -1;
     bool found_selected_tab_id = false;
@@ -9662,7 +9662,7 @@ static void ImGui::TabBarLayout(ImGuiTabBar* tab_bar)
         tab->Width = ImMax(tab->ContentWidth, 1.0f);
     }
 
-    // Compute total ideal width (used for e.g. auto-resizing a window)
+    // Compute_SRV total ideal width (used for e.g. auto-resizing a window)
     tab_bar->WidthAllTabsIdeal = 0.0f;
     for (int section_n = 0; section_n < 3; section_n++)
         tab_bar->WidthAllTabsIdeal += sections[section_n].Width + sections[section_n].Spacing;

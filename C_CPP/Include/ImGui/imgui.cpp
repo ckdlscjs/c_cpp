@@ -7747,7 +7747,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             if ((flags & ImGuiWindowFlags_ChildWindow) && !(flags & ImGuiWindowFlags_Popup) && !window_is_child_tooltip)
             {
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
-                // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
+                // - We disable this when the parent window has zero iTriangleCount, which is a common pattern leading to laying out multiple overlapping childs
                 ImGuiWindow* previous_child = parent_window->DC.ChildWindows.Size >= 2 ? parent_window->DC.ChildWindows[parent_window->DC.ChildWindows.Size - 2] : NULL;
                 bool previous_child_overlapping = previous_child ? previous_child->Rect().Overlaps(window->Rect()) : false;
                 bool parent_is_empty = (parent_window->DrawList->VtxBuffer.Size == 0);
@@ -12847,7 +12847,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
         cand.ClipWithFull(window->ClipRect); // This allows the scored item to not overlap other candidates in the parent window
     }
 
-    // Compute distance between boxes
+    // Compute_SRV distance between boxes
     // FIXME-NAV: Introducing biases for vertical navigation, needs to be removed.
     float dbx = NavScoreItemDistInterval(cand.Min.x, cand.Max.x, curr.Min.x, curr.Max.x);
     float dby = NavScoreItemDistInterval(ImLerp(cand.Min.y, cand.Max.y, 0.2f), ImLerp(cand.Min.y, cand.Max.y, 0.8f), ImLerp(curr.Min.y, curr.Max.y, 0.2f), ImLerp(curr.Min.y, curr.Max.y, 0.8f)); // Scale down on Y to keep using box-distance for vertically touching items
@@ -12855,7 +12855,7 @@ static bool ImGui::NavScoreItem(ImGuiNavItemData* result)
         dbx = (dbx / 1000.0f) + ((dbx > 0.0f) ? +1.0f : -1.0f);
     float dist_box = ImFabs(dbx) + ImFabs(dby);
 
-    // Compute distance between centers (this is off by a factor of 2, but we only compare center distances with each other so it doesn't matter)
+    // Compute_SRV distance between centers (this is off by a factor of 2, but we only compare center distances with each other so it doesn't matter)
     float dcx = (cand.Min.x + cand.Max.x) - (curr.Min.x + curr.Max.x);
     float dcy = (cand.Min.y + cand.Max.y) - (curr.Min.y + curr.Max.y);
     float dist_center = ImFabs(dcx) + ImFabs(dcy); // L1 metric (need this for our connectedness guarantee)
@@ -16094,7 +16094,7 @@ void ImGui::ShowMetricsWindow(bool* p_open)
         Text("(Context Name: \"%s\")", g.ContextName);
     }
     Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-    Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
+    Text("%d iTriangleCount, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
     Text("%d visible windows, %d current allocations", io.MetricsRenderWindows, g.DebugAllocInfo.TotalAllocCount - g.DebugAllocInfo.TotalFreeCount);
     //SameLine(); if (SmallButton("GC")) { g.GcCompactAll = true; }
 
@@ -16791,9 +16791,9 @@ void ImGui::DebugNodeDrawList(ImGuiWindow* window, ImGuiViewportP* viewport, con
         if (IsItemHovered() && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
 
-        // Display individual triangles/vertices. Hover on to get the corresponding triangle highlighted.
+        // Display individual triangles/iTriangleCount. Hover on to get the corresponding triangle highlighted.
         ImGuiListClipper clipper;
-        clipper.Begin(pcmd->ElemCount / 3); // Manually coarse clip our print out of individual vertices to save CPU, only items that may be visible.
+        clipper.Begin(pcmd->ElemCount / 3); // Manually coarse clip our print out of individual iTriangleCount to save CPU, only items that may be visible.
         while (clipper.Step())
             for (int prim = clipper.DisplayStart, idx_i = pcmd->IdxOffset + clipper.DisplayStart * 3; prim < clipper.DisplayEnd; prim++)
             {
@@ -16851,7 +16851,7 @@ void ImGui::DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, co
     out_draw_list->Flags = backup_flags;
 }
 
-// [DEBUG] Compute mask of inputs with the same codepoint.
+// [DEBUG] Compute_SRV mask of inputs with the same codepoint.
 static int CalcFontGlyphSrcOverlapMask(ImFontAtlas* atlas, ImFont* font, unsigned int codepoint)
 {
     int mask = 0, count = 0;

@@ -1,11 +1,16 @@
 #include "CollisionSystem.h"
 #include "CameraSystem.h"
 #include "ResourceSystem.h"
+#include "EngineSystem.h"
 #include "ECSSystem.h"
-#include "Inputsystem.h"	//Picking
+#include "ComputeSystem.h"
+#include "Inputsystem.h"
 
 #include "Assets.h"
 #include "Mesh.h"
+#include "Material.h"
+#include "Views.h"
+#include "Buffers.h"
 
 #include "Frustum.h"
 #include "Plane.h"
@@ -36,14 +41,14 @@ void CollisionSystem::Frame(float deltatime)
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
 	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
 	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
-	const Matrix4x4& cam_matView = c_cam_main.matView;
-	const Matrix4x4& cam_matProj = c_cam_proj.matProj;
+	const Matrix4x4& matView = c_cam_main.matView;
+	const Matrix4x4& matProj = c_cam_proj.matProj;
 
 	//현재 프레임에서 절두체 컬링으로 렌더할 객체들
 	std::vector<std::pair<size_t, size_t>> RenderAbles;
 
 	//시야절두체
-	Frustum frustum(c_cam_main.fFar, cam_matView, cam_matProj);
+	Frustum frustum(c_cam_main.fFar, matView, matProj);
 
 	//피킹
 	/*
@@ -55,10 +60,10 @@ void CollisionSystem::Frame(float deltatime)
 	* y' -> y / d -> y / cot(a/2)
 	*/
 	Vector2 pickingPos = _InputSystem.GetPickingPos();
-	float vx = (+2.0f * pickingPos.GetX() / g_iWidth - 1.0f) / cam_matProj[0].GetX();
-	float vy = (-2.0f * pickingPos.GetY() / g_iHeight + 1.0f) / cam_matProj[1].GetY();
+	float vx = (+2.0f * pickingPos.GetX() / g_iWidth - 1.0f) / matProj[0].GetX();
+	float vy = (-2.0f * pickingPos.GetY() / g_iHeight + 1.0f) / matProj[1].GetY();
 	
-	Matrix4x4 matInvView = GetMat_Inverse(cam_matView);
+	Matrix4x4 matInvView = GetMat_Inverse(matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
 	using PickingOrder = std::tuple<float, C_Collider*>;
@@ -121,24 +126,33 @@ void CollisionSystem::Frame(float deltatime)
 								//BoundingVolume
 								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume)) //바운딩볼륨은 로컬에서 판별한다
 								{
-									//TraversalTriangle, skeletal과의 통일성을위해 월드에서 판별한다                                                              
-									const auto& RenderCounts = pMesh->GetRendIndices();
-									const auto& Indices = pMesh->GetIndicies();
-									auto RenderCount = RenderCounts[i];
-									for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
+									if (archetype->HasComponents<C_Compute>())
 									{
-										Vector3 wv[3];
-										for (int j = 0; j < 3; j++)
+										auto& computes = archetype->GetComponents<C_Compute>(row);
+										auto ca = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
+										int a = 0;
+									}
+									else
+									{
+										//TraversalTriangle, skeletal과의 통일성을위해 월드에서 판별한다                                                              
+										const auto& RenderCounts = pMesh->GetRendIndices();
+										const auto& Indices = pMesh->GetIndicies();
+										auto RenderCount = RenderCounts[i];
+										for (UINT idx = RenderCount.idx; idx < RenderCount.idx + RenderCount.count; idx += 3)
 										{
-											Vector4 v(pMesh->GetPosition(idx + j), 1.0f);
-											wv[j] = (v * matWorld).ToVector3();
-										}
-										float dist = FLT_MAX;
-										if (IsCollision(rayOriginWorld, rayDirWorld, wv[0], wv[1], wv[2], dist))
-										{
-											if (dist >= fDist) continue;
-											fDist = dist;
-											colliders[col].pickingIdx = idx;
+											Vector3 wv[3];
+											for (int j = 0; j < 3; j++)
+											{
+												Vector4 v(pMesh->GetPosition(idx + j), 1.0f);
+												wv[j] = (v * matWorld).ToVector3();
+											}
+											float dist = FLT_MAX;
+											if (IsCollision(rayOriginWorld, rayDirWorld, wv[0], wv[1], wv[2], dist))
+											{
+												if (dist >= fDist) continue;
+												fDist = dist;
+												colliders[col].pickingIdx = idx;
+											}
 										}
 									}
 								}
@@ -216,36 +230,110 @@ void CollisionSystem::Frame(float deltatime)
 								//BoundingVolume
 								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
 								{
-									//std::wcout << pMesh->GetPath() << '\n';
-									
-									//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
-									auto RenderCounts = pMesh->GetRendIndices();
-									auto Indices = pMesh->GetIndicies();
-									auto RenderCount = RenderCounts[i];
-									for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
+									if (archetype->HasComponents<C_Compute>())
 									{
-										Vector3 AnimPos[3];
-										for (int j = 0; j < 3; j++)
+										auto& computes = archetype->GetComponents<C_Compute>(row);
+										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
+										for (UINT j = 0; j < ComputeMats.size(); j++)
 										{
-											Vector4 pos;
-											auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
-											auto bw = pMesh->GetBW(iidx + j);
-											auto bones = bw.first;
-											auto weights = bw.second;
-											for (int bwidx = 0; bwidx < 4; bwidx++)
+											//계산셰이더 자원
+											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
+											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
+
+											CB_WVPITMatrix cb_wvpitmat;
+											cb_wvpitmat.matWorld	= matWorld;
+											cb_wvpitmat.matView		= matView;
+											cb_wvpitmat.matProj		= matProj;
+											cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
+
+											UINT totalVertices = (UINT)pMesh->GetIndicies().size();
+											CB_RayTriangle cb_raytriangle;
+											cb_raytriangle.vRayOrigin = rayOriginWorld.ToVector3();
+											cb_raytriangle.vRayDir = rayDirWorld.ToVector3();
+											cb_raytriangle.iTriangleCount = totalVertices / 3;
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raycollision, &cb_raytriangle);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raycollision, 1);
+
+											CB_BoneMatrix cb_bonemat;
+											std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
+
+											const std::vector<size_t>* srvs = pMaterial->GetTextures();
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
 											{
-												pos += weights[bwidx] * (v * animations[col].matAnims[bones[bwidx]]);
+												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
+												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
 											}
-											pos.SetW(1.0f);
-											AnimPos[j] = (pos * matWorld).ToVector3();
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											{
+												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
+												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
+											}
+											UINT cnt = _Dispatch_Vertices(totalVertices);
+											_ComputeSystem.Dispatch(cnt, 1, 1);
+
+											//해제
+											_ComputeSystem.SetCS_Shader(NULL);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
+
+											D3D11_MAPPED_SUBRESOURCE mappedResource;
+											auto pSrc = _EngineSystem.GetUAV(g_hash_stb_collisionResults)->GetBuffer();
+											auto pDst = _EngineSystem.GetSGB(g_hash_sgb_collisionResults)->GetBuffer();
+											_EngineSystem.CopyResource(pSrc, pDst);
+											_EngineSystem.MappedBuffer(pDst, &mappedResource);
+											STB_CollisionResults* pResults = reinterpret_cast<STB_CollisionResults*>(mappedResource.pData);
+											//std::vector< STB_CollisionResults> chks;
+											UINT triangleCount = totalVertices / 3;
+											for (UINT i = 0; i < triangleCount; i++)
+											{
+												if (pResults[i].fDist < fDist)
+												{
+													fDist = pResults[i].fDist;
+													colliders[col].pickingIdx = pResults[i].iHitIdx;
+												}
+												//chks.push_back(pResults[i]);
+											}
+											_EngineSystem.UnMappedBuffer(pDst);
+											//int iidx = colliders[col].pickingIdx;
+											//int a = 0;
 										}
-										
-										float dist = FLT_MAX;
-										if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
+									}
+									else
+									{
+										//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
+										auto RenderCounts = pMesh->GetRendIndices();
+										auto RenderCount = RenderCounts[i];
+										for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
 										{
-											if (dist >= fDist) continue;
-											fDist = dist;
-											colliders[col].pickingIdx = iidx;
+											Vector3 AnimPos[3];
+											for (int j = 0; j < 3; j++)
+											{
+												Vector4 pos;
+												auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
+												auto bw = pMesh->GetBW(iidx + j);
+												auto bones = bw.first;
+												auto weights = bw.second;
+												for (int bwidx = 0; bwidx < 4; bwidx++)
+												{
+													pos += weights[bwidx] * (v * animations[col].matAnims[bones[bwidx]]);
+												}
+												pos.SetW(1.0f);
+												AnimPos[j] = (pos * matWorld).ToVector3();
+											}
+
+											float dist = FLT_MAX;
+											if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
+											{
+												if (dist >= fDist) continue;
+												fDist = dist;
+												colliders[col].pickingIdx = iidx;
+											}
 										}
 									}
 								}
@@ -272,19 +360,19 @@ void CollisionSystem::Frame(float deltatime)
 }
 
 
-size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* vertices, E_Collider collider)
+size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::vector<Vector3>* iTriangleCount, E_Collider collider)
 {
 	switch (collider)
 	{
 		case E_Collider::SPHERE:
 		{
-			return AddCollider<Sphere>(szName + L"Sphere", vertices);
+			return AddCollider<Sphere>(szName + L"Sphere", iTriangleCount);
 		}	break;
 
 		case E_Collider::OBB:
 		case E_Collider::AABB:
 		{
-			return AddCollider<Box>(szName + L"Box", vertices);
+			return AddCollider<Box>(szName + L"Box", iTriangleCount);
 		}break;
 
 		case E_Collider::RAY:

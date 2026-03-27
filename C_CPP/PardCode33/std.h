@@ -11,6 +11,8 @@
 #define _EPSILON 1e-20f
 #define _CLAMP(val, low, high) Clamp(val, low, high)
 #define VK_MOUSE_MOVE 255
+#define _CSGroup 64
+#define _Dispatch_Vertices(count) (count / 3) / _CSGroup + ((count / 3) % _CSGroup ? 1 : 0)
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>
@@ -66,6 +68,34 @@ extern HWND g_hWnd;
 extern bool g_bIsRun;
 extern float g_fTime_Log;
 static const std::wstring g_initpath_Texture = L"../Assets/Textures/";
+
+//해시, 상수버퍼
+extern size_t g_hash_cb_directionalLight;
+extern size_t g_hash_cb_pointLight;
+extern size_t g_hash_cb_spotLight;
+extern size_t g_hash_cb_wvpitmat;
+extern size_t g_hash_cb_time;
+extern size_t g_hash_cb_campos;
+extern size_t g_hash_cb_lightmat;
+extern size_t g_hash_cb_bonemat;
+extern size_t g_hash_cb_fog;
+extern size_t g_hash_cb_debug_box;
+extern size_t g_hash_cb_debug_sphere;
+extern size_t g_hash_cb_cubemap;
+extern size_t g_hash_cb_raycollision;
+extern size_t g_hash_stb_collisionResults;
+extern size_t g_hash_sgb_collisionResults;
+
+//해시, 디버그렌더
+extern size_t g_hash_VS_Debug;
+extern size_t g_hash_GS_Debug_Box;
+extern size_t g_hash_PS_Debug_PC;
+extern size_t g_hash_VS_Debug_Sphere;
+extern size_t g_hash_HS_Debug_Sphere;
+extern size_t g_hash_DS_Debug_Sphere;
+extern size_t g_hash_PS_Picking;
+
+
 
 //공용함수들
 template<typename T>

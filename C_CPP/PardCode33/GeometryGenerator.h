@@ -99,7 +99,7 @@
 //void GeometryGenerator::CreateBox(float width, float height, float depth, MeshData& meshData)
 //{
 //	//
-//	// Create the vertices.
+//	// Create the iTriangleCount.
 //	//
 //
 //	Vertex v[24];
@@ -185,7 +185,7 @@
 //	meshData.Indices.clear();
 //
 //	//
-//	// Compute the vertices stating at the top pole and moving down the stacks.
+//	// Compute_SRV the iTriangleCount stating at the top pole and moving down the stacks.
 //	//
 //
 //	// Poles: note that there will be texture coordinate distortion as there is
@@ -199,7 +199,7 @@
 //	float phiStep   = XM_PI/stackCount;
 //	float thetaStep = 2.0f*XM_PI/sliceCount;
 //
-//	// Compute vertices for each stack ring (do not count the poles as rings).
+//	// Compute_SRV iTriangleCount for each stack ring (do not count the poles as rings).
 //	for(UINT i = 1; i <= stackCount-1; ++i)
 //	{
 //		float phi = i*phiStep;
@@ -237,7 +237,7 @@
 //	meshData.Vertices.push_back( bottomVertex );
 //
 //	//
-//	// Compute indices for top stack.  The top stack was written first to the vertex buffer
+//	// Compute_SRV indices for top stack.  The top stack was written first to the vertex buffer
 //	// and connects the top pole to the first ring.
 //	//
 //
@@ -249,7 +249,7 @@
 //	}
 //	
 //	//
-//	// Compute indices for inner stacks (not connected to poles).
+//	// Compute_SRV indices for inner stacks (not connected to poles).
 //	//
 //
 //	// Offset the indices to the index of the first vertex in the first ring.
@@ -271,7 +271,7 @@
 //	}
 //
 //	//
-//	// Compute indices for bottom stack.  The bottom stack was written last to the vertex buffer
+//	// Compute_SRV indices for bottom stack.  The bottom stack was written last to the vertex buffer
 //	// and connects the bottom pole to the bottom ring.
 //	//
 //
@@ -408,7 +408,7 @@
 //	for(UINT i = 0; i < numSubdivisions; ++i)
 //		Subdivide(meshData);
 //
-//	// Project vertices onto sphere and scale.
+//	// Project iTriangleCount onto sphere and scale.
 //	for(UINT i = 0; i < meshData.Vertices.size(); ++i)
 //	{
 //		// Project onto unit sphere.
@@ -456,13 +456,13 @@
 //
 //	UINT ringCount = stackCount+1;
 //
-//	// Compute vertices for each stack ring starting at the bottom and moving up.
+//	// Compute_SRV iTriangleCount for each stack ring starting at the bottom and moving up.
 //	for(UINT i = 0; i < ringCount; ++i)
 //	{
 //		float y = -0.5f*height + i*stackHeight;
 //		float r = bottomRadius + i*radiusStep;
 //
-//		// vertices of ring
+//		// iTriangleCount of ring
 //		float dTheta = 2.0f*XM_PI/sliceCount;
 //		for(UINT j = 0; j <= sliceCount; ++j)
 //		{
@@ -514,7 +514,7 @@
 //	// since the texture coordinates are different.
 //	UINT ringVertexCount = sliceCount+1;
 //
-//	// Compute indices for each stack.
+//	// Compute_SRV indices for each stack.
 //	for(UINT i = 0; i < stackCount; ++i)
 //	{
 //		for(UINT j = 0; j < sliceCount; ++j)
@@ -541,7 +541,7 @@
 //	float y = 0.5f*height;
 //	float dTheta = 2.0f*XM_PI/sliceCount;
 //
-//	// Duplicate cap ring vertices because the texture coordinates and normals differ.
+//	// Duplicate cap ring iTriangleCount because the texture coordinates and normals differ.
 //	for(UINT i = 0; i <= sliceCount; ++i)
 //	{
 //		float x = topRadius*cosf(i*dTheta);
@@ -579,7 +579,7 @@
 //	UINT baseIndex = (UINT)meshData.Vertices.size();
 //	float y = -0.5f*height;
 //
-//	// vertices of ring
+//	// iTriangleCount of ring
 //	float dTheta = 2.0f*XM_PI/sliceCount;
 //	for(UINT i = 0; i <= sliceCount; ++i)
 //	{
@@ -614,7 +614,7 @@
 //	UINT faceCount   = (m-1)*(n-1)*2;
 //
 //	//
-//	// Create the vertices.
+//	// Create the iTriangleCount.
 //	//
 //
 //	float halfWidth = 0.5f*width;
@@ -710,39 +710,39 @@
 
 #pragma once
 #include "CommonHeader.h"
-inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTNTB_Skinned>& vertices, std::vector<UINT>& indices)
+inline static void GeometryGenerate_Plane(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTNTB_Skinned>& iTriangleCount, std::vector<UINT>& indices)
 {
 	/*
 	* 0 1
 	* 2 3
 	*/
 	points.resize(1, std::vector<Vector3>(4));
-	vertices.resize(4);
-	vertices[0].pos0 = points[0][0] = Vector3(-0.5f, 0.5f, 0.0f);
-	vertices[0].tex0 = Vector2(0.0f, 0.0f);
+	iTriangleCount.resize(4);
+	iTriangleCount[0].pos0 = points[0][0] = Vector3(-0.5f, 0.5f, 0.0f);
+	iTriangleCount[0].tex0 = Vector2(0.0f, 0.0f);
 
-	vertices[1].pos0 = points[0][1] = Vector3(0.5f, 0.5f, 0.0f);
-	vertices[1].tex0 = Vector2(1.0f, 0.0f);
+	iTriangleCount[1].pos0 = points[0][1] = Vector3(0.5f, 0.5f, 0.0f);
+	iTriangleCount[1].tex0 = Vector2(1.0f, 0.0f);
 
-	vertices[2].pos0 = points[0][2] = Vector3(-0.5f, -0.5f, 0.0f);
-	vertices[2].tex0 = Vector2(0.0f, 1.0f);
+	iTriangleCount[2].pos0 = points[0][2] = Vector3(-0.5f, -0.5f, 0.0f);
+	iTriangleCount[2].tex0 = Vector2(0.0f, 1.0f);
 
-	vertices[3].pos0 = points[0][3] = Vector3(0.5f, -0.5f, 0.0f);
-	vertices[3].tex0 = Vector2(1.0f, 1.0f);
+	iTriangleCount[3].pos0 = points[0][3] = Vector3(0.5f, -0.5f, 0.0f);
+	iTriangleCount[3].tex0 = Vector2(1.0f, 1.0f);
 
-	vertices[0].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-	vertices[1].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-	vertices[2].normal0 = Vector3(0.0f, 0.0f, -1.0f);
-	vertices[3].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	iTriangleCount[0].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	iTriangleCount[1].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	iTriangleCount[2].normal0 = Vector3(0.0f, 0.0f, -1.0f);
+	iTriangleCount[3].normal0 = Vector3(0.0f, 0.0f, -1.0f);
 	
 	indices = { 0, 1, 2, 2, 1, 3 };
 
 	//tangent, binormal재계산
-	//ComputeTangentBinormal(indices, vertices);
+	//ComputeTangentBinormal(indices, iTriangleCount);
 }
 
 //폴리곤을 분할한다, subdivide
-inline static void Subdivide(std::vector<Vector3>& points, std::vector<Vertex_PTNTB_Skinned>& vertices, std::vector<UINT>& indices)
+inline static void Subdivide(std::vector<Vector3>& points, std::vector<Vertex_PTNTB_Skinned>& iTriangleCount, std::vector<UINT>& indices)
 {
 	// Save a copy of the input geometry.
 	//       v1
@@ -756,10 +756,10 @@ inline static void Subdivide(std::vector<Vector3>& points, std::vector<Vertex_PT
 	// v0    m2     v2
 	
 	std::vector<Vector3> pointCopy = points;
-	std::vector<Vertex_PTNTB_Skinned> verticesCopy = vertices;
+	std::vector<Vertex_PTNTB_Skinned> verticesCopy = iTriangleCount;
 	std::vector<UINT> indiciesCopy = indices;
 	points.resize(0);
-	vertices.resize(0);
+	iTriangleCount.resize(0);
 	indices.resize(0);
 
 	UINT numTriangles = indiciesCopy.size()/3;
@@ -778,12 +778,12 @@ inline static void Subdivide(std::vector<Vector3>& points, std::vector<Vertex_PT
 		m2.pos0 = Vector3(0.5f * (v0.pos0.GetX() + v2.pos0.GetX()), 0.5f * (v0.pos0.GetY() + v2.pos0.GetY()), 0.5f * (v0.pos0.GetZ() + v2.pos0.GetZ()));
 
 		// Add new geometry.
-		vertices.push_back(v0); points.push_back(v0.pos0);	// 0
-		vertices.push_back(v1); points.push_back(v1.pos0);	// 1
-		vertices.push_back(v2); points.push_back(v2.pos0);	// 2
-		vertices.push_back(m0); points.push_back(m0.pos0);	// 3
-		vertices.push_back(m1); points.push_back(m1.pos0);	// 4
-		vertices.push_back(m2); points.push_back(m2.pos0);	// 5
+		iTriangleCount.push_back(v0); points.push_back(v0.pos0);	// 0
+		iTriangleCount.push_back(v1); points.push_back(v1.pos0);	// 1
+		iTriangleCount.push_back(v2); points.push_back(v2.pos0);	// 2
+		iTriangleCount.push_back(m0); points.push_back(m0.pos0);	// 3
+		iTriangleCount.push_back(m1); points.push_back(m1.pos0);	// 4
+		iTriangleCount.push_back(m2); points.push_back(m2.pos0);	// 5
  
 		indices.push_back(i*6+0);
 		indices.push_back(i*6+3);
@@ -804,7 +804,7 @@ inline static void Subdivide(std::vector<Vector3>& points, std::vector<Vertex_PT
 }
 
 //미분을 이용해 정점을 재귀적으로 나누어 계산해 구체를생성한다
-inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions, std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTNTB_Skinned>& vertices, std::vector<UINT>& indices)
+inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions, std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PTNTB_Skinned>& iTriangleCount, std::vector<UINT>& indices)
 {
 	points.resize(1);
 
@@ -833,27 +833,27 @@ inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions
 		10,1,6, 11,0,9, 2,11,9, 5,2,9,  11,2,7 
 	};
 
-	vertices.resize(12);
+	iTriangleCount.resize(12);
 	indices.resize(60);
 
 	for(UINT i = 0; i < 12; ++i)
-		vertices[i].pos0 = pos[i];
+		iTriangleCount[i].pos0 = pos[i];
 
 	for(UINT i = 0; i < 60; ++i)
 		indices[i] = k[i];
 
 	for(UINT i = 0; i < numSubdivisions; ++i)
-		Subdivide(points[0], vertices, indices);
+		Subdivide(points[0], iTriangleCount, indices);
 
 	// 1. 기본적인 UV 계산 (기존 방식 유지하되 atan2 범위 조정)
-	for (UINT i = 0; i < vertices.size(); ++i)
+	for (UINT i = 0; i < iTriangleCount.size(); ++i)
 	{
 		// Project onto unit sphere.
-		Vector3 n = vertices[i].pos0.Normalize();
+		Vector3 n = iTriangleCount[i].pos0.Normalize();
 		// Project onto sphere.
 		Vector3 p = radius * n;
-		vertices[i].pos0 = points[0][i] = p;
-		vertices[i].normal0 = n;
+		iTriangleCount[i].pos0 = points[0][i] = p;
+		iTriangleCount[i].normal0 = n;
 
 		// atan2f는 -pi ~ pi를 반환하므로 0 ~ 2pi로 보정
 		float theta = atan2f(n.GetZ(), n.GetX()); // [-pi, pi]
@@ -861,7 +861,7 @@ inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions
 
 		float phi = acosf(std::max(-1.0f, std::min(1.0f, n.GetY())));
 
-		vertices[i].tex0 = Vector2(theta / DirectX::XM_2PI, phi / DirectX::XM_PI);
+		iTriangleCount[i].tex0 = Vector2(theta / DirectX::XM_2PI, phi / DirectX::XM_PI);
 	}
 
 	// 2. 이음새(Seam) 보정 - 핵심 로직
@@ -872,13 +872,13 @@ inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions
 		UINT i1 = indices[i + 1];
 		UINT i2 = indices[i + 2];
 
-		Vector3 p0 = vertices[i0].pos0;
-		Vector3 p1 = vertices[i1].pos0;
-		Vector3 p2 = vertices[i2].pos0;
+		Vector3 p0 = iTriangleCount[i0].pos0;
+		Vector3 p1 = iTriangleCount[i1].pos0;
+		Vector3 p2 = iTriangleCount[i2].pos0;
 
-		Vector2 uv0 = vertices[i0].tex0;
-		Vector2 uv1 = vertices[i1].tex0;
-		Vector2 uv2 = vertices[i2].tex0;
+		Vector2 uv0 = iTriangleCount[i0].tex0;
+		Vector2 uv1 = iTriangleCount[i1].tex0;
+		Vector2 uv2 = iTriangleCount[i2].tex0;
 
 		// 삼각형의 각 변에 대해 UV 차이가 0.5보다 크면 이음새를 가로지르는 것으로 간주
 		// (예: 한 점은 0.1, 한 점은 0.9인 경우)
@@ -888,24 +888,24 @@ inline static void GeometryGenerate_GeoSphere(float radius, UINT numSubdivisions
 			for (int j = 0; j < 3; ++j)
 			{
 				// U값이 작은(0.5 미만) 정점들을 찾아 복제본을 만들고 U에 1.0을 더해줌
-				if (vertices[idx[j]].tex0.GetX() < 0.5f)
+				if (iTriangleCount[idx[j]].tex0.GetX() < 0.5f)
 				{
-					Vertex_PTNTB_Skinned newV = vertices[idx[j]];
+					Vertex_PTNTB_Skinned newV = iTriangleCount[idx[j]];
 					newV.tex0.SetX(newV.tex0.GetX() + 1.0f);
 
 					// 기존 정점을 수정하는 게 아니라 새 정점을 추가하고 인덱스를 교체함
-					indices[i + j] = (UINT)vertices.size();
-					vertices.push_back(newV);
+					indices[i + j] = (UINT)iTriangleCount.size();
+					iTriangleCount.push_back(newV);
 				}
 			}
 		}
 	}
 
 	//tangent, binormal재계산
-	ComputeTangentBinormal(indices, vertices);
+	ComputeTangentBinormal(indices, iTriangleCount);
 }
 
-inline static void GeometryGenerate_Gizmo(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PC>& vertices, std::vector<UINT>& indices)
+inline static void GeometryGenerate_Gizmo(std::vector<std::vector<Vector3>>& points, std::vector<Vertex_PC>& iTriangleCount, std::vector<UINT>& indices)
 {
 	/*
 	* x 0 1
@@ -913,24 +913,24 @@ inline static void GeometryGenerate_Gizmo(std::vector<std::vector<Vector3>>& poi
 	* z 4 5
 	*/
 	points.resize(1, std::vector<Vector3>(6));
-	vertices.resize(6);
-	vertices[0].pos0 = points[0][0] = Vector3(0.0f, 0.0f, 0.0f);
-	vertices[0].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	iTriangleCount.resize(6);
+	iTriangleCount[0].pos0 = points[0][0] = Vector3(0.0f, 0.0f, 0.0f);
+	iTriangleCount[0].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 
-	vertices[1].pos0 = points[0][1] = Vector3(1.0f, 0.0f, 0.0f);
-	vertices[1].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	iTriangleCount[1].pos0 = points[0][1] = Vector3(1.0f, 0.0f, 0.0f);
+	iTriangleCount[1].color0 = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
 
-	vertices[2].pos0 = points[0][2] = Vector3(0.0f, 0.0f, 0.0f);
-	vertices[2].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+	iTriangleCount[2].pos0 = points[0][2] = Vector3(0.0f, 0.0f, 0.0f);
+	iTriangleCount[2].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	vertices[3].pos0 = points[0][3] = Vector3(0.0f, 1.0f, 0.0f);
-	vertices[3].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+	iTriangleCount[3].pos0 = points[0][3] = Vector3(0.0f, 1.0f, 0.0f);
+	iTriangleCount[3].color0 = Vector4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	vertices[4].pos0 = points[0][4] = Vector3(0.0f, 0.0f, 0.0f);
-	vertices[4].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+	iTriangleCount[4].pos0 = points[0][4] = Vector3(0.0f, 0.0f, 0.0f);
+	iTriangleCount[4].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 
-	vertices[5].pos0 = points[0][5] = Vector3(0.0f, 0.0f, 1.0f);
-	vertices[5].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+	iTriangleCount[5].pos0 = points[0][5] = Vector3(0.0f, 0.0f, 1.0f);
+	iTriangleCount[5].color0 = Vector4(0.0f, 0.0f, 1.0f, 1.0f);
 
 	indices = {0, 1, 2, 3, 4, 5};
 }

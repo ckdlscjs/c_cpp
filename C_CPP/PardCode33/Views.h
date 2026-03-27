@@ -10,9 +10,11 @@ protected:
 	BaseView& operator=(const BaseView&) = delete;
 	BaseView(BaseView&&) = delete;
 	BaseView& operator=(BaseView&&) = delete;
-	void ReleaseView();
+	
 public:
+	void ReleaseView();
 	T* GetView();
+	ID3D11Resource* GetBuffer();
 protected:
 	T* m_pView = nullptr;
 };
@@ -41,6 +43,14 @@ template<typename T>
 inline T* BaseView<T>::GetView()
 {
 	return m_pView;
+}
+
+template<typename T>
+inline ID3D11Resource* BaseView<T>::GetBuffer()
+{
+	ID3D11Resource* pResource;
+	m_pView->GetResource(&pResource);
+	return pResource;
 }
 
 

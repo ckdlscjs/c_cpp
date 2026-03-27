@@ -126,7 +126,6 @@
     <ClInclude Include="States.h">
       <Filter>Engine\RenderAPI</Filter>
     </ClInclude>
-    <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="Views.h">
       <Filter>Engine\RenderAPI</Filter>
     </ClInclude>
@@ -193,6 +192,7 @@
     <ClInclude Include="EngineSystem.h">
       <Filter>Engine\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="GeometryGenerator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AppWindow.cpp">

@@ -64,8 +64,8 @@ void AppWindow::OnCreate()
 	_ComputeSystem.Init();
 
 	// 1. 난수 시드(seed)를 설정합니다.
-		// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
-		// 매번 다른 시드를 얻을 수 있습니다.
+	// std::random_device는 하드웨어 기반의 비결정적 난수를 제공하여
+	// 매번 다른 시드를 얻을 수 있습니다.
 	std::random_device rd;
 
 	// 2. mt19937 난수 생성 엔진을 초기화합니다.
@@ -166,10 +166,10 @@ void AppWindow::OnCreate()
 		//gizmo
 		{
 			/*std::vector<std::vector<Vector3>> points;
-			std::vector<Vertex_PC> vertices;
+			std::vector<Vertex_PC> iTriangleCount;
 			std::vector<UINT> indices;
-			GeometryGenerate_Gizmo(points, vertices, indices);
-			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(vertices), std::move(indices));
+			GeometryGenerate_Gizmo(points, iTriangleCount, indices);
+			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(iTriangleCount), std::move(indices));
 			{
 
 			}*/
@@ -686,7 +686,8 @@ void AppWindow::OnCreate()
 		size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
 		_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
 		std::vector<TX_HASH> tx_hashs_compute;
-		tx_hashs_compute.push_back({ E_Texture::Compute, hash_STB_vertices });
+		tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+		tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
 		_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
 
 		size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
@@ -1099,7 +1100,7 @@ void AppWindow::OnCreate()
 		}
 	}
 
-	//Compute
+	//Compute_SRV
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Compute>();
 		size_t lookup = _ECSSystem.CreateEntity<C_Compute>();
@@ -1111,10 +1112,10 @@ void AppWindow::OnCreate()
 	//gizmo
 	{
 		std::vector<std::vector<Vector3>> points;
-		std::vector<Vertex_PC> vertices;
+		std::vector<Vertex_PC> iTriangleCount;
 		std::vector<UINT> indices;
-		GeometryGenerate_Gizmo(points, vertices, indices);
-		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(vertices), std::move(indices), E_Collider::AABB);
+		GeometryGenerate_Gizmo(points, iTriangleCount, indices);
+		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::AABB);
 		{
 			size_t hash_material = _EngineSystem.CreateMaterial<Vertex_PC>(L"Mat_Gizmo", L"VS_PC.hlsl", L"PS_PC.hlsl");
 			_EngineSystem.Gizmo = new TempObj();
@@ -1147,10 +1148,10 @@ void AppWindow::OnCreate()
 	//ReflectPlane
 	{
 		std::vector<std::vector<Vector3>> points;
-		std::vector<Vertex_PTN> vertices;
+		std::vector<Vertex_PTN> iTriangleCount;
 		std::vector<UINT> indices;
-		GeometryGenerate_Plane(points, vertices, indices);
-		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane_Reflect", std::move(points), std::move(vertices), std::move(indices), E_Collider::AABB);
+		GeometryGenerate_Plane(points, iTriangleCount, indices);
+		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane_Reflect", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::AABB);
 		{
 			size_t hash_material = _EngineSystem.CreateMaterial<Vertex_PTN>(L"Mat_Reflect", L"VS_PTN.hlsl", L"PS_PTN_Transparent.hlsl");
 			std::vector<TX_HASH> tx_hash;

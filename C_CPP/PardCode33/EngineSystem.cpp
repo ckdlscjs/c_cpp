@@ -26,6 +26,32 @@
 
 #include "TestBlockMacro.h"
 
+//해시, 상수버퍼
+size_t g_hash_cb_directionalLight;
+size_t g_hash_cb_pointLight;
+size_t g_hash_cb_spotLight;
+size_t g_hash_cb_wvpitmat;
+size_t g_hash_cb_time;
+size_t g_hash_cb_campos;
+size_t g_hash_cb_lightmat;
+size_t g_hash_cb_bonemat;
+size_t g_hash_cb_fog;
+size_t g_hash_cb_debug_box;
+size_t g_hash_cb_debug_sphere;
+size_t g_hash_cb_cubemap;
+size_t g_hash_cb_raycollision;
+size_t g_hash_stb_collisionResults;
+size_t g_hash_sgb_collisionResults;
+
+//해시, 디버그렌더
+size_t g_hash_VS_Debug;
+size_t g_hash_GS_Debug_Box;
+size_t g_hash_PS_Debug_PC;
+size_t g_hash_VS_Debug_Sphere;
+size_t g_hash_HS_Debug_Sphere;
+size_t g_hash_DS_Debug_Sphere;
+size_t g_hash_PS_Picking;
+
 EngineSystem::EngineSystem()
 {
 }
@@ -55,6 +81,36 @@ void EngineSystem::Init()
 
 	m_vp_CubeMap.MinDepth = m_vp_BB.MinDepth = 0.0f;
 	m_vp_CubeMap.MaxDepth = m_vp_BB.MaxDepth = 1.0f;
+
+	//상수버퍼 기본세팅
+	g_hash_cb_directionalLight	= _EngineSystem.CreateConstantBuffer(typeid(CB_DirectionalLight), sizeof(CB_DirectionalLight));
+	g_hash_cb_pointLight		= _EngineSystem.CreateConstantBuffer(typeid(CB_PointLight), sizeof(CB_PointLight));
+	g_hash_cb_spotLight			= _EngineSystem.CreateConstantBuffer(typeid(CB_SpotLight), sizeof(CB_SpotLight));
+	g_hash_cb_wvpitmat			= _EngineSystem.CreateConstantBuffer(typeid(CB_WVPITMatrix), sizeof(CB_WVPITMatrix));
+	g_hash_cb_time				= _EngineSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
+	g_hash_cb_campos			= _EngineSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
+	g_hash_cb_lightmat			= _EngineSystem.CreateConstantBuffer(typeid(CB_LightMatrix), sizeof(CB_LightMatrix));
+	g_hash_cb_bonemat			= _EngineSystem.CreateConstantBuffer(typeid(CB_BoneMatrix), sizeof(CB_BoneMatrix));
+	g_hash_cb_fog				= _EngineSystem.CreateConstantBuffer(typeid(CB_Fog), sizeof(CB_Fog));
+	g_hash_cb_debug_box			= _EngineSystem.CreateConstantBuffer(typeid(CB_Debug_Box), sizeof(CB_Debug_Box));
+	g_hash_cb_debug_sphere		= _EngineSystem.CreateConstantBuffer(typeid(CB_Debug_Sphere), sizeof(CB_Debug_Sphere));
+	g_hash_cb_cubemap			= _EngineSystem.CreateConstantBuffer(typeid(CB_CubeMap), sizeof(CB_CubeMap));
+	g_hash_cb_raycollision		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
+
+	
+
+	//디버그용 셰이더
+	g_hash_VS_Debug				= _EngineSystem.CreateVertexShader(L"VS_Debug.hlsl", "vsmain", "vs_5_0");
+	g_hash_GS_Debug_Box			= _EngineSystem.CreateGeometryShader(L"GS_Debug_Box.hlsl", "gsmain", "gs_5_0");
+	g_hash_PS_Debug_PC			= _EngineSystem.CreatePixelShader(L"PS_PC.hlsl", "psmain", "ps_5_0");
+	g_hash_VS_Debug_Sphere		= _EngineSystem.CreateVertexShader(L"VS_Debug_Sphere.hlsl", "vsmain", "vs_5_0");
+	g_hash_HS_Debug_Sphere		= _EngineSystem.CreateHullShader(L"HS_Debug_Sphere.hlsl", "hsmain", "hs_5_0");
+	g_hash_DS_Debug_Sphere		= _EngineSystem.CreateDomainShader(L"DS_Debug_Sphere.hlsl", "dsmain", "ds_5_0");
+	g_hash_PS_Picking			= _EngineSystem.CreatePixelShader(L"PS_Picking.hlsl", "psmain", "ps_5_0");
+
+	//계산셰이더
+	g_hash_stb_collisionResults = _EngineSystem.CreateViews(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5, nullptr);
+	g_hash_sgb_collisionResults = _EngineSystem.CreateStagingBuffer(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5);
 }
 
 EngineSystem::~EngineSystem()
@@ -196,12 +252,17 @@ EngineSystem::~EngineSystem()
 
 ID3D11Device* EngineSystem::GetD3DDevice() const
 {
-	return m_pCDirect3D->GetDevice();
+	return m_pCDirect3D ? m_pCDirect3D->GetDevice() : nullptr;
 }
 
 ID3D11DeviceContext* EngineSystem::GetD3DDeviceContext() const
 {
-	return m_pCDirect3D->GetDeviceContext();
+	return m_pCDirect3D ? m_pCDirect3D->GetDeviceContext() : nullptr;
+}
+
+IDXGISwapChain* EngineSystem::GetSwapChain() const
+{
+	return m_pCSwapChain ? m_pCSwapChain->GetSwapChain() : nullptr;
 }
 
 // 생성한 ScratchImage로부터 ID3D11Resource 객체를 생성한다
@@ -245,7 +306,7 @@ const std::vector<size_t>& EngineSystem::CreateColliders(size_t hash_mesh, E_Col
 size_t EngineSystem::CreateComputeVertices(size_t hash_mesh)
 {
 	BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hash_mesh);
-	//Compute Collision을 위한 Buffer/View자원 구성
+	//Compute_SRV Collision을 위한 Buffer/View자원 구성
 	std::vector<STB_CollisionVertices> datas;
 	auto Indices = pMesh->GetIndicies();
 	for (UINT idx = 0; idx < Indices.size(); idx++)
@@ -468,11 +529,11 @@ size_t EngineSystem::CreateInputLayout(const std::wstring& szName, D3D11_INPUT_E
 	return hash;
 }
 
-size_t EngineSystem::CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* vertices)
+size_t EngineSystem::CreateVertexBuffer(const std::wstring& szName, UINT stride, UINT count, void* iTriangleCount)
 {
 	size_t hash = Hasing_wstring(szName);
 	if (m_pCVBs.find(hash) != m_pCVBs.end()) return hash;
-	VertexBuffer* pBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), vertices, stride, count);
+	VertexBuffer* pBuffer = new VertexBuffer(m_pCDirect3D->GetDevice(), iTriangleCount, stride, count);
 	_ASEERTION_NULCHK(pBuffer, "VB is nullptr");
 	m_pCVBs[hash] = pBuffer;
 	return hash;
@@ -914,236 +975,33 @@ size_t EngineSystem::CreateViews(const std::wstring& szName, UINT stride, UINT c
 	return hash;
 }
 
-/////////////////////////////
-//API Usage
-/////////////////////////////
-void EngineSystem::OnResize(UINT width, UINT height)
-{
-	if (!m_pCDirect3D) return;
-	if (width == 0 || height == 0) return;
-	g_iWidth = width;
-	g_iHeight = height;
-
-	//refCount를 전부 해제시킨다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 Comptr객체에서 해제된다
-	if (m_hash_RTV_BB && m_pCRTVs.find(m_hash_RTV_BB) != m_pCRTVs.end()) m_pCRTVs[m_hash_RTV_BB]->GetView()->Release();
-	if (m_hash_RTV_0 && m_pCRTVs.find(m_hash_RTV_0) != m_pCRTVs.end()) m_pCRTVs[m_hash_RTV_0]->GetView()->Release();
-	if (m_hash_RTV_0 && m_pCSRVs.find(m_hash_RTV_0) != m_pCSRVs.end()) m_pCSRVs[m_hash_RTV_0]->GetView()->Release();
-	if (m_hash_DSV_0 && m_pCDSVs.find(m_hash_DSV_0) != m_pCDSVs.end()) m_pCDSVs[m_hash_DSV_0]->GetView()->Release();
-	if (m_hash_DSV_0 && m_pCSRVs.find(m_hash_DSV_0) != m_pCSRVs.end()) m_pCSRVs[m_hash_DSV_0]->GetView()->Release();
-
-	m_pCSwapChain->GetSwapChain()->ResizeBuffers(1, g_iWidth, g_iHeight, DXGI_FORMAT_UNKNOWN, 0);
-	//백버퍼
-	HRESULT hResult;
-	ID3D11Texture2D* pBuffer;
-	hResult = m_pCSwapChain->GetSwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBuffer);
-	_ASEERTION_CREATE(hResult, "BackBuffer");
-	m_hash_RTV_BB = CreateRenderTargetView(Hasing_wstring(L"RTV_BB"), pBuffer, _BB);
-	pBuffer->Release();
-
-	//RTT
-	m_hash_RTV_0 = CreateViews(L"RTV_BB_UI", _Target_ResourceView, g_iWidth, g_iHeight);
-	m_hash_DSV_0 = CreateViews(L"DSV_BB_UI", _Target_DepthView, g_iWidth, g_iHeight);
-	SetViewportSize(&m_vp_BB, g_iWidth, g_iHeight);
-}
-
-void EngineSystem::SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight)
-{
-	pViewport->Width = iWidth;
-	pViewport->Height = iHeight;
-}
-
-void EngineSystem::ClearRenderTargetView(size_t hashRTV, float r, float g, float b, float a)
-{
-	_ASEERTION_NULCHK(m_pCRTVs.find(hashRTV) != m_pCRTVs.end(), "NotExist");
-	FLOAT clearColor[] = { r, g, b, a };
-	m_pCDirect3D->GetDeviceContext()->ClearRenderTargetView(m_pCRTVs[hashRTV]->GetView(), clearColor);
-}
-
-void EngineSystem::ClearDepthStencilView(size_t hashDSV)
-{
-	_ASEERTION_NULCHK(m_pCDSVs.find(hashDSV) != m_pCDSVs.end(), "NotExist");
-	m_pCDirect3D->GetDeviceContext()->ClearDepthStencilView(m_pCDSVs[hashDSV]->GetView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-}
-
-void EngineSystem::UpdateConstantBuffer(size_t hashCB, void* pData)
-{
-	_ASEERTION_NULCHK(m_pCCBs.find(hashCB) != m_pCCBs.end(), "NotExist");
-	m_pCCBs[hashCB]->UpdateBufferData(m_pCDirect3D->GetDeviceContext(), pData);
-}
-
 void EngineSystem::GenerateMipMaps(size_t hashSRV)
 {
 	_ASEERTION_NULCHK(m_pCSRVs.find(hashSRV) != m_pCSRVs.end(), "NotExist");
 	m_pCDirect3D->GetDeviceContext()->GenerateMips(m_pCSRVs[hashSRV]->GetView());
 }
 
-void EngineSystem::SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology)
+void EngineSystem::UpdateConstantBuffer(size_t hashCB, void* pData)
 {
-	m_pCDirect3D->GetDeviceContext()->IASetPrimitiveTopology(topology);
+	auto pBuffer = _EngineSystem.GetCB(hashCB);
+	_ASEERTION_NULCHK(pBuffer, "NotExist");
+	pBuffer->UpdateBufferData(_EngineSystem.GetD3DDeviceContext(), pData);
 }
 
-void EngineSystem::SetIA_InputLayout(size_t hashIL)
+void EngineSystem::CopyResource(ID3D11Resource* pSrc, ID3D11Resource* pDst)
 {
-	auto ptr = m_pCILs.find(hashIL) != m_pCILs.end() ? m_pCILs[hashIL]->GetInputLayout() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->IASetInputLayout(ptr);
+	m_pCDirect3D->GetDeviceContext()->CopyResource(pDst, pSrc);
 }
 
-void EngineSystem::SetIA_VertexBuffer(size_t hashVB, UINT offset)
+void EngineSystem::MappedBuffer(ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* mappedResource)
 {
-	auto ptr = m_pCVBs.find(hashVB) != m_pCVBs.end() ? m_pCVBs[hashVB]->GetBuffer() : nullptr;
-	UINT stride = m_pCVBs.find(hashVB) != m_pCVBs.end() ? m_pCVBs[hashVB]->GetVertexSize() : 0;
-	m_pCDirect3D->GetDeviceContext()->IASetVertexBuffers(0, 1, &ptr, &stride, &offset);
+	HRESULT hResult = m_pCDirect3D->GetDeviceContext()->Map(pResource, 0, D3D11_MAP_READ, 0, mappedResource);
+	_ASEERTION_CREATE(hResult, "Mapped Not Successfully");
 }
 
-void EngineSystem::SetIA_IndexBuffer(size_t hashIB, UINT offset)
+void EngineSystem::UnMappedBuffer(ID3D11Resource* pResource)
 {
-	auto ptr = m_pCIBs.find(hashIB) != m_pCIBs.end() ? m_pCIBs[hashIB]->GetBuffer() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->IASetIndexBuffer(ptr, DXGI_FORMAT_R32_UINT, offset); //4바이트, 32비트를의미
+	m_pCDirect3D->GetDeviceContext()->Unmap(pResource, 0);
 }
 
-void EngineSystem::SetVS_Shader(size_t hashVS)
-{
-	auto ptr = m_pCVSs.find(hashVS) != m_pCVSs.end() ? m_pCVSs[hashVS]->GetShader() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->VSSetShader(ptr, nullptr, 0);
-}
-
-void EngineSystem::SetVS_ShaderResourceView(size_t hashSRV, UINT startIdx)
-{
-	auto ptr = m_pCSRVs.find(hashSRV) != m_pCSRVs.end() ? m_pCSRVs[hashSRV]->GetView() : nullptr;
-	int isize = m_pCSRVs.find(hashSRV) != m_pCSRVs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->VSSetShaderResources(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetVS_ConstantBuffer(size_t hashCB, UINT startIdx)
-{
-	auto ptr = m_pCCBs.find(hashCB) != m_pCCBs.end() ? m_pCCBs[hashCB]->GetBuffer() : nullptr;
-	int isize = m_pCCBs.find(hashCB) != m_pCCBs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->VSSetConstantBuffers(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetVS_SamplerState(E_Sampler eSampler, UINT startIdx)
-{
-	_ASEERTION_NULCHK(m_pCSamplers->GetState(eSampler), "NotExist");
-	auto pSampler = m_pCSamplers->GetState(eSampler);
-	m_pCDirect3D->GetDeviceContext()->VSSetSamplers(startIdx, 1, &pSampler);
-}
-
-void EngineSystem::SetHS_Shader(size_t hashHS)
-{
-	auto ptr = m_pCHSs.find(hashHS) != m_pCHSs.end() ? m_pCHSs[hashHS]->GetShader() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->HSSetShader(ptr, nullptr, 0);
-}
-
-void EngineSystem::SetHS_ConstantBuffer(size_t hashCB, UINT startIdx)
-{
-	auto ptr = m_pCCBs.find(hashCB) != m_pCCBs.end() ? m_pCCBs[hashCB]->GetBuffer() : nullptr;
-	int isize = m_pCCBs.find(hashCB) != m_pCCBs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->HSSetConstantBuffers(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetDS_Shader(size_t hashDS)
-{
-	auto ptr = m_pCDSs.find(hashDS) != m_pCDSs.end() ? m_pCDSs[hashDS]->GetShader() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->DSSetShader(ptr, nullptr, 0);
-}
-
-void EngineSystem::SetDS_ConstantBuffer(size_t hashCB, UINT startIdx)
-{
-	auto ptr = m_pCCBs.find(hashCB) != m_pCCBs.end() ? m_pCCBs[hashCB]->GetBuffer() : nullptr;
-	int isize = m_pCCBs.find(hashCB) != m_pCCBs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->DSSetConstantBuffers(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetGS_Shader(size_t hashGS)
-{
-	auto ptr = m_pCGSs.find(hashGS) != m_pCGSs.end() ? m_pCGSs[hashGS]->GetShader() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->GSSetShader(ptr, nullptr, 0);
-}
-
-void EngineSystem::SetGS_ConstantBuffer(size_t hashCB, UINT startIdx)
-{
-	auto ptr = m_pCCBs.find(hashCB) != m_pCCBs.end() ? m_pCCBs[hashCB]->GetBuffer() : nullptr;
-	int isize = m_pCCBs.find(hashCB) != m_pCCBs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->GSSetConstantBuffers(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetPS_SamplerState(E_Sampler eSampler, UINT startIdx)
-{
-	_ASEERTION_NULCHK(m_pCSamplers->GetState(eSampler), "NotExist");
-	auto pSampler = m_pCSamplers->GetState(eSampler);
-	m_pCDirect3D->GetDeviceContext()->PSSetSamplers(startIdx, 1, &pSampler);
-}
-
-void EngineSystem::SetPS_Shader(size_t hashPS)
-{
-	auto ptr = m_pCPSs.find(hashPS) != m_pCPSs.end() ? m_pCPSs[hashPS]->GetShader() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->PSSetShader(ptr, nullptr, 0);
-}
-
-void EngineSystem::SetPS_ShaderResourceView(size_t hashSRV, UINT startIdx)
-{
-	auto ptr = m_pCSRVs.find(hashSRV) != m_pCSRVs.end() ? m_pCSRVs[hashSRV]->GetView() : nullptr;
-	int isize = m_pCSRVs.find(hashSRV) != m_pCSRVs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->PSSetShaderResources(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetPS_ConstantBuffer(size_t hashCB, UINT startIdx)
-{
-	auto ptr = m_pCCBs.find(hashCB) != m_pCCBs.end() ? m_pCCBs[hashCB]->GetBuffer() : nullptr;
-	int isize = m_pCCBs.find(hashCB) != m_pCCBs.end() ? 1 : 0;
-	m_pCDirect3D->GetDeviceContext()->PSSetConstantBuffers(startIdx, isize, &ptr);
-}
-
-void EngineSystem::SetRS_RasterizerState(E_RSState eRSState)
-{
-	_ASEERTION_NULCHK(m_pCRasterizers->GetState(eRSState), "NotExist");
-	auto pState = m_pCRasterizers->GetState(eRSState);
-	m_pCDirect3D->GetDeviceContext()->RSSetState(pState);
-}
-
-void EngineSystem::SetRS_Viewport(D3D11_VIEWPORT* pViewport)
-{
-	m_pCDirect3D->GetDeviceContext()->RSSetViewports(1, pViewport);
-}
-
-void EngineSystem::SetOM_RenderTargets(std::vector<size_t> hashRtvs, size_t hashDSV)
-{
-	std::vector<ID3D11RenderTargetView*> rtvs;
-	for (UINT i = 0; i < hashRtvs.size(); i++)
-	{
-		_ASEERTION_NULCHK(m_pCRTVs.find(hashRtvs[i]) != m_pCRTVs.end(), "NotExist");
-		rtvs.push_back(m_pCRTVs[hashRtvs[i]]->GetView());
-	}
-	auto pdsv = m_pCDSVs.find(hashDSV) != m_pCDSVs.end() ? m_pCDSVs[hashDSV]->GetView() : nullptr;
-	m_pCDirect3D->GetDeviceContext()->OMSetRenderTargets(rtvs.size(), rtvs.empty() ? nullptr : rtvs.data(), pdsv);
-}
-
-void EngineSystem::SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef)
-{
-	_ASEERTION_NULCHK(m_pCDepthStencils->GetState(eDSState), "NotExist");
-	auto pState = m_pCDepthStencils->GetState(eDSState);
-	m_pCDirect3D->GetDeviceContext()->OMSetDepthStencilState(pState, stencilRef);
-}
-
-void EngineSystem::SetOM_BlendState(E_BSState eBSState, const FLOAT* blendFactor, UINT sampleMask)
-{
-	_ASEERTION_NULCHK(m_pCBlends->GetState(eBSState), "NotExist");
-	auto pState = m_pCBlends->GetState(eBSState);
-	m_pCDirect3D->GetDeviceContext()->OMSetBlendState(pState, blendFactor, sampleMask);
-}
-
-void EngineSystem::Draw_Vertices(UINT vertexCount, UINT startIdx)
-{
-	m_pCDirect3D->GetDeviceContext()->Draw(vertexCount, startIdx);
-}
-
-void EngineSystem::Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset)
-{
-	m_pCDirect3D->GetDeviceContext()->DrawIndexed(indexCount, startIdx, vertexOffset);
-}
-
-void EngineSystem::SwapchainPresent(bool vsync)
-{
-	m_pCSwapChain->GetSwapChain()->Present(vsync, NULL);
-}
 

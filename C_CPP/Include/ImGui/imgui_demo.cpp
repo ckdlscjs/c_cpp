@@ -10086,7 +10086,7 @@ static void ShowExampleAppCustomRendering(bool* p_open)
                 draw_list->AddRectFilled(ImVec2(p1.x + 25, p1.y + 25), ImVec2(p1.x + 75, p1.y + 75), IM_COL32(255, 0, 0, 255)); // Red
 
                 // Flatten/reorder channels. Red shape is in channel 0 and it appears below the Blue shape in channel 1.
-                // This works by copying draw indices only (vertices are not copied).
+                // This works by copying draw indices only (iTriangleCount are not copied).
                 draw_list->ChannelsMerge();
                 ImGui::Dummy(ImVec2(75, 75));
                 ImGui::Text("After reordering, contents of channel 0 appears below channel 1.");
