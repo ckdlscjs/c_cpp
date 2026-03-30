@@ -15,5 +15,7 @@ public:
 	void Init();
 	void Frame(float deltatime);
 
+	float fPlayRate = 0.1f;
+
 };
 #define _AnimationSystem AnimationSystem::GetInstance()

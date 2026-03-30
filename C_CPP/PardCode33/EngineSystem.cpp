@@ -39,7 +39,7 @@ size_t g_hash_cb_fog;
 size_t g_hash_cb_debug_box;
 size_t g_hash_cb_debug_sphere;
 size_t g_hash_cb_cubemap;
-size_t g_hash_cb_raycollision;
+size_t g_hash_cb_raytriangle;
 size_t g_hash_stb_collisionResults;
 size_t g_hash_sgb_collisionResults;
 
@@ -95,7 +95,7 @@ void EngineSystem::Init()
 	g_hash_cb_debug_box			= _EngineSystem.CreateConstantBuffer(typeid(CB_Debug_Box), sizeof(CB_Debug_Box));
 	g_hash_cb_debug_sphere		= _EngineSystem.CreateConstantBuffer(typeid(CB_Debug_Sphere), sizeof(CB_Debug_Sphere));
 	g_hash_cb_cubemap			= _EngineSystem.CreateConstantBuffer(typeid(CB_CubeMap), sizeof(CB_CubeMap));
-	g_hash_cb_raycollision		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
+	g_hash_cb_raytriangle		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
 
 	
 
@@ -109,7 +109,8 @@ void EngineSystem::Init()
 	g_hash_PS_Picking			= _EngineSystem.CreatePixelShader(L"PS_Picking.hlsl", "psmain", "ps_5_0");
 
 	//계산셰이더
-	g_hash_stb_collisionResults = _EngineSystem.CreateViews(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5, nullptr);
+	std::vector<STB_CollisionResults> tempData((UINT)1e5);
+	g_hash_stb_collisionResults = _EngineSystem.CreateViews(L"CollisionResults", sizeof(STB_CollisionResults), tempData.size(), tempData.data());
 	g_hash_sgb_collisionResults = _EngineSystem.CreateStagingBuffer(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5);
 }
 
@@ -993,6 +994,7 @@ void EngineSystem::CopyResource(ID3D11Resource* pSrc, ID3D11Resource* pDst)
 	m_pCDirect3D->GetDeviceContext()->CopyResource(pDst, pSrc);
 }
 
+//Cpu에서 Gpu자원에 접근하기위한 Map/Unmap
 void EngineSystem::MappedBuffer(ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* mappedResource)
 {
 	HRESULT hResult = m_pCDirect3D->GetDeviceContext()->Map(pResource, 0, D3D11_MAP_READ, 0, mappedResource);

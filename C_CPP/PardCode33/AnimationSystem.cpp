@@ -45,7 +45,7 @@ void AnimationSystem::Frame(float deltatime)
 						animations[col].bInitialized = true;
 					}
 
-					animations[col].elapsedTime += animations[col].clipIter->second.fTicksPerSecond * deltatime;
+					animations[col].elapsedTime += animations[col].clipIter->second.fTicksPerSecond * deltatime * fPlayRate;
 					//animations[col].elapsedTime = 0.0f;
 					if (animations[col].elapsedTime >= animations[col].clipIter->second.fDuration)
 					{

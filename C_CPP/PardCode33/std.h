@@ -82,7 +82,7 @@ extern size_t g_hash_cb_fog;
 extern size_t g_hash_cb_debug_box;
 extern size_t g_hash_cb_debug_sphere;
 extern size_t g_hash_cb_cubemap;
-extern size_t g_hash_cb_raycollision;
+extern size_t g_hash_cb_raytriangle;
 extern size_t g_hash_stb_collisionResults;
 extern size_t g_hash_sgb_collisionResults;
 

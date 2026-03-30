@@ -1,7 +1,7 @@
 #define _CSGroup 64
 #define _Epsilon 1e-6f
 #define _Infinite 1e38f
-
+#define _IsAnimate 255
 struct Vertex
 {
     float4 pos0;
@@ -27,7 +27,7 @@ cbuffer CB_WVPIT : register(b0)
 cbuffer CB_RayTriagnle : register(b1)
 {
     float3 vRayOrigin;
-    float padding_0;
+    float notAnimate; //larger then 255 not animate
     float3 vRayDir;
     float padding_1;
     uint triangleCount;
@@ -46,6 +46,8 @@ float3 ComputeSkinning(Vertex v)
 {
     float4 animPos = float4(0, 0, 0, 0);
     float4 localPos = float4(v.pos0.xyz, 1.0f);
+    if (notAnimate > _IsAnimate)
+        return mul(localPos, matWorld).xyz;
     [unroll]
     for (int i = 0; i < 4; ++i)
         animPos += v.weights[i] * mul(localPos, matBone[v.bones[i]]);
@@ -134,7 +136,9 @@ void csmain(uint3 dispatchThreadID : SV_DispatchThreadID)
     
     float fDist = _Infinite;
     bool isHit = Intersect(vRayOrigin, vRayDir, wv0, wv1, wv2, fDist);
+
     
     gOuputResults[tid].idx = tid * 3;
     gOuputResults[tid].fDist = isHit ? fDist : _Infinite;
+
 }

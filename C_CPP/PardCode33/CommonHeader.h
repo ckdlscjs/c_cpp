@@ -816,7 +816,7 @@ __declspec(align(16))
 struct STB_CollisionResults
 {
 	UINT iHitIdx;
-	float fDist;
+	float fDist = FLT_MAX;
 	UINT padding[2];
 };
 
@@ -824,8 +824,8 @@ __declspec(align(16))
 struct CB_RayTriangle
 {
 	//worldRay
-	Vector3 vRayOrigin;
-	Vector3 vRayDir;
+	Vector4 vRayOrigin;	//w is animate
+	Vector4 vRayDir;	//w is padding
 	UINT iTriangleCount;
 };
 

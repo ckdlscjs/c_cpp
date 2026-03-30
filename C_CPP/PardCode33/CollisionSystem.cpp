@@ -126,14 +126,76 @@ void CollisionSystem::Frame(float deltatime)
 								//BoundingVolume
 								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume)) //바운딩볼륨은 로컬에서 판별한다
 								{
+									//GpuCollision Check(UseCompute Shader)
 									if (archetype->HasComponents<C_Compute>())
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
-										auto ca = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
-										int a = 0;
+										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
+										for (UINT j = 0; j < ComputeMats.size(); j++)
+										{
+											//계산셰이더 자원
+											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
+											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
+
+											CB_WVPITMatrix cb_wvpitmat;
+											cb_wvpitmat.matWorld = matWorld;
+											cb_wvpitmat.matView = matView;
+											cb_wvpitmat.matProj = matProj;
+											cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
+
+											UINT totalVertices = (UINT)pMesh->GetIndicies().size();
+											CB_RayTriangle cb_raytriangle;
+											cb_raytriangle.vRayOrigin = Vector4(rayOriginWorld.ToVector3(), 257);	//w larger then 255 not animate in cs
+											cb_raytriangle.vRayDir = rayDirWorld;
+											cb_raytriangle.iTriangleCount = totalVertices / 3;
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
+
+											const std::vector<size_t>* srvs = pMaterial->GetTextures();
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+											{
+												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
+												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
+											}
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											{
+												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
+												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
+											}
+											UINT cnt = _Dispatch_Vertices(totalVertices);
+											_ComputeSystem.Dispatch(cnt, 1, 1);
+
+											//해제
+											_ComputeSystem.SetCS_Shader(NULL);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
+
+											D3D11_MAPPED_SUBRESOURCE mappedResource;
+											auto pSrc = _EngineSystem.GetUAV(g_hash_stb_collisionResults)->GetBuffer();
+											auto pDst = _EngineSystem.GetSGB(g_hash_sgb_collisionResults)->GetBuffer();
+											_EngineSystem.CopyResource(pSrc, pDst);
+											_EngineSystem.MappedBuffer(pDst, &mappedResource);
+											STB_CollisionResults* pResults = reinterpret_cast<STB_CollisionResults*>(mappedResource.pData);
+											UINT triangleCount = totalVertices / 3;
+											for (UINT i = 0; i < triangleCount; i++)
+											{
+												if (pResults[i].fDist < fDist)
+												{
+													fDist = pResults[i].fDist;
+													colliders[col].pickingIdx = pResults[i].iHitIdx;
+												}
+											}
+											_EngineSystem.UnMappedBuffer(pDst);
+
+										}
 									}
 									else
 									{
+										//CpuCollision Check
 										//TraversalTriangle, skeletal과의 통일성을위해 월드에서 판별한다                                                              
 										const auto& RenderCounts = pMesh->GetRendIndices();
 										const auto& Indices = pMesh->GetIndicies();
@@ -230,6 +292,7 @@ void CollisionSystem::Frame(float deltatime)
 								//BoundingVolume
 								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
 								{
+									//GpuCollision Check(UseCompute Shader)
 									if (archetype->HasComponents<C_Compute>())
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
@@ -253,8 +316,8 @@ void CollisionSystem::Frame(float deltatime)
 											cb_raytriangle.vRayOrigin = rayOriginWorld.ToVector3();
 											cb_raytriangle.vRayDir = rayDirWorld.ToVector3();
 											cb_raytriangle.iTriangleCount = totalVertices / 3;
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raycollision, &cb_raytriangle);
-											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raycollision, 1);
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
 
 											CB_BoneMatrix cb_bonemat;
 											std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
@@ -288,7 +351,6 @@ void CollisionSystem::Frame(float deltatime)
 											_EngineSystem.CopyResource(pSrc, pDst);
 											_EngineSystem.MappedBuffer(pDst, &mappedResource);
 											STB_CollisionResults* pResults = reinterpret_cast<STB_CollisionResults*>(mappedResource.pData);
-											//std::vector< STB_CollisionResults> chks;
 											UINT triangleCount = totalVertices / 3;
 											for (UINT i = 0; i < triangleCount; i++)
 											{
@@ -297,15 +359,14 @@ void CollisionSystem::Frame(float deltatime)
 													fDist = pResults[i].fDist;
 													colliders[col].pickingIdx = pResults[i].iHitIdx;
 												}
-												//chks.push_back(pResults[i]);
 											}
 											_EngineSystem.UnMappedBuffer(pDst);
-											//int iidx = colliders[col].pickingIdx;
-											//int a = 0;
+		
 										}
 									}
 									else
 									{
+										//CpuCollision Check
 										//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
 										auto RenderCounts = pMesh->GetRendIndices();
 										auto RenderCount = RenderCounts[i];
