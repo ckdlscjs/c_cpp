@@ -29,6 +29,12 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
 	return archetypes;
 }
 
+Archetype* ECSSystem::QueryArchetype(ArchetypeKey key)
+{
+	_ASEERTION_NULCHK(m_Archetypes.find(key) != m_Archetypes.end(), "NotExist");
+	return m_Archetypes[key];
+}
+
 /*
 * RowCols에 실제로 업데이트된 엔티티들의 row/col이 순서대로 담겨있으므로 이를 역순으로 Archetype의 끝부분으로 
 * 밀집시켜 이후 계층에서 순회량을 줄인다
@@ -85,6 +91,11 @@ void ECSSystem::DeleteEntity(size_t lookupIdx)
 	m_LookupTable[lastLookupIdx] = delEntityIdx;
 	m_Entitys[delEntityIdx] = std::move(m_Entitys.back());
 	m_Entitys.pop_back();
+}
+
+const Entity* ECSSystem::GetEntity(size_t lookupIdx)
+{
+	return &m_Entitys[FindEntity(lookupIdx)];
 }
 
 size_t ECSSystem::FindEntity(size_t lookupIdx)

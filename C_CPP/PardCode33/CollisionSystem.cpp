@@ -66,13 +66,14 @@ void CollisionSystem::Frame(float deltatime)
 	Matrix4x4 matInvView = GetMat_Inverse(matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
-	using PickingOrder = std::tuple<float, C_Collider*>;
+	using PickingOrder = std::tuple<float, C_Collider*, C_Info*>;
 	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
+	_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;	//picking entity initialize
 	UINT renderCnt = 0;
 	//Static
 	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
 		{
@@ -80,9 +81,10 @@ void CollisionSystem::Frame(float deltatime)
 			size_t st_col = 0;
 			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
-				auto& transforms = archetype->GetComponents<C_Transform>(row);
-				auto& renders = archetype->GetComponents<C_Render>(row);
-				auto& colliders = archetype->GetComponents<C_Collider>(row);
+				auto& transforms	= archetype->GetComponents<C_Transform>(row);
+				auto& renders		= archetype->GetComponents<C_Render>(row);
+				auto& colliders		= archetype->GetComponents<C_Collider>(row);
+				auto& infos			= archetype->GetComponents<C_Info>(row);
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = false;
@@ -221,7 +223,7 @@ void CollisionSystem::Frame(float deltatime)
 							}
 						}
 					}
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col] });
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col]});
 				}
 			}
 			st_col = 0;
@@ -230,7 +232,7 @@ void CollisionSystem::Frame(float deltatime)
 	
 	//Skeletal
 	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 		for (auto& archetype : queries)
 		{
@@ -238,10 +240,11 @@ void CollisionSystem::Frame(float deltatime)
 			size_t st_col = 0;
 			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 			{
-				auto& transforms = archetype->GetComponents<C_Transform>(row);
-				auto& renders = archetype->GetComponents<C_Render>(row);
-				auto& animations = archetype->GetComponents<C_Animation>(row);
-				auto& colliders = archetype->GetComponents<C_Collider>(row);
+				auto& transforms	= archetype->GetComponents<C_Transform>(row);
+				auto& renders		= archetype->GetComponents<C_Render>(row);
+				auto& animations	= archetype->GetComponents<C_Animation>(row);
+				auto& colliders		= archetype->GetComponents<C_Collider>(row);
+				auto& infos			= archetype->GetComponents<C_Info>(row);
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = true;
@@ -401,7 +404,7 @@ void CollisionSystem::Frame(float deltatime)
 							}
 						}
 					}
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col] });
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col]});
 				}
 			}
 			st_col = 0;
@@ -414,6 +417,8 @@ void CollisionSystem::Frame(float deltatime)
 		pq_picking.pop();
 		C_Collider* pCollider = std::get<1>(top);
 		pCollider->bPicking = true;
+		C_Info* pInfo = std::get<2>(top);
+		_EngineSystem.m_hash_pickingLookup = pInfo->lEntityLookup;
 	}
 
 	if (g_fTime_Log >= 1.0f)

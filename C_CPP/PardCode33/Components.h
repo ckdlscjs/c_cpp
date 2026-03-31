@@ -13,6 +13,7 @@ public:
 struct C_Info
 {
 	std::wstring szName;
+	size_t lEntityLookup;
 };
 
 struct C_Transform

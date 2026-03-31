@@ -206,6 +206,9 @@ public:
 	//그림자맵 렌더링을 위한 변수들
 	size_t												m_hash_DSV_ShadowMap;
 	size_t												m_hash_Mat_ShadowMap;
+
+	//피킹엔티티lookup
+	size_t												m_hash_pickingLookup;
 };
 //SingletonClasses
 #define _EngineSystem EngineSystem::GetInstance()

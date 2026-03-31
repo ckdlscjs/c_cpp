@@ -13,6 +13,7 @@
 #define VK_MOUSE_MOVE 255
 #define _CSGroup 64
 #define _Dispatch_Vertices(count) (count / 3) / _CSGroup + ((count / 3) % _CSGroup ? 1 : 0)
+#define _HashNotInitialize size_t(-1)
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>

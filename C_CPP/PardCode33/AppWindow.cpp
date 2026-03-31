@@ -197,7 +197,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, T_Render_Sky>();
 
-			_ECSSystem.AddComponent<C_Info>(key, { szName });
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			std::bitset<256> vkmask;
 			vkmask['W'] = true;
@@ -250,7 +250,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			_ECSSystem.AddComponent<C_Info>(key, { szName });
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quarternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
@@ -286,7 +286,7 @@ void AppWindow::OnCreate()
 			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			_ECSSystem.AddComponent<C_Info>(key, { szName });
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quarternion(0.0f, 0.0f, 0.0f)}, {0.0f, 50.0f, 0.0f} });
 
@@ -322,17 +322,19 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
 			
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
 
 			{
 				for (int i = 0; i < cnt; i++)
 				{
-					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+					size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
 					std::bitset<256> vkmask;
 					vkmask[VK_UP] = true;
 					//vkmask[VK_LEFT] = true;
 					vkmask[VK_DOWN] = true;
 					//vkmask[VK_RIGHT] = true;
+					_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
+
 					_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
 					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f},  Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup, (float)lookup, (float)lookup} });
@@ -371,17 +373,20 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 			
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
 
 			{
 				for (int i = 0; i < cnt; i++)
 				{
-					size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+					size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
 					std::bitset<256> vkmask;
 					//vkmask[VK_UP] = true;
 					vkmask[VK_LEFT] = true;
 					//vkmask[VK_DOWN] = true;
 					vkmask[VK_RIGHT] = true;
+
+					_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
+
 					_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
 					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup,(float)lookup,(float)lookup} });
@@ -426,8 +431,10 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 			
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Billboard>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Billboard>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Billboard>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
@@ -459,8 +466,10 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static >();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static >();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {230.0f, 100.0f, 0.0f} });
 
@@ -503,9 +512,11 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
 
@@ -547,9 +558,11 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
@@ -595,9 +608,11 @@ void AppWindow::OnCreate()
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
 
@@ -635,7 +650,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 
-		_ECSSystem.AddComponent<C_Info>(key, { szName });
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
@@ -703,9 +718,11 @@ void AppWindow::OnCreate()
 		size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 	
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
+
+		_ECSSystem.AddComponent<C_Info>(key, {szName, lookup});
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
@@ -716,6 +733,14 @@ void AppWindow::OnCreate()
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+
+		/*
+		//Testing pick(O(1))
+		const Entity* entity = _ECSSystem.GetEntity(lookup);
+		Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
+		std::wcout << archetype->GetComponents<C_Info>(entity->m_IdxRow)[entity->m_IdxCol].szName << '\n';
+		std::cout << archetype->GetComponents<C_Transform>(entity->m_IdxRow)[entity->m_IdxCol].vPosition.GetX() << '\n';
+		*/
 	}
 
 #endif // _MutantWalk
@@ -741,9 +766,11 @@ void AppWindow::OnCreate()
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
 
@@ -790,7 +817,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
-		_ECSSystem.AddComponent<C_Info>(key, { szName });
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
@@ -829,7 +856,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
 
-		_ECSSystem.AddComponent<C_Info>(key, { szName });
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(0.0f, 180.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
 
@@ -864,7 +891,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Static>();
 
-		_ECSSystem.AddComponent<C_Info>(key, { szName });
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
 
@@ -901,7 +928,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Static>();
 
-		_ECSSystem.AddComponent<C_Info>(key, { szName });
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -80.0f} });
 
@@ -1045,9 +1072,11 @@ void AppWindow::OnCreate()
 				const std::vector<size_t>& hash_CLs = _EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 				_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
-				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
+				ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
 
-				size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
+				size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static, T_Render_CubeMap>();
+
+				_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 				_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
@@ -1091,9 +1120,10 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_UI>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Render_UI>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Render_UI>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Render_UI>();
 
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 			_ECSSystem.AddComponent<C_Transform>(key, { {(float)g_iWidth, (float)g_iHeight, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 		}
@@ -1114,20 +1144,14 @@ void AppWindow::OnCreate()
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_UI>();
-			size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, T_Render_UI>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Render_UI>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Render_UI>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {300.0f, 300.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 		}
-	}
-
-	//Compute_SRV
-	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Compute>();
-		size_t lookup = _ECSSystem.CreateEntity<C_Compute>();
-
-		
 	}
 
 #ifdef _LEGACY

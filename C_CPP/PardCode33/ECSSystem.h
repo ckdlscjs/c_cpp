@@ -38,8 +38,10 @@ public:
 	template<typename T>
 	T& GetComponent(size_t idx_lookup);
 	std::vector<Archetype*> QueryArchetypes(ArchetypeKey key);
+	Archetype* QueryArchetype(ArchetypeKey key);
 	void UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& swapRowCols, size_t startIdx, Archetype* archetype);
 	void DeleteEntity(size_t lookupIdx);
+	const Entity* GetEntity(size_t lookupIdx);
 private:
 	size_t FindEntity(size_t lookupIdx);
 private:
