@@ -66,7 +66,8 @@ void CollisionSystem::Frame(float deltatime)
 	Matrix4x4 matInvView = GetMat_Inverse(matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
-	using PickingOrder = std::tuple<float, C_Collider*, C_Info*>;
+	//using PickingOrder = std::tuple<float, C_Collider*, C_Info*>;
+	using PickingOrder = std::tuple<float, C_Info*>;
 	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
 	_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;	//picking entity initialize
@@ -88,7 +89,7 @@ void CollisionSystem::Frame(float deltatime)
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = false;
-					colliders[col].bPicking = false;
+					//colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -223,7 +224,8 @@ void CollisionSystem::Frame(float deltatime)
 							}
 						}
 					}
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col]});
+					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &infos[col]});
 				}
 			}
 			st_col = 0;
@@ -248,7 +250,7 @@ void CollisionSystem::Frame(float deltatime)
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					renders[col].bRenderable = true;
-					colliders[col].bPicking = false;
+					//colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
 					const Quarternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
@@ -322,9 +324,9 @@ void CollisionSystem::Frame(float deltatime)
 											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
 
-											CB_BoneMatrix cb_bonemat;
-											std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+											
+											std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 											const std::vector<size_t>* srvs = pMaterial->GetTextures();
@@ -404,7 +406,8 @@ void CollisionSystem::Frame(float deltatime)
 							}
 						}
 					}
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col]});
+					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
+					if (fDist < FLT_MAX) pq_picking.push({ fDist, &infos[col]});
 				}
 			}
 			st_col = 0;
@@ -415,9 +418,12 @@ void CollisionSystem::Frame(float deltatime)
 	{
 		auto top = pq_picking.top();
 		pq_picking.pop();
+		/*
 		C_Collider* pCollider = std::get<1>(top);
 		pCollider->bPicking = true;
 		C_Info* pInfo = std::get<2>(top);
+		*/
+		C_Info* pInfo = std::get<1>(top);
 		_EngineSystem.m_hash_pickingLookup = pInfo->lEntityLookup;
 	}
 

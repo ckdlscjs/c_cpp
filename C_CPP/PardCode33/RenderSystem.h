@@ -72,7 +72,7 @@ private:
 	void RenderCubeMap();
 	void RenderUI(const Matrix4x4& matOrtho);
 	void RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void RenderGeometry_Picking(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj);
 
 };
 //SingletonClasses

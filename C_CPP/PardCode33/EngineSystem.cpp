@@ -52,6 +52,8 @@ size_t g_hash_HS_Debug_Sphere;
 size_t g_hash_DS_Debug_Sphere;
 size_t g_hash_PS_Picking;
 
+CB_BoneMatrix g_mats_bone;
+
 EngineSystem::EngineSystem()
 {
 }
@@ -98,7 +100,6 @@ void EngineSystem::Init()
 	g_hash_cb_raytriangle		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
 
 	
-
 	//디버그용 셰이더
 	g_hash_VS_Debug				= _EngineSystem.CreateVertexShader(L"VS_Debug.hlsl", "vsmain", "vs_5_0");
 	g_hash_GS_Debug_Box			= _EngineSystem.CreateGeometryShader(L"GS_Debug_Box.hlsl", "gsmain", "gs_5_0");

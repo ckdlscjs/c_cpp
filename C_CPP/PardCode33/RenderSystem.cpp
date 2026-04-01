@@ -159,7 +159,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 	//Render Pikcing
 	if(_InputSystem.IsPressed_LBTN())
-		RenderGeometry_Picking(cam_matView, cam_matProj);
+		RenderGeometry_PickingTriangle(cam_matView, cam_matProj);
 
 	//Render DebugGeometry
 	if (_InputSystem.IsDebugRender())
@@ -581,9 +581,9 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-					CB_BoneMatrix cb_bonemat;
-					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+				
+					std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
 					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -776,10 +776,9 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-
-					CB_BoneMatrix cb_bonemat;
-					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+					
+					std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
 					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -1111,9 +1110,8 @@ void RenderSystem::RenderCubeMap()
 						_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 						SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-						CB_BoneMatrix cb_bonemat;
-						std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+						std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
+						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
 						SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -1227,7 +1225,7 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 	}
 }
 
-void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix4x4& matProj)
+void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj)
 {
 	if (_EngineSystem.m_hash_pickingLookup == _HashNotInitialize)
 		return;
@@ -1355,13 +1353,12 @@ void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix
 	size_t row = entity->m_IdxRow;
 	size_t col = entity->m_IdxCol;
 
-	
 	auto& transforms = archetype->GetComponents<C_Transform>(row);
 	auto& renders = archetype->GetComponents<C_Render>(row);
 	auto& colliders = archetype->GetComponents<C_Collider>(row);
 
 	if (!renders[col].bRenderable) return;
-	if (!colliders[col].bPicking) return;
+	//if (!colliders[col].bPicking) return;
 
 	if (g_fTime_Log >= 1.0f)
 		std::cout << '\n' << "Picking Entity : " << _towm(archetype->GetComponents<C_Info>(row)[col].szName) << '\n' << '\n';
@@ -1380,9 +1377,8 @@ void RenderSystem::RenderGeometry_Picking(const Matrix4x4& matView, const Matrix
 	if (archetype->HasComponents<C_Animation>())
 	{
 		auto& animations = archetype->GetComponents<C_Animation>(row);
-		CB_BoneMatrix cb_bonemat;
-		std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
+		std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
+		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
 		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 	}
 

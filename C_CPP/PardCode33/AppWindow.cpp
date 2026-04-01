@@ -733,14 +733,6 @@ void AppWindow::OnCreate()
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
-
-		/*
-		//Testing pick(O(1))
-		const Entity* entity = _ECSSystem.GetEntity(lookup);
-		Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
-		std::wcout << archetype->GetComponents<C_Info>(entity->m_IdxRow)[entity->m_IdxCol].szName << '\n';
-		std::cout << archetype->GetComponents<C_Transform>(entity->m_IdxRow)[entity->m_IdxCol].vPosition.GetX() << '\n';
-		*/
 	}
 
 #endif // _MutantWalk
