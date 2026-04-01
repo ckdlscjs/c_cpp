@@ -6,6 +6,7 @@
 #include "ECSSystem.h"
 #include "CameraSystem.h"
 #include "CollisionSystem.h"
+#include "AnimationSystem.h"
 
 //D3D Wrappers
 #include "Direct3D.h"
@@ -581,9 +582,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-				
-					std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
-					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
 					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -777,8 +776,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 					
-					std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
-					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
 					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -1110,8 +1108,7 @@ void RenderSystem::RenderCubeMap()
 						_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 						SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-						std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
-						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
+						_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
 						SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 						const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
@@ -1377,8 +1374,7 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	if (archetype->HasComponents<C_Animation>())
 	{
 		auto& animations = archetype->GetComponents<C_Animation>(row);
-		std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
-		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
+		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
 		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 	}
 
@@ -1551,7 +1547,7 @@ void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x
 						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 						{
-							cb_wvpitmat.matWorld = animations[col].matAnims[idx] * GetMat_World(scale, rotate, position);
+							cb_wvpitmat.matWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * GetMat_World(scale, rotate, position);
 							_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 
 							size_t hash_collider = pMesh->GetCLs()[idx];

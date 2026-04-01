@@ -52,8 +52,6 @@ size_t g_hash_HS_Debug_Sphere;
 size_t g_hash_DS_Debug_Sphere;
 size_t g_hash_PS_Picking;
 
-CB_BoneMatrix g_mats_bone;
-
 EngineSystem::EngineSystem()
 {
 }

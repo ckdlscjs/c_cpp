@@ -58,13 +58,24 @@ void AnimationSystem::Frame(float deltatime)
 							animations[col].elapsedTime = 0.0f;
 						}
 					}
-
-					std::vector<Matrix4x4> curAnim;
-					pAnimation->GetFinalTransform(animations[col].clipIter->first, animations[col].elapsedTime, curAnim);
-					std::memcpy(animations[col].matAnims, curAnim.data(), curAnim.size() * sizeof(Matrix4x4));
+					
+					pAnimation->GetFinalTransform(animations[col].clipIter->first, animations[col].elapsedTime, m_matAnimbones[animations[col].hash_animbones]);
+					//std::memcpy(animations[col].matAnims, curAnim.data(), curAnim.size() * sizeof(Matrix4x4));
 				}
 				st_col = 0;
 			}
 		}
 	}
+}
+
+void AnimationSystem::AddAnimbones(size_t hash)
+{
+	_ASEERTION_NULCHK(m_matAnimbones.find(hash) == m_matAnimbones.end(), "AlreayExist");
+	m_matAnimbones.insert({ hash, std::vector<Matrix4x4>(256) });
+}
+
+const std::vector<Matrix4x4>& AnimationSystem::GetAnimbones(size_t hash)
+{
+	_ASEERTION_NULCHK(m_matAnimbones.find(hash) != m_matAnimbones.end(), "NotExist");
+	return m_matAnimbones[hash];
 }

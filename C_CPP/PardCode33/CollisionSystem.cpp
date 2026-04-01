@@ -5,6 +5,7 @@
 #include "ECSSystem.h"
 #include "ComputeSystem.h"
 #include "Inputsystem.h"
+#include "AnimationSystem.h"
 
 #include "Assets.h"
 #include "Mesh.h"
@@ -271,7 +272,7 @@ void CollisionSystem::Frame(float deltatime)
 							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 							{
 								auto iter = pMesh->GetCLs()[idx];
-								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
+								Matrix4x4 matAnimWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * matWorld;
 								if (IsCollision(frustum, iter, matAnimWorld))
 								{
 									renders[col].bRenderable = true;
@@ -287,7 +288,7 @@ void CollisionSystem::Frame(float deltatime)
 						{
 							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 							{
-								Matrix4x4 matAnimWorld = animations[col].matAnims[idx] * matWorld;
+								Matrix4x4 matAnimWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * matWorld;
 
 								//MousePicking Variable, using local BoundingVolume Intersect
 								Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
@@ -324,9 +325,7 @@ void CollisionSystem::Frame(float deltatime)
 											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
 
-											
-											std::memcpy(g_mats_bone.bones, animations[col].matAnims, sizeof(g_mats_bone.bones));
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &g_mats_bone);
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
 											const std::vector<size_t>* srvs = pMaterial->GetTextures();
@@ -387,7 +386,8 @@ void CollisionSystem::Frame(float deltatime)
 												auto weights = bw.second;
 												for (int bwidx = 0; bwidx < 4; bwidx++)
 												{
-													pos += weights[bwidx] * (v * animations[col].matAnims[bones[bwidx]]);
+													
+													pos += weights[bwidx] * (v * _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[bones[bwidx]]);
 												}
 												pos.SetW(1.0f);
 												AnimPos[j] = (pos * matWorld).ToVector3();
@@ -447,8 +447,6 @@ size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::ve
 			return AddCollider<Box>(szName + L"Box", iTriangleCount);
 		}break;
 
-		case E_Collider::RAY:
-			break;
 		default:
 			return size_t();
 	}
@@ -471,8 +469,6 @@ bool CollisionSystem::IsCollision(const Frustum& frustum, size_t hash, const Mat
 			return IsCollision(frustum, *static_cast<Box*>(m_Colliders[hash]), matWorld);
 		}break;
 
-		case E_Collider::RAY:
-			break;
 		default:
 			return false;
 	}
@@ -535,10 +531,6 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 			return IsCollision(rayOrigin, rayDir, *static_cast<Box*>(m_Colliders[hash]));
 		}break;
 
-		case E_Collider::RAY:
-		{
-
-		}break;
 		default:
 			return false;
 	}

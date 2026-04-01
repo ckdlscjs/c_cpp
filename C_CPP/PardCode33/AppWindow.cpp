@@ -699,6 +699,7 @@ void AppWindow::OnCreate()
 		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 		
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
+		_AnimationSystem.AddAnimbones(hash_animation);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
 		for (auto& iter : hashs_material)
@@ -732,7 +733,8 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 	}
 
 #endif // _MutantWalk
@@ -757,10 +759,19 @@ void AppWindow::OnCreate()
 
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+		size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+		_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+		std::vector<TX_HASH> tx_hashs_compute;
+		tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+		tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+		_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+		size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
+
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
@@ -768,9 +779,12 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+
 	}
 #endif // _Praying
 
@@ -815,7 +829,8 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 
@@ -854,7 +869,8 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 	}
 #endif // _Rapunzel
 	
@@ -889,7 +905,8 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 	}
@@ -926,7 +943,8 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation });
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 	}

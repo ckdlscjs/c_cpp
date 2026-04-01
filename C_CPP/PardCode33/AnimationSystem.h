@@ -14,8 +14,11 @@ public:
 	~AnimationSystem();
 	void Init();
 	void Frame(float deltatime);
+	void AddAnimbones(size_t hash);
+	const std::vector<Matrix4x4>& GetAnimbones(size_t hash);
 
+private:
 	float fPlayRate = 0.1f;
-
+	std::unordered_map<size_t, std::vector<Matrix4x4>> m_matAnimbones;
 };
 #define _AnimationSystem AnimationSystem::GetInstance()

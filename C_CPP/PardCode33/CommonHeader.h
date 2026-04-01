@@ -74,7 +74,6 @@ enum class E_Collider
 	SPHERE,
 	AABB,
 	OBB,
-	RAY,
 };
 
 enum class E_Texture
@@ -926,6 +925,3 @@ extern size_t g_hash_VS_Debug_Sphere;
 extern size_t g_hash_HS_Debug_Sphere;
 extern size_t g_hash_DS_Debug_Sphere;
 extern size_t g_hash_PS_Picking;
-
-//스택->힙 이관
-extern CB_BoneMatrix g_mats_bone;

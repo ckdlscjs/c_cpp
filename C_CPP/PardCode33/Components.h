@@ -97,10 +97,11 @@ struct C_Animation
 {
 public:
 	size_t hash_ai = 0;
+	size_t hash_animbones = _HashNotInitialize;
 	bool bInitialized = false;
 	float elapsedTime;
 	std::unordered_map<std::string, AnimationClip>::const_iterator clipIter;
-	Matrix4x4 matAnims[256];
+	//Matrix4x4 matAnims[256];
 };
 
 #ifdef _RENDERPASS
