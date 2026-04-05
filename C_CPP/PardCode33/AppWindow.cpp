@@ -825,7 +825,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(30.0f, 95.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -1105,6 +1105,36 @@ void AppWindow::OnCreate()
 		size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 		_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 		_EngineSystem.m_hash_Mat_ShadowMap = hash_material;
+	}
+
+	//Outline Shader
+	{
+		const std::wstring szName = L"Outline";
+		size_t hash_material;
+
+		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_" + szName);
+		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN.hlsl");
+		_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_Outline_PTN.hlsl");
+		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+		_EngineSystem.m_hash_Mat_Outline_PTN = hash_material;
+
+		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
+		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
+		_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
+		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+		_EngineSystem.m_hash_Mat_Outline_PTN_Skinned = hash_material;
+
+		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
+		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB.hlsl");
+		_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_Outline_PTNTB.hlsl");
+		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+		_EngineSystem.m_hash_Mat_Outline_PTNTB = hash_material;
+
+		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
+		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
+		_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
+		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+		_EngineSystem.m_hash_Mat_Outline_PTNTB_Skinned = hash_material;
 	}
 
 	//Initialize RTV, DSV

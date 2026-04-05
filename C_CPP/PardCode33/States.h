@@ -59,7 +59,7 @@ public:
 	SamplerState& operator=(const SamplerState&) = delete;
 	SamplerState(SamplerState&&) = delete;
 	SamplerState& operator=(SamplerState&&) = delete;
-	ID3D11SamplerState* GetState(E_Sampler stateIdx);
+	ID3D11SamplerState* GetState(E_SMState stateIdx);
 };
 
 

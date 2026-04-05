@@ -23,6 +23,7 @@ public:
 	Quarternion qRotate;
 	Vector3 vPosition;
 };
+
 enum E_Behavior
 {
 	NONE,

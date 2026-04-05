@@ -35,7 +35,7 @@ public:
 	void SetVS_Shader(size_t hashVS);
 	void SetVS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetVS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-	void SetVS_SamplerState(E_Sampler eSampler, UINT startIdx = 0);
+	void SetVS_SamplerState(E_SMState eSampler, UINT startIdx = 0);
 
 	void SetHS_Shader(size_t hashHS);
 	void SetHS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
@@ -49,13 +49,13 @@ public:
 	void SetPS_Shader(size_t hashPS);
 	void SetPS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetPS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-	void SetPS_SamplerState(E_Sampler eSampler, UINT startIdx = 0);
+	void SetPS_SamplerState(E_SMState eSampler, UINT startIdx = 0);
 
 	void SetRS_RasterizerState(E_RSState eRSState);
 	void SetRS_Viewport(D3D11_VIEWPORT* pViewport);
 
 	void SetOM_RenderTargets(std::vector<size_t> hashRtvs, size_t hashDSV);
-	void SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef = 1);
+	void SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef = 0);
 	void SetOM_BlendState(E_BSState eBSState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
 
 	void Draw_Vertices(UINT vertexCount, UINT startIdx);
@@ -73,6 +73,7 @@ private:
 	void RenderUI(const Matrix4x4& matOrtho);
 	void RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderGeometry_PickingOutline(const Matrix4x4& matView, const Matrix4x4& matProj);
 
 };
 //SingletonClasses

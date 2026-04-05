@@ -2,6 +2,12 @@
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
+
+//Systems
+#include "EngineSystem.h"
+#include "ECSSystem.h"
+#include "InputSystem.h"
+
 ImguiSystem::ImguiSystem()
 {   
 }
@@ -63,14 +69,18 @@ void ImguiSystem::Frame(float deltatime)
     if (g_fTime_Log >= 1.0f)
         std::cout << "Frame : " << "ImguiSystem" << " Class" << '\n';
     // Our state, 수정필요
+    ImGuiIO& io = ImGui::GetIO();
+    _EngineSystem.bMouseOnGUI = io.WantCaptureMouse;    //마우스의 위치상황
+
     bool show_demo_window = true;
-    bool show_another_window = false;
+    bool show_another_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     // Start the Dear ImGui frame
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
         ImGui::ShowDemoWindow(&show_demo_window);
@@ -97,16 +107,18 @@ void ImguiSystem::Frame(float deltatime)
        // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
+    
+    //// 3. Show another simple window.
+    //if (show_another_window)
+    //{
+    //    ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+    //    ImGui::Text("Hello from another window!");
+    //    if (ImGui::Button("Close Me"))
+    //        show_another_window = false;
+    //    ImGui::End();
+    //}
 
-    // 3. Show another simple window.
-    if (show_another_window)
-    {
-        ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            show_another_window = false;
-        ImGui::End();
-    }
+    Editor_Transform();
 }
 
 void ImguiSystem::Render()
@@ -115,10 +127,86 @@ void ImguiSystem::Render()
         std::cout << "Render : " << "ImguiSystem" << " Class" << '\n';
     // Rendering
     ImGui::Render();
-    /*const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
+    /*
+    const float clear_color_with_alpha[4] = { clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w };
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, nullptr);
-    g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);*/
+    g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView, clear_color_with_alpha);
+    */
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
+void ImguiSystem::Editor_Transform()
+{
+    size_t lookup = _EngineSystem.m_hash_pickingLookup;
+    C_Transform* entityTransform = nullptr;
+    if(lookup != _HashNotInitialize)
+    {
+        const Entity* entity = _ECSSystem.GetEntity(lookup);
+        Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
+
+        size_t row = entity->m_IdxRow;
+        size_t col = entity->m_IdxCol;
+
+        auto& infos = archetype->GetComponents<C_Info>(row);
+        auto& transforms = archetype->GetComponents<C_Transform>(row);
+        entityTransform = &transforms[col];
+        Vector3 vPosition = entityTransform->vPosition;
+        Vector3 vRotate = entityTransform->qRotate.ToRotate();
+        Vector3 vScale = entityTransform->vScale;
+        m_fEditTF_Pos[0] = vPosition.GetX(); m_fEditTF_Pos[1] = vPosition.GetY(); m_fEditTF_Pos[2] = vPosition.GetZ();
+        m_fEditTF_Rot[0] = vRotate.GetX(); m_fEditTF_Rot[1] = vRotate.GetY(); m_fEditTF_Rot[2] = vRotate.GetZ();
+        m_fEditTF_Sca[0] = vScale.GetX(); m_fEditTF_Sca[1] = vScale.GetY(); m_fEditTF_Sca[2] = vScale.GetZ();
+        m_szEntityName = _towm(infos[col].szName);
+    }
+    else
+    {
+        std::memset(m_fEditTF_Pos, 0.0f, sizeof(float) * 3);
+        std::memset(m_fEditTF_Rot, 0.0f, sizeof(float) * 3);
+        std::memset(m_fEditTF_Sca, 0.0f, sizeof(float) * 3);
+        m_szEntityName = NotPicking;
+    }
+    
+ 
+    // -------------------------------------------------------------------------
+    // [2] ImGui UI 구성
+    // -------------------------------------------------------------------------
+    ImGui::Begin("Inspector");
+
+    if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.7f); // 라벨 영역 확보
+        std::string outputName = "EntityName : " + m_szEntityName;
+        ImGui::Text(outputName.c_str());
+        // Position 조절 (DragFloat은 마우스 드래그로 미세조정 가능)
+        if (ImGui::DragFloat3("Position", m_fEditTF_Pos, 0.1f) && entityTransform)
+        {
+            entityTransform->vPosition.Set(m_fEditTF_Pos[0], m_fEditTF_Pos[1], m_fEditTF_Pos[2]);
+        }
+
+        // Rotation 조절 (각도 단위)
+        if (ImGui::DragFloat3("Rotation", m_fEditTF_Rot, 0.5f) && entityTransform)
+        {
+            entityTransform->qRotate = Quarternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
+        }
+
+        // Scale 조절
+        if (ImGui::DragFloat3("Scale", m_fEditTF_Sca, 0.001f) && entityTransform)
+        {
+            entityTransform->vScale.Set(m_fEditTF_Sca[0], m_fEditTF_Sca[1], m_fEditTF_Sca[2]);
+        }
+
+        ImGui::PopItemWidth();
+
+        // 초기화 버튼 (우측 정렬 예시)
+        ImGui::Spacing();
+        if (ImGui::Button("Reset Transform"))
+        {
+            std::memset(m_fEditTF_Pos, 0.0f, sizeof(float) * 3);
+            std::memset(m_fEditTF_Rot, 0.0f, sizeof(float) * 3);
+            std::memset(m_fEditTF_Sca, 0.0f, sizeof(float) * 3);
+        }
+    }
+    ImGui::End();
 }
 
 ImguiSystem::~ImguiSystem()

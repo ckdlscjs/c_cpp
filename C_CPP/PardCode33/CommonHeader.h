@@ -34,7 +34,7 @@ enum class E_InputEvent
 	NOTHING,
 };
 
-enum class E_Sampler
+enum class E_SMState
 {
 	LINEAR_WRAP,
 	ANISOTROPIC_WRAP,
@@ -43,6 +43,7 @@ enum class E_Sampler
 	// 새롭게 추가된 샘플러 상태들
 	//LINEAR_CLAMP,
 	//ANISOTROPIC_CLAMP,
+	COUNT,
 };
 
 enum class E_RSState
@@ -52,20 +53,27 @@ enum class E_RSState
 	SOLID_CULLFRONT_CW,
 	SOLID_CULLFRONT_CCW,
 	WIRE_CULLBACK_CW,
+	COUNT,
 };
 
 enum class E_DSState
 {
-	DEFAULT,
-	SKYBOX,
+	Default,
+	SkyBox,
+	Outline_Write,
+	Outline_Draw,
 	UI,
+	COUNT,
 };
 
 enum class E_BSState
 {
 	Opaque,
 	Transparent,
-	Additive
+	Additive,
+	Outline_Write,
+	Outline_Draw,
+	COUNT,
 };
 
 enum class E_Collider
@@ -828,6 +836,12 @@ struct CB_RayTriangle
 	UINT iTriangleCount;
 };
 
+__declspec(align(16))
+struct CB_Outline_Picking
+{
+	Vector4 color_thickness; //rgb, thickness
+};
+
 
 /*
 		TBN구성에 사용할 tangent(접벡터), binormal(종벡터)를 계산한다
@@ -916,6 +930,7 @@ extern size_t g_hash_cb_cubemap;
 extern size_t g_hash_cb_raytriangle;
 extern size_t g_hash_stb_collisionResults;
 extern size_t g_hash_sgb_collisionResults;
+extern size_t g_hash_cb_outline_picking;
 
 //해시, 디버그렌더
 extern size_t g_hash_VS_Debug;

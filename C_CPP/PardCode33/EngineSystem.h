@@ -207,8 +207,15 @@ public:
 	size_t												m_hash_DSV_ShadowMap;
 	size_t												m_hash_Mat_ShadowMap;
 
+	//아웃라인 렌더링을 위한 변수들
+	size_t												m_hash_Mat_Outline_PTN;
+	size_t												m_hash_Mat_Outline_PTN_Skinned;
+	size_t												m_hash_Mat_Outline_PTNTB;
+	size_t												m_hash_Mat_Outline_PTNTB_Skinned;
+
 	//피킹엔티티lookup
-	size_t												m_hash_pickingLookup;
+	bool												bMouseOnGUI = false;
+	size_t												m_hash_pickingLookup = _HashNotInitialize;
 };
 //SingletonClasses
 #define _EngineSystem EngineSystem::GetInstance()

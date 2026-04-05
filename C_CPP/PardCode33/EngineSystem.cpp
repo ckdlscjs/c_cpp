@@ -42,6 +42,7 @@ size_t g_hash_cb_cubemap;
 size_t g_hash_cb_raytriangle;
 size_t g_hash_stb_collisionResults;
 size_t g_hash_sgb_collisionResults;
+size_t g_hash_cb_outline_picking;
 
 //해시, 디버그렌더
 size_t g_hash_VS_Debug;
@@ -96,6 +97,7 @@ void EngineSystem::Init()
 	g_hash_cb_debug_sphere		= _EngineSystem.CreateConstantBuffer(typeid(CB_Debug_Sphere), sizeof(CB_Debug_Sphere));
 	g_hash_cb_cubemap			= _EngineSystem.CreateConstantBuffer(typeid(CB_CubeMap), sizeof(CB_CubeMap));
 	g_hash_cb_raytriangle		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
+	g_hash_cb_outline_picking   = _EngineSystem.CreateConstantBuffer(typeid(CB_Outline_Picking), sizeof(CB_Outline_Picking));
 
 	
 	//디버그용 셰이더

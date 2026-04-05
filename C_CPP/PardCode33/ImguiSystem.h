@@ -18,7 +18,13 @@ public:
 	void Frame(float deltatime);
 	void Render();
 	
-
+public:
+	void Editor_Transform();
+#define NotPicking "NotPicking";
+	std::string m_szEntityName;
+	float m_fEditTF_Pos[3] = { 0.0f, 0.0f, 0.0f };
+	float m_fEditTF_Rot[3] = { 0.0f, 0.0f, 0.0f };
+	float m_fEditTF_Sca[3] = { 0.0f, 0.0f, 0.0f };
 private:
 
 };

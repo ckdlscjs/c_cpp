@@ -33,9 +33,9 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	//	D3D11_COMPARISON_FUNC StencilFunc;		// 스텐실 테스트 비교 함수
 	//} D3D11_DEPTH_STENCILOP_DESC;
 
+	m_pStates.resize((UINT)E_DSState::COUNT);
 
 	HRESULT result;
-	ID3D11DepthStencilState* pState;
 	D3D11_DEPTH_STENCIL_DESC depth_stencil_desc;
 	ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
 	depth_stencil_desc.DepthEnable = TRUE;
@@ -43,68 +43,71 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;				//픽셀이 기존보다 가깝거나 같을시
 	depth_stencil_desc.StencilEnable = FALSE;
 
-	//DEFAULT
-	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &pState);
-	_ASEERTION_NULCHK(pState, "DEPTH, WRITEALL, LESSEQUAL");
-	m_pStates.push_back(pState);
+	//Default
+	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &m_pStates[(UINT)E_DSState::Default]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_DSState::Default], "DEPTH, WRITEALL, LESSEQUAL");
 
-	//SKYBOX, Transparent objects(투명)
+	//SkyBox, Transparent objects(투명)
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;		//깊이버퍼에 값을 쓰지않는다
-	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &pState);
-	_ASEERTION_NULCHK(pState, "DEPTH, MASKZERO, LESSEQUAL");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &m_pStates[(UINT)E_DSState::SkyBox]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_DSState::SkyBox], "DEPTH, MASKZERO, LESSEQUAL");
 
 	//2D렌더링(화가알고리즘)
 	depth_stencil_desc.DepthEnable = FALSE;
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &pState);
-	_ASEERTION_NULCHK(pState, "UI");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &m_pStates[(UINT)E_DSState::UI]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_DSState::UI], "UI");
 
-	/*
-	//스텐실버퍼에 오브젝트그리기
-	depthDesc.DepthEnable = TRUE;
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depthDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
+	// -------------------------------------------------------------------------
+	// [3] Outline_Write (피킹된 물체의 영역을 스텐실 버퍼에 기록)
+	// -------------------------------------------------------------------------
+	ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	depth_stencil_desc.DepthEnable = TRUE;
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
-	depthDesc.StencilEnable = TRUE;
-	depthDesc.StencilReadMask = 0xFF;
-	depthDesc.StencilWriteMask = 0xFF;
+	depth_stencil_desc.StencilEnable = TRUE;
+	depth_stencil_desc.StencilReadMask = 0xFF;
+	depth_stencil_desc.StencilWriteMask = 0xFF;
 
-	// 스텐실 테스트를 무조건 통과시키고, 스텐실 버퍼에 1을 씁니다.
-	depthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // 1로 대체
-	depthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	// 앞면 설정: 스텐실/깊이 테스트 모두 통과 시 스텐실 값을 Ref 값으로 교체(REPLACE)
+	depth_stencil_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depth_stencil_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	depth_stencil_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	depth_stencil_desc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; // 무조건 통과해서 기록
 
-	depthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
-	depthDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-	*/
+	// 뒷면도 동일하게 설정 (단면 렌더링 시에는 큰 의미 없으나 안전하게 설정)
+	depth_stencil_desc.BackFace = depth_stencil_desc.FrontFace;
 
-	/*
-	//스텐실버퍼를이용해 외곽선 그리기
-	depthDesc.DepthEnable = TRUE;
-	depthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // 깊이 쓰기 금지
-	depthDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &m_pStates[(UINT)E_DSState::Outline_Write]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_DSState::Outline_Write], "Outline_Write");
 
-	depthDesc.StencilEnable = TRUE;
-	depthDesc.StencilReadMask = 0xFF;
-	depthDesc.StencilWriteMask = 0xFF;
 
-	// 스텐실 값이 1과 같지 않은 경우에만 통과하여 외곽선을 그립니다.
-	depthDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL; // 1과 같지 않으면 통과
+	// -------------------------------------------------------------------------
+	// [4] Outline_Draw (기록된 영역을 제외한 나머지 외곽선만 렌더링)
+	// -------------------------------------------------------------------------
+	ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+	// 아웃라인은 보통 물체 뒤에 가려져도 보여야 하므로 DepthEnable을 FALSE로 하거나 
+	// DepthFunc을 ALWAYS로 설정하는 경우가 많습니다.
+	depth_stencil_desc.DepthEnable = FALSE;
+	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
 
-	depthDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthDesc.BackFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
-	*/
+	depth_stencil_desc.StencilEnable = TRUE;
+	depth_stencil_desc.StencilReadMask = 0xFF;
+	depth_stencil_desc.StencilWriteMask = 0xFF;
+
+	// 앞면 설정: 스텐실 값이 기록된 값(Ref)과 '같지 않을 때만' 픽셀을 그립니다.
+	depth_stencil_desc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depth_stencil_desc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	depth_stencil_desc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depth_stencil_desc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+
+	depth_stencil_desc.BackFace = depth_stencil_desc.FrontFace;
+
+	result = pDevice->CreateDepthStencilState(&depth_stencil_desc, &m_pStates[(UINT)E_DSState::Outline_Draw]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_DSState::Outline_Draw], "Outline_Draw");
+
 	//필요시 추가
 }
 
@@ -118,9 +121,9 @@ ID3D11DepthStencilState* DepthStencilState::GetState(E_DSState stateIdx)
 ////////////////////////////////////////////////////////////////////////////////
 SamplerState::SamplerState(ID3D11Device* pDevice)
 {
+	m_pStates.resize((UINT)E_SMState::COUNT);
 	HRESULT result;
 	D3D11_SAMPLER_DESC sampler_desc;
-	ID3D11SamplerState* pSamplers;
 	ZeroMemory(&sampler_desc, sizeof(D3D11_SAMPLER_DESC));
 
 	//Linear_Wrap
@@ -128,18 +131,16 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Linear_Wrap");
-	m_pStates.push_back(pSamplers);
+	result = pDevice->CreateSamplerState(&sampler_desc, &m_pStates[(UINT)E_SMState::LINEAR_WRAP]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_SMState::LINEAR_WRAP], "Linear_Wrap");
 
 	//Anisotrpic_Wrap
 	sampler_desc.Filter = D3D11_FILTER_ANISOTROPIC;
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Anisotropic_Wrap");
-	m_pStates.push_back(pSamplers);
+	result = pDevice->CreateSamplerState(&sampler_desc, &m_pStates[(UINT)E_SMState::ANISOTROPIC_WRAP]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_SMState::ANISOTROPIC_WRAP], "Anisotropic_Wrap");
 
 
 	//Point_Clamp, 픽셀 아트, 스프라이트, UI 등에 사용
@@ -147,9 +148,8 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 	sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Point_Clamp");
-	m_pStates.push_back(pSamplers);
+	result = pDevice->CreateSamplerState(&sampler_desc, &m_pStates[(UINT)E_SMState::POINT_CLAMP]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_SMState::POINT_CLAMP], "Point_Clamp");
 
 	//그림자를위한 비교 SAMPLER
 	sampler_desc.Filter = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT; 
@@ -159,9 +159,8 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	sampler_desc.ComparisonFunc = D3D11_COMPARISON_LESS_EQUAL;
 	sampler_desc.MinLOD = 0;
 	sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-	result = pDevice->CreateSamplerState(&sampler_desc, &pSamplers);
-	_ASEERTION_NULCHK(pSamplers, "Point_Clamp_Comparison");
-	m_pStates.push_back(pSamplers);
+	result = pDevice->CreateSamplerState(&sampler_desc, &m_pStates[(UINT)E_SMState::POINT_CLAMP_COMPARISON]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_SMState::POINT_CLAMP_COMPARISON], "Point_Clamp_Comparison");
 
 
 	/*
@@ -187,7 +186,7 @@ SamplerState::SamplerState(ID3D11Device* pDevice)
 	*/
 }
 
-ID3D11SamplerState* SamplerState::GetState(E_Sampler stateIdx)
+ID3D11SamplerState* SamplerState::GetState(E_SMState stateIdx)
 {
 	return BaseState::GetState(static_cast<UINT>(stateIdx));
 }
@@ -212,10 +211,9 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	//   BOOL MultisampleEnable;				//멀티샘플링(MSAA)
 	//   BOOL AntialiasedLineEnable;			//MSAA사용대신 line에 안티앨리어싱적용
 	//   } 	D3D11_RASTERIZER_DESC;
-
+	m_pStates.resize((UINT)E_RSState::COUNT);
 	HRESULT result;
 	D3D11_RASTERIZER_DESC rasterizer_desc;
-	ID3D11RasterizerState* pState;
 	ZeroMemory(&rasterizer_desc, sizeof(D3D11_RASTERIZER_DESC));
 
 	rasterizer_desc.DepthClipEnable = TRUE;
@@ -230,41 +228,36 @@ RasterizerState::RasterizerState(ID3D11Device* pDevice)
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;
 	rasterizer_desc.FrontCounterClockwise = FALSE;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CW");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &m_pStates[(UINT)E_RSState::SOLID_CULLBACK_CW]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_RSState::SOLID_CULLBACK_CW], "SOLID, CULLBACK, CW");
 
 	//SOLID, CULLBACK, CCW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;
 	rasterizer_desc.FrontCounterClockwise = TRUE;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "SOLID, CULLBACK, CCW");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &m_pStates[(UINT)E_RSState::SOLID_CULLBACK_CCW]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_RSState::SOLID_CULLBACK_CCW], "SOLID, CULLBACK, CCW");
 
 	//SOLID, CULLFRONT, CW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
 	rasterizer_desc.FrontCounterClockwise = FALSE;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CW");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &m_pStates[(UINT)E_RSState::SOLID_CULLFRONT_CW]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_RSState::SOLID_CULLFRONT_CW], "SOLID, CULLFRONT, CW");
 
 	//SOLID, CULLFRONT, CCW
 	rasterizer_desc.FillMode = D3D11_FILL_SOLID;
 	rasterizer_desc.CullMode = D3D11_CULL_FRONT;
 	rasterizer_desc.FrontCounterClockwise = TRUE;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "SOLID, CULLFRONT, CCW");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &m_pStates[(UINT)E_RSState::SOLID_CULLFRONT_CCW]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_RSState::SOLID_CULLFRONT_CCW], "SOLID, CULLFRONT, CCW");
 
 	//WIREFRAME, CULLBACK, CW
 	rasterizer_desc.FillMode = D3D11_FILL_WIREFRAME;
 	rasterizer_desc.CullMode = D3D11_CULL_BACK;
 	rasterizer_desc.FrontCounterClockwise = FALSE;
-	result = pDevice->CreateRasterizerState(&rasterizer_desc, &pState);
-	_ASEERTION_NULCHK(pState, "WIREFRAME, CULLBACK, CW");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateRasterizerState(&rasterizer_desc, &m_pStates[(UINT)E_RSState::WIRE_CULLBACK_CW]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_RSState::WIRE_CULLBACK_CW], "WIREFRAME, CULLBACK, CW");
 
 	//필요시 추가
 }
@@ -316,9 +309,9 @@ BlendState::BlendState(ID3D11Device* pDevice)
 		비트가 0일 때 : 해당 샘플에 색상 쓰기(Write) 금지.
 		3. 가장 일반적인 사용법 : 0xFFFFFFFF 또는 - 1
 	*/
+	m_pStates.resize((UINT)E_BSState::COUNT);
 	HRESULT result;
 	D3D11_BLEND_DESC blend_desc;
-	ID3D11BlendState* pState;
 	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
 
 	blend_desc.AlphaToCoverageEnable = FALSE;		//MSAA
@@ -327,12 +320,11 @@ BlendState::BlendState(ID3D11Device* pDevice)
 	// 알파 블렌드를 비활성화 설정합니다(Opaque)
 	blend_desc.RenderTarget[0].BlendEnable = FALSE;
 	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL; //0x0F, 8바이트변수
-	result = pDevice->CreateBlendState(&blend_desc, &pState);
-	_ASEERTION_NULCHK(pState, "Opaque");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateBlendState(&blend_desc, &m_pStates[(UINT)E_BSState::Opaque]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_BSState::Opaque], "Opaque");
 
 	// 알파블렌드 값을 설정합니다(Transparent)
-	// // 용도: 투명한 객체 (유리, 나뭇잎, 투명 UI 등) 렌더링.
+	// 용도: 투명한 객체 (유리, 나뭇잎, 투명 UI 등) 렌더링.
 	// 공식: FinalColor = (SrcColor * SrcA) + (DestColor * (1 - SrcA))
 	//RGB
 	blend_desc.RenderTarget[0].BlendEnable = TRUE;
@@ -343,14 +335,13 @@ BlendState::BlendState(ID3D11Device* pDevice)
 	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	result = pDevice->CreateBlendState(&blend_desc, &pState);
-	_ASEERTION_NULCHK(pState, "Transparent");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateBlendState(&blend_desc, &m_pStates[(UINT)E_BSState::Transparent]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_BSState::Transparent], "Transparent");
 
 	// 가산블렌딩 AdditiveBlending
 	// 용도: 발광체, 불꽃, 폭발, 마법 효과 등 밝은 효과 렌더링. 색상을 누적시켜 밝아집니다.
 	// 공식: FinalColor = (SrcColor * 1) + (DestColor * 1)
-	 // RenderTarget[0] 설정
+	// RenderTarget[0] 설정
 	blend_desc.RenderTarget[0].BlendEnable = TRUE; // 블렌딩 활성화
 
 	// 색상 블렌딩 설정 (RGB)
@@ -362,9 +353,40 @@ BlendState::BlendState(ID3D11Device* pDevice)
 	blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 	blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
 	blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-	result = pDevice->CreateBlendState(&blend_desc, &pState);
-	_ASEERTION_NULCHK(pState, "AdditiveBlending");
-	m_pStates.push_back(pState);
+	result = pDevice->CreateBlendState(&blend_desc, &m_pStates[(UINT)E_BSState::Additive]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_BSState::Additive], "AdditiveBlending");
+
+	// -------------------------------------------------------------------------
+	// [4] Outline_Write (색상 출력 금지, 스텐실 마킹 전용)
+	// 용도: 스텐실 버퍼에 영역만 기록하고 RTV의 기존 색상은 보존함.
+	// -------------------------------------------------------------------------
+	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+
+	blend_desc.RenderTarget[0].BlendEnable = FALSE; // 블렌딩 불필요
+	// 핵심: 모든 채널(R, G, B, A) 쓰기를 금지함. 
+	// 이 상태에서 그리면 픽셀 셰이더가 돌아도 RTV에는 아무 변화가 없습니다.
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = 0;
+
+	result = pDevice->CreateBlendState(&blend_desc, &m_pStates[(UINT)E_BSState::Outline_Write]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_BSState::Outline_Write], "Outline_Write");
+
+
+	// -------------------------------------------------------------------------
+	// [5] Outline_Draw (일반 불투명 렌더링과 동일하나 명시적으로 분리)
+	// 용도: 실제 아웃라인 색상을 RTV에 덮어씌움.
+	// -------------------------------------------------------------------------
+	ZeroMemory(&blend_desc, sizeof(D3D11_BLEND_DESC));
+	blend_desc.AlphaToCoverageEnable = FALSE;
+	blend_desc.IndependentBlendEnable = FALSE;
+
+	// 아웃라인은 보통 불투명하게(Opaque) 덧칠하므로 BlendEnable은 FALSE입니다.
+	blend_desc.RenderTarget[0].BlendEnable = FALSE;
+	blend_desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	result = pDevice->CreateBlendState(&blend_desc, &m_pStates[(UINT)E_BSState::Outline_Draw]);
+	_ASEERTION_NULCHK(m_pStates[(UINT)E_BSState::Outline_Draw], "Outline_Draw");
 }
 
 ID3D11BlendState* BlendState::GetState(E_BSState stateIdx)

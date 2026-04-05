@@ -71,7 +71,6 @@ void CollisionSystem::Frame(float deltatime)
 	using PickingOrder = std::tuple<float, C_Info*>;
 	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
-	_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;	//picking entity initialize
 	UINT renderCnt = 0;
 	//Static
 	{
@@ -123,7 +122,7 @@ void CollisionSystem::Frame(float deltatime)
 						
 						//피킹 이전에 공간분할(octree등) 추후필요
 						//Picking
-						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN())
+						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN() && !_EngineSystem.bMouseOnGUI)
 						{
 							for (const auto& hash_boundingVolume : pMesh->GetCLs())
 							{
@@ -284,7 +283,7 @@ void CollisionSystem::Frame(float deltatime)
 
 						//피킹 이전에 공간분할(octree등) 추후필요
 						//Picking
-						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN())
+						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN() && !_EngineSystem.bMouseOnGUI)
 						{
 							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
 							{
@@ -417,15 +416,12 @@ void CollisionSystem::Frame(float deltatime)
 	if (pq_picking.size())
 	{
 		auto top = pq_picking.top();
-		pq_picking.pop();
-		/*
-		C_Collider* pCollider = std::get<1>(top);
-		pCollider->bPicking = true;
-		C_Info* pInfo = std::get<2>(top);
-		*/
 		C_Info* pInfo = std::get<1>(top);
 		_EngineSystem.m_hash_pickingLookup = pInfo->lEntityLookup;
 	}
+
+	if (_InputSystem.IsPressed_LBTN() && pq_picking.empty() && !_EngineSystem.bMouseOnGUI)
+		_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;
 
 	if (g_fTime_Log >= 1.0f)
 		std::cout << "렌더링 된 객체 수 : " << renderCnt << '\n';
