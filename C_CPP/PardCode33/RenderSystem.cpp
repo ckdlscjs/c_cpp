@@ -159,7 +159,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
 
 	//Render Pikcing
-	if (_InputSystem.IsPressed_LBTN())
+	if (_EngineSystem.m_hash_pickingLookup != _HashNotInitialize)
 	{
 		RenderGeometry_PickingOutline(cam_matView, cam_matProj);
 		RenderGeometry_PickingTriangle(cam_matView, cam_matProj);
@@ -1551,7 +1551,6 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	auto& colliders = archetype->GetComponents<C_Collider>(row);
 
 	if (!renders[col].bRenderable) return;
-	//if (!colliders[col].bPicking) return;
 
 	if (g_fTime_Log >= 1.0f)
 		std::cout << '\n' << "Picking Entity : " << _towm(archetype->GetComponents<C_Info>(row)[col].szName) << '\n' << '\n';
@@ -1652,7 +1651,8 @@ void RenderSystem::RenderGeometry_PickingOutline(const Matrix4x4& matView, const
 	}
 
 	CB_Outline_Picking cb_outline;
-	cb_outline.color_thickness = Vector4(255.0f, 165.0f, 0.0f, 1.0f); //rgb, thickness;
+	Vector3 outlineColor = Vector3(255.0f, 165.0f, 0.0f) / 255.0f;
+	cb_outline.color_thickness = Vector4(outlineColor, _EngineSystem.m_fThickness); //rgb, thickness;
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_outline_picking, &cb_outline);
 	SetVS_ConstantBuffer(g_hash_cb_outline_picking, 3);
 

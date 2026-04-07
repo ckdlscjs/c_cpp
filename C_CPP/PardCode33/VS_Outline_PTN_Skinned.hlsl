@@ -66,7 +66,7 @@ VS_OUTPUT vsmain(VS_INPUT input)
     output.pos0 = mul(output.pos0, matView);
     output.pos0 = mul(output.pos0, matProj);
 
-    output.color0 = float4(outline_Color / 255.0f, 1.0f);
+    output.color0 = float4(outline_Color, 1.0f);
     return output;
     
 }

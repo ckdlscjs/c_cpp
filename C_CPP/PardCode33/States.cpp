@@ -88,10 +88,20 @@ DepthStencilState::DepthStencilState(ID3D11Device* pDevice)
 	// [4] Outline_Draw (기록된 영역을 제외한 나머지 외곽선만 렌더링)
 	// -------------------------------------------------------------------------
 	ZeroMemory(&depth_stencil_desc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-	// 아웃라인은 보통 물체 뒤에 가려져도 보여야 하므로 DepthEnable을 FALSE로 하거나 
-	// DepthFunc을 ALWAYS로 설정하는 경우가 많습니다.
-	depth_stencil_desc.DepthEnable = FALSE;
+
+	//// 물체에 가려져도 스텐실버퍼를 그리는경우
+	//// 아웃라인은 보통 물체 뒤에 가려져도 보여야 하므로 DepthEnable을 FALSE로 하거나 
+	//// DepthFunc을 ALWAYS로 설정하는 경우가 많습니다.
+	//depth_stencil_desc.DepthEnable = FALSE;
+	//depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+
+	// 물체에 가려지면 해당 버퍼를 표기하지 않는경우
+	// 수정: 깊이 테스트를 활성화하여 다른 물체에 가려지면 안 그리도록 합니다.
+	// 아웃라인 자체가 깊이 버퍼를 갱신해서 뒤에 그릴 다른 물체에 영향을 주면 안 되므로 ZERO
+	// 기존 깊이값(다른 물체)보다 가깝거나 같을 때만 그립니다.
+	depth_stencil_desc.DepthEnable = TRUE;
 	depth_stencil_desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+	depth_stencil_desc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
 	depth_stencil_desc.StencilEnable = TRUE;
 	depth_stencil_desc.StencilReadMask = 0xFF;

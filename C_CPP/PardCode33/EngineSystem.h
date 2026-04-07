@@ -208,6 +208,7 @@ public:
 	size_t												m_hash_Mat_ShadowMap;
 
 	//아웃라인 렌더링을 위한 변수들
+	float												m_fThickness = 0.5f;
 	size_t												m_hash_Mat_Outline_PTN;
 	size_t												m_hash_Mat_Outline_PTN_Skinned;
 	size_t												m_hash_Mat_Outline_PTNTB;
@@ -217,6 +218,7 @@ public:
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
 };
+
 //SingletonClasses
 #define _EngineSystem EngineSystem::GetInstance()
 

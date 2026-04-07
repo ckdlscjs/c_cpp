@@ -137,6 +137,12 @@ void ImguiSystem::Render()
 
 void ImguiSystem::Editor_Transform()
 {
+    std::function<void()> ResetTransform = [&]() 
+        {  
+            m_fEditTF_Pos[0] = m_fEditTF_Pos[1] = m_fEditTF_Pos[2] = 0.0f;
+            m_fEditTF_Rot[0] = m_fEditTF_Rot[1] = m_fEditTF_Rot[2] = 0.0f;
+            m_fEditTF_Sca[0] = m_fEditTF_Sca[1] = m_fEditTF_Sca[2] = 1.0f;
+        };
     size_t lookup = _EngineSystem.m_hash_pickingLookup;
     C_Transform* entityTransform = nullptr;
     if(lookup != _HashNotInitialize)
@@ -160,9 +166,7 @@ void ImguiSystem::Editor_Transform()
     }
     else
     {
-        std::memset(m_fEditTF_Pos, 0.0f, sizeof(float) * 3);
-        std::memset(m_fEditTF_Rot, 0.0f, sizeof(float) * 3);
-        std::memset(m_fEditTF_Sca, 0.0f, sizeof(float) * 3);
+        ResetTransform();
         m_szEntityName = NotPicking;
     }
     
@@ -199,11 +203,12 @@ void ImguiSystem::Editor_Transform()
 
         // 초기화 버튼 (우측 정렬 예시)
         ImGui::Spacing();
-        if (ImGui::Button("Reset Transform"))
+        if (ImGui::Button("Reset Transform") && entityTransform)
         {
-            std::memset(m_fEditTF_Pos, 0.0f, sizeof(float) * 3);
-            std::memset(m_fEditTF_Rot, 0.0f, sizeof(float) * 3);
-            std::memset(m_fEditTF_Sca, 0.0f, sizeof(float) * 3);
+            ResetTransform();
+            entityTransform->vPosition.Set(m_fEditTF_Pos[0], m_fEditTF_Pos[1], m_fEditTF_Pos[2]);
+            entityTransform->qRotate = Quarternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
+            entityTransform->vScale.Set(m_fEditTF_Sca[0], m_fEditTF_Sca[1], m_fEditTF_Sca[2]);
         }
     }
     ImGui::End();
