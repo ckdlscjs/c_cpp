@@ -217,7 +217,7 @@ struct KeyFrame_Vector
 struct KeyFrame_Quarternion
 {
 	float fTime;
-	Quarternion qValue;
+	Quaternion qValue;
 };
 
 //애니메이션클립(Sort by Bones)

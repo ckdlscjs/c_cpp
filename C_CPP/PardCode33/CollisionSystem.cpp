@@ -91,7 +91,7 @@ void CollisionSystem::Frame(float deltatime)
 					renders[col].bRenderable = false;
 					//colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
@@ -252,7 +252,7 @@ void CollisionSystem::Frame(float deltatime)
 					renders[col].bRenderable = true;
 					//colliders[col].bPicking = false;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 

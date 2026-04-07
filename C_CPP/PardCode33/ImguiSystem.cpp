@@ -2,11 +2,13 @@
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
+#include "ImGuizmo.h"
 
 //Systems
 #include "EngineSystem.h"
 #include "ECSSystem.h"
 #include "InputSystem.h"
+#include "CameraSystem.h"
 
 ImguiSystem::ImguiSystem()
 {   
@@ -80,6 +82,8 @@ void ImguiSystem::Frame(float deltatime)
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
+    // 1. 기즈모 시작 선언 (매 프레임)
+    ImGuizmo::BeginFrame();
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
@@ -117,7 +121,7 @@ void ImguiSystem::Frame(float deltatime)
     //        show_another_window = false;
     //    ImGui::End();
     //}
-
+   
     Editor_Transform();
 }
 
@@ -137,6 +141,14 @@ void ImguiSystem::Render()
 
 void ImguiSystem::Editor_Transform()
 {
+    size_t lookup_maincam = _CameraSystem.lookup_maincam;
+    const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
+    const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
+    const auto& c_cam_ortho = _ECSSystem.GetComponent<C_Orthographic>(lookup_maincam);
+    const Matrix4x4& matView = c_cam_main.matView;
+    const Matrix4x4& matProj = c_cam_proj.matProj;
+    const Matrix4x4& matOrtho = c_cam_ortho.matOrtho;
+
     std::function<void()> ResetTransform = [&]() 
         {  
             m_fEditTF_Pos[0] = m_fEditTF_Pos[1] = m_fEditTF_Pos[2] = 0.0f;
@@ -176,8 +188,23 @@ void ImguiSystem::Editor_Transform()
     // -------------------------------------------------------------------------
     ImGui::Begin("Inspector");
 
+    static ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+    static ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::WORLD;
+
     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
     {
+        ImGui::Text("Gizmo Operation");
+        if (ImGui::RadioButton("Translate", mCurrentGizmoOperation == ImGuizmo::TRANSLATE)) mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Rotate", mCurrentGizmoOperation == ImGuizmo::ROTATE)) mCurrentGizmoOperation = ImGuizmo::ROTATE;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Scale", mCurrentGizmoOperation == ImGuizmo::SCALE)) mCurrentGizmoOperation = ImGuizmo::SCALE;
+
+        ImGui::Text("Gizmo Mode");
+        if (ImGui::RadioButton("Local", mCurrentGizmoMode == ImGuizmo::LOCAL)) mCurrentGizmoMode = ImGuizmo::LOCAL;
+        ImGui::SameLine();
+        if (ImGui::RadioButton("World", mCurrentGizmoMode == ImGuizmo::WORLD)) mCurrentGizmoMode = ImGuizmo::WORLD;
+
         ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.7f); // 라벨 영역 확보
         std::string outputName = "EntityName : " + m_szEntityName;
         ImGui::Text(outputName.c_str());
@@ -190,7 +217,7 @@ void ImguiSystem::Editor_Transform()
         // Rotation 조절 (각도 단위)
         if (ImGui::DragFloat3("Rotation", m_fEditTF_Rot, 0.5f) && entityTransform)
         {
-            entityTransform->qRotate = Quarternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
+            entityTransform->qRotate = Quaternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
         }
 
         // Scale 조절
@@ -207,11 +234,46 @@ void ImguiSystem::Editor_Transform()
         {
             ResetTransform();
             entityTransform->vPosition.Set(m_fEditTF_Pos[0], m_fEditTF_Pos[1], m_fEditTF_Pos[2]);
-            entityTransform->qRotate = Quarternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
+            entityTransform->qRotate = Quaternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
             entityTransform->vScale.Set(m_fEditTF_Sca[0], m_fEditTF_Sca[1], m_fEditTF_Sca[2]);
         }
     }
     ImGui::End();
+
+    // Setting, Render gizmo
+    if (lookup == _HashNotInitialize) return;
+    // 2. 기즈모를 그릴 좌표 평면 설정 (화면 전체 혹은 특정 창)
+    ImGuiIO& io = ImGui::GetIO();
+    ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
+    // 3. 카메라 행렬 준비 (float* 로 변환), xmmatrix를 이용하므로 memcpy로 이동할 수 있다
+    // 4. 대상 물체의 월드 행렬 가져오기
+    Matrix4x4 matWorld = entityTransform ? GetMat_World(entityTransform->vScale, entityTransform->qRotate, entityTransform->vPosition) : GetMat_Identity();
+    float model[16], view[16], proj[16];
+    memcpy(view, &matView, sizeof(Matrix4x4));
+    memcpy(proj, &matProj, sizeof(Matrix4x4));
+    memcpy(model, &matWorld, sizeof(Matrix4x4));
+
+    // 5. 조작 및 렌더링 (Manipulate)
+    // Operation: TRANSLATE, ROTATE, SCALE 중 선택 (보통 단축키로 제어)
+    // Mode: LOCAL 또는 WORLD
+    ImGuizmo::Manipulate(view, proj, mCurrentGizmoOperation, mCurrentGizmoMode, model);
+
+    // 6. 사용자가 기즈모를 조작했다면 엔진 데이터 갱신
+    if (ImGuizmo::IsUsing() && entityTransform)
+    {
+        // 수정된 model 행렬을 다시 Matrix 객체로 복사
+        Matrix4x4 newWorld;
+        memcpy(&newWorld, model, sizeof(float) * 16);
+
+        //수정된 행렬을 Decompose(분해)해서 Transform에 세팅
+        Vector3 pos, scale;
+        Quaternion rot;
+        DecomposeFromWorld(newWorld, &scale, &rot, &pos);
+        entityTransform->vScale = scale;
+        entityTransform->qRotate = rot;
+        entityTransform->vPosition = pos;
+    }
 }
 
 ImguiSystem::~ImguiSystem()

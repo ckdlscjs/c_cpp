@@ -1,3 +1,9 @@
+
+//ImguiGizmo사용용도
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+
 // dear imgui, v1.92.1
 // (headers)
 

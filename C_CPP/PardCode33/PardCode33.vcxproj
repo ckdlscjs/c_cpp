@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>../Include/ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../Include/ImGuiGizmo;../Include/ImGui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -141,6 +141,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Include\ImGuiGizmo\GraphEditor.h" />
+    <ClInclude Include="..\Include\ImGuiGizmo\ImCurveEdit.h" />
+    <ClInclude Include="..\Include\ImGuiGizmo\ImGradient.h" />
+    <ClInclude Include="..\Include\ImGuiGizmo\ImGuizmo.h" />
+    <ClInclude Include="..\Include\ImGuiGizmo\ImSequencer.h" />
+    <ClInclude Include="..\Include\ImGuiGizmo\ImZoomSlider.h" />
     <ClInclude Include="..\Include\ImGui\imconfig.h" />
     <ClInclude Include="..\Include\ImGui\imgui.h" />
     <ClInclude Include="..\Include\ImGui\imgui_impl_dx11.h" />
@@ -198,6 +204,11 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Include\ImGuiGizmo\GraphEditor.cpp" />
+    <ClCompile Include="..\Include\ImGuiGizmo\ImCurveEdit.cpp" />
+    <ClCompile Include="..\Include\ImGuiGizmo\ImGradient.cpp" />
+    <ClCompile Include="..\Include\ImGuiGizmo\ImGuizmo.cpp" />
+    <ClCompile Include="..\Include\ImGuiGizmo\ImSequencer.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_demo.cpp" />
     <ClCompile Include="..\Include\ImGui\imgui_draw.cpp" />

@@ -71,7 +71,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		cb_directional.mAmbient		= c_light.vAmbient;
 		cb_directional.mDiffuse		= c_light.vDiffuse;
 		cb_directional.mSpecular	= c_light.vSpecular;
-		cb_directional.vDirection	= Vector4(Quarternion(lightDir.dir).GetForwardAxis(), c_light.fShiness);
+		cb_directional.vDirection	= Vector4(Quaternion(lightDir.dir).GetForwardAxis(), c_light.fShiness);
 	}
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_directionalLight, &cb_directional);
 	SetPS_ConstantBuffer(g_hash_cb_directionalLight, 0);
@@ -449,7 +449,7 @@ void RenderSystem::RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& ma
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
 				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
+				const Quaternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
 				CB_WVPITMatrix cb_wvpitmat;
 				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -515,7 +515,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -574,7 +574,7 @@ void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& mat
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 
 					CB_WVPITMatrix cb_wvpitmat;
@@ -641,7 +641,7 @@ void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matVi
 			{
 				if (!renders[col].bRenderable) continue;
 				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
+				const Quaternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
 				CB_WVPITMatrix cb_wvpitmat;
 				/*
@@ -651,7 +651,7 @@ void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matVi
 				*/
 				//yaw빌보드 구현, +z(화면안쪽) 이므로 물체-카메라로 역방향으로 회전해야 같은yaw로 회전해 빌보드로 보이게된다
 
-				Quarternion qRot((position - campos).Normalize());
+				Quaternion qRot((position - campos).Normalize());
 				cb_wvpitmat.matWorld = GetMat_Scale(scale) * GetMat_RotYaw(qRot.ToRotate().GetY()) * GetMat_Translation(position);
 				cb_wvpitmat.matView = matView;
 				cb_wvpitmat.matProj = matProj;
@@ -718,7 +718,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -768,7 +768,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 
 					CB_WVPITMatrix cb_wvpitmat;
@@ -832,7 +832,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					/*
@@ -842,7 +842,7 @@ void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& ma
 					*/
 					//yaw빌보드 구현, +z(화면안쪽) 이므로 물체-카메라로 역방향으로 회전해야 같은yaw로 회전해 빌보드로 보이게된다
 
-					Quarternion qRot((position - c_cam_transform.vPosition).Normalize());
+					Quaternion qRot((position - c_cam_transform.vPosition).Normalize());
 					cb_wvpitmat.matWorld = GetMat_Scale(scale) * GetMat_RotYaw(qRot.ToRotate().GetY()) * GetMat_Translation(position);
 					cb_wvpitmat.matView = matView;
 					cb_wvpitmat.matProj = matProj;
@@ -974,7 +974,7 @@ void RenderSystem::RenderCubeMap()
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -1038,7 +1038,7 @@ void RenderSystem::RenderCubeMap()
 					{
 						if (!renders[col].bRenderable) continue;
 						const Vector3& scale = transforms[col].vScale;
-						const Quarternion& rotate = transforms[col].qRotate;
+						const Quaternion& rotate = transforms[col].qRotate;
 						const Vector3& position = transforms[col].vPosition;
 						CB_WVPITMatrix cb_wvpitmat;
 						cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -1100,7 +1100,7 @@ void RenderSystem::RenderCubeMap()
 					{
 						if (!renders[col].bRenderable) continue;
 						const Vector3& scale = transforms[col].vScale;
-						const Quarternion& rotate = transforms[col].qRotate;
+						const Quaternion& rotate = transforms[col].qRotate;
 						const Vector3& position = transforms[col].vPosition;
 
 						CB_WVPITMatrix cb_wvpitmat;
@@ -1184,7 +1184,7 @@ void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
 				const Vector3& scale = transforms[col].vScale;
-				const Quarternion& rotate = transforms[col].qRotate;
+				const Quaternion& rotate = transforms[col].qRotate;
 				const Vector3& position = transforms[col].vPosition;
 				CB_WVPITMatrix cb_wvpitmat;
 				cb_wvpitmat.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_World(scale, rotate, position);
@@ -1251,7 +1251,7 @@ void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x
 				{
 					if (!renders[col].bRenderable) continue;
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -1339,7 +1339,7 @@ void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x
 					if (!renders[col].bRenderable) continue;
 
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					CB_WVPITMatrix cb_wvpitmat;
 					cb_wvpitmat.matView = matView;
@@ -1446,7 +1446,7 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	//				if (!renders[col].bRenderable) continue;
 	//				if (!colliders[col].bPicking) continue;
 	//				const Vector3& scale = transforms[col].vScale;
-	//				const Quarternion& rotate = transforms[col].qRotate;
+	//				const Quaternion& rotate = transforms[col].qRotate;
 	//				const Vector3& position = transforms[col].vPosition;
 	//				CB_WVPITMatrix cb_wvpitmat;
 	//				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
@@ -1499,7 +1499,7 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	//				if (!renders[col].bRenderable) continue;
 	//				if (!colliders[col].bPicking) continue;
 	//				const Vector3& scale = transforms[col].vScale;
-	//				const Quarternion& rotate = transforms[col].qRotate;
+	//				const Quaternion& rotate = transforms[col].qRotate;
 	//				const Vector3& position = transforms[col].vPosition;
 
 	//				CB_WVPITMatrix cb_wvpitmat;
@@ -1539,25 +1539,20 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	//	}
 	//}
 
-	
-	const Entity* entity = _ECSSystem.GetEntity(_EngineSystem.m_hash_pickingLookup);
-	Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
+	size_t lookup			= _EngineSystem.m_hash_pickingLookup;
+	auto& info				= _ECSSystem.GetComponent<C_Info>(lookup);
+	auto& transform			= _ECSSystem.GetComponent<C_Transform>(lookup);
+	auto& render			= _ECSSystem.GetComponent<C_Render>(lookup);
+	auto& collider			= _ECSSystem.GetComponent<C_Collider>(lookup);
 
-	size_t row = entity->m_IdxRow;
-	size_t col = entity->m_IdxCol;
-
-	auto& transforms = archetype->GetComponents<C_Transform>(row);
-	auto& renders = archetype->GetComponents<C_Render>(row);
-	auto& colliders = archetype->GetComponents<C_Collider>(row);
-
-	if (!renders[col].bRenderable) return;
+	if (!render.bRenderable) return;
 
 	if (g_fTime_Log >= 1.0f)
-		std::cout << '\n' << "Picking Entity : " << _towm(archetype->GetComponents<C_Info>(row)[col].szName) << '\n' << '\n';
+		std::cout << '\n' << "Picking Entity : " << _towm(info.szName) << '\n' << '\n';
 
-	const Vector3& scale = transforms[col].vScale;
-	const Quarternion& rotate = transforms[col].qRotate;
-	const Vector3& position = transforms[col].vPosition;
+	const Vector3& scale = transform.vScale;
+	const Quaternion& rotate = transform.qRotate;
+	const Vector3& position = transform.vPosition;
 	CB_WVPITMatrix cb_wvpitmat;
 	cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
 	cb_wvpitmat.matView = matView;
@@ -1566,14 +1561,14 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 	SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-	if (archetype->HasComponents<C_Animation>())
+	if (_ECSSystem.HasComponent<C_Animation>(lookup))
 	{
-		auto& animations = archetype->GetComponents<C_Animation>(row);
-		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
+		auto& animation = _ECSSystem.GetComponent<C_Animation>(lookup);
+		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
 		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 	}
 
-	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
+	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(render.hash_asset_Render)->m_hMeshMats;
 	for (UINT j = 0; j < MeshMats.size(); j++)
 	{
 		auto& iter = MeshMats[j];
@@ -1589,7 +1584,7 @@ void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, cons
 		SetGS_Shader(NULL);
 		SetPS_Shader(g_hash_PS_Picking);
 
-		Draw_Indicies(3, colliders[col].pickingIdx, 0);
+		Draw_Indicies(3, collider.pickingIdx, 0);
 	}
 }
 
@@ -1615,26 +1610,21 @@ void RenderSystem::RenderGeometry_PickingOutline(const Matrix4x4& matView, const
 			}
 		};
 
-	
 	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
 	SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
 	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
 
-	const Entity* entity = _ECSSystem.GetEntity(_EngineSystem.m_hash_pickingLookup);
-	Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
+	size_t lookup			= _EngineSystem.m_hash_pickingLookup;
+	auto& info				= _ECSSystem.GetComponent<C_Info>(lookup);
+	auto& transform			= _ECSSystem.GetComponent<C_Transform>(lookup);
+	auto& render			= _ECSSystem.GetComponent<C_Render>(lookup);
+	auto& collider			= _ECSSystem.GetComponent<C_Collider>(lookup);
 
-	size_t row = entity->m_IdxRow;
-	size_t col = entity->m_IdxCol;
+	if (!render.bRenderable) return;
 
-	auto& transforms = archetype->GetComponents<C_Transform>(row);
-	auto& renders = archetype->GetComponents<C_Render>(row);
-	auto& colliders = archetype->GetComponents<C_Collider>(row);
-
-	if (!renders[col].bRenderable) return;
-
-	const Vector3& scale = transforms[col].vScale;
-	const Quarternion& rotate = transforms[col].qRotate;
-	const Vector3& position = transforms[col].vPosition;
+	const Vector3& scale = transform.vScale;
+	const Quaternion& rotate = transform.qRotate;
+	const Vector3& position = transform.vPosition;
 	CB_WVPITMatrix cb_wvpitmat;
 	cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
 	cb_wvpitmat.matView = matView;
@@ -1643,10 +1633,10 @@ void RenderSystem::RenderGeometry_PickingOutline(const Matrix4x4& matView, const
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
 	SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
 
-	if (archetype->HasComponents<C_Animation>())
+	if (_ECSSystem.HasComponent<C_Animation>(lookup))
 	{
-		auto& animations = archetype->GetComponents<C_Animation>(row);
-		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
+		auto& animation = _ECSSystem.GetComponent<C_Animation>(lookup);
+		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
 		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
 	}
 
@@ -1656,7 +1646,7 @@ void RenderSystem::RenderGeometry_PickingOutline(const Matrix4x4& matView, const
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_outline_picking, &cb_outline);
 	SetVS_ConstantBuffer(g_hash_cb_outline_picking, 3);
 
-	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
+	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(render.hash_asset_Render)->m_hMeshMats;
 
 	//Outline_Write
 	SetOM_BlendState(E_BSState::Outline_Write, NULL);

@@ -36,6 +36,8 @@ public:
 	template<typename T>
 	void AddComponent(ArchetypeKey key, T&& component);
 	template<typename T>
+	bool HasComponent(size_t idx_lookup);
+	template<typename T>
 	T& GetComponent(size_t idx_lookup);
 	std::vector<Archetype*> QueryArchetypes(ArchetypeKey key);
 	Archetype* QueryArchetype(ArchetypeKey key);
@@ -92,6 +94,14 @@ template<typename T>
 inline void ECSSystem::AddComponent(ArchetypeKey key, T&& component)
 {
 	m_Archetypes[key]->AddComponent<T>(std::forward<T>(component));
+}
+
+template<typename T>
+inline bool ECSSystem::HasComponent(size_t idx_lookup)
+{
+	size_t entityIdx = FindEntity(idx_lookup);
+	const auto& entity = m_Entitys[entityIdx];
+	return m_Archetypes[entity.m_Key]->HasComponents<T>();
 }
 
 template<typename T>

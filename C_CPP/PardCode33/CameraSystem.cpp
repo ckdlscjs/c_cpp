@@ -129,7 +129,7 @@ void CameraSystem::Frame(float deltaTime)
 				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 				{
 					const Vector3& scale = transforms[col].vScale;
-					const Quarternion& rotate = transforms[col].qRotate;
+					const Quaternion& rotate = transforms[col].qRotate;
 					const Vector3& position = transforms[col].vPosition;
 					cameras[col].matWorld = GetMat_World(scale, rotate, position);
 					cameras[col].matView = GetMat_View(position, rotate);

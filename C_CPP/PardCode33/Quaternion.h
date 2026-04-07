@@ -1,15 +1,15 @@
 #pragma once
 #include "Matrix4x4.h"
 __declspec(align(16))
-struct Quarternion
+struct Quaternion
 {
 public:
 	//생성자(복사/이동 생성자는 컴파일러의 자동생성에 맡긴다)
-	inline Quarternion() : m_quat(0.0f, 0.0f, 0.0f, 1.0f) {}
-	inline Quarternion(float w, float x, float y, float z) : m_quat(x, y, z, w) {}
-	inline Quarternion(const Vector4& v) : m_quat(v) {}
-	inline Quarternion(float w, const Vector3& v) : Quarternion(w, v.GetX(), v.GetY(), v.GetZ()) {}
-	inline Quarternion(const Vector3& v, float degree)
+	inline Quaternion() : m_quat(0.0f, 0.0f, 0.0f, 1.0f) {}
+	inline Quaternion(float w, float x, float y, float z) : m_quat(x, y, z, w) {}
+	inline Quaternion(const Vector4& v) : m_quat(v) {}
+	inline Quaternion(float w, const Vector3& v) : Quaternion(w, v.GetX(), v.GetY(), v.GetZ()) {}
+	inline Quaternion(const Vector3& v, float degree)
 	{
 		float cos = cosf(_DEGTORAD(degree) * 0.5f);
 		float sin = sinf(_DEGTORAD(degree) * 0.5f);
@@ -18,7 +18,7 @@ public:
 		m_quat.SetY(v.GetY() * sin);
 		m_quat.SetZ(v.GetZ() * sin);
 	}
-	inline Quarternion(float pitch, float yaw, float roll)
+	inline Quaternion(float pitch, float yaw, float roll)
 	{
 		SetFromRotate(pitch, yaw, roll);
 	}
@@ -27,7 +27,7 @@ public:
 	* 가정한다면 이 둘을 외적하면 사원수의 임의회전축을 얻을수 있고 이 두벡터의 사잇각을 이용해
 	* (cos(t), sin(t) * n) 을 구성한다
 	*/
-	inline Quarternion(const Vector3& direction)
+	inline Quaternion(const Vector3& direction)
 	{
 		//두 벡터를 구성한다
 		Vector3 vForward(0.0f, 0.0f, 1.0f);
@@ -70,7 +70,7 @@ public:
 		Set(cosTheta, rotateAxis * sinTheta);
 	}
 
-	inline Quarternion(const Matrix4x4& mat)
+	inline Quaternion(const Matrix4x4& mat)
 	{
 		SetFromMatrix(mat);
 	}
@@ -81,19 +81,19 @@ public:
 	inline void Set(float w, const Vector3& v) { m_quat.Set(v.GetX(), v.GetY(), v.GetZ(), w); }
 
 	//연산자재정의
-	inline Quarternion operator+(const Quarternion& other) const { return Quarternion(m_quat + other.m_quat); }
-	inline Quarternion& operator+=(const Quarternion& other)
+	inline Quaternion operator+(const Quaternion& other) const { return Quaternion(m_quat + other.m_quat); }
+	inline Quaternion& operator+=(const Quaternion& other)
 	{
 		m_quat += other.m_quat;
 		return *this;
 	}
 	//사원수반전, slerp등에사용
-	inline Quarternion operator-() const
+	inline Quaternion operator-() const
 	{
-		return Quarternion(-GetW(), -GetV());
+		return Quaternion(-GetW(), -GetV());
 	}
-	inline Quarternion operator-(const Quarternion& other) const { return Quarternion(m_quat - other.m_quat); }
-	inline Quarternion& operator-=(const Quarternion& other)
+	inline Quaternion operator-(const Quaternion& other) const { return Quaternion(m_quat - other.m_quat); }
+	inline Quaternion& operator-=(const Quaternion& other)
 	{
 		m_quat -= other.m_quat;
 		return *this;
@@ -108,27 +108,27 @@ public:
 	* (W, V)
 	* q1 * q2 = (w1w2 - (v1 dot v2), w1v2 + w2v1 + v1 cross v2)
 	*/
-	inline Quarternion& operator*=(const Quarternion& other)
+	inline Quaternion& operator*=(const Quaternion& other)
 	{
 		float w1 = GetW(), w2 = other.GetW();
 		Vector3 v1 = GetV(), v2 = other.GetV();
 		Set(w1 * w2 - v1.DotProduct(v2), w1 * v2 + w2 * v1 + v1.CrossProduct(v2));
 		return *this;
 	}
-	inline Quarternion operator*(const Quarternion& other) const
+	inline Quaternion operator*(const Quaternion& other) const
 	{
-		Quarternion ret(m_quat);
+		Quaternion ret(m_quat);
 		ret *= other;
 		return ret;
 	}
-	inline Quarternion& operator*=(const float scalar)
+	inline Quaternion& operator*=(const float scalar)
 	{
 		m_quat *= scalar;
 		return *this;
 	}
-	inline Quarternion operator*(const float scalar) const
+	inline Quaternion operator*(const float scalar) const
 	{
-		Quarternion ret(m_quat);
+		Quaternion ret(m_quat);
 		ret *= scalar;
 		return ret;
 	}
@@ -140,20 +140,20 @@ public:
 	*/
 	inline Vector3 operator*(const Vector3& v) const
 	{
-		return (*this * Quarternion(0.0f, v) * this->Conjugate()).GetV();
+		return (*this * Quaternion(0.0f, v) * this->Conjugate()).GetV();
 	}
 	inline Vector3 RotateVector(const Vector3& v) const
 	{
 		return *this * v;
 	}
-	inline Quarternion& operator/=(const float scalar)
+	inline Quaternion& operator/=(const float scalar)
 	{
 		m_quat /= scalar;
 		return *this;
 	}
-	inline Quarternion operator/(float scalar) const
+	inline Quaternion operator/(float scalar) const
 	{ 
-		Quarternion ret(m_quat);
+		Quaternion ret(m_quat);
 		ret /= scalar;
 		return ret;
 	}
@@ -172,31 +172,31 @@ public:
 	}
 
 	//켤레사원수, q* = w -(xi + yj + zk)
-	inline Quarternion Conjugate() const
+	inline Quaternion Conjugate() const
 	{
-		return Quarternion(GetW(), -GetV());;
+		return Quaternion(GetW(), -GetV());;
 	}
 
 	//단위사원수(회전사원수)화
-	inline Quarternion Normalize() const
+	inline Quaternion Normalize() const
 	{
 		const float length = Length();
-		if (std::abs(length - 0.0f) <= _EPSILON) return Quarternion();
-		return Quarternion(m_quat / length);
+		if (std::abs(length - 0.0f) <= _EPSILON) return Quaternion();
+		return Quaternion(m_quat / length);
 	}
 	//역원, q^-1 = q* / (||q|| ^ 2)
-	inline Quarternion Inverse() const
+	inline Quaternion Inverse() const
 	{
 		const float lengthsq = LengthSquared();
-		if(std::abs(lengthsq - 0.0f) <= _EPSILON) return Quarternion();
+		if(std::abs(lengthsq - 0.0f) <= _EPSILON) return Quaternion();
 		return Conjugate() / lengthsq;
 	}
 
-	inline float DotProduct(const Quarternion& other) const 
+	inline float DotProduct(const Quaternion& other) const 
 	{
 		return m_quat.DotProduct(other.m_quat);
 	}
-	friend inline float DotProduct(const Quarternion& v1, const Quarternion& v2);
+	friend inline float DotProduct(const Quaternion& v1, const Quaternion& v2);
 
 	inline void SetFromRotate(float pitch, float yaw, float roll)
 	{
@@ -315,7 +315,7 @@ private:
 	Vector4 m_quat;
 };
 
-inline float DotProduct(const Quarternion& v1, const Quarternion& v2)
+inline float DotProduct(const Quaternion& v1, const Quaternion& v2)
 {
 	return v1.m_quat.DotProduct(v2.m_quat);
 }

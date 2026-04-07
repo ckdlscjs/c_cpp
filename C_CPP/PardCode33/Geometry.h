@@ -307,7 +307,7 @@ inline void Geometry::ProcessAnim(const aiScene* scene)
 			{
 				KeyFrame_Quarternion kfRotate;
 				kfRotate.fTime = (float)channel->mRotationKeys[k].mTime;
-				kfRotate.qValue = Quarternion(channel->mRotationKeys[k].mValue.w, channel->mRotationKeys[k].mValue.x, channel->mRotationKeys[k].mValue.y, channel->mRotationKeys[k].mValue.z);
+				kfRotate.qValue = Quaternion(channel->mRotationKeys[k].mValue.w, channel->mRotationKeys[k].mValue.x, channel->mRotationKeys[k].mValue.y, channel->mRotationKeys[k].mValue.z);
 				animClip.boneFrames_Rotate[boneName].push_back(kfRotate);
 			}
 			

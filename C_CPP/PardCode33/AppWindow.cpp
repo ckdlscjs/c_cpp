@@ -107,7 +107,7 @@ void AppWindow::OnCreate()
 
 			Vector3 pos(0.0f, 50.0f, -50.0f);
 			Vector3 dir = (Vector3(0.0f, 0.0f, 0.0f) - pos).Normalize();
-			_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quarternion(dir), pos });
+			_ECSSystem.AddComponent<C_Transform>(key, { {1.0f, 1.0f, 1.0f}, Quaternion(dir), pos });
 
 			std::array<unsigned char, E_Behavior::COUNT> behavior;
 			behavior[E_Behavior::MOVE_FORWARD] = 'W';
@@ -252,7 +252,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quarternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quaternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -288,7 +288,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quarternion(0.0f, 0.0f, 0.0f)}, {0.0f, 50.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quaternion(0.0f, 0.0f, 0.0f)}, {0.0f, 50.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -337,7 +337,7 @@ void AppWindow::OnCreate()
 
 					_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
-					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f},  Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup, (float)lookup, (float)lookup} });
+					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f},  Quaternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup, (float)lookup, (float)lookup} });
 
 					std::array<unsigned char, E_Behavior::COUNT> behavior;
 					behavior[E_Behavior::MOVE_FORWARD] = VK_UP;
@@ -389,7 +389,7 @@ void AppWindow::OnCreate()
 
 					_ECSSystem.AddComponent<C_Input>(key, { vkmask });
 
-					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup,(float)lookup,(float)lookup} });
+					_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quaternion(dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f), {(float)lookup,(float)lookup,(float)lookup} });
 
 					std::array<unsigned char, E_Behavior::COUNT> behavior;
 					behavior[E_Behavior::MOVE_FORWARD] = VK_UP;
@@ -518,7 +518,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quarternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quaternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -564,7 +564,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -614,7 +614,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quarternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {0.5f, 0.5f, 0.5f}, Quaternion(0.0f, 90.0f, 0.0f), {0.0f, 0.0f, -50.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 		}
@@ -652,7 +652,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quarternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -683,7 +683,7 @@ void AppWindow::OnCreate()
 
 		size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, Quarternion(0.0f, 0.0f, 0.0f), {-100.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, Quaternion(0.0f, 0.0f, 0.0f), {-100.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 	}
@@ -725,7 +725,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, {szName, lookup});
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -775,7 +775,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -825,7 +825,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quarternion(30.0f, 95.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quaternion(30.0f, 95.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -865,7 +865,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(0.0f, 180.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(0.0f, 180.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -901,7 +901,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -939,7 +939,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quarternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -80.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -80.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -989,7 +989,7 @@ void AppWindow::OnCreate()
 
 		//size_t lookup = _ECSSystem.CreateEntity<C_Transform, C_Render, C_Collider, T_Render_Geometry>();
 
-		//_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quarternion(90.0f, 90.0f, 0.0f), {-100.0f, 0.0f, -50.0f} });
+		//_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(90.0f, 90.0f, 0.0f), {-100.0f, 0.0f, -50.0f} });
 
 		//_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 

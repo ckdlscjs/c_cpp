@@ -153,26 +153,39 @@ inline Matrix4x4 GetMat_World(const Vector3& scale, const Vector3& eulerDegrees,
 //각 회전축의 길이는 스케일값이 곱해져있으므로 길이값이 각 x, y, z스케일값을의미한다
 inline Vector3 GetScaleFromWorld(const Matrix4x4& matWorld)
 {
-	return Vector3(Vector3(matWorld[0].GetX(), matWorld[1].GetX(), matWorld[2].GetX()).Length(), Vector3(matWorld[0].GetY(), matWorld[1].GetY(), matWorld[2].GetY()).Length(), Vector3(matWorld[0].GetZ(), matWorld[1].GetZ(), matWorld[2].GetZ()).Length());
+	return Vector3(
+		matWorld[0].ToVector3().Length(), // Sx
+		matWorld[1].ToVector3().Length(), // Sy
+		matWorld[2].ToVector3().Length()  // Sz
+	);
+	//return Vector3(Vector3(matWorld[0].GetX(), matWorld[1].GetX(), matWorld[2].GetX()).Length(), Vector3(matWorld[0].GetY(), matWorld[1].GetY(), matWorld[2].GetY()).Length(), Vector3(matWorld[0].GetZ(), matWorld[1].GetZ(), matWorld[2].GetZ()).Length());
 }
 
 //정규화된 좌표축을 가져온다 right, up, forward
 inline Vector3 GetAxesRightFromWorld(const Matrix4x4& matWorld)
 {
 	Vector3 vScale = GetScaleFromWorld(matWorld);
-	return Vector3(matWorld[0].GetX(), matWorld[0].GetY(), matWorld[0].GetZ()) / vScale.GetX();
+	return Vector3(matWorld[0].GetX(), matWorld[0].GetY(), matWorld[0].GetZ()).Normalize();
+	//return Vector3(matWorld[0].GetX(), matWorld[0].GetY(), matWorld[0].GetZ()) / vScale.GetX();
 }
 
 inline Vector3 GetAxesUpFromWorld(const Matrix4x4& matWorld)
 {
 	Vector3 vScale = GetScaleFromWorld(matWorld);
-	return Vector3(matWorld[1].GetX(), matWorld[1].GetY(), matWorld[1].GetZ()).Normalize() / vScale.GetY();
+	return Vector3(matWorld[1].GetX(), matWorld[1].GetY(), matWorld[1].GetZ()).Normalize();
+	//return Vector3(matWorld[1].GetX(), matWorld[1].GetY(), matWorld[1].GetZ()).Normalize() / vScale.GetY();
 }
 
 inline Vector3 GetAxesForwardFromWorld(const Matrix4x4& matWorld)
 {
 	Vector3 vScale = GetScaleFromWorld(matWorld);
-	return Vector3(matWorld[2].GetX(), matWorld[2].GetY(), matWorld[2].GetZ()).Normalize() / vScale.GetZ();
+	return Vector3(matWorld[2].GetX(), matWorld[2].GetY(), matWorld[2].GetZ()).Normalize();
+	//return Vector3(matWorld[2].GetX(), matWorld[2].GetY(), matWorld[2].GetZ()).Normalize() / vScale.GetZ();
+}
+
+inline Quaternion GetQuarterionFromWorld(const Matrix4x4& matWorld)
+{
+	return Quaternion(matWorld);
 }
 
 inline Vector3 GetTranslationFromWorld(const Matrix4x4& matWorld)
@@ -189,11 +202,29 @@ inline Matrix4x4 GetMat_RotFromMatrix(const Matrix4x4& matSource)
 	return mat;
 }
 
-//사원수 추가후 추가예정
-//inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Vector3* rotate, Vector3* translation)
-//{
-//	*scale = GetScaleFromWorld(matWorld);
-//}
+//분해요소를 다 채우는식으로구성
+inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Quaternion* quarternion, Vector3* translation)
+{
+	_ASEERTION_NULCHK(scale && quarternion && translation, L"IsNullptr");
+	*scale = GetScaleFromWorld(matWorld);
+	*translation = GetTranslationFromWorld(matWorld);
+	// 스케일이 0인 경우에 대한 예외 처리
+	if (scale->GetX() == 0 || scale->GetY() == 0 || scale->GetZ() == 0)
+	{
+		*quarternion = Quaternion(0.0f, 0.0f, 0.0f);
+	}
+	else
+	{
+		// 순수 회전 성분만 가진 행렬을 임시 생성
+		Matrix4x4 matRot = GetMat_Identity();
+		matRot[0] = Vector4(matWorld[0].ToVector3() / scale->GetX(), 0.0f);
+		matRot[1] = Vector4(matWorld[1].ToVector3() / scale->GetY(), 0.0f);
+		matRot[2] = Vector4(matWorld[2].ToVector3() / scale->GetZ(), 0.0f);
+
+		// 이제 정규화된 행렬로 사원수를 만들어야 정밀도가 보장됩니다.
+		*quarternion = Quaternion(matRot);
+	}
+}
 
 /*
 * 뷰행렬
@@ -506,7 +537,7 @@ inline Matrix4x4 GetMat_InverseTranspose(Matrix4x4 mat)
 * 2.0f(xz + wy)				2.0f(yz - wx)			1.0f-2.0f(x^2+y^2)		0.0f
 * 0.0f						0.0f					0.0f					1.0f
 */
-inline Matrix4x4 GetMat_RotateFromQuarternion(const Quarternion& q)
+inline Matrix4x4 GetMat_RotateFromQuarternion(const Quaternion& q)
 {
 	Matrix4x4 mat;
 	float w = q.GetW();
@@ -534,12 +565,12 @@ inline Matrix4x4 GetMat_RotateFromQuarternion(const Quarternion& q)
 	return mat;
 }
 
-inline Matrix4x4 GetMat_World(const Vector3& scale, const Quarternion& quarternion, const Vector3& position)
+inline Matrix4x4 GetMat_World(const Vector3& scale, const Quaternion& quarternion, const Vector3& position)
 {
 	return GetMat_Scale(scale) * GetMat_RotateFromQuarternion(quarternion) * GetMat_Translation(position);
 }
 
-inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quarternion& q)
+inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quaternion& q)
 {
 	Matrix4x4 matRotate = GetMat_RotateFromQuarternion(q).Transpose();	//회전행렬의 역행렬
 	Matrix4x4 matTrans = GetMat_Translation(-posCamera);	//이동행렬의 역행렬
@@ -566,7 +597,7 @@ inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quarternion& q)
 * 이때 내적을 이용한 결과가 양수일경우 그대로사용, 음수일경우 반대경로를사용하며 내적의 결과가 1에 가까울경우 평행하므로
 * 선형보간을 사용한다
 */
-inline Quarternion Slerp(Quarternion q1, Quarternion q2, float t)
+inline Quaternion Slerp(Quaternion q1, Quaternion q2, float t)
 {
 	float a = 0.0f, b = 0.0f;
 	float dot = q1.DotProduct(q2);
@@ -590,7 +621,7 @@ inline Quarternion Slerp(Quarternion q1, Quarternion q2, float t)
 		a = sinf((1.0f - t) * theta) / sin_theta;
 		b = sinf(t * theta) / sin_theta;
 	}
-	return Quarternion(q1 * a + q2 * b);
+	return Quaternion(q1 * a + q2 * b);
 }
 
 /*
@@ -598,7 +629,7 @@ inline Quarternion Slerp(Quarternion q1, Quarternion q2, float t)
 * 가정한다면 이 둘을 외적하면 사원수의 임의회전축을 얻을수 있고 이 두벡터의 사잇각을 이용해
 * (cos(t), sin(t) * n) 을 구성한다
 */
-inline Quarternion GetQuarternionFromDirection(const Vector3& direction)
+inline Quaternion GetQuarternionFromDirection(const Vector3& direction)
 {
 	//두 벡터를 구성한다
 	Vector3 vForward(0.0f, 0.0f, 1.0f);
@@ -614,11 +645,11 @@ inline Quarternion GetQuarternionFromDirection(const Vector3& direction)
 	//예외처리
 	//1. 같은방향일경우
 	if (cost > 1.0f - _EPSILON)
-		return Quarternion();
+		return Quaternion();
 	
 	//2. 반대방향일경우, yaw를 기준축으로 삼는다
 	if (cost < -1.0f + _EPSILON)
-		return Quarternion(0.0f, 0.0f, 1.0f, 0.0f);
+		return Quaternion(0.0f, 0.0f, 1.0f, 0.0f);
 
 	//일반적인경우, 두벡터의 외적을통해 기준축을 구한다
 	Vector3 rotateAxis = vForward.CrossProduct(vDirection);	//forward to dir
@@ -626,6 +657,6 @@ inline Quarternion GetQuarternionFromDirection(const Vector3& direction)
 	angle *= 0.5f;	//q v q', theta/2를 사용한다
 	float cosTheta = cosf(angle);
 	float sinTheta = sinf(angle);
-	return Quarternion(cosTheta, rotateAxis * sinTheta);
+	return Quaternion(cosTheta, rotateAxis * sinTheta);
 }
 

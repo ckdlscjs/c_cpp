@@ -20,7 +20,7 @@ struct C_Transform
 {
 public:
 	Vector3 vScale;
-	Quarternion qRotate;
+	Quaternion qRotate;
 	Vector3 vPosition;
 };
 
