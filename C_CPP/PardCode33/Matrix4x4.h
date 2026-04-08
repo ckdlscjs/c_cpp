@@ -23,6 +23,7 @@ struct Matrix4x4
         );
     }
     // DirectX::XMFLOAT4X4에서 로드
+    inline Matrix4x4(const float* m) : Matrix4x4(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11], m[12], m[13], m[14], m[15]) {}
     inline Matrix4x4(const DirectX::XMFLOAT4X4& m) : m_mat(DirectX::XMLoadFloat4x4(&m)) {}
     inline Matrix4x4(const DirectX::XMVECTOR& r0, const DirectX::XMVECTOR& r1, const DirectX::XMVECTOR& r2, const DirectX::XMVECTOR& r3) : m_mat(DirectX::XMMATRIX(r0, r1, r2, r3)) {}
     inline Matrix4x4(const Vector4& r0, const Vector4& r1, const Vector4& r2, const Vector4& r3) : m_mat(DirectX::XMMATRIX(r0.ToXMVECTOR(), r1.ToXMVECTOR(), r2.ToXMVECTOR(), r3.ToXMVECTOR())) {}

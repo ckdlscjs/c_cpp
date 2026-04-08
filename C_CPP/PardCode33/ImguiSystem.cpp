@@ -263,15 +263,7 @@ void ImguiSystem::Editor_Transform()
     // 6. 사용자가 기즈모를 조작했다면 엔진 데이터 갱신
     if (ImGuizmo::IsUsing() && entityTransform)
     {
-        Matrix4x4 newWorld;
-        memcpy(&newWorld, model, sizeof(Matrix4x4));
-        //DecomposeFromWorld(newWorld, &entityTransform->vScale, &entityTransform->qRotate, &entityTransform->vPosition);
-        entityTransform->vPosition = GetTranslationFromWorld(newWorld);
-        entityTransform->qRotate = GetQuaterionFromWorld(newWorld);
-        entityTransform->vScale = GetScaleFromWorld(newWorld);
-       /* m_fEditTF_Pos[0] = newPos[0]; m_fEditTF_Pos[1] = newPos[1]; m_fEditTF_Pos[2] = newPos[2];
-        m_fEditTF_Rot[0] = newRot[0]; m_fEditTF_Rot[1] = newRot[1]; m_fEditTF_Rot[2] = newRot[2];
-        m_fEditTF_Sca[0] = newSca[0]; m_fEditTF_Sca[1] = newSca[1]; m_fEditTF_Sca[2] = newSca[2];*/
+        DecomposeFromWorld(Matrix4x4(model), &entityTransform->vScale, &entityTransform->qRotate, &entityTransform->vPosition);
     }
 }
 
