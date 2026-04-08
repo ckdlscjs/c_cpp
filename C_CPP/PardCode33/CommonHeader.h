@@ -214,7 +214,7 @@ struct KeyFrame_Vector
 	float fTime;
 	Vector3 vValue;
 };
-struct KeyFrame_Quarternion
+struct KeyFrame_Quaternion
 {
 	float fTime;
 	Quaternion qValue;
@@ -227,7 +227,7 @@ struct AnimationClip
 	float fDuration;
 	float fTicksPerSecond;
 	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Scale;
-	std::unordered_map<std::string, std::vector<KeyFrame_Quarternion>> boneFrames_Rotate;
+	std::unordered_map<std::string, std::vector<KeyFrame_Quaternion>> boneFrames_Rotate;
 	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Translation;
 };
 

@@ -178,7 +178,7 @@ void ImguiSystem::Editor_Transform()
     }
     else
     {
-        ResetTransform();
+        //ResetTransform();
         m_szEntityName = NotPicking;
     }
     
@@ -189,7 +189,7 @@ void ImguiSystem::Editor_Transform()
     ImGui::Begin("Inspector");
 
     static ImGuizmo::OPERATION mCurrentGizmoOperation = ImGuizmo::TRANSLATE;
-    static ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::WORLD;
+    static ImGuizmo::MODE mCurrentGizmoMode = ImGuizmo::LOCAL;
 
     if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
     {
@@ -248,7 +248,8 @@ void ImguiSystem::Editor_Transform()
 
     // 3. 카메라 행렬 준비 (float* 로 변환), xmmatrix를 이용하므로 memcpy로 이동할 수 있다
     // 4. 대상 물체의 월드 행렬 가져오기
-    Matrix4x4 matWorld = entityTransform ? GetMat_World(entityTransform->vScale, entityTransform->qRotate, entityTransform->vPosition) : GetMat_Identity();
+    Vector3 Rotate = entityTransform->qRotate.ToRotate();
+    Matrix4x4 matWorld = entityTransform ? GetMat_World(entityTransform->vScale, entityTransform->qRotate.Normalize(), entityTransform->vPosition) : GetMat_Identity();
     float model[16], view[16], proj[16];
     memcpy(view, &matView, sizeof(Matrix4x4));
     memcpy(proj, &matProj, sizeof(Matrix4x4));
@@ -262,17 +263,15 @@ void ImguiSystem::Editor_Transform()
     // 6. 사용자가 기즈모를 조작했다면 엔진 데이터 갱신
     if (ImGuizmo::IsUsing() && entityTransform)
     {
-        // 수정된 model 행렬을 다시 Matrix 객체로 복사
         Matrix4x4 newWorld;
-        memcpy(&newWorld, model, sizeof(float) * 16);
-
-        //수정된 행렬을 Decompose(분해)해서 Transform에 세팅
-        Vector3 pos, scale;
-        Quaternion rot;
-        DecomposeFromWorld(newWorld, &scale, &rot, &pos);
-        entityTransform->vScale = scale;
-        entityTransform->qRotate = rot;
-        entityTransform->vPosition = pos;
+        memcpy(&newWorld, model, sizeof(Matrix4x4));
+        //DecomposeFromWorld(newWorld, &entityTransform->vScale, &entityTransform->qRotate, &entityTransform->vPosition);
+        entityTransform->vPosition = GetTranslationFromWorld(newWorld);
+        entityTransform->qRotate = GetQuaterionFromWorld(newWorld);
+        entityTransform->vScale = GetScaleFromWorld(newWorld);
+       /* m_fEditTF_Pos[0] = newPos[0]; m_fEditTF_Pos[1] = newPos[1]; m_fEditTF_Pos[2] = newPos[2];
+        m_fEditTF_Rot[0] = newRot[0]; m_fEditTF_Rot[1] = newRot[1]; m_fEditTF_Rot[2] = newRot[2];
+        m_fEditTF_Sca[0] = newSca[0]; m_fEditTF_Sca[1] = newSca[1]; m_fEditTF_Sca[2] = newSca[2];*/
     }
 }
 

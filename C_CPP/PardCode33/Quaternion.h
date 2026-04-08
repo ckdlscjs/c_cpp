@@ -184,6 +184,7 @@ public:
 		if (std::abs(length - 0.0f) <= _EPSILON) return Quaternion();
 		return Quaternion(m_quat / length);
 	}
+
 	//역원, q^-1 = q* / (||q|| ^ 2)
 	inline Quaternion Inverse() const
 	{
@@ -224,13 +225,26 @@ public:
 	*/
 	inline void SetFromMatrix(const Matrix4x4& mat)
 	{
-		float w = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f;
+		// 각 축(Basis)의 스케일값을 계산하여 정규화 준비
+		float sx = mat[0].ToVector3().Length();
+		float sy = mat[1].ToVector3().Length();
+		float sz = mat[2].ToVector3().Length();
+
+		// 스케일이 0에 가까우면 회전 계산이 불가능하므로 단위 사원수 반환
+		if (sx < 1e-6f || sy < 1e-6f || sz < 1e-6f) {
+			m_quat.Set(0, 0, 0, 1);
+			return;
+		}
+
+		// 정규화된 성분으로 m 배열 채우기, mat 내부의 순수 회전 성분만 사용하게 됨
 		const float m[3][3] =
 		{
-			{mat[0].GetX(), mat[0].GetY(), mat[0].GetZ()},
-			{mat[1].GetX(), mat[1].GetY(), mat[1].GetZ()},
-			{mat[2].GetX(), mat[2].GetY(), mat[2].GetZ()},
+			{mat[0].GetX() / sx, mat[0].GetY() / sx, mat[0].GetZ() / sx},
+			{mat[1].GetX() / sy, mat[1].GetY() / sy, mat[1].GetZ() / sy},
+			{mat[2].GetX() / sz, mat[2].GetY() / sz, mat[2].GetZ() / sz},
 		};
+
+		float w = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f;
 		float trace = m[0][0] + m[1][1] + m[2][2];
 		if (trace > 0.0f)	//w^2이 0.25보다 대략적으로 크기때문에 안정적으로 분모로 사용 가능할경우
 		{

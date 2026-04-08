@@ -183,7 +183,7 @@ inline Vector3 GetAxesForwardFromWorld(const Matrix4x4& matWorld)
 	//return Vector3(matWorld[2].GetX(), matWorld[2].GetY(), matWorld[2].GetZ()).Normalize() / vScale.GetZ();
 }
 
-inline Quaternion GetQuarterionFromWorld(const Matrix4x4& matWorld)
+inline Quaternion GetQuaterionFromWorld(const Matrix4x4& matWorld)
 {
 	return Quaternion(matWorld);
 }
@@ -203,27 +203,12 @@ inline Matrix4x4 GetMat_RotFromMatrix(const Matrix4x4& matSource)
 }
 
 //분해요소를 다 채우는식으로구성
-inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Quaternion* quarternion, Vector3* translation)
+inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Quaternion* quaternion, Vector3* translation)
 {
-	_ASEERTION_NULCHK(scale && quarternion && translation, L"IsNullptr");
+	_ASEERTION_NULCHK(scale && quaternion && translation, L"IsNullptr");
 	*scale = GetScaleFromWorld(matWorld);
 	*translation = GetTranslationFromWorld(matWorld);
-	// 스케일이 0인 경우에 대한 예외 처리
-	if (scale->GetX() == 0 || scale->GetY() == 0 || scale->GetZ() == 0)
-	{
-		*quarternion = Quaternion(0.0f, 0.0f, 0.0f);
-	}
-	else
-	{
-		// 순수 회전 성분만 가진 행렬을 임시 생성
-		Matrix4x4 matRot = GetMat_Identity();
-		matRot[0] = Vector4(matWorld[0].ToVector3() / scale->GetX(), 0.0f);
-		matRot[1] = Vector4(matWorld[1].ToVector3() / scale->GetY(), 0.0f);
-		matRot[2] = Vector4(matWorld[2].ToVector3() / scale->GetZ(), 0.0f);
-
-		// 이제 정규화된 행렬로 사원수를 만들어야 정밀도가 보장됩니다.
-		*quarternion = Quaternion(matRot);
-	}
+	*quaternion = GetQuaterionFromWorld(matWorld);
 }
 
 /*
@@ -537,7 +522,7 @@ inline Matrix4x4 GetMat_InverseTranspose(Matrix4x4 mat)
 * 2.0f(xz + wy)				2.0f(yz - wx)			1.0f-2.0f(x^2+y^2)		0.0f
 * 0.0f						0.0f					0.0f					1.0f
 */
-inline Matrix4x4 GetMat_RotateFromQuarternion(const Quaternion& q)
+inline Matrix4x4 GetMat_RotateFromQuaternion(const Quaternion& q)
 {
 	Matrix4x4 mat;
 	float w = q.GetW();
@@ -565,14 +550,14 @@ inline Matrix4x4 GetMat_RotateFromQuarternion(const Quaternion& q)
 	return mat;
 }
 
-inline Matrix4x4 GetMat_World(const Vector3& scale, const Quaternion& quarternion, const Vector3& position)
+inline Matrix4x4 GetMat_World(const Vector3& scale, const Quaternion& quaternion, const Vector3& position)
 {
-	return GetMat_Scale(scale) * GetMat_RotateFromQuarternion(quarternion) * GetMat_Translation(position);
+	return GetMat_Scale(scale) * GetMat_RotateFromQuaternion(quaternion) * GetMat_Translation(position);
 }
 
 inline Matrix4x4 GetMat_View(const Vector3& posCamera, const Quaternion& q)
 {
-	Matrix4x4 matRotate = GetMat_RotateFromQuarternion(q).Transpose();	//회전행렬의 역행렬
+	Matrix4x4 matRotate = GetMat_RotateFromQuaternion(q).Transpose();	//회전행렬의 역행렬
 	Matrix4x4 matTrans = GetMat_Translation(-posCamera);	//이동행렬의 역행렬
 	Matrix4x4 mat = matTrans * matRotate; //(R*T)^-1 = T^-1 * R^-1
 	return mat;
@@ -629,7 +614,7 @@ inline Quaternion Slerp(Quaternion q1, Quaternion q2, float t)
 * 가정한다면 이 둘을 외적하면 사원수의 임의회전축을 얻을수 있고 이 두벡터의 사잇각을 이용해
 * (cos(t), sin(t) * n) 을 구성한다
 */
-inline Quaternion GetQuarternionFromDirection(const Vector3& direction)
+inline Quaternion GetQuaternionFromDirection(const Vector3& direction)
 {
 	//두 벡터를 구성한다
 	Vector3 vForward(0.0f, 0.0f, 1.0f);

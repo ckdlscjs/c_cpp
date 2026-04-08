@@ -16,7 +16,7 @@ public:
 	const std::unordered_map<std::string, AnimationClip>& GetAnimations();
 private:
 	Vector3		FrameInterpolate_Vector(const std::vector<KeyFrame_Vector>& frames, const float t);
-	Quaternion FrameInterpolate_Quarternion(const std::vector<KeyFrame_Quarternion>& frames, const float t);
+	Quaternion FrameInterpolate_Quaternion(const std::vector<KeyFrame_Quaternion>& frames, const float t);
 
 private:
 	std::unordered_map<std::string, AnimationClip> m_AnimationClip;
@@ -49,7 +49,7 @@ inline void Animation::GetFinalTransform(const std::string& szName, const float 
 			if (animClip.boneFrames_Scale.find(curName) != animClip.boneFrames_Scale.end())
 			{
 				Vector3 vScale = FrameInterpolate_Vector(animClip.boneFrames_Scale.at(curName), t);
-				Quaternion qRotate = FrameInterpolate_Quarternion(animClip.boneFrames_Rotate.at(curName), t);
+				Quaternion qRotate = FrameInterpolate_Quaternion(animClip.boneFrames_Rotate.at(curName), t);
 				Vector3 vTranslation = FrameInterpolate_Vector(animClip.boneFrames_Translation.at(curName), t);
 
 				// 보통 애니메이션이 있으면 초기 상대행렬(matRelative)을 '대체'합니다.
@@ -111,11 +111,11 @@ inline Vector3 Animation::FrameInterpolate_Vector(const std::vector<KeyFrame_Vec
 	return lerp(frames[prv].vValue, frames[nxt].vValue, amount);
 }
 
-inline Quaternion Animation::FrameInterpolate_Quarternion(const std::vector<KeyFrame_Quarternion>& frames, const float t)
+inline Quaternion Animation::FrameInterpolate_Quaternion(const std::vector<KeyFrame_Quaternion>& frames, const float t)
 {
 	if (frames.size() <= 1)
 		return frames[0].qValue;
-	auto iter = std::upper_bound(frames.begin(), frames.end(), t, [](const float val, const KeyFrame_Quarternion& frame)
+	auto iter = std::upper_bound(frames.begin(), frames.end(), t, [](const float val, const KeyFrame_Quaternion& frame)
 		{
 			return val < frame.fTime;
 		});
