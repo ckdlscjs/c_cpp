@@ -96,7 +96,7 @@ void CollisionSystem::Frame(float deltatime)
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
 					//MousePicking Variable
-					float fDist = FLT_MAX;	//거리에따른 피킹판별
+					float fDist = _VanishingPoint;	//거리에따른 피킹판별
 					Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
 					Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
 					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
@@ -211,7 +211,7 @@ void CollisionSystem::Frame(float deltatime)
 												Vector4 v(pMesh->GetPosition(idx + j), 1.0f);
 												wv[j] = (v * matWorld).ToVector3();
 											}
-											float dist = FLT_MAX;
+											float dist = _VanishingPoint;
 											if (IsCollision(rayOriginWorld, rayDirWorld, wv[0], wv[1], wv[2], dist))
 											{
 												if (dist >= fDist) continue;
@@ -225,7 +225,7 @@ void CollisionSystem::Frame(float deltatime)
 						}
 					}
 					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &infos[col]});
+					if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col]});
 				}
 			}
 			st_col = 0;
@@ -257,7 +257,7 @@ void CollisionSystem::Frame(float deltatime)
 					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
 					//MousePicking Variable
-					float fDist = FLT_MAX;	//거리에따른 피킹판별
+					float fDist = _VanishingPoint;	//거리에따른 피킹판별
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 					for (UINT i = 0; i < MeshMats.size(); i++)
@@ -392,7 +392,7 @@ void CollisionSystem::Frame(float deltatime)
 												AnimPos[j] = (pos * matWorld).ToVector3();
 											}
 
-											float dist = FLT_MAX;
+											float dist = _VanishingPoint;
 											if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
 											{
 												if (dist >= fDist) continue;
@@ -406,7 +406,7 @@ void CollisionSystem::Frame(float deltatime)
 						}
 					}
 					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
-					if (fDist < FLT_MAX) pq_picking.push({ fDist, &infos[col]});
+					if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col]});
 				}
 			}
 			st_col = 0;

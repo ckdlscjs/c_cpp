@@ -38,6 +38,8 @@ const std::wstring g_szName_ra = L"Ra_";
 const std::wstring g_szName_ca = L"Ca_";
 UINT g_iWidth = 800.0f;
 UINT g_iHeight = 600.0f;
+float g_fDist_Near = 0.1f;
+float g_fDist_Far = 10000.0f;
 HWND g_hWnd;
 bool g_bIsRun = false;
 float g_fTime_Log = 0.0f;
@@ -122,8 +124,8 @@ void AppWindow::OnCreate()
 			camera.fScreenWidth = g_iWidth;
 			camera.fScreenHeight = g_iHeight;
 			camera.fFov = 75.0f;
-			camera.fNear = 0.1f;
-			camera.fFar = 10000.0f;
+			camera.fNear = g_fDist_Near;
+			camera.fFar = g_fDist_Far;
 			_ECSSystem.AddComponent<C_Camera>(key, std::move(camera));
 		}
 	}

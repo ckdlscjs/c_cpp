@@ -910,6 +910,9 @@ inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vecto
 extern UINT g_iWidth;
 extern UINT g_iHeight;
 extern HWND g_hWnd;
+extern float g_fDist_Near;
+extern float g_fDist_Far;
+#define _VanishingPoint g_fDist_Far + 100.0f
 extern bool g_bIsRun;
 extern float g_fTime_Log;
 static const std::wstring g_initpath_Texture = L"../Assets/Textures/";

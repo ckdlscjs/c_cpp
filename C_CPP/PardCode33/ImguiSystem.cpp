@@ -178,7 +178,7 @@ void ImguiSystem::Editor_Transform()
     }
     else
     {
-        //ResetTransform();
+        ResetTransform();
         m_szEntityName = NotPicking;
     }
     
