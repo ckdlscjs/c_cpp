@@ -159,22 +159,15 @@ void ImguiSystem::Editor_Transform()
     C_Transform* entityTransform = nullptr;
     if(lookup != _HashNotInitialize)
     {
-        const Entity* entity = _ECSSystem.GetEntity(lookup);
-        Archetype* archetype = _ECSSystem.QueryArchetype(entity->m_Key);
-
-        size_t row = entity->m_IdxRow;
-        size_t col = entity->m_IdxCol;
-
-        auto& infos = archetype->GetComponents<C_Info>(row);
-        auto& transforms = archetype->GetComponents<C_Transform>(row);
-        entityTransform = &transforms[col];
+        auto& info = _ECSSystem.GetComponent<C_Info>(lookup);
+        entityTransform = &_ECSSystem.GetComponent<C_Transform>(lookup);
         Vector3 vPosition = entityTransform->vPosition;
         Vector3 vRotate = entityTransform->qRotate.ToRotate();
         Vector3 vScale = entityTransform->vScale;
         m_fEditTF_Pos[0] = vPosition.GetX(); m_fEditTF_Pos[1] = vPosition.GetY(); m_fEditTF_Pos[2] = vPosition.GetZ();
         m_fEditTF_Rot[0] = vRotate.GetX(); m_fEditTF_Rot[1] = vRotate.GetY(); m_fEditTF_Rot[2] = vRotate.GetZ();
         m_fEditTF_Sca[0] = vScale.GetX(); m_fEditTF_Sca[1] = vScale.GetY(); m_fEditTF_Sca[2] = vScale.GetZ();
-        m_szEntityName = _towm(infos[col].szName);
+        m_szEntityName = _towm(info.szName);
     }
     else
     {
