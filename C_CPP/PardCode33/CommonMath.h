@@ -207,8 +207,8 @@ inline void DecomposeFromWorld(const Matrix4x4& matWorld, Vector3* scale, Quater
 {
 	_ASEERTION_NULCHK(scale && quaternion && translation, L"IsNullptr");
 	*scale = GetScaleFromWorld(matWorld);
-	*translation = GetTranslationFromWorld(matWorld);
 	*quaternion = GetQuaterionFromWorld(matWorld);
+	*translation = GetTranslationFromWorld(matWorld);
 }
 
 /*

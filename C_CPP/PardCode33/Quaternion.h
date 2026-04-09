@@ -231,8 +231,8 @@ public:
 		float sz = mat[2].ToVector3().Length();
 
 		// 스케일이 0에 가까우면 회전 계산이 불가능하므로 단위 사원수 반환
-		if (sx < 1e-6f || sy < 1e-6f || sz < 1e-6f) {
-			m_quat.Set(0, 0, 0, 1);
+		if (sx < _EPSILON || sy < _EPSILON || sz < _EPSILON) {
+			m_quat = Quaternion(0.0f, 0.0f, 0.0f).m_quat;
 			return;
 		}
 
@@ -256,9 +256,16 @@ public:
 		else				//w분모가 안정적이지 않아(매우작은값) 다른큰값을 분모로 잡을경우
 		{
 			//4 x^2 y^2 z^2들
+			/*
+			//정규화값으로수정(버그픽스)
 			float xs = mat[0].GetX() - mat[1].GetY() - mat[2].GetZ();
 			float ys = mat[1].GetY() - mat[0].GetX() - mat[2].GetZ();
 			float zs = mat[2].GetZ() - mat[0].GetX() - mat[1].GetY();
+			*/
+
+			float xs = m[0][0] - m[1][1] - m[2][2];
+			float ys = m[1][1] - m[0][0] - m[2][2];
+			float zs = m[2][2] - m[0][0] - m[1][1];
 			if (xs > ys && xs > zs)
 			{
 				x = 0.5f * std::sqrt(xs + 1.0f);

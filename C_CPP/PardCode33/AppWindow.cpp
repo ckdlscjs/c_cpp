@@ -290,7 +290,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quaternion(0.0f, 0.0f, 0.0f)}, {0.0f, 50.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quaternion(0.0f, 0.0f, 0.0f)}, {-50.0f, 50.0f, 0.0f} });
 
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
@@ -373,14 +373,21 @@ void AppWindow::OnCreate()
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+
+			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+			_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+			std::vector<TX_HASH> tx_hashs_compute;
+			tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+			tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+			_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+			size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 			
-
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
-
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 			{
 				for (int i = 0; i < cnt; i++)
 				{
-					size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, T_Render_Geometry_Static>();
+					size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Input, C_Behavior, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 					std::bitset<256> vkmask;
 					//vkmask[VK_UP] = true;
 					vkmask[VK_LEFT] = true;
@@ -403,6 +410,8 @@ void AppWindow::OnCreate()
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+
+					_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 				}
 			}
 		}
@@ -466,10 +475,19 @@ void AppWindow::OnCreate()
 			std::vector<Mesh_Material> mesh_mats;
 			mesh_mats.push_back({ hash_mesh, hash_material });
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+
+			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+			_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+			std::vector<TX_HASH> tx_hashs_compute;
+			tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+			tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+			_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+			size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static >();
-			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static >();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
@@ -478,6 +496,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+
+			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 		}
 #endif // _NORMALMAP
 
@@ -513,10 +533,19 @@ void AppWindow::OnCreate()
 
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+			_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+			std::vector<TX_HASH> tx_hashs_compute;
+			tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+			tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+			_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+			size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			//ECS Initialize(test, 251111)
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
+
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
@@ -525,6 +554,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+
+			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 		}
 #endif // _HOUSE
 
@@ -558,11 +589,20 @@ void AppWindow::OnCreate()
 			}
 
 			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+
+			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+			_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+			std::vector<TX_HASH> tx_hashs_compute;
+			tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+			tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+			_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+			size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 			
 			//ECS Initialize(test, 251111)
-			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 
-			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, T_Render_Geometry_Static>();
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
@@ -571,6 +611,8 @@ void AppWindow::OnCreate()
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+
+			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 		}
 #endif // _SPONZA
 
@@ -860,19 +902,33 @@ void AppWindow::OnCreate()
 
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
-		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+		size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+		_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+		std::vector<TX_HASH> tx_hashs_compute;
+		tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+		tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+		_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
+		size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
+
+		//ECS Initialize(test, 251111)
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute,T_Render_Geometry_Skeletal>();
+
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(0.0f, 180.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(0.0f, 0.0f, 0.0f), {-100.0f, 0.0f, -40.0f} });
 
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render });
 
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
+
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+
+		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 	}
 #endif // _Rapunzel
 	
