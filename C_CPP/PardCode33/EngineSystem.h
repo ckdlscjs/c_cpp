@@ -71,14 +71,14 @@ public:
 	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
 	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);
 	void Material_SetShaders(size_t hash_material, const UINT flag);
-	void Material_SetVS(size_t hash_material, const std::wstring& vsName);
+	void Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
 	template<typename T>
-	void Material_SetIL(size_t hash_material, const std::wstring& vsName);
-	void Material_SetHS(size_t hash_material, const std::wstring& hsName);
-	void Material_SetDS(size_t hash_material, const std::wstring& dsName);
-	void Material_SetGS(size_t hash_material, const std::wstring& gsName);
-	void Material_SetPS(size_t hash_material, const std::wstring& psName);
-	void Material_SetCS(size_t hash_material, const std::wstring& csName);
+	void Material_SetIL(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
+	void Material_SetHS(size_t hash_material, const std::wstring& hsName, const std::string& entryName = "hsmain", const std::string& target = "hs_5_0");
+	void Material_SetDS(size_t hash_material, const std::wstring& dsName, const std::string& entryName = "dsmain", const std::string& target = "ds_5_0");
+	void Material_SetGS(size_t hash_material, const std::wstring& gsName, const std::string& entryName = "gsmain", const std::string& target = "gs_5_0");
+	void Material_SetPS(size_t hash_material, const std::wstring& psName, const std::string& entryName = "psmain", const std::string& target = "ps_5_0");
+	void Material_SetCS(size_t hash_material, const std::wstring& csName, const std::string& entryName = "csmain", const std::string& target = "cs_5_0");
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 
 	//Animation
@@ -223,10 +223,10 @@ public:
 #define _EngineSystem EngineSystem::GetInstance()
 
 //템플릿 추론 명시
-template void EngineSystem::Material_SetIL<Vertex_PC>(size_t hash_material, const std::wstring& vsName);
-template void EngineSystem::Material_SetIL<Vertex_PT>(size_t hash_material, const std::wstring& vsName);
-template void EngineSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, const std::wstring& vsName);
-template void EngineSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName);
+template void EngineSystem::Material_SetIL<Vertex_PC>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
+template void EngineSystem::Material_SetIL<Vertex_PT>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
+template void EngineSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
+template void EngineSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
 
 template size_t EngineSystem::CreateMeshFromGeometry<Vertex_PTN>(size_t hash_geometry);
 template size_t EngineSystem::CreateMeshFromGeometry<Vertex_PTN_Skinned>(size_t hash_geometry);

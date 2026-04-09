@@ -467,47 +467,47 @@ void EngineSystem::Material_SetShaders(size_t hash_material, const UINT flag)
 	}
 }
 
-void EngineSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName)
+void EngineSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetVS(CreateVertexShader(vsName, "vsmain", "vs_5_0"));
+	pMaterial->SetVS(CreateVertexShader(vsName, entryName, target));
 }
 
 template<typename T>
-void EngineSystem::Material_SetIL(size_t hash_material, const std::wstring& vsName)
+void EngineSystem::Material_SetIL(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, "vsmain", "vs_5_0")]->GetBlob()));
+	pMaterial->SetIL(CreateInputLayout(vsName + L"IL", Traits_InputLayout<T>::GetLayout(), Traits_InputLayout<T>::GetSize(), m_pCVSs[CreateVertexShader(vsName, entryName, target)]->GetBlob()));
 }
 
-void EngineSystem::Material_SetHS(size_t hash_material, const std::wstring& hsName)
+void EngineSystem::Material_SetHS(size_t hash_material, const std::wstring& hsName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetHS(CreateHullShader(hsName, "gsmain", "gs_5_0"));
+	pMaterial->SetHS(CreateHullShader(hsName, entryName, target));
 }
 
-void EngineSystem::Material_SetDS(size_t hash_material, const std::wstring& dsName)
+void EngineSystem::Material_SetDS(size_t hash_material, const std::wstring& dsName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetDS(CreateDomainShader(dsName, "dsmain", "ds_5_0"));
+	pMaterial->SetDS(CreateDomainShader(dsName, entryName, target));
 }
 
-void EngineSystem::Material_SetGS(size_t hash_material, const std::wstring& gsName)
+void EngineSystem::Material_SetGS(size_t hash_material, const std::wstring& gsName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetGS(CreateGeometryShader(gsName, "gsmain", "gs_5_0"));
+	pMaterial->SetGS(CreateGeometryShader(gsName, entryName, target));
 }
 
-void EngineSystem::Material_SetPS(size_t hash_material, const std::wstring& psName)
+void EngineSystem::Material_SetPS(size_t hash_material, const std::wstring& psName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetPS(CreatePixelShader(psName, "psmain", "ps_5_0"));
+	pMaterial->SetPS(CreatePixelShader(psName, entryName, target));
 }
 
-void EngineSystem::Material_SetCS(size_t hash_material, const std::wstring& csName)
+void EngineSystem::Material_SetCS(size_t hash_material, const std::wstring& csName, const std::string& entryName, const std::string& target)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	pMaterial->SetCS(CreateComputeShader(csName, "csmain", "cs_5_0"));
+	pMaterial->SetCS(CreateComputeShader(csName, entryName, target));
 }
 
 void EngineSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
