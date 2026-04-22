@@ -18,7 +18,7 @@
 #define _Rapunzel
 #define _Doro
 #define _GeoSphere
-#define _Zhao
+//#define _Zhao
 
 //#define _SPACESHIP
 //#define _TESTBLOCK

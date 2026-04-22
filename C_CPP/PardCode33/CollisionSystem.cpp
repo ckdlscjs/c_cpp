@@ -102,11 +102,10 @@ void CollisionSystem::Frame(float deltatime)
 					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
 		
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
+					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
 
-					for (UINT i = 0; i < MeshMats.size(); i++)
+					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
 					{
-						auto& iter = MeshMats[i];
-						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
 						if (!renders[col].bRenderable)
 						{
 							for (const auto& hash_collider : pMesh->GetCLs())
@@ -260,11 +259,9 @@ void CollisionSystem::Frame(float deltatime)
 					float fDist = _VanishingPoint;	//거리에따른 피킹판별
 
 					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-					for (UINT i = 0; i < MeshMats.size(); i++)
+					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
+					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
 					{
-						auto& iter = MeshMats[i];
-						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-
 						//Frustum Culling
 						if(!renders[col].bRenderable)
 						{

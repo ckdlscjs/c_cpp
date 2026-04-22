@@ -2,50 +2,8 @@
 #include "Resource.h"
 //추후에 확장시 참고
 //https://mvje.tistory.com/83
-class Material : public BaseResource<Material>
-{
-	friend class BaseResource<Material>;
-public:
-	Material(size_t hash, const std::wstring& szFilePath);
-	Material(const Material&) = delete;
-	Material& operator=(const Material&) = delete;
-	Material(Material&&) = delete;
-	Material& operator=(Material&&) = delete;
-
-	void SetVS(size_t hash) { m_lVS = hash; }
-	size_t GetVS() const { return m_lVS; }
-	void SetIL(size_t hash) { m_lIL = hash; }
-	size_t GetIL() const { return m_lIL; }
-	void SetHS(size_t hash) { m_lHS = hash; }
-	size_t GetHS() const { return m_lHS; }
-	void SetDS(size_t hash) { m_lDS = hash; }
-	size_t GetDS() const { return m_lDS; }
-	void SetGS(size_t hash) { m_lGS = hash; }
-	size_t GetGS() const { return m_lGS; }
-	void SetPS(size_t hash) { m_lPS = hash; }
-	size_t GetPS() const { return m_lPS; }
-	void SetCS(size_t hash) { m_lCS = hash; }
-	size_t GetCS() const { return m_lCS; }
-	
-	void SetTexture(TX_HASH tx_hash);
-	const std::vector<size_t>* GetTextures() const;
-	void SetTexturePath(TX_PATH tx_path);
-	const std::vector<std::string>* GetTexturesPaths() const;
-private:
-	size_t m_lVS = 0;
-	size_t m_lHS = 0;
-	size_t m_lDS = 0;
-	size_t m_lGS = 0;
-	size_t m_lPS = 0;
-	size_t m_lIL = 0;
-	size_t m_lCS = 0;
-	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
-	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
-};
-
 /*
-* # 이 파일은 Wavefront OBJ MTL 파일입니다.
-
+* # 이 파일은 Wavefront OBJ MTL 파일입니다
 # 새로운 재질 정의: 컨테이너의 금속 재질
 newmtl Sci_Fi_Container_Material
 # 주변광 색상
@@ -89,6 +47,57 @@ map_ao Sci_Fi_Container_AO.png
 # 물체 자체가 빛을 내는 부분을 표현합니다.
 map_Ke Sci_Fi_Container_Emissive.png
 */
+class Material : public BaseResource<Material>
+{
+	friend class BaseResource<Material>;
+public:
+	Material(size_t hash, const std::wstring& szFilePath);
+	Material(const Material&) = delete;
+	Material& operator=(const Material&) = delete;
+	Material(Material&&) = delete;
+	Material& operator=(Material&&) = delete;
+
+	void SetHashPass(uint32_t hashPass) { m_hashPass = hashPass; }
+	uint32_t GetHashPass() { return m_hashPass; }
+	void SetHashShaders(uint32_t hashShaders) { m_hashShaders = hashShaders; }
+	uint32_t GetHashShaders() { return m_hashShaders; }
+	void SetHashStates(uint32_t hashStates) { m_hashStates = hashStates; }
+	uint32_t GetHashStates() { return m_hashStates; }
+
+	void SetVS(size_t hash) { m_lVS = hash; }
+	size_t GetVS() const { return m_lVS; }
+	void SetIL(size_t hash) { m_lIL = hash; }
+	size_t GetIL() const { return m_lIL; }
+	void SetHS(size_t hash) { m_lHS = hash; }
+	size_t GetHS() const { return m_lHS; }
+	void SetDS(size_t hash) { m_lDS = hash; }
+	size_t GetDS() const { return m_lDS; }
+	void SetGS(size_t hash) { m_lGS = hash; }
+	size_t GetGS() const { return m_lGS; }
+	void SetPS(size_t hash) { m_lPS = hash; }
+	size_t GetPS() const { return m_lPS; }
+	void SetCS(size_t hash) { m_lCS = hash; }
+	size_t GetCS() const { return m_lCS; }
+	
+	void SetTexture(TX_HASH tx_hash);
+	const std::vector<size_t>* GetTextures() const;
+	void SetTexturePath(TX_PATH tx_path);
+	const std::vector<std::string>* GetTexturesPaths() const;
+
+private:
+	uint32_t m_hashPass;
+	uint32_t m_hashShaders;
+	uint32_t m_hashStates;
+	size_t m_lVS = 0;
+	size_t m_lHS = 0;
+	size_t m_lDS = 0;
+	size_t m_lGS = 0;
+	size_t m_lPS = 0;
+	size_t m_lIL = 0;
+	size_t m_lCS = 0;
+	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
+	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
+};
 inline Material::Material(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 }

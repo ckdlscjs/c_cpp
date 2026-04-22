@@ -68,7 +68,7 @@ inline ArchetypeKey ECSSystem::CreateArchetype()
 	ArchetypeKey key = GetArchetypeKey<Comps...>();
 	if (m_Archetypes.find(key) != m_Archetypes.end()) 
 		return key;
-	m_Archetypes[key] = new Archetype();
+	m_Archetypes[key] = new Archetype(key);
 	(m_Archetypes[key]->RegisterComponent<Comps>(), ...);
 	return key;
 }

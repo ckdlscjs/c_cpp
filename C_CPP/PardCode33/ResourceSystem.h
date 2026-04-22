@@ -40,6 +40,6 @@ T* ResourceSystem::CreateResource(const std::wstring& szFile, Types&&... args)
 template<typename T>
 T* ResourceSystem::GetResource(size_t hash)
 {
-	_ASEERTION_NULCHK(m_Resources.find(hash) != m_Resources.end(), "hash is null");
+	_ASEERTION_NULCHK(m_Resources.find(hash) != m_Resources.end(), "hash not Exist");
 	return static_cast<T*>(m_Resources[hash]);
 }

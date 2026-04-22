@@ -78,11 +78,25 @@ struct T_Camera_Ortho_CT {};
 struct T_Camera_Ortho_LT {};
 struct T_Camera_Cubemap {};
 
+
+/*
+* enum class E_RenderPass : BYTE
+{
+	Shadow = 0,
+	Opaque = 1,
+	Transparent = 2,
+	Outline = 3,
+	Debug = 4,
+	UI = 5,
+	COUNT
+};
+*/
 struct C_Render
 {
 public:
 	bool bRenderable = false;
 	size_t hash_asset_Render = 0;
+	uint32_t passMasks;
 };
 
 struct C_Collider 
@@ -102,7 +116,6 @@ public:
 	bool bInitialized = false;
 	float elapsedTime;
 	std::unordered_map<std::string, AnimationClip>::const_iterator clipIter;
-	//Matrix4x4 matAnims[256];
 };
 
 #ifdef _RENDERPASS

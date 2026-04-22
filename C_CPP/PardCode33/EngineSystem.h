@@ -89,7 +89,7 @@ public:
 	size_t CreateComputeVertices(size_t hash_mesh);
 
 	//Asset(Components <-> API) 리소스 생성
-	size_t CreateRenderAsset(const std::wstring& szName, const std::vector<Mesh_Material>& hashs);
+	size_t CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs);
 	size_t CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs);
 	//size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
 
@@ -128,6 +128,14 @@ public:
 	void MappedBuffer(ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* mappedResource);
 	void UnMappedBuffer(ID3D11Resource* pResource);
 
+	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
+	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
+	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_BSState stateBS, E_DSState stateDS);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMaterial);
+	uint32_t GetRenderPassKey_DistToCamera(float dist);
+	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
+	void EnqueueRenderItem(_RPKey sortKey, ArchetypeKey key, size_t entityRow, size_t entityCol, size_t subsetIdx = 0);
+
 public:
 	template<typename T>
 	T* GetAPIResource(const std::unordered_map<size_t, T*>& containter, size_t hash) const
@@ -156,6 +164,8 @@ public:
 	RasterizerState*			GetState_RS() const { return m_pCRasterizers; }
 	DepthStencilState*			GetState_DS() const { return m_pCDepthStencils; }
 	BlendState*					GetState_BS() const { return m_pCBlends; }
+
+	
 	
 	//사용을위해 분할한 클래스객체들
 private:
@@ -208,15 +218,25 @@ public:
 	size_t												m_hash_Mat_ShadowMap;
 
 	//아웃라인 렌더링을 위한 변수들
-	float												m_fThickness = 0.5f;
+	float												m_fThickness = 1.0f;
 	size_t												m_hash_Mat_Outline_PTN;
 	size_t												m_hash_Mat_Outline_PTN_Skinned;
 	size_t												m_hash_Mat_Outline_PTNTB;
 	size_t												m_hash_Mat_Outline_PTNTB_Skinned;
 
+	//디버그 렌더링을 위한 변수들
+	size_t												m_hash_Mat_Debug_Box;
+	size_t												m_hash_Mat_Debug_Sphere;
+
 	//피킹엔티티lookup
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
+
+	//RenderPass용 정수값
+	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
+	std::unordered_map<size_t, uint8_t>					m_hRP_States;
+	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
+	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
 };
 
 //SingletonClasses

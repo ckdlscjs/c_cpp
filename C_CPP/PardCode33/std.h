@@ -14,6 +14,7 @@
 #define _CSGroup 64
 #define _Dispatch_Vertices(count) (count / 3) / _CSGroup + ((count / 3) % _CSGroup ? 1 : 0)
 #define _HashNotInitialize size_t(-1)
+#define _RPKey size_t
 //App Header
 #include <cstdlib>
 #include <crtdbg.h>

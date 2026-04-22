@@ -255,14 +255,13 @@ public:
 		}
 		else				//w분모가 안정적이지 않아(매우작은값) 다른큰값을 분모로 잡을경우
 		{
-			//4 x^2 y^2 z^2들
 			/*
 			//정규화값으로수정(버그픽스)
 			float xs = mat[0].GetX() - mat[1].GetY() - mat[2].GetZ();
 			float ys = mat[1].GetY() - mat[0].GetX() - mat[2].GetZ();
 			float zs = mat[2].GetZ() - mat[0].GetX() - mat[1].GetY();
 			*/
-
+			//4 x^2 y^2 z^2들
 			float xs = m[0][0] - m[1][1] - m[2][2];
 			float ys = m[1][1] - m[0][0] - m[2][2];
 			float zs = m[2][2] - m[0][0] - m[1][1];

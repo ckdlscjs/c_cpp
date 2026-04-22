@@ -9,7 +9,7 @@ public:
 	RenderAsset& operator=(const RenderAsset&) = delete;
 	RenderAsset(RenderAsset&&) = delete;
 	RenderAsset& operator=(RenderAsset&&) = delete;
-	std::vector<Mesh_Material> m_hMeshMats;
+	Mesh_Material m_hMeshMats;
 };
 inline RenderAsset::RenderAsset(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {

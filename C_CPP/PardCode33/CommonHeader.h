@@ -111,39 +111,52 @@ enum class E_InputLayout
 	PTNTB_Skinned,
 };
 
-/*
-Usage (어떻게 갱신하는가?)
+enum class E_RenderPass : uint32_t
+{
+	Sky			= 0,
+	Shadow		= 1,
+	Opaque		= 2,
+	Transparent = 3,
+	Cubemap		= 4,
+	Outline		= 5,
+	Debug		= 6,
+	UI			= 7,
+	COUNT,
+};
 
-	파일에서 한 번 읽고 끝이다: DEFAULT
-	매 프레임 CPU에서 데이터를 넘겨준다 (Matrix, UI): DYNAMIC
-	GPU가 그리고 GPU가 다시 읽는다 (Post-process): DEFAULT
-	GPU가 그린 걸 CPU가 읽어야 한다 (Picking, Screenshot): STAGING
+//비트트 합 연산 (Pass | Pass -> Mask)
+inline uint32_t operator|(E_RenderPass a, E_RenderPass b)
+{
+	return (1 << static_cast<uint32_t>(a)) | (1 << static_cast<uint32_t>(b));
+}
 
-BindFlags (파이프라인 어디에 꽂히는가?)
+//마스크에 비트 추가 (Mask | Pass -> Mask)
+inline uint32_t operator|(uint32_t mask, E_RenderPass pass)
+{
+	return mask | (1 << static_cast<uint32_t>(pass));
+}
 
-	셰이더 Texture2D 변수에 들어간다: SHADER_RESOURCE
-	OMSetRenderTargets의 첫 번째 인자다: RENDER_TARGET
-	OMSetRenderTargets의 마지막 인자(깊이)다: DEPTH_STENCIL
-	그림자 맵처럼 깊이를 기록하고 나중에 셰이더에서 읽는다: DEPTH_STENCIL | SHADER_RESOURCE
+//마스크 포함 여부 확인 (Mask & Pass -> bool)
+inline bool operator&(uint32_t mask, E_RenderPass pass)
+{
+	return (mask & (1 << static_cast<uint32_t>(pass))) != 0;
+}
 
-Format (무엇을 담는가?)
+//패스 확인여부
+inline bool operator==(E_RenderPass a, uint32_t b)
+{
+	return static_cast<uint32_t>(a) == b;
+}
 
-	일반 그림/색상: R8G8B8A8_UNORM (채널당 1바이트, 0~255)
-	정밀한 물리계산/광해석: R16G16B16A16_FLOAT (채널당 2바이트, 부동소수점)
-	단순 깊이 값: D24_UNORM_S8_UINT (일반 깊이 버퍼 전용)
-	그림자 맵용 깊이: R32_TYPELESS (범용 32비트, 읽기용으로 변환 용이)
+struct RenderItem
+{
+	_RPKey sortKey;
+	ArchetypeKey key;
+	size_t entityRow;
+	size_t entityCol;
+	size_t subsetIdx;
+};
 
-	UINT Width;
-	UINT Height;
-	UINT MipLevels;
-	UINT ArraySize;
-	DXGI_FORMAT Format;
-	DXGI_SAMPLE_DESC SampleDesc;
-	D3D11_USAGE Usage;
-	UINT BindFlags;
-	UINT CPUAccessFlags;
-	UINT MiscFlags;
-*/
 #define _BB 1 << 0
 #define _SRV 1 << 1
 #define _RTV 1 << 2
@@ -157,14 +170,6 @@ Format (무엇을 담는가?)
 #define _Target_Compute_Buffer (_SRV | _UAV)
 #define _Target_Cubemap_ResourceView (_SRV | _RTV | _CUBE)
 #define _Target_Cubemap_DepthView (_SRV | _DSV | _CUBE)
-
-enum class E_RenderPass
-{
-	FORWARD_PASS,
-	DEFERRED_PASS,
-	SHADOW_PASS,
-	COUNT
-};
 
 //Resources data struct
 struct TX_HASH
@@ -279,7 +284,7 @@ inline const std::wstring GetTexType(E_Texture eTexture)
 struct Mesh_Material
 {
 	size_t hash_mesh;
-	size_t hash_material;
+	std::vector<size_t> hash_mats;
 };
 
 struct InputEvent 

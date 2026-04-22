@@ -205,7 +205,7 @@ public:
 class Archetype
 {
 public:
-	Archetype();
+	Archetype(ArchetypeKey key);
 	~Archetype();
 	Archetype(const Archetype&) = delete;
 	Archetype& operator=(const Archetype&) = delete;
@@ -231,18 +231,20 @@ public:
 	size_t GetCount_Chunk(size_t row) const;
 	size_t GetAllChunkCount() const;
 	size_t GetLookupIdx(size_t row, size_t col) const;
+	const ArchetypeKey GetKey() const;
 
 	size_t m_transfer_row = 0;
 	size_t m_transfer_col = 0;
 private:
+	ArchetypeKey m_Key;
 	size_t m_ChunksCapacity;
 	std::unordered_map<std::type_index, std::vector<ComponentChunk*>> m_Components;
 	std::vector<size_t> m_LookupIdxs;
 };
 
-
-inline Archetype::Archetype()
+inline Archetype::Archetype(ArchetypeKey key) : m_Key(key)
 {
+
 }
 
 inline Archetype::~Archetype()
@@ -401,4 +403,9 @@ inline size_t Archetype::GetAllChunkCount() const
 inline size_t Archetype::GetLookupIdx(size_t row, size_t col) const
 {
 	return m_LookupIdxs[row * m_ChunksCapacity + col];
+}
+
+inline const ArchetypeKey Archetype::GetKey() const
+{
+	return m_Key;
 }
