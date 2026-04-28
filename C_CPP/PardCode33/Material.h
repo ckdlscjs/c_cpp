@@ -58,11 +58,13 @@ public:
 	Material& operator=(Material&&) = delete;
 
 	void SetHashPass(uint32_t hashPass) { m_hashPass = hashPass; }
-	uint32_t GetHashPass() { return m_hashPass; }
+	uint32_t GetHashPass() const { return m_hashPass; }
 	void SetHashShaders(uint32_t hashShaders) { m_hashShaders = hashShaders; }
-	uint32_t GetHashShaders() { return m_hashShaders; }
+	uint32_t GetHashShaders() const { return m_hashShaders; }
 	void SetHashStates(uint32_t hashStates) { m_hashStates = hashStates; }
-	uint32_t GetHashStates() { return m_hashStates; }
+	uint32_t GetHashStates() const { return m_hashStates; }
+	void SetTopology(D3D_PRIMITIVE_TOPOLOGY topology) { m_Topology = topology; }
+	D3D_PRIMITIVE_TOPOLOGY GetTopology() const { return m_Topology; }
 
 	void SetVS(size_t hash) { m_lVS = hash; }
 	size_t GetVS() const { return m_lVS; }
@@ -88,6 +90,7 @@ private:
 	uint32_t m_hashPass;
 	uint32_t m_hashShaders;
 	uint32_t m_hashStates;
+	D3D_PRIMITIVE_TOPOLOGY m_Topology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 	size_t m_lVS = 0;
 	size_t m_lHS = 0;
 	size_t m_lDS = 0;

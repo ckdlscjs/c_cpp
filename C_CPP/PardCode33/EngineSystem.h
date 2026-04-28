@@ -29,6 +29,8 @@ class RasterizerState;
 class DepthStencilState;
 class BlendState;
 
+class Archetype;
+
 class EngineSystem : public BaseSystem<EngineSystem>
 {
 	friend class BaseSystem<EngineSystem>;
@@ -131,10 +133,10 @@ public:
 	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
 	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
 	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_BSState stateBS, E_DSState stateDS);
-	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMaterial);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, E_Collider collider, UINT idx = 0);
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
-	void EnqueueRenderItem(_RPKey sortKey, ArchetypeKey key, size_t entityRow, size_t entityCol, size_t subsetIdx = 0);
+	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
 
 public:
 	template<typename T>
@@ -232,11 +234,16 @@ public:
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
 
+
 	//RenderPass용 정수값
 	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
 	std::unordered_map<size_t, uint8_t>					m_hRP_States;
 	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
+	std::vector<size_t>									m_resRP_Shaders;
+	std::vector<RPStates>								m_resRP_States;
+	std::vector<RPMeshCollider>							m_resRP_Resources;
 	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
+	
 };
 
 //SingletonClasses

@@ -103,10 +103,12 @@ void EngineSystem::Init()
 	//디버그용 셰이더
 	g_hash_VS_Debug				= _EngineSystem.CreateVertexShader(L"VS_Debug.hlsl", "vsmain", "vs_5_0");
 	g_hash_GS_Debug_Box			= _EngineSystem.CreateGeometryShader(L"GS_Debug_Box.hlsl", "gsmain", "gs_5_0");
-	g_hash_PS_Debug_PC			= _EngineSystem.CreatePixelShader(L"PS_PC.hlsl", "psmain", "ps_5_0");
 	g_hash_VS_Debug_Sphere		= _EngineSystem.CreateVertexShader(L"VS_Debug_Sphere.hlsl", "vsmain", "vs_5_0");
 	g_hash_HS_Debug_Sphere		= _EngineSystem.CreateHullShader(L"HS_Debug_Sphere.hlsl", "hsmain", "hs_5_0");
 	g_hash_DS_Debug_Sphere		= _EngineSystem.CreateDomainShader(L"DS_Debug_Sphere.hlsl", "dsmain", "ds_5_0");
+	g_hash_PS_Debug_PC			= _EngineSystem.CreatePixelShader(L"PS_PC.hlsl", "psmain", "ps_5_0");
+
+	//피킹용 셰이더
 	g_hash_PS_Picking			= _EngineSystem.CreatePixelShader(L"PS_Picking.hlsl", "psmain", "ps_5_0");
 
 	//계산셰이더
@@ -115,7 +117,7 @@ void EngineSystem::Init()
 	g_hash_sgb_collisionResults = _EngineSystem.CreateStagingBuffer(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5);
 
 	//렌더패스
-	//m_hRP_CommandQueue.reserve(10'000);
+	m_hRP_CommandQueue.reserve(10'000);
 }
 
 EngineSystem::~EngineSystem()
@@ -1052,9 +1054,9 @@ uint32_t EngineSystem::GetRenderPassKey_Shaders(size_t hashMaterial)
 	auto iter = m_hRP_Shaders.find(hash);
 	if (iter != m_hRP_Shaders.end())
 		return iter->second;
-	
-	uint16_t newID = static_cast<uint16_t>(m_hRP_Shaders.size());
+	uint16_t newID = static_cast<uint16_t>(m_resRP_Shaders.size());
 	m_hRP_Shaders[hash] = newID;
+	m_resRP_Shaders.push_back(hashMaterial);
 	return newID;
 }
 
@@ -1069,22 +1071,25 @@ uint32_t EngineSystem::GetRenderPassKey_States(E_RSState stateRS, E_BSState stat
 	if (iter != m_hRP_States.end())
 		return iter->second;
 
-	uint8_t newID = static_cast<uint8_t>(m_hRP_States.size());
+	uint8_t newID = static_cast<uint8_t>(m_resRP_States.size());
 	m_hRP_States[hash] = newID;
+	m_resRP_States.push_back({ stateRS, stateBS, stateDS });
 	return newID;
 }
 
-uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMaterial)
+uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, E_Collider collider, UINT idx)
 {
 	size_t hash = 0;
 	hash_combine(hash, std::hash<size_t>{}(hashMesh));
-	hash_combine(hash, std::hash<size_t>{}(hashMaterial));
+	hash_combine(hash, std::hash<size_t>{}(static_cast<size_t>(collider)));
+	hash_combine(hash, std::hash<UINT>{}(idx));
 	auto iter = m_hRP_Resources.find(hash);
 	if (iter != m_hRP_Resources.end())
 		return iter->second;
 
-	uint16_t newID = static_cast<uint16_t>(m_hRP_Resources.size());
+	uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
 	m_hRP_Resources[hash] = newID;
+	m_resRP_Resources.push_back({ hashMesh, collider, idx });
 	return newID;
 }
 
@@ -1125,7 +1130,7 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 	return key;
 }
 
-void EngineSystem::EnqueueRenderItem(_RPKey sortKey, ArchetypeKey key, size_t entityRow, size_t entityCol, size_t subsetIdx)
+void EngineSystem::EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx)
 {
-	m_hRP_CommandQueue.push_back({ sortKey, key, entityRow, entityCol, subsetIdx });
+	m_hRP_CommandQueue.push_back({ sortKey, pArchetype, entityRow, entityCol, renderCnt, startIdx });
 }

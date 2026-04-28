@@ -63,9 +63,15 @@ public:
 
 	void SwapchainPresent(bool vsync);
 
-	//RenderPass
+	/////////////////////////////
+	//Render Pass
+	/////////////////////////////
 private:
-	void RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& matProj);
+	size_t GetHashMat_Debug(E_Collider eType);
+	size_t GetHashMat_Cubemap(E_VerticesType eType);
+	size_t GetHashMat_Outline(E_VerticesType eType);
+	void CollectRenderItem(const Vector3& posCam);
+	/*void RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& matProj);
@@ -73,21 +79,9 @@ private:
 	void RenderUI(const Matrix4x4& matOrtho);
 	void RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
 	void RenderGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void RenderGeometry_PickingOutline(const Matrix4x4& matView, const Matrix4x4& matProj);
+	void RenderGeometry_PickingOutline(const Matrix4x4& matView, const Matrix4x4& matProj);*/
 
-	size_t GetHashMat_Debug(E_Collider eType);
-	size_t GetHashMat_Cubemap(E_VerticesType eType);
-	size_t GetHashMat_Outline(E_VerticesType eType);
-	void CollectRenderItem(const Vector3& posCam);
-	void CollectSkySphere(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectGeometry(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectShadowMap(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectCubeMap();
-	void CollectUI(const Matrix4x4& matOrtho);
-	void CollectGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj);
-	void CollectGeometry_PickingOutline(const Matrix4x4& matView, const Matrix4x4& matProj);
+
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()

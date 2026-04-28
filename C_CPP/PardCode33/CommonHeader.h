@@ -148,13 +148,17 @@ inline bool operator==(E_RenderPass a, uint32_t b)
 	return static_cast<uint32_t>(a) == b;
 }
 
+class Archetype;
+
 struct RenderItem
 {
 	_RPKey sortKey;
-	ArchetypeKey key;
+	Archetype* pArchetype;
 	size_t entityRow;
 	size_t entityCol;
-	size_t subsetIdx;
+	//size_t subsetIdx;
+	UINT renderCnt;
+	UINT startIdx;
 };
 
 #define _BB 1 << 0
@@ -310,6 +314,20 @@ struct RenderCounts
 {
 	UINT count;
 	UINT idx;
+};
+
+struct RPStates
+{
+	E_RSState stateRS;
+	E_BSState stateBS;
+	E_DSState stateDS;
+};
+
+struct RPMeshCollider
+{
+	size_t hashMesh;
+	E_Collider collider;
+	UINT idxCollider;
 };
 
 struct Vertex_PC

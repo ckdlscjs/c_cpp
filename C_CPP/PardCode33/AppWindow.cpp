@@ -163,6 +163,68 @@ void AppWindow::OnCreate()
 		}
 	}
 
+	//Common Materials
+	{
+		//ShadowMap
+		{
+			const std::wstring szName = L"ShadowMap";
+			_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateViews(szName, _Target_DepthView, g_iWidth, g_iHeight);
+			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
+			_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
+			_EngineSystem.m_hash_Mat_ShadowMap = hash_material;
+		}
+
+		//Outline Shader
+		{
+			const std::wstring szName = L"Outline";
+			size_t hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_Outline_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+			_EngineSystem.m_hash_Mat_Outline_PTN = hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+			_EngineSystem.m_hash_Mat_Outline_PTN_Skinned = hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_Outline_PTNTB.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+			_EngineSystem.m_hash_Mat_Outline_PTNTB = hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
+			_EngineSystem.m_hash_Mat_Outline_PTNTB_Skinned = hash_material;
+		}
+
+		//Debug Shader
+		{
+			const std::wstring szName = L"Debug";
+			size_t hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"Box_" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Debug.hlsl");
+			_EngineSystem.Material_SetGS(hash_material, L"GS_Debug_Box.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_PC.hlsl");
+			_EngineSystem.m_hash_Mat_Debug_Box = hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"Sphere_" + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_Debug_Sphere.hlsl");
+			_EngineSystem.Material_SetHS(hash_material, L"HS_Debug_Sphere.hlsl");
+			_EngineSystem.Material_SetDS(hash_material, L"DS_Debug_Sphere.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_PC.hlsl");
+			_EngineSystem.m_hash_Mat_Debug_Sphere = hash_material;
+		}
+	}
+	
+
 	//Initialize RenderAsset
 	{
 		//gizmo
@@ -1208,45 +1270,6 @@ void AppWindow::OnCreate()
 		}
 	}
 #endif //_EnvironmentMap
-
-	//ShadowMap
-	{
-		const std::wstring szName = L"ShadowMap";
-		_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateViews(szName, _Target_DepthView, g_iWidth, g_iHeight);
-		size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
-		_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
-		_EngineSystem.m_hash_Mat_ShadowMap = hash_material;
-	}
-
-	//Outline Shader
-	{
-		const std::wstring szName = L"Outline";
-		size_t hash_material;
-
-		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_" + szName);
-		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_Outline_PTN.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
-		_EngineSystem.m_hash_Mat_Outline_PTN = hash_material;
-
-		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
-		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
-		_EngineSystem.m_hash_Mat_Outline_PTN_Skinned = hash_material;
-
-		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
-		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_Outline_PTNTB.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
-		_EngineSystem.m_hash_Mat_Outline_PTNTB = hash_material;
-
-		hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
-		_EngineSystem.Material_SetVS(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
-		_EngineSystem.m_hash_Mat_Outline_PTNTB_Skinned = hash_material;
-	}
 
 	//Initialize RTV, DSV
 	{
