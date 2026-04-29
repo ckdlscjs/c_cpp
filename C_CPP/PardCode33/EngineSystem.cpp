@@ -522,6 +522,30 @@ void EngineSystem::Material_SetTextures(size_t hash_material, const std::vector<
 		pMaterial->SetTexture(iter);
 }
 
+void EngineSystem::Material_SetTopology(size_t hash_material, D3D_PRIMITIVE_TOPOLOGY topology)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetTopology(topology);
+}
+
+void EngineSystem::Material_SetHashPass(size_t hash_material, E_RenderPass renderPass)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetHashPass(static_cast<uint32_t>(renderPass));
+}
+
+void EngineSystem::Material_SetHashShaders(size_t hash_material, uint32_t hash_shaders)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetHashShaders(hash_shaders);
+}
+
+void EngineSystem::Material_SetHashStates(size_t hash_material, uint32_t hash_states)
+{
+	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+	pMaterial->SetHashStates(hash_states);
+}
+
 /////////////////////////////
 //Create APIResources
 /////////////////////////////
@@ -1114,7 +1138,7 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 	// 3. 상태 (8비트)
 	key |= (static_cast<uint64_t>(hashStates) & 0xFF) << 36;
 
-	// 4. 머티리얼/리소스 (16비트)
+	// 4. 메쉬/컬라이더
 	key |= (static_cast<uint64_t>(hashResources) & 0xFFFF) << 20;
 
 	// 5. 거리 (20비트)
@@ -1133,4 +1157,14 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 void EngineSystem::EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx)
 {
 	m_hRP_CommandQueue.push_back({ sortKey, pArchetype, entityRow, entityCol, renderCnt, startIdx });
+}
+
+void EngineSystem::SortRenderItem()
+{
+	std::sort(m_hRP_CommandQueue.begin(), m_hRP_CommandQueue.end(), [&](const RenderItem& a, const RenderItem& b) { return a.sortKey < b.sortKey; });
+}
+
+void EngineSystem::ClearRenderItem()
+{
+	_EngineSystem.m_hRP_CommandQueue.clear();
 }

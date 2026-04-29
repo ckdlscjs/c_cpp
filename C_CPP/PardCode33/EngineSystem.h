@@ -82,6 +82,10 @@ public:
 	void Material_SetPS(size_t hash_material, const std::wstring& psName, const std::string& entryName = "psmain", const std::string& target = "ps_5_0");
 	void Material_SetCS(size_t hash_material, const std::wstring& csName, const std::string& entryName = "csmain", const std::string& target = "cs_5_0");
 	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
+	void Material_SetTopology(size_t hash_material, D3D_PRIMITIVE_TOPOLOGY topology);
+	void Material_SetHashPass(size_t hash_material, E_RenderPass renderPass);
+	void Material_SetHashShaders(size_t hash_material, uint32_t hash_shaders);
+	void Material_SetHashStates(size_t hash_material, uint32_t hash_states);
 
 	//Animation
 	size_t CreateAnimaitonFromGeometry(size_t hash_geometry);
@@ -137,6 +141,9 @@ public:
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
 	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
+	void SortRenderItem();
+	void ClearRenderItem();
+
 
 public:
 	template<typename T>
