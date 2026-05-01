@@ -1,5 +1,6 @@
 Texture2D ShadowMapTexture : register(t6); //psset으로세팅하였다
 SamplerComparisonState samShadow : register(s6);
+
 static const float SMAP_WIDTH = 1004.0f;
 static const float SMAP_HEIGHT = 725.0f;
 static const float SMAP_DX = 1.0f / SMAP_WIDTH;

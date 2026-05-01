@@ -7,6 +7,7 @@ class Texture : public BaseResource<Texture>
 public:
 	Texture(size_t hash, const std::wstring& szFilePath, ScratchImage&& scratchIamge);
 	Texture(size_t hash, const std::wstring& szFilePath);
+	Texture(size_t hash, const std::wstring& szFilePath, size_t hashSRV);
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
 	Texture(Texture&&) = delete;
@@ -50,6 +51,10 @@ inline Texture::Texture(size_t hash, const std::wstring& szFilePath) : BaseResou
 	hr = DirectX::LoadFromWICFile(L"../Assets/Textures/brick.png", WIC_FLAGS_IGNORE_SRGB, nullptr, m_ScratchImage);
 	if (hr == S_OK) return;
 	_ASEERTION_CREATE(FAILED(hr), "LoadTexture not successfully");
+}
+
+inline Texture::Texture(size_t hash, const std::wstring& szFilePath, size_t hashSRV) : BaseResource(hash, szFilePath), m_lSRV(hashSRV)
+{
 }
 
 inline void Texture::SetSRV(size_t hashSRV)

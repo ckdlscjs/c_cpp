@@ -1,8 +1,8 @@
 #pragma once
-//#define _Floor
+#define _Floor
 //#define _RandOBJ
 //#define _Billboard
-//#define _NENE
+#define _NENE
 //#define _MECHAGIRL
 //#define _GIRL
 //#define _REFLECT

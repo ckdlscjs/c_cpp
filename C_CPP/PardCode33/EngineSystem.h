@@ -58,6 +58,7 @@ public:
 	//Texture
 	size_t CreateTexture(const std::wstring& szFilePath, ScratchImage&& image);
 	size_t CreateTexture(const std::wstring& szFilePath);
+	size_t CreateTexture(const std::wstring& szFilePath, size_t hashSRV);
 
 	//Geometry
 	size_t CreateGeometry(const std::wstring& szFilePath);
@@ -136,7 +137,7 @@ public:
 
 	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
 	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
-	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_BSState stateBS, E_DSState stateDS);
+	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
 	uint32_t GetRenderPassKey_Resources(size_t hashMesh, E_Collider collider, UINT idx = 0);
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);

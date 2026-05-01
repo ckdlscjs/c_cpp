@@ -113,14 +113,15 @@ enum class E_InputLayout
 
 enum class E_RenderPass : uint32_t
 {
-	Sky			= 0,
-	Shadow		= 1,
-	Opaque		= 2,
-	Transparent = 3,
-	Cubemap		= 4,
-	Outline		= 5,
-	Debug		= 6,
-	UI			= 7,
+	Sky				= 0,
+	Shadow			= 1,
+	Opaque			= 2,
+	Transparent		= 3,
+	Cubemap			= 4,
+	Outline_Write	= 5,
+	Outline_Draw	= 6,
+	Debug			= 7,
+	UI				= 8,
 	COUNT,
 };
 
@@ -320,7 +321,10 @@ struct RPStates
 {
 	E_RSState stateRS;
 	E_BSState stateBS;
+	float blendFactor[4];
+	UINT blendMask;
 	E_DSState stateDS;
+	UINT stencilRef;
 };
 
 struct RPMeshCollider

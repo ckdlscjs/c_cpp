@@ -291,6 +291,12 @@ size_t EngineSystem::CreateTexture(const std::wstring& szFilePath)
 	return pTexture->GetHash();
 }
 
+size_t EngineSystem::CreateTexture(const std::wstring& szFilePath, size_t hashSRV)
+{
+	Texture* pTexture = _ResourceSystem.CreateResource<Texture>(szFilePath, hashSRV);
+	return pTexture->GetHash();
+}
+
 const std::vector<size_t>& EngineSystem::CreateColliders(size_t hash_mesh, E_Collider collider)
 {
 	BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hash_mesh);
@@ -1045,17 +1051,10 @@ void EngineSystem::UnMappedBuffer(ID3D11Resource* pResource)
 	불투명: 앞에서 뒤로(Front-to-Back) 그려서 뒤에 가려진 정점을 미리 연산에서 제외(Early-Z)합니다.
 	투명: 뒤에서 앞으로(Back-to-Front) 그려야 올바른 알파 블렌딩 결과가 나옵니다.
 
-	구간,비트 수,할당 내용,비고
-	60~63,4 bit,Render Pass,"Shadow(0), Opaque(1), Alpha(2) 등"
-	44~59,16 bit,Shader ID,"해시를 변환한 16비트 정수 (최대 65,535개)"
-	36~43,8 bit,State ID,Rasterizer/Blend 상태 조합 ID
-	20~35,16 bit,Material ID,텍스처/버퍼 리소스 묶음 ID
-	0~19,20 bit,Depth,거리를 정수화 (Z-Sorting용)
-
 	// 1. Pass는 4비트면 충분하므로 uint8_t로도 충분하지만, 가독성을 위해 유지
 	// 2. 셰이더 조합 ID (16비트)
 	// 3. 상태(RS, BS, DSS) 조합 ID (8비트)
-	// 4. 리소스(Material/Texture) ID (16비트)
+	// 4. 리소스(Mesh/Collider) 16비트
 	// 5. 거리 계산 (20비트) - float 거리를 받아서 20비트 정수로 변환
 	// 4 + 16 + 8 + 16 + 20 -> 64비트 hash 비트별구분
 */
@@ -1068,7 +1067,7 @@ uint32_t EngineSystem::GetRenderPassKey_Pass(E_RenderPass pass)
 uint32_t EngineSystem::GetRenderPassKey_Shaders(size_t hashMaterial)
 {
 	Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-	size_t hash = 0;
+	size_t hash = hashMaterial;
 	if (pMaterial->GetVS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetVS());
 	if (pMaterial->GetHS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetHS());
 	if (pMaterial->GetDS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetDS());
@@ -1084,12 +1083,22 @@ uint32_t EngineSystem::GetRenderPassKey_Shaders(size_t hashMaterial)
 	return newID;
 }
 
-uint32_t EngineSystem::GetRenderPassKey_States(E_RSState stateRS, E_BSState stateBS, E_DSState stateDS)
+uint32_t EngineSystem::GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref, float* bs_factor, UINT bs_mask)
 {
 	size_t hash = 0;
 	hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateRS)));
 	hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateBS)));
 	hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateDS)));
+	float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	if (bs_factor != nullptr)
+	{
+		for (int i = 0; i < 4; i++)
+			blendFactor[i] = bs_factor[i];
+	}
+	for (int i = 0; i < 4; ++i)
+		hash_combine(hash, std::hash<float>{}(blendFactor[i]));
+	hash_combine(hash, std::hash<UINT>{}(bs_mask));
+	hash_combine(hash, std::hash<UINT>{}(ds_stencilref));
 
 	auto iter = m_hRP_States.find(hash);
 	if (iter != m_hRP_States.end())
@@ -1097,7 +1106,7 @@ uint32_t EngineSystem::GetRenderPassKey_States(E_RSState stateRS, E_BSState stat
 
 	uint8_t newID = static_cast<uint8_t>(m_resRP_States.size());
 	m_hRP_States[hash] = newID;
-	m_resRP_States.push_back({ stateRS, stateBS, stateDS });
+	m_resRP_States.push_back({ stateRS, stateBS, {blendFactor[0], blendFactor[1], blendFactor[2], blendFactor[3]}, bs_mask, stateDS, ds_stencilref });
 	return newID;
 }
 
