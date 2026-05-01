@@ -423,8 +423,11 @@ void AppWindow::OnCreate()
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetGS(hash_material, L"GS_PTN.hlsl");
+			//_EngineSystem.Material_SetGS(hash_material, L"GS_PTN.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
+			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter6.webp") });
@@ -459,7 +462,7 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
+					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
@@ -478,6 +481,9 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
+			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
+			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter5.webp") });
@@ -520,7 +526,7 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
+					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });

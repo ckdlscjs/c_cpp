@@ -886,11 +886,11 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 				{
 					size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[matIdx];
-					const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMaterial);
-					if (!(passMasks & (1 << pMateiral->GetHashPass()))) continue;
-					uint32_t hashPass = pMateiral->GetHashPass();
-					uint32_t hashShader = pMateiral->GetHashShaders();
-					uint32_t hashStates = pMateiral->GetHashStates();
+					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+					if (!(passMasks & (1 << pMaterial->GetHashPass()))) continue;
+					uint32_t hashPass = pMaterial->GetHashPass();
+					uint32_t hashShader = pMaterial->GetHashShaders();
+					uint32_t hashStates = pMaterial->GetHashStates();
 					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
 					_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 				}
@@ -903,10 +903,10 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 					for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 					{
 						size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[matIdx];
-						const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMaterial);
+						const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
 						uint32_t hashPass = hashPassShadow;
-						uint32_t hashShader = pMateiral->GetHashShaders();
-						uint32_t hashStates = pMateiral->GetHashStates();
+						uint32_t hashShader = pMaterial->GetHashShaders();
+						uint32_t hashStates = pMaterial->GetHashStates();
 						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
@@ -916,10 +916,10 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				if (passMasks & E_RenderPass::Cubemap)
 				{
 					size_t hashMateiral = GetHashMat_Cubemap(pMesh->GetVerticesType());
-					const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMateiral);
-					uint32_t hashPass = pMateiral->GetHashPass();
-					uint32_t hashShader = pMateiral->GetHashShaders();
-					uint32_t hashStates = pMateiral->GetHashStates();
+					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
+					uint32_t hashPass = pMaterial->GetHashPass();
+					uint32_t hashShader = pMaterial->GetHashShaders();
+					uint32_t hashStates = pMaterial->GetHashStates();
 					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
 					for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
@@ -929,10 +929,10 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				if (_InputSystem.IsDebugRender() && (passMasks & E_RenderPass::Debug))
 				{
 					size_t hashMateiral = GetHashMat_Debug(eCollider);
-					const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMateiral);
-					uint32_t hashPass = pMateiral->GetHashPass();
-					uint32_t hashShader = pMateiral->GetHashShaders();
-					uint32_t hashStates = pMateiral->GetHashStates();
+					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
+					uint32_t hashPass = pMaterial->GetHashPass();
+					uint32_t hashShader = pMaterial->GetHashShaders();
+					uint32_t hashStates = pMaterial->GetHashStates();
 					for (UINT colliderIdx = 0; colliderIdx < pMesh->GetCLs().size(); colliderIdx++)
 					{
 						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider, colliderIdx);
@@ -977,9 +977,9 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 			{
 				size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[matIdx];
-				const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMaterial);
-				uint32_t hashPass = pMateiral->GetHashPass();
-				uint32_t hashShader = pMateiral->GetHashShaders();
+				const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+				uint32_t hashPass = pMaterial->GetHashPass();
+				uint32_t hashShader = pMaterial->GetHashShaders();
 				uint32_t hashStates = _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1);
 				uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
@@ -989,10 +989,10 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 		//Collect Draw Outline
 		{
 			size_t hashMateiral = GetHashMat_Outline(pMesh->GetVerticesType());
-			const auto& pMateiral = _ResourceSystem.GetResource<Material>(hashMateiral);
-			uint32_t hashPass = pMateiral->GetHashPass();
-			uint32_t hashShader = pMateiral->GetHashShaders();
-			uint32_t hashStates = pMateiral->GetHashStates();
+			const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
+			uint32_t hashPass = pMaterial->GetHashPass();
+			uint32_t hashShader = pMaterial->GetHashShaders();
+			uint32_t hashStates = pMaterial->GetHashStates();
 			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
