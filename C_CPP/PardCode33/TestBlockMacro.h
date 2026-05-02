@@ -1,8 +1,8 @@
 #pragma once
 #define _Floor
-#define _RandOBJ
+//#define _RandOBJ
 //#define _Billboard
-//#define _NENE
+#define _NENE
 //#define _MECHAGIRL
 //#define _GIRL
 //#define _REFLECT
@@ -10,14 +10,14 @@
 //#define _SPONZA
 //#define _HOUSE
 //#define _NORMALMAP
-//#define _MutantWalk
+#define _MutantWalk
 //#define _Praying
 //#define _Herald		
 //#define _DRAGON
 //#define _MoveDirecionalLight
 //#define _Rapunzel
 //#define _Doro
-//#define _GeoSphere
+#define _GeoSphere
 //#define _Zhao
 
 //#define _SPACESHIP

@@ -169,7 +169,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	//큐브카메라
 	size_t lookup_cubecam = _CameraSystem.lookup_cubemapcam;
 	const auto& c_cubecam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_cubecam);
-	const Matrix4x4& matProj = c_cubecam_proj.matProj;
+	const auto& matProj_Cubecam = c_cubecam_proj.matProj;
 
 	//큐브맵 뷰행렬
 	const Vector3& cam_pos_cubemap = _ECSSystem.GetComponent<C_Transform>(lookup_cubecam).vPosition;
@@ -219,12 +219,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	// 4. 리소스(Material/Texture) ID (16비트)
 	// 5. 거리 계산 (20비트) - float 거리를 받아서 20비트 정수로 변환
 	// 4 + 16 + 8 + 16 + 20 -> 64비트 hash 비트별구분
-	for (UINT idx = 0; idx < _EngineSystem.m_hRP_CommandQueue.size(); idx++)
-	{
-		const auto& renderItem = _EngineSystem.m_hRP_CommandQueue[idx];
-	/*}
 	for (const auto& renderItem : _EngineSystem.m_hRP_CommandQueue)
-	{*/
+	{
 		_RPKey keyCur			= renderItem.sortKey;
 		Archetype* pArchetype	= renderItem.pArchetype;
 		size_t row				= renderItem.entityRow;
@@ -235,6 +231,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		//debug entity
 		const auto& info = pArchetype->GetComponents<C_Info>(row)[col];
 		int a = 0;
+
+		//WVPMat
+		Matrix4x4 matWorld;
+		Matrix4x4 matView;
+		Matrix4x4 matProj;
 
 		size_t diff = keyCur ^ keyPrev;				//xor, 1비트라도 다르면 시프트후 해당비트에 값이존재
 		uint32_t prevPass = (keyPrev >> 60) & 0xF;	
@@ -255,6 +256,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				case (uint32_t)E_RenderPass::Opaque:
 				case (uint32_t)E_RenderPass::Outline_Write:
 				case (uint32_t)E_RenderPass::Outline_Draw:
+				case (uint32_t)E_RenderPass::Picking_Triangle:
 				case (uint32_t)E_RenderPass::Debug:
 				case (uint32_t)E_RenderPass::Transparent:
 				{
@@ -271,6 +273,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					//뷰포트 및 렌더타겟 세팅
 					SetRS_Viewport(&_EngineSystem.m_vp_CubeMap);
 					SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_CubeMap }, _EngineSystem.m_hash_DSV_CubeMap);
+					cb_campos.vPosition = cam_pos_cubemap;
+					_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
 				}break;
 
 				case (uint32_t)E_RenderPass::UI:
@@ -293,8 +297,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				//RTV, SRV에 사용하는 버퍼의 밉맵을 형성한다(앨리어싱처리)
 				_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
 				SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
-				cb_campos.vPosition = cam_pos_cubemap;
-				_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
 			}
 		}
 
@@ -312,6 +314,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			SetGS_Shader(pMaterial->GetGS());
 			if(curPass == (uint32_t)E_RenderPass::Shadow)
 				SetPS_Shader(_ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap)->GetPS());
+			else if(curPass == (uint32_t)E_RenderPass::Picking_Triangle)
+				SetPS_Shader(_ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_Picking)->GetPS());
 			else
 				SetPS_Shader(pMaterial->GetPS());
 
@@ -354,7 +358,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					CB_Debug_Box cb_debug_box;
 					_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
-			
 				}
 				else if (MeshCollider.collider == E_Collider::SPHERE)
 				{
@@ -362,9 +365,18 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_sphere, &cb_debug_sphere);
 				}
+				if (pArchetype->HasComponents<C_Animation>())
+				{
+					const auto& animation = pArchetype->GetComponents<C_Animation>(row)[col];
+					matWorld = matWorld * _AnimationSystem.GetAnimbones(animation.hash_animbones)[MeshCollider.idxCollider];
+				}
 			}
 		}
-
+		if (pArchetype->HasComponents<C_Animation>())
+		{
+			const auto& animation = pArchetype->GetComponents<C_Animation>(row)[col];
+			_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
+		}
 
 		// ... 나머지 리소스 바인딩 및 Draw 호출
 		if (pArchetype->HasComponents<C_Transform>())
@@ -374,10 +386,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			const Quaternion& quat = transform.qRotate;
 			const Vector3& pos = transform.vPosition;
 
-			CB_WVPITMatrix cb_wvpitmat;
-			Matrix4x4 matWorld;
-			Matrix4x4 matView;
-			Matrix4x4 matProj;
 			if (pArchetype->HasComponents<T_Render_Billboard>())
 			{
 				/*
@@ -399,7 +407,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			}
 			else
 			{
-				matWorld = GetMat_World(scale, quat, pos);
+				matWorld = matWorld * GetMat_World(scale, quat, pos);
 				matView = cam_matView;
 				matProj = cam_matProj;
 			}
@@ -410,18 +418,12 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				matProj = cb_lightMat.matLightProj;
 			}
 
+			CB_WVPITMatrix cb_wvpitmat;
 			cb_wvpitmat.matWorld = matWorld;
 			cb_wvpitmat.matView = matView;
 			cb_wvpitmat.matProj = matProj;
 			cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(matWorld);
 			_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-		}
-
-		if (pArchetype->HasComponents<C_Animation>())
-		{
-			const auto& animation = pArchetype->GetComponents<C_Animation>(row)[col];
-			_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
-			
 		}
 
 		if (curPass != (uint32_t)E_RenderPass::Debug)
@@ -432,116 +434,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		//키상태 저장
 		keyPrev = keyCur;
 	}
-
-
-//	CB_DirectionalLight cb_directional;
-//	{
-//		size_t lookup				= _EngineSystem.m_hash_light_directional;
-//		const auto& lightDir		= _ECSSystem.GetComponent<C_Light_Direction>(lookup);
-//		const auto& c_light			= _ECSSystem.GetComponent<C_Light>(lookup);
-//		cb_directional.mAmbient		= c_light.vAmbient;
-//		cb_directional.mDiffuse		= c_light.vDiffuse;
-//		cb_directional.mSpecular	= c_light.vSpecular;
-//		cb_directional.vDirection	= Vector4(Quaternion(lightDir.dir).GetForwardAxis(), c_light.fShiness);
-//	}
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_directionalLight, &cb_directional);
-//	SetPS_ConstantBuffer(g_hash_cb_directionalLight, 0);
-//
-//	CB_PointLight cb_point;
-//	{
-//		size_t lookup				= _EngineSystem.m_hash_light_point;
-//		const auto& c_transform		= _ECSSystem.GetComponent<C_Transform>(lookup);
-//		const auto& c_light			= _ECSSystem.GetComponent<C_Light>(lookup);
-//		const auto& c_attenuation	= _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
-//		cb_point.mAmbient			= c_light.vAmbient;
-//		cb_point.mDiffuse			= c_light.vDiffuse;
-//		cb_point.mSpecular			= c_light.vSpecular;
-//		cb_point.vPosition			= Vector4(c_transform.vPosition, c_light.fShiness);
-//		cb_point.fAttenuations		= Vector4(c_attenuation.fAtt_a0, c_attenuation.fAtt_a1, c_attenuation.fAtt_a2, c_attenuation.fRange);
-//	}
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_pointLight, &cb_point);
-//	SetPS_ConstantBuffer(g_hash_cb_pointLight, 1);
-//
-//	CB_SpotLight cb_spot;
-//	{
-//		size_t lookup				= _EngineSystem.m_hash_light_spot;
-//		const auto& c_transform		= _ECSSystem.GetComponent<C_Transform>(lookup);
-//		const auto& c_light			= _ECSSystem.GetComponent<C_Light>(lookup);
-//		const auto& c_attenuation	= _ECSSystem.GetComponent<C_Light_Attenuation>(lookup);
-//		const auto& c_spot			= _ECSSystem.GetComponent<C_Light_Spot>(lookup);
-//		cb_spot.mAmbient			= c_light.vAmbient;
-//		cb_spot.mDiffuse			= c_light.vDiffuse;
-//		cb_spot.mSpecular			= c_light.vSpecular;
-//		cb_spot.vDirection			= c_transform.qRotate.GetForwardAxis();
-//		cb_spot.vPosition			= Vector4(c_transform.vPosition, c_light.fShiness);
-//		cb_spot.fAttenuations		= Vector4(c_attenuation.fAtt_a0, c_attenuation.fAtt_a1, c_attenuation.fAtt_a2, c_attenuation.fRange);
-//		cb_spot.fSpots				= Vector4(c_spot.fSpot, c_spot.fCos_OuterCone, c_spot.fCos_InnerCone, 0.0f);
-//	}
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_spotLight, &cb_spot);
-//	SetPS_ConstantBuffer(g_hash_cb_spotLight, 2);
-//
-//	CB_LightMatrix cb_lightMat;
-//	{
-//		size_t lookup				= _EngineSystem.m_hash_light_directional;
-//		const auto& lightDir		= _ECSSystem.GetComponent<C_Light_Direction>(lookup);
-//		const auto& c_cam			= _ECSSystem.GetComponent<C_Camera>(_CameraSystem.lookup_maincam);
-//		Vector4 pos					= -lightDir.dir * 5000.0f;
-//		cb_lightMat.matLightView	= GetMat_View(pos.ToVector3(), lightDir.dir);
-//		cb_lightMat.matLightProj	= GetMat_Orthographic(c_cam.fScreenWidth, c_cam.fScreenHeight, c_cam.fNear, 10000.0f);
-//		cb_lightMat.vPos			= pos;
-//	}
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_lightmat, &cb_lightMat);
-//	SetVS_ConstantBuffer(g_hash_cb_lightmat, 1);
-//	SetGS_ConstantBuffer(g_hash_cb_lightmat, 1);
-//
-//	size_t lookup_maincam			= _CameraSystem.lookup_maincam;
-//	const auto& c_cam_main			= _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
-//	const auto& c_cam_proj			= _ECSSystem.GetComponent<C_Projection>(lookup_maincam);
-//	const auto& c_cam_ortho			= _ECSSystem.GetComponent<C_Orthographic>(lookup_maincam);
-//	const Matrix4x4& cam_matWorld	= c_cam_main.matWorld;
-//	const Matrix4x4& cam_matView	= c_cam_main.matView;
-//	const Matrix4x4& cam_matProj	= c_cam_proj.matProj;
-//	const Matrix4x4& cam_matOrhto	= c_cam_ortho.matOrtho;
-//
-//	//ShadowMap
-//	RenderShadowMap(cb_lightMat.matLightView, cb_lightMat.matLightProj);
-//
-//#ifdef  _EnviornmentMap
-//	//CubeMap
-//	RenderCubeMap();
-//#endif //  _EnviornmentMap
-//
-//	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(lookup_maincam);
-//	CB_Campos cb_campos;
-//	cb_campos.vPosition = c_cam_transform.vPosition;
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
-//	SetVS_ConstantBuffer(g_hash_cb_campos, 5);
-//
-//	//Render SkySphere
-//	RenderSkySphere(cam_matView, cam_matProj);
-//	
-//	//Render Geometry
-//	RenderGeometry(cam_matView, cam_matProj);
-//
-//	//Render CubeMap
-//	//RenderEnviornmentMap(cam_matView, cam_matProj);
-//
-//	//Render Billboard
-//	RenderBillboard(c_cam_transform.vPosition, cam_matView, cam_matProj);
-//
-//	//Render Pikcing
-//	if (_EngineSystem.m_hash_pickingLookup != _HashNotInitialize)
-//	{
-//		RenderGeometry_PickingOutline(cam_matView, cam_matProj);
-//		RenderGeometry_PickingTriangle(cam_matView, cam_matProj);
-//	}
-//
-//	//Render DebugGeometry
-//	if (_InputSystem.IsDebugRender())
-//		RenderGeometry_Debug(cam_matView, cam_matProj);
-//
-//	//Render UI
-//	RenderUI(cam_matOrhto);
 }
 
 void RenderSystem::PostRender()
@@ -969,7 +861,14 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 
 		//Collect Picking Triangle
 		{
-
+			size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[collider.idxMat];
+			const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+			const auto& pMaterial_Picking = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_Picking);
+			uint32_t hashPass = pMaterial_Picking->GetHashPass();
+			uint32_t hashShader = pMaterial->GetHashShaders();
+			uint32_t hashStates = pMaterial_Picking->GetHashStates();
+			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+			_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, 3, collider.idxPicking);
 		}
 
 		//Collect Write Outline
@@ -988,8 +887,8 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 
 		//Collect Draw Outline
 		{
-			size_t hashMateiral = GetHashMat_Outline(pMesh->GetVerticesType());
-			const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
+			size_t hashMaterial = GetHashMat_Outline(pMesh->GetVerticesType());
+			const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
 			uint32_t hashPass = pMaterial->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial->GetHashStates();
@@ -1000,194 +899,6 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 	}
 }
 
-//void RenderSystem::RenderSkySphere(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::SkyBox);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CCW);
-//	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Sky>();
-//	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//	for (auto& archetype : queries)
-//	{
-//		size_t st_row = 0;
-//		size_t st_col = 0;
-//		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//		{
-//			auto& transforms = archetype->GetComponents<C_Transform>(row);
-//			auto& renders = archetype->GetComponents<C_Render>(row);
-//			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//			{
-//				const Vector3& scale = transforms[col].vScale;
-//				const Quaternion& rotate = transforms[col].qRotate;
-//				const Vector3& position = transforms[col].vPosition;
-//				CB_WVPITMatrix cb_wvpitmat;
-//				cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//				cb_wvpitmat.matView = matView;
-//				cb_wvpitmat.matProj = matProj;
-//				cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//				SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//				RenderAsset* pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render);
-//				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(pRenderAsset->m_hMeshMats.hash_mesh);
-//				SetIA_VertexBuffer(pMesh->GetVB());
-//				SetIA_IndexBuffer(pMesh->GetIB());
-//
-//				for (UINT j = 0; j < pRenderAsset->m_hMeshMats.hash_mats.size(); j++)
-//				{
-//					Material* pMaterial = _ResourceSystem.GetResource<Material>(pRenderAsset->m_hMeshMats.hash_mats[j]);
-//					SetIA_InputLayout(pMaterial->GetIL());
-//					SetVS_Shader(pMaterial->GetVS());
-//					SetGS_Shader(pMaterial->GetGS());
-//					SetPS_Shader(pMaterial->GetPS());
-//
-//					const std::vector<size_t>* texs = pMaterial->GetTextures();
-//					int cnt = 0;
-//					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//					{
-//						for (const auto& hashTx : texs[idxTex])
-//						{
-//							size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//							SetPS_ShaderResourceView(hashSRV, cnt++);
-//						}
-//					}
-//					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//				}
-//			}
-//			st_col = 0;
-//		}
-//	}
-//}
-//
-//void RenderSystem::RenderGeometry(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::Default);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-//	
-//	//static
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//					SetIA_VertexBuffer(pMesh->GetVB());
-//					SetIA_IndexBuffer(pMesh->GetIB());
-//					for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//					{
-//						auto& hashMaterial = MeshMats.hash_mats[j];
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//						SetGS_Shader(pMaterial->GetGS());
-//						SetPS_Shader(pMaterial->GetPS());
-//
-//						const std::vector<size_t>* texs = pMaterial->GetTextures();
-//						int cnt = 0;
-//						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//						{
-//							for (const auto& hashTx : texs[idxTex])
-//							{
-//								size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//								SetPS_ShaderResourceView(hashSRV, cnt++);
-//							}
-//						}
-//						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	//Skeletal
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& animations = archetype->GetComponents<C_Animation>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
-//					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//					SetIA_VertexBuffer(pMesh->GetVB());
-//					SetIA_IndexBuffer(pMesh->GetIB());
-//					for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//					{
-//						auto& hashMaterial = MeshMats.hash_mats[j];
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//						SetGS_Shader(pMaterial->GetGS());
-//						SetPS_Shader(pMaterial->GetPS());
-//
-//						const std::vector<size_t>* texs = pMaterial->GetTextures();
-//						int cnt = 0;
-//						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//						{
-//							for (const auto& hashTx : texs[idxTex])
-//							{
-//								size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//								SetPS_ShaderResourceView(hashSRV, cnt++);
-//							}
-//						}
-//						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//}
-//
 //void RenderSystem::RenderBillboard(const Vector3& campos, const Matrix4x4& matView, const Matrix4x4& matProj)
 //{
 //	SetOM_BlendState(E_BSState::Opaque, NULL);
@@ -1256,195 +967,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 //		}
 //	}
 //}
-//
-//void RenderSystem::RenderShadowMap(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::Default);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-//
-//	//그림자맵 텍스쳐를 구성하기위한 타겟(rtv null, dsv만) 세팅
-//	ClearDepthStencilView(_EngineSystem.m_hash_DSV_ShadowMap);
-//	SetOM_RenderTargets(std::vector<size_t>(), _EngineSystem.m_hash_DSV_ShadowMap);
-//
-//	//Render Geometry
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Geometry_Static>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//					SetIA_VertexBuffer(pMesh->GetVB());
-//					SetIA_IndexBuffer(pMesh->GetIB());
-//					for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//					{
-//						auto& hashMaterial = MeshMats.hash_mats[j];
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//
-//						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
-//						SetPS_Shader(pShadowMapMaterial->GetPS());
-//
-//						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	//Skeletal
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& animations = archetype->GetComponents<C_Animation>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//					
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
-//					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//					SetIA_VertexBuffer(pMesh->GetVB());
-//					SetIA_IndexBuffer(pMesh->GetIB());
-//					for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//					{
-//						auto& hashMaterial = MeshMats.hash_mats[j];
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//
-//						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
-//						SetPS_Shader(pShadowMapMaterial->GetPS());
-//
-//						const std::vector<size_t>* texs = pMaterial->GetTextures();
-//						int cnt = 0;
-//						for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//						{
-//							for (const auto& hashTx : texs[idxTex])
-//							{
-//								size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//								SetPS_ShaderResourceView(hashSRV, cnt++);
-//							}
-//						}
-//						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	const auto& c_cam_transform = _ECSSystem.GetComponent<C_Transform>(_CameraSystem.lookup_maincam);
-//	//Render Billboard
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_Billboard>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					/*
-//					float dx = c_cam_transform.vPosition.GetX() - position.GetX();
-//					float dz = c_cam_transform.vPosition.GetZ() - position.GetZ();
-//					double angle = _RADTODEG(atan2f(dx, dz)) + 180.0f;
-//					*/
-//					//yaw빌보드 구현, +z(화면안쪽) 이므로 물체-카메라로 역방향으로 회전해야 같은yaw로 회전해 빌보드로 보이게된다
-//
-//					Quaternion qRot((position - c_cam_transform.vPosition).Normalize());
-//					cb_wvpitmat.matWorld = GetMat_Scale(scale) * GetMat_RotYaw(qRot.ToRotate().GetY()) * GetMat_Translation(position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//					SetIA_VertexBuffer(pMesh->GetVB());
-//					SetIA_IndexBuffer(pMesh->GetIB());
-//					for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//					{
-//						auto& hashMaterial = MeshMats.hash_mats[j];
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//
-//						Material* pShadowMapMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
-//						SetPS_Shader(pShadowMapMaterial->GetPS());
-//
-//						Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	//원복
-//	ClearRenderTargetView(_EngineSystem.m_hash_RTV_0, 0.0f, 0.3f, 0.4f, 1.0f);
-//	ClearDepthStencilView(_EngineSystem.m_hash_DSV_0);
-//	SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
-//	
-//	SetPS_ShaderResourceView(_EngineSystem.m_hash_DSV_ShadowMap, 6);
-//}
-//
+
 //void RenderSystem::RenderCubeMap()
 //{
 //	//뷰포트 및 렌더타겟 세팅
@@ -1720,553 +1243,4 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 //	SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
 //	SetRS_Viewport(&_EngineSystem.m_vp_BB);
 //	SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
-//}
-//
-//void RenderSystem::RenderUI(const Matrix4x4& matOrtho)
-//{
-//	SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::UI);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-//
-//	//2D객체로 SRV임시체크
-//	SetOM_RenderTargets({}, NULL);
-//	ClearRenderTargetView(_EngineSystem.m_hash_RTV_BB, 0.0f, 0.0f, 0.0f, 1.0f);
-//	SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_BB }, NULL);
-//
-//	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, T_Render_UI>();
-//	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//	for (auto& archetype : queries)
-//	{
-//		size_t st_row = 0;
-//		size_t st_col = 0;
-//		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//		{
-//			auto& transforms = archetype->GetComponents<C_Transform>(row);
-//			auto& renders = archetype->GetComponents<C_Render>(row);
-//			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//			{
-//				const Vector3& scale = transforms[col].vScale;
-//				const Quaternion& rotate = transforms[col].qRotate;
-//				const Vector3& position = transforms[col].vPosition;
-//				CB_WVPITMatrix cb_wvpitmat;
-//				cb_wvpitmat.matWorld = GetMat_ConvertGeometryOrtho() * GetMat_World(scale, rotate, position);
-//				cb_wvpitmat.matView = GetMat_Identity();
-//				cb_wvpitmat.matProj = matOrtho;
-//				_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//				SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-//				SetIA_VertexBuffer(pMesh->GetVB());
-//				SetIA_IndexBuffer(pMesh->GetIB());
-//				for (UINT j = 0; j < MeshMats.hash_mats.size(); j++)
-//				{
-//					size_t hashMaterial = MeshMats.hash_mats[j];
-//					Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-//					SetIA_InputLayout(pMaterial->GetIL());
-//					SetVS_Shader(pMaterial->GetVS());
-//					SetPS_Shader(pMaterial->GetPS());
-//					SetGS_Shader(pMaterial->GetGS());
-//
-//					const std::vector<size_t>* texs = pMaterial->GetTextures();
-//					int cnt = 0;
-//					for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//					{
-//						for (const auto& hashTx : texs[idxTex])
-//						{
-//							size_t hashSRV = hashTx;
-//							SetPS_ShaderResourceView(hashSRV, cnt++);
-//						}
-//					}
-//					Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//				}
-//			}
-//		}
-//		st_col = 0;
-//	}
-//}
-//
-//void RenderSystem::RenderGeometry_Debug(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::Default);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetRS_RasterizerState(E_RSState::WIRE_CULLBACK_CW);
-//	//DebugRender는 PS를 통일
-//	SetPS_Shader(g_hash_PS_Debug_PC);
-//	//Static
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& colliders = archetype->GetComponents<C_Collider>(row);
-//
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//
-//					SetIA_VertexBuffer(NULL);
-//					SetIA_IndexBuffer(NULL);
-//					SetIA_InputLayout(NULL);
-//
-//					if (colliders[col].type == E_Collider::AABB)
-//					{
-//						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-//						SetVS_Shader(g_hash_VS_Debug);
-//						SetHS_Shader(NULL);
-//						SetDS_Shader(NULL);
-//						SetGS_Shader(g_hash_GS_Debug_Box);
-//						SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//					}
-//					else if (colliders[col].type == E_Collider::SPHERE)
-//					{
-//						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-//						SetVS_Shader(g_hash_VS_Debug_Sphere);
-//						SetHS_Shader(g_hash_HS_Debug_Sphere);
-//						SetDS_Shader(g_hash_DS_Debug_Sphere);
-//						SetGS_Shader(NULL);
-//						SetDS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//					}
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					for (UINT j = 0; j < MeshMats.size(); j++)
-//					{
-//						auto& iter = MeshMats[j];
-//						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//
-//						for (const auto& hash_collider : pMesh->GetCLs())
-//						{
-//							UINT drawCount = 0;
-//							if (colliders[col].type == E_Collider::AABB)
-//							{
-//								CB_Debug_Box cb_debug_box;
-//								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
-//								_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
-//								SetGS_ConstantBuffer(g_hash_cb_debug_box, 5);
-//								drawCount = 1;
-//							}
-//							else if (colliders[col].type == E_Collider::SPHERE)
-//							{
-//								CB_Debug_Sphere cb_debug_sphere;
-//								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
-//								_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_sphere, &cb_debug_sphere);
-//								SetHS_ConstantBuffer(g_hash_cb_debug_sphere, 5);
-//								SetDS_ConstantBuffer(g_hash_cb_debug_sphere, 5);
-//								drawCount = 60;
-//							}
-//
-//							Draw_Vertices(drawCount, 0);
-//						}
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	//Skeletal
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, C_Collider, T_Render_Geometry_Skeletal>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& animations = archetype->GetComponents<C_Animation>(row);
-//				auto& colliders = archetype->GetComponents<C_Collider>(row);
-//
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//
-//					SetIA_VertexBuffer(NULL, 0);
-//					SetIA_IndexBuffer(NULL);
-//					SetIA_InputLayout(NULL);
-//
-//					if (colliders[col].type == E_Collider::AABB)
-//					{
-//						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
-//						SetVS_Shader(g_hash_VS_Debug);
-//						SetHS_Shader(NULL);
-//						SetDS_Shader(NULL);
-//						SetGS_Shader(g_hash_GS_Debug_Box);
-//					}
-//					else if (colliders[col].type == E_Collider::SPHERE)
-//					{
-//						SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-//						SetVS_Shader(g_hash_VS_Debug_Sphere);
-//						SetHS_Shader(g_hash_HS_Debug_Sphere);
-//						SetDS_Shader(g_hash_DS_Debug_Sphere);
-//						SetGS_Shader(NULL);
-//					}
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					for (UINT j = 0; j < MeshMats.size(); j++)
-//					{
-//						auto& iter = MeshMats[j];
-//						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//						for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
-//						{
-//							cb_wvpitmat.matWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * GetMat_World(scale, rotate, position);
-//							_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//
-//							size_t hash_collider = pMesh->GetCLs()[idx];
-//
-//							UINT drawCount = 0;
-//							if (colliders[col].type == E_Collider::AABB)
-//							{
-//								SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//								CB_Debug_Box cb_debug_box;
-//								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
-//								_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
-//								SetGS_ConstantBuffer(g_hash_cb_debug_box, 1);
-//								drawCount = 1;
-//							}
-//							else if (colliders[col].type == E_Collider::SPHERE)
-//							{
-//								SetDS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//
-//								CB_Debug_Sphere cb_debug_sphere;
-//								_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
-//								_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_sphere, &cb_debug_sphere);
-//								SetHS_ConstantBuffer(g_hash_cb_debug_sphere, 1);
-//								SetDS_ConstantBuffer(g_hash_cb_debug_sphere, 1);
-//								drawCount = 60;
-//							}
-//
-//							Draw_Vertices(drawCount, 0);
-//						}
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	SetVS_Shader(NULL);
-//	SetHS_Shader(NULL);
-//	SetDS_Shader(NULL);
-//	SetGS_Shader(NULL);
-//	SetPS_Shader(NULL);
-//}
-//
-//void RenderSystem::RenderGeometry_PickingTriangle(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	if (_EngineSystem.m_hash_pickingLookup == _HashNotInitialize)
-//		return;
-//	SetOM_BlendState(E_BSState::Opaque, NULL);
-//	SetOM_DepthStenilState(E_DSState::Default);
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-//
-//	//static
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& colliders = archetype->GetComponents<C_Collider>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					if (!colliders[col].bPicking) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					for (UINT j = 0; j < MeshMats.size(); j++)
-//					{
-//						auto& iter = MeshMats[j];
-//						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//						SetIA_VertexBuffer(pMesh->GetVB());
-//						SetIA_IndexBuffer(pMesh->GetIB());
-//
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//						SetHS_Shader(NULL);
-//						SetDS_Shader(NULL);
-//						SetGS_Shader(NULL);
-//						SetPS_Shader(g_hash_PS_Picking);
-//
-//						Draw_Indicies(3, colliders[col].pickingIdx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	//Skeletal
-//	{
-//		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, C_Collider, T_Render_Geometry_Skeletal>();
-//		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-//		for (auto& archetype : queries)
-//		{
-//			size_t st_row = 0;
-//			size_t st_col = 0;
-//			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-//			{
-//				auto& transforms = archetype->GetComponents<C_Transform>(row);
-//				auto& renders = archetype->GetComponents<C_Render>(row);
-//				auto& animations = archetype->GetComponents<C_Animation>(row);
-//				auto& colliders = archetype->GetComponents<C_Collider>(row);
-//				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-//				{
-//					if (!renders[col].bRenderable) continue;
-//					if (!colliders[col].bPicking) continue;
-//					const Vector3& scale = transforms[col].vScale;
-//					const Quaternion& rotate = transforms[col].qRotate;
-//					const Vector3& position = transforms[col].vPosition;
-//
-//					CB_WVPITMatrix cb_wvpitmat;
-//					cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//					cb_wvpitmat.matView = matView;
-//					cb_wvpitmat.matProj = matProj;
-//					cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//					SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//					CB_BoneMatrix cb_bonemat;
-//					std::memcpy(cb_bonemat.bones, animations[col].matAnims, sizeof(cb_bonemat.bones));
-//					_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, &cb_bonemat);
-//					SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
-//
-//					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-//					for (UINT j = 0; j < MeshMats.size(); j++)
-//					{
-//						auto& iter = MeshMats[j];
-//						BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//						SetIA_VertexBuffer(pMesh->GetVB());
-//						SetIA_IndexBuffer(pMesh->GetIB());
-//
-//						Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-//						SetIA_InputLayout(pMaterial->GetIL());
-//						SetVS_Shader(pMaterial->GetVS());
-//						SetHS_Shader(NULL);
-//						SetDS_Shader(NULL);
-//						SetGS_Shader(NULL);
-//						SetPS_Shader(g_hash_PS_Picking);
-//
-//						Draw_Indicies(3, colliders[col].pickingIdx, 0);
-//					}
-//				}
-//				st_col = 0;
-//			}
-//		}
-//	}
-//
-//	size_t lookup			= _EngineSystem.m_hash_pickingLookup;
-//	auto& info				= _ECSSystem.GetComponent<C_Info>(lookup);
-//	auto& transform			= _ECSSystem.GetComponent<C_Transform>(lookup);
-//	auto& render			= _ECSSystem.GetComponent<C_Render>(lookup);
-//	auto& collider			= _ECSSystem.GetComponent<C_Collider>(lookup);
-//
-//	if (!render.bRenderable) return;
-//
-//	if (g_fTime_Log >= 1.0f)
-//		std::cout << '\n' << "Picking Entity : " << _towm(info.szName) << '\n' << '\n';
-//
-//	const Vector3& scale = transform.vScale;
-//	const Quaternion& rotate = transform.qRotate;
-//	const Vector3& position = transform.vPosition;
-//	CB_WVPITMatrix cb_wvpitmat;
-//	cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//	cb_wvpitmat.matView = matView;
-//	cb_wvpitmat.matProj = matProj;
-//	cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//	SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//	if (_ECSSystem.HasComponent<C_Animation>(lookup))
-//	{
-//		auto& animation = _ECSSystem.GetComponent<C_Animation>(lookup);
-//		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
-//		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
-//	}
-//
-//	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(render.hash_asset_Render)->m_hMeshMats;
-//	for (UINT j = 0; j < MeshMats.size(); j++)
-//	{
-//		auto& iter = MeshMats[j];
-//		BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//		SetIA_VertexBuffer(pMesh->GetVB());
-//		SetIA_IndexBuffer(pMesh->GetIB());
-//
-//		Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-//		SetIA_InputLayout(pMaterial->GetIL());
-//		SetVS_Shader(pMaterial->GetVS());
-//		SetHS_Shader(NULL);
-//		SetDS_Shader(NULL);
-//		SetGS_Shader(NULL);
-//		SetPS_Shader(g_hash_PS_Picking);
-//
-//		Draw_Indicies(3, collider.pickingIdx, 0);
-//	}
-//}
-//
-//void RenderSystem::RenderGeometry_PickingOutline(const Matrix4x4& matView, const Matrix4x4& matProj)
-//{
-//	if (_EngineSystem.m_hash_pickingLookup == _HashNotInitialize)
-//		return;
-//
-//	std::function<size_t(E_VerticesType)> GetHash_OutlineMat = [&](E_VerticesType eType)->size_t
-//		{
-//			switch (eType)
-//			{
-//				case E_VerticesType::Vertex_PTN:
-//					return _EngineSystem.m_hash_Mat_Outline_PTN;
-//				case E_VerticesType::Vertex_PTN_Skinned:
-//					return _EngineSystem.m_hash_Mat_Outline_PTN_Skinned;
-//				case E_VerticesType::Vertex_PTNTB:
-//					return _EngineSystem.m_hash_Mat_Outline_PTNTB;
-//				case E_VerticesType::Vertex_PTNTB_Skinned:
-//					return _EngineSystem.m_hash_Mat_Outline_PTNTB_Skinned;
-//				default:
-//					return _EngineSystem.m_hash_Mat_Outline_PTN;
-//			}
-//		};
-//
-//	SetPS_SamplerState(E_SMState::LINEAR_WRAP);
-//	SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
-//	SetRS_RasterizerState(E_RSState::SOLID_CULLBACK_CW);
-//
-//	size_t lookup			= _EngineSystem.m_hash_pickingLookup;
-//	auto& info				= _ECSSystem.GetComponent<C_Info>(lookup);
-//	auto& transform			= _ECSSystem.GetComponent<C_Transform>(lookup);
-//	auto& render			= _ECSSystem.GetComponent<C_Render>(lookup);
-//	auto& collider			= _ECSSystem.GetComponent<C_Collider>(lookup);
-//
-//	if (!render.bRenderable) return;
-//
-//	const Vector3& scale = transform.vScale;
-//	const Quaternion& rotate = transform.qRotate;
-//	const Vector3& position = transform.vPosition;
-//	CB_WVPITMatrix cb_wvpitmat;
-//	cb_wvpitmat.matWorld = GetMat_World(scale, rotate, position);
-//	cb_wvpitmat.matView = matView;
-//	cb_wvpitmat.matProj = matProj;
-//	cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-//	SetVS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-//
-//	if (_ECSSystem.HasComponent<C_Animation>(lookup))
-//	{
-//		auto& animation = _ECSSystem.GetComponent<C_Animation>(lookup);
-//		_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animation.hash_animbones).data());
-//		SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);
-//	}
-//
-//	CB_Outline_Picking cb_outline;
-//	Vector3 outlineColor = Vector3(255.0f, 165.0f, 0.0f) / 255.0f;
-//	cb_outline.color_thickness = Vector4(outlineColor, _EngineSystem.m_fThickness); //rgb, thickness;
-//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_outline_picking, &cb_outline);
-//	SetVS_ConstantBuffer(g_hash_cb_outline_picking, 3);
-//
-//	const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(render.hash_asset_Render)->m_hMeshMats;
-//
-//	//Outline_Write
-//	SetOM_BlendState(E_BSState::Outline_Write, NULL);
-//	SetOM_DepthStenilState(E_DSState::Outline_Write, 1);
-//	for (UINT j = 0; j < MeshMats.size(); j++)
-//	{
-//		auto& iter = MeshMats[j];
-//		BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//		SetIA_VertexBuffer(pMesh->GetVB());
-//		SetIA_IndexBuffer(pMesh->GetIB());
-//
-//		Material* pMaterial = _ResourceSystem.GetResource<Material>(iter.hash_material);
-//		SetIA_InputLayout(pMaterial->GetIL());
-//		SetVS_Shader(pMaterial->GetVS());
-//		SetGS_Shader(pMaterial->GetGS());
-//		SetPS_Shader(pMaterial->GetPS());
-//
-//		const std::vector<size_t>* texs = pMaterial->GetTextures();
-//		int cnt = 0;
-//		for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//		{
-//			for (const auto& hashTx : texs[idxTex])
-//			{
-//				size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//				SetPS_ShaderResourceView(hashSRV, cnt++);
-//			}
-//		}
-//		Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//	}
-//
-//	//Outline_Draw
-//	SetOM_BlendState(E_BSState::Outline_Draw, NULL);
-//	SetOM_DepthStenilState(E_DSState::Outline_Draw, 1);
-//	for (UINT j = 0; j < MeshMats.size(); j++)
-//	{
-//		auto& iter = MeshMats[j];
-//		BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(iter.hash_mesh);
-//		SetIA_VertexBuffer(pMesh->GetVB());
-//		SetIA_IndexBuffer(pMesh->GetIB());
-//
-//		Material* pMaterial = _ResourceSystem.GetResource<Material>(GetHash_OutlineMat(pMesh->GetVerticesType()));
-//		SetIA_InputLayout(pMaterial->GetIL());
-//		SetVS_Shader(pMaterial->GetVS());
-//		SetGS_Shader(pMaterial->GetGS());
-//		SetPS_Shader(pMaterial->GetPS());
-//
-//		const std::vector<size_t>* texs = pMaterial->GetTextures();
-//		int cnt = 0;
-//		for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-//		{
-//			for (const auto& hashTx : texs[idxTex])
-//			{
-//				size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-//				SetPS_ShaderResourceView(hashSRV, cnt++);
-//			}
-//		}
-//		Draw_Indicies(pMesh->GetRendIndices()[j].count, pMesh->GetRendIndices()[j].idx, 0);
-//	}
 //}

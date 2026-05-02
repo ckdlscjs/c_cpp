@@ -113,15 +113,16 @@ enum class E_InputLayout
 
 enum class E_RenderPass : uint32_t
 {
-	Sky				= 0,
-	Shadow			= 1,
-	Opaque			= 2,
-	Transparent		= 3,
-	Cubemap			= 4,
-	Outline_Write	= 5,
-	Outline_Draw	= 6,
-	Debug			= 7,
-	UI				= 8,
+	Sky					= 0,
+	Shadow				= 1,
+	Opaque				= 2,
+	Transparent			= 3,
+	Cubemap				= 4,
+	Outline_Write		= 5,
+	Outline_Draw		= 6,
+	Picking_Triangle	= 7,
+	Debug				= 8,
+	UI					= 9,
 	COUNT,
 };
 

@@ -188,7 +188,7 @@ void CollisionSystem::Frame(float deltatime)
 												if (pResults[i].fDist < fDist)
 												{
 													fDist = pResults[i].fDist;
-													colliders[col].pickingIdx = pResults[i].iHitIdx;
+													colliders[col].idxPicking = pResults[i].iHitIdx;
 												}
 											}
 											_EngineSystem.UnMappedBuffer(pDst);
@@ -215,7 +215,8 @@ void CollisionSystem::Frame(float deltatime)
 											{
 												if (dist >= fDist) continue;
 												fDist = dist;
-												colliders[col].pickingIdx = idx;
+												colliders[col].idxPicking = idx;
+												colliders[col].idxMat = i;
 											}
 										}
 									}
@@ -357,7 +358,7 @@ void CollisionSystem::Frame(float deltatime)
 												if (pResults[i].fDist < fDist)
 												{
 													fDist = pResults[i].fDist;
-													colliders[col].pickingIdx = pResults[i].iHitIdx;
+													colliders[col].idxPicking = pResults[i].iHitIdx;
 												}
 											}
 											_EngineSystem.UnMappedBuffer(pDst);
@@ -394,7 +395,8 @@ void CollisionSystem::Frame(float deltatime)
 											{
 												if (dist >= fDist) continue;
 												fDist = dist;
-												colliders[col].pickingIdx = iidx;
+												colliders[col].idxPicking = iidx;
+												colliders[col].idxMat = i;
 											}
 										}
 									}

@@ -241,6 +241,7 @@ public:
 	//피킹엔티티lookup
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
+	size_t												m_hash_Mat_Picking;
 
 
 	//RenderPass용 정수값
