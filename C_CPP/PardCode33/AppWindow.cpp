@@ -1209,7 +1209,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Doro.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -1249,7 +1249,7 @@ void AppWindow::OnCreate()
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 	}

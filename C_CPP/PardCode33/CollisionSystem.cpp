@@ -72,37 +72,185 @@ void CollisionSystem::Frame(float deltatime)
 	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
 
 	UINT renderCnt = 0;
-	//Static
-	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, T_Render_Geometry_Static>();
-		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-		for (auto& archetype : queries)
-		{
-			size_t st_row = 0;
-			size_t st_col = 0;
-			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-			{
-				auto& transforms	= archetype->GetComponents<C_Transform>(row);
-				auto& renders		= archetype->GetComponents<C_Render>(row);
-				auto& colliders		= archetype->GetComponents<C_Collider>(row);
-				auto& infos			= archetype->GetComponents<C_Info>(row);
-				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-				{
-					renders[col].bRenderable = false;
-					//colliders[col].bPicking = false;
-					const Vector3& scale = transforms[col].vScale;
-					const Quaternion& rotate = transforms[col].qRotate;
-					const Vector3& position = transforms[col].vPosition;
-					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
 
+	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider>();
+	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+	for (auto& archetype : queries)
+	{
+		size_t st_row = 0;
+		size_t st_col = 0;
+		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+		{
+			auto& infos			= archetype->GetComponents<C_Info>(row);
+			auto& transforms	= archetype->GetComponents<C_Transform>(row);
+			auto& renders		= archetype->GetComponents<C_Render>(row);
+			auto& colliders		= archetype->GetComponents<C_Collider>(row);
+			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+			{
+				renders[col].bRenderable = false;
+				const Vector3& scale = transforms[col].vScale;
+				const Quaternion& rotate = transforms[col].qRotate;
+				const Vector3& position = transforms[col].vPosition;
+				Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
+
+				float fDist = _VanishingPoint;	//거리에따른 피킹판별
+
+				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
+				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
+
+				if (archetype->HasComponents<C_Animation>())
+				{
+					const auto& matAnims = _AnimationSystem.GetAnimbones(archetype->GetComponents<C_Animation>(row)[col].hash_animbones);
+					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
+					{
+						//Frustum Culling
+						if (!renders[col].bRenderable)
+						{
+							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
+							{
+								auto iter = pMesh->GetCLs()[idx];
+								Matrix4x4 matAnimWorld = matAnims[idx] * matWorld;
+								if (IsCollision(frustum, iter, matAnimWorld))
+								{
+									renders[col].bRenderable = true;
+									renderCnt++;
+									break;
+								}
+							}
+						}
+
+						//피킹 이전에 공간분할(octree등) 추후필요
+						//Picking
+						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN() && !_EngineSystem.bMouseOnGUI)
+						{
+							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
+							{
+								Matrix4x4 matAnimWorld = matAnims[idx] * matWorld;
+
+								//MousePicking Variable, using local BoundingVolume Intersect
+								Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
+								Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
+								Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
+
+								//BoundingVolume
+								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
+								{
+									//GpuCollision Check(UseCompute Shader)
+									if (archetype->HasComponents<C_Compute>())
+									{
+										auto& computes = archetype->GetComponents<C_Compute>(row);
+										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
+										for (UINT j = 0; j < ComputeMats.size(); j++)
+										{
+											//계산셰이더 자원
+											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
+											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
+
+											CB_WVPITMatrix cb_wvpitmat;
+											cb_wvpitmat.matWorld = matWorld;
+											cb_wvpitmat.matView = matView;
+											cb_wvpitmat.matProj = matProj;
+											cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
+
+											UINT totalVertices = (UINT)pMesh->GetIndicies().size();
+											CB_RayTriangle cb_raytriangle;
+											cb_raytriangle.vRayOrigin = rayOriginWorld.ToVector3();
+											cb_raytriangle.vRayDir = rayDirWorld.ToVector3();
+											cb_raytriangle.iTriangleCount = totalVertices / 3;
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
+
+											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)matAnims.data());
+											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
+
+											const std::vector<size_t>* srvs = pMaterial->GetTextures();
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+											{
+												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
+												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
+											}
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											{
+												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
+												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
+											}
+											UINT cnt = _Dispatch_Vertices(totalVertices);
+											_ComputeSystem.Dispatch(cnt, 1, 1);
+
+											//해제
+											_ComputeSystem.SetCS_Shader(NULL);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
+											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
+
+											D3D11_MAPPED_SUBRESOURCE mappedResource;
+											auto pSrc = _EngineSystem.GetUAV(g_hash_stb_collisionResults)->GetBuffer();
+											auto pDst = _EngineSystem.GetSGB(g_hash_sgb_collisionResults)->GetBuffer();
+											_EngineSystem.CopyResource(pSrc, pDst);
+											_EngineSystem.MappedBuffer(pDst, &mappedResource);
+											STB_CollisionResults* pResults = reinterpret_cast<STB_CollisionResults*>(mappedResource.pData);
+											UINT triangleCount = totalVertices / 3;
+											for (UINT i = 0; i < triangleCount; i++)
+											{
+												if (pResults[i].fDist < fDist)
+												{
+													fDist = pResults[i].fDist;
+													colliders[col].idxPicking = pResults[i].iHitIdx;
+												}
+											}
+											_EngineSystem.UnMappedBuffer(pDst);
+
+										}
+									}
+									else
+									{
+										//CpuCollision Check
+										//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
+										auto RenderCounts = pMesh->GetRendIndices();
+										auto RenderCount = RenderCounts[i];
+										for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
+										{
+											Vector3 AnimPos[3];
+											for (int j = 0; j < 3; j++)
+											{
+												Vector4 pos;
+												auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
+												auto bw = pMesh->GetBW(iidx + j);
+												auto bones = bw.first;
+												auto weights = bw.second;
+												for (int bwidx = 0; bwidx < 4; bwidx++)
+												{
+
+													pos += weights[bwidx] * (v * matAnims[bones[bwidx]]);
+												}
+												pos.SetW(1.0f);
+												AnimPos[j] = (pos * matWorld).ToVector3();
+											}
+
+											float dist = _VanishingPoint;
+											if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
+											{
+												if (dist >= fDist) continue;
+												fDist = dist;
+												colliders[col].idxPicking = iidx;
+												colliders[col].idxMat = i;
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
 					//MousePicking Variable
-					float fDist = _VanishingPoint;	//거리에따른 피킹판별
 					Matrix4x4 matInvWorld = GetMat_Inverse(matWorld);
 					Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
 					Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
-		
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
 
 					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
 					{
@@ -113,12 +261,11 @@ void CollisionSystem::Frame(float deltatime)
 								if (IsCollision(frustum, hash_collider, matWorld))
 								{
 									renders[col].bRenderable = true;
-									renderCnt++; 
-									break;	
+									renderCnt++;
+									break;
 								}
 							}
 						}
-						
 						//피킹 이전에 공간분할(octree등) 추후필요
 						//Picking
 						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN() && !_EngineSystem.bMouseOnGUI)
@@ -224,189 +371,9 @@ void CollisionSystem::Frame(float deltatime)
 							}
 						}
 					}
-					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
-					if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col]});
 				}
-			}
-			st_col = 0;
-		}
-	}
-	
-	//Skeletal
-	{
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, T_Render_Geometry_Skeletal>();
-		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
-		for (auto& archetype : queries)
-		{
-			size_t st_row = 0;
-			size_t st_col = 0;
-			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
-			{
-				auto& transforms	= archetype->GetComponents<C_Transform>(row);
-				auto& renders		= archetype->GetComponents<C_Render>(row);
-				auto& animations	= archetype->GetComponents<C_Animation>(row);
-				auto& colliders		= archetype->GetComponents<C_Collider>(row);
-				auto& infos			= archetype->GetComponents<C_Info>(row);
-				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
-				{
-					renders[col].bRenderable = true;
-					//colliders[col].bPicking = false;
-					const Vector3& scale = transforms[col].vScale;
-					const Quaternion& rotate = transforms[col].qRotate;
-					const Vector3& position = transforms[col].vPosition;
-					Matrix4x4 matWorld = GetMat_World(scale, rotate, position);
-
-					//MousePicking Variable
-					float fDist = _VanishingPoint;	//거리에따른 피킹판별
-
-					const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
-					BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
-					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
-					{
-						//Frustum Culling
-						if(!renders[col].bRenderable)
-						{
-							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
-							{
-								auto iter = pMesh->GetCLs()[idx];
-								Matrix4x4 matAnimWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * matWorld;
-								if (IsCollision(frustum, iter, matAnimWorld))
-								{
-									renders[col].bRenderable = true;
-									renderCnt++;
-									break;
-								}
-							}
-						}
-
-						//피킹 이전에 공간분할(octree등) 추후필요
-						//Picking
-						if (renders[col].bRenderable && _InputSystem.IsPressed_LBTN() && !_EngineSystem.bMouseOnGUI)
-						{
-							for (int idx = 0; idx < pMesh->GetCLs().size(); idx++)
-							{
-								Matrix4x4 matAnimWorld = _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[idx] * matWorld;
-
-								//MousePicking Variable, using local BoundingVolume Intersect
-								Matrix4x4 matInvWorld = GetMat_Inverse(matAnimWorld);
-								Vector4	localRayOrigin = rayOriginWorld * matInvWorld;
-								Vector4 localRayDir = (rayDirWorld * matInvWorld).Normalize();
-
-								//BoundingVolume
-								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
-								{
-									//GpuCollision Check(UseCompute Shader)
-									if (archetype->HasComponents<C_Compute>())
-									{
-										auto& computes = archetype->GetComponents<C_Compute>(row);
-										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
-										for (UINT j = 0; j < ComputeMats.size(); j++)
-										{
-											//계산셰이더 자원
-											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
-											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
-
-											CB_WVPITMatrix cb_wvpitmat;
-											cb_wvpitmat.matWorld	= matWorld;
-											cb_wvpitmat.matView		= matView;
-											cb_wvpitmat.matProj		= matProj;
-											cb_wvpitmat.matInvTrans = GetMat_InverseTranspose(cb_wvpitmat.matWorld);
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_wvpitmat, &cb_wvpitmat);
-											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_wvpitmat, 0);
-
-											UINT totalVertices = (UINT)pMesh->GetIndicies().size();
-											CB_RayTriangle cb_raytriangle;
-											cb_raytriangle.vRayOrigin = rayOriginWorld.ToVector3();
-											cb_raytriangle.vRayDir = rayDirWorld.ToVector3();
-											cb_raytriangle.iTriangleCount = totalVertices / 3;
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
-											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
-
-											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)_AnimationSystem.GetAnimbones(animations[col].hash_animbones).data());
-											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
-
-											const std::vector<size_t>* srvs = pMaterial->GetTextures();
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
-											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
-												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
-											}
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
-											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
-												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
-											}
-											UINT cnt = _Dispatch_Vertices(totalVertices);
-											_ComputeSystem.Dispatch(cnt, 1, 1);
-
-											//해제
-											_ComputeSystem.SetCS_Shader(NULL);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
-												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
-												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
-
-											D3D11_MAPPED_SUBRESOURCE mappedResource;
-											auto pSrc = _EngineSystem.GetUAV(g_hash_stb_collisionResults)->GetBuffer();
-											auto pDst = _EngineSystem.GetSGB(g_hash_sgb_collisionResults)->GetBuffer();
-											_EngineSystem.CopyResource(pSrc, pDst);
-											_EngineSystem.MappedBuffer(pDst, &mappedResource);
-											STB_CollisionResults* pResults = reinterpret_cast<STB_CollisionResults*>(mappedResource.pData);
-											UINT triangleCount = totalVertices / 3;
-											for (UINT i = 0; i < triangleCount; i++)
-											{
-												if (pResults[i].fDist < fDist)
-												{
-													fDist = pResults[i].fDist;
-													colliders[col].idxPicking = pResults[i].iHitIdx;
-												}
-											}
-											_EngineSystem.UnMappedBuffer(pDst);
-		
-										}
-									}
-									else
-									{
-										//CpuCollision Check
-										//TraversalTriangle, CpuSkinning, 월드에서판별한다                               
-										auto RenderCounts = pMesh->GetRendIndices();
-										auto RenderCount = RenderCounts[i];
-										for (UINT iidx = RenderCount.idx; iidx < RenderCount.idx + RenderCount.count; iidx += 3)
-										{
-											Vector3 AnimPos[3];
-											for (int j = 0; j < 3; j++)
-											{
-												Vector4 pos;
-												auto v = Vector4(pMesh->GetPosition(iidx + j), 1.0f);
-												auto bw = pMesh->GetBW(iidx + j);
-												auto bones = bw.first;
-												auto weights = bw.second;
-												for (int bwidx = 0; bwidx < 4; bwidx++)
-												{
-													
-													pos += weights[bwidx] * (v * _AnimationSystem.GetAnimbones(animations[col].hash_animbones)[bones[bwidx]]);
-												}
-												pos.SetW(1.0f);
-												AnimPos[j] = (pos * matWorld).ToVector3();
-											}
-
-											float dist = _VanishingPoint;
-											if (IsCollision(rayOriginWorld, rayDirWorld, AnimPos[0], AnimPos[1], AnimPos[2], dist))
-											{
-												if (dist >= fDist) continue;
-												fDist = dist;
-												colliders[col].idxPicking = iidx;
-												colliders[col].idxMat = i;
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-					//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
-					if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col]});
-				}
+				//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
+				if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col] });
 			}
 			st_col = 0;
 		}

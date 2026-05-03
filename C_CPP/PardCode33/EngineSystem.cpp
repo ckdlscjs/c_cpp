@@ -1057,7 +1057,7 @@ void EngineSystem::UnMappedBuffer(ID3D11Resource* pResource)
 	// 1. Pass는 4비트면 충분하므로 uint8_t로도 충분하지만, 가독성을 위해 유지
 	// 2. 셰이더 조합 ID (16비트)
 	// 3. 상태(RS, BS, DSS) 조합 ID (8비트)
-	// 4. 리소스(Mesh/Collider) 16비트
+	// 4. 리소스(Mesh, Material, Collider) 16비트
 	// 5. 거리 계산 (20비트) - float 거리를 받아서 20비트 정수로 변환
 	// 4 + 16 + 8 + 16 + 20 -> 64비트 hash 비트별구분
 */
