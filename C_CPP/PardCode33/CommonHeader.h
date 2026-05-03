@@ -115,9 +115,9 @@ enum class E_RenderPass : uint32_t
 {
 	Sky					= 0,
 	Shadow				= 1,
-	Opaque				= 2,
-	Transparent			= 3,
-	Cubemap				= 4,
+	Cubemap				= 2,
+	Opaque				= 3,
+	Transparent			= 4,
 	Outline_Write		= 5,
 	Outline_Draw		= 6,
 	Picking_Triangle	= 7,
@@ -328,9 +328,10 @@ struct RPStates
 	UINT stencilRef;
 };
 
-struct RPMeshCollider
+struct RPResources
 {
 	size_t hashMesh;
+	size_t hashMat;
 	E_Collider collider;
 	UINT idxCollider;
 };

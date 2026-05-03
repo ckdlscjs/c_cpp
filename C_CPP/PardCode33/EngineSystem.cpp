@@ -741,16 +741,19 @@ ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT 
 
 	switch (bindFlags)
 	{
-		case _Target_Compute_Tex:
 		case _Target_ResourceView:
 		{
-			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
-
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 		}break;
 
 		case _Target_DepthView:
 		{
 			desc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+		}break;
+
+		case _Target_Compute_Tex:
+		{
+			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
 		}break;
 
 		case _Target_Cubemap_ResourceView:
@@ -1110,10 +1113,11 @@ uint32_t EngineSystem::GetRenderPassKey_States(E_RSState stateRS, E_DSState stat
 	return newID;
 }
 
-uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, E_Collider collider, UINT idx)
+uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx)
 {
 	size_t hash = 0;
 	hash_combine(hash, std::hash<size_t>{}(hashMesh));
+	hash_combine(hash, std::hash<size_t>{}(hashMat));
 	hash_combine(hash, std::hash<size_t>{}(static_cast<size_t>(collider)));
 	hash_combine(hash, std::hash<UINT>{}(idx));
 	auto iter = m_hRP_Resources.find(hash);
@@ -1122,7 +1126,7 @@ uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, E_Collider co
 
 	uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
 	m_hRP_Resources[hash] = newID;
-	m_resRP_Resources.push_back({ hashMesh, collider, idx });
+	m_resRP_Resources.push_back({ hashMesh, hashMat, collider, idx });
 	return newID;
 }
 

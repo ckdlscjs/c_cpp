@@ -138,7 +138,7 @@ public:
 	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
 	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
 	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
-	uint32_t GetRenderPassKey_Resources(size_t hashMesh, E_Collider collider, UINT idx = 0);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 0);
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
 	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
@@ -250,7 +250,7 @@ public:
 	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
 	std::vector<size_t>									m_resRP_Shaders;
 	std::vector<RPStates>								m_resRP_States;
-	std::vector<RPMeshCollider>							m_resRP_Resources;
+	std::vector<RPResources>							m_resRP_Resources;
 	std::vector<RenderItem>								m_hRP_CommandQueue;		//¼öÁýÈÄ sort
 	
 };

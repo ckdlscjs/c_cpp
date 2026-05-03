@@ -166,12 +166,30 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	const Matrix4x4& cam_matOrhto	= c_cam_ortho.matOrtho;
 	const Vector3& cam_pos			= _ECSSystem.GetComponent<C_Transform>(lookup_maincam).vPosition;
 
+
+	//	//카메라
+//	size_t lookup_cam = _CameraSystem.lookup_cubemapcam;
+//	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_cam);
+//	const auto& c_cam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_cam);
+//	const Matrix4x4& matProj = c_cam_proj.matProj;
+//
+//	//큐브맵 뷰행렬
+//	Vector3 pos = _ECSSystem.GetComponent<C_Transform>(lookup_cam).vPosition;
+//	
+//	//카메라위치세팅
+//	CB_Campos cb_campos;
+//	cb_campos.vPosition = pos;
+//	_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
+//	SetPS_ConstantBuffer(g_hash_cb_campos, 5);
+// 
+// 
 	//큐브카메라
 	size_t lookup_cubecam = _CameraSystem.lookup_cubemapcam;
+	const auto& c_cubecam_main = _ECSSystem.GetComponent<C_Camera>(lookup_cubecam);
 	const auto& c_cubecam_proj = _ECSSystem.GetComponent<C_Projection>(lookup_cubecam);
-	const auto& matProj_Cubecam = c_cubecam_proj.matProj;
+	const auto& cubecam_matProj = c_cubecam_proj.matProj;
 
-	//큐브맵 뷰행렬
+	//큐브맵 카메라 위치
 	const Vector3& cam_pos_cubemap = _ECSSystem.GetComponent<C_Transform>(lookup_cubecam).vPosition;
 
 	//카메라위치세팅
@@ -204,12 +222,12 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		cb_cubemap.matViews[i] = GetMat_View(cam_pos_cubemap, targets[i], ups[i]);
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_cubemap, &cb_cubemap);
 
+	//피킹 아웃라인
 	CB_Outline_Picking cb_outline;
 	Vector3 outlineColor = Vector3(255.0f, 165.0f, 0.0f) / 255.0f;
 	cb_outline.color_thickness = Vector4(outlineColor, _EngineSystem.m_fThickness); //rgb, thickness;
 	_EngineSystem.UpdateConstantBuffer(g_hash_cb_outline_picking, &cb_outline);
 	
-
 	_RPKey keyPrev = _HashNotInitialize;
 
 	//ExecuteRenderPass
@@ -248,7 +266,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			cb_campos.vPosition = cam_pos;
 			_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
 			
-		
 			// RenderTarget 교체 및 패스 준비
 			switch (curPass)
 			{
@@ -280,6 +297,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				case (uint32_t)E_RenderPass::UI:
 				{
 					//2D객체로 SRV임시체크
+					SetOM_RenderTargets({ }, NULL);
 					SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_BB }, NULL);
 				}break;
 
@@ -318,16 +336,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				SetPS_Shader(_ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_Picking)->GetPS());
 			else
 				SetPS_Shader(pMaterial->GetPS());
-
-			int cnt = 0;
-			for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
-			{
-				for (const auto& hashTx : pMaterial->GetTextures()[idxTex])
-				{
-					size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-					SetPS_ShaderResourceView(hashSRV, cnt++);
-				}
-			}
 		}
 
 		if (diff >> 36) // 상태가 바뀌었는지 확인 (비트 36~43)
@@ -344,22 +352,35 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 		{
 			//버퍼 세팅
 			uint32_t IDResources = (keyCur >> 20) & 0xFFFF;		//16비트
-			RPMeshCollider MeshCollider = _EngineSystem.m_resRP_Resources[IDResources];
+			RPResources resources = _EngineSystem.m_resRP_Resources[IDResources];
 
-			BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshCollider.hashMesh);
+			BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(resources.hashMesh);
 			SetIA_VertexBuffer(pMesh->GetVB());
 			SetIA_IndexBuffer(pMesh->GetIB());
+			
+			//텍스쳐
+			Material* pMaterial = _ResourceSystem.GetResource<Material>(resources.hashMat);
+			int cnt = 0;
+			for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+			{
+				for (const auto& hashTx : pMaterial->GetTextures()[idxTex])
+				{
+					size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
+					SetPS_ShaderResourceView(hashSRV, cnt++);
+				}
+			}
 
+			//상수버퍼
 			if (curPass == (uint32_t)E_RenderPass::Debug)
 			{
-				size_t hash_collider = pMesh->GetCLs()[MeshCollider.idxCollider];
-				if (MeshCollider.collider == E_Collider::AABB)
+				size_t hash_collider = pMesh->GetCLs()[resources.idxCollider];
+				if (resources.collider == E_Collider::AABB)
 				{
 					CB_Debug_Box cb_debug_box;
 					_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
 				}
-				else if (MeshCollider.collider == E_Collider::SPHERE)
+				else if (resources.collider == E_Collider::SPHERE)
 				{
 					CB_Debug_Sphere cb_debug_sphere;
 					_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
@@ -368,7 +389,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				if (pArchetype->HasComponents<C_Animation>())
 				{
 					const auto& animation = pArchetype->GetComponents<C_Animation>(row)[col];
-					matWorld = matWorld * _AnimationSystem.GetAnimbones(animation.hash_animbones)[MeshCollider.idxCollider];
+					matWorld = matWorld * _AnimationSystem.GetAnimbones(animation.hash_animbones)[resources.idxCollider];
 				}
 			}
 		}
@@ -416,6 +437,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			{
 				matView = cb_lightMat.matLightView;
 				matProj = cb_lightMat.matLightProj;
+			}
+			else if (curPass == (uint32_t)E_RenderPass::Cubemap)
+			{
+				matView = GetMat_Identity();
+				matProj = cubecam_matProj;
 			}
 
 			CB_WVPITMatrix cb_wvpitmat;
@@ -783,7 +809,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 					uint32_t hashPass = pMaterial->GetHashPass();
 					uint32_t hashShader = pMaterial->GetHashShaders();
 					uint32_t hashStates = pMaterial->GetHashStates();
-					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 					_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 				}
 
@@ -799,7 +825,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 						uint32_t hashPass = hashPassShadow;
 						uint32_t hashShader = pMaterial->GetHashShaders();
 						uint32_t hashStates = pMaterial->GetHashStates();
-						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
 				}
@@ -807,27 +833,30 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				//Collect Draw Cubemap
 				if (passMasks & E_RenderPass::Cubemap)
 				{
-					size_t hashMateiral = GetHashMat_Cubemap(pMesh->GetVerticesType());
-					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
-					uint32_t hashPass = pMaterial->GetHashPass();
-					uint32_t hashShader = pMaterial->GetHashShaders();
-					uint32_t hashStates = pMaterial->GetHashStates();
-					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+					const auto& pMaterial_Cubemap = _ResourceSystem.GetResource<Material>(GetHashMat_Cubemap(pMesh->GetVerticesType()));
 					for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
+					{
+						size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[matIdx];
+						const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+						uint32_t hashPass = pMaterial_Cubemap->GetHashPass();
+						uint32_t hashShader = pMaterial_Cubemap->GetHashShaders();
+						uint32_t hashStates = pMaterial->GetHashStates();
+						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
+					}
 				}
 
 				//Collect Draw Debug
 				if (_InputSystem.IsDebugRender() && (passMasks & E_RenderPass::Debug))
 				{
-					size_t hashMateiral = GetHashMat_Debug(eCollider);
-					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMateiral);
+					size_t hashMaterial = GetHashMat_Debug(eCollider);
+					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
 					uint32_t hashPass = pMaterial->GetHashPass();
 					uint32_t hashShader = pMaterial->GetHashShaders();
 					uint32_t hashStates = pMaterial->GetHashStates();
 					for (UINT colliderIdx = 0; colliderIdx < pMesh->GetCLs().size(); colliderIdx++)
 					{
-						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider, colliderIdx);
+						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, colliderIdx);
 						UINT renderCnt = (eCollider == E_Collider::AABB) ? 1 : 60;
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, renderCnt, 0);
 					}
@@ -867,7 +896,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial_Picking->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial_Picking->GetHashStates();
-			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 			_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, 3, collider.idxPicking);
 		}
 
@@ -880,7 +909,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				uint32_t hashPass = pMaterial->GetHashPass();
 				uint32_t hashShader = pMaterial->GetHashShaders();
 				uint32_t hashStates = _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1);
-				uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+				uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 			}
 		}
@@ -892,7 +921,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial->GetHashStates();
-			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, eCollider);
+			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 		}

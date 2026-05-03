@@ -38,12 +38,6 @@ cbuffer CB_LightMat : register(b1)
     float4 LightPos;
 };
 
-cbuffer CB_Bone : register(b2)
-{
-    row_major float4x4 matBone[256];
-};
-
-
 cbuffer CB_CubeMap : register(b7)
 {
     row_major float4x4 matView_Cube[6];
