@@ -17,12 +17,12 @@ public:
 	void PreRender(float deltatime, float elapsedtime);
 	void Render(float deltatime, float elapsedtime);
 	void PostRender();
+	void OnResize(UINT width, UINT height);
 
 	/////////////////////////////
 	//API Usage
 	/////////////////////////////
-public:
-	void OnResize(UINT width, UINT height);
+private:
 	void SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight);
 	void ClearRenderTargetView(size_t hashRTV, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f);
 	void ClearDepthStencilView(size_t hashDSV);
