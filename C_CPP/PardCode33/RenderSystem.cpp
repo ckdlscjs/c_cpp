@@ -54,8 +54,8 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 		std::cout << "PreRender : " << "EngineSystem" << " Class" << '\n';
 	
 	//RTVÃÊ±âÈ­
-	ClearRenderTargetView(_EngineSystem.m_hash_RTV_BB, 0.0f, 0.0f, 0.0f, 1.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_RTV_0, 0.0f, 0.3f, 0.4f, 1.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_RTV_BB, 0.0f, 0.0f, 0.0f, 1.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap, 0.0f, 0.0f, 0.0f, 1.0f);
 
 	ClearDepthStencilView(_EngineSystem.m_hash_DSV_0);

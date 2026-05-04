@@ -185,7 +185,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 				totalWeight += weightList[j].weight;
 			}
 
-			//정규화 및 데이터 기입
+			// 정규화 및 데이터 기입
 			// 각 가중치를 totalWeight로 나누어 합이 1.0이 되도록 보정
 			// 남는 슬롯은 0으로 채움
 			if (totalWeight > 0.0f)

@@ -1151,7 +1151,7 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 	// 3. 상태 (8비트)
 	key |= (static_cast<uint64_t>(hashStates) & 0xFF) << 36;
 
-	// 4. 메쉬/컬라이더
+	// 4. 메쉬/머티리얼/컬라이더(16비트)
 	key |= (static_cast<uint64_t>(hashResources) & 0xFFFF) << 20;
 
 	// 5. 거리 (20비트)

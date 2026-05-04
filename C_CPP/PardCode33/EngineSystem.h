@@ -176,9 +176,8 @@ public:
 	BlendState*					GetState_BS() const { return m_pCBlends; }
 
 	
-	
-	//사용을위해 분할한 클래스객체들
 private:
+	//사용을위해 분할한 클래스객체들
 	Direct3D*											m_pCDirect3D = nullptr;
 	SwapChain*											m_pCSwapChain = nullptr;
 	SamplerState*										m_pCSamplers = nullptr;
@@ -201,6 +200,16 @@ private:
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
 	std::unordered_map<size_t, UnorderedAccessView*>	m_pCUAVs;
+
+public:
+	//RenderPass
+	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
+	std::unordered_map<size_t, uint8_t>					m_hRP_States;
+	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
+	std::vector<size_t>									m_resRP_Shaders;
+	std::vector<RPStates>								m_resRP_States;
+	std::vector<RPResources>							m_resRP_Resources;
+	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
 
 public:
 	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요
@@ -242,17 +251,6 @@ public:
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
 	size_t												m_hash_Mat_Picking;
-
-
-	//RenderPass용 정수값
-	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
-	std::unordered_map<size_t, uint8_t>					m_hRP_States;
-	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
-	std::vector<size_t>									m_resRP_Shaders;
-	std::vector<RPStates>								m_resRP_States;
-	std::vector<RPResources>							m_resRP_Resources;
-	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
-	
 };
 
 //SingletonClasses
