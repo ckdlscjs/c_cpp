@@ -450,7 +450,7 @@ void AppWindow::OnCreate()
 			GeometryGenerate_Plane(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(szName, verticesByMaterial, indicesByMaterial, pointsByMeshs);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
@@ -478,7 +478,7 @@ void AppWindow::OnCreate()
 			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
-			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 		}
 #endif // _Floor
 
@@ -533,7 +533,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/cube.obj");
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
@@ -580,7 +580,7 @@ void AppWindow::OnCreate()
 					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
-					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 				}
 			}
 		}
@@ -662,7 +662,7 @@ void AppWindow::OnCreate()
 			GeometryGenerate_Plane(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(szName, verticesByMaterial, indicesByMaterial, pointsByMeshs);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
@@ -690,7 +690,7 @@ void AppWindow::OnCreate()
 			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Cubemap | E_RenderPass::Opaque | E_RenderPass::Debug;
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
-			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 		}
 #endif // _Billboard
 
@@ -751,7 +751,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/house.obj");
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 
@@ -800,7 +800,7 @@ void AppWindow::OnCreate()
 			uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
-			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 		}
@@ -812,7 +812,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/sponza_basic.obj");
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
 			Mesh_Material mesh_mats;
@@ -865,7 +865,7 @@ void AppWindow::OnCreate()
 			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
-			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 		}
@@ -878,7 +878,7 @@ void AppWindow::OnCreate()
 			size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/MechanicGirl/Mechanic_Girl-85698ecb/fbx/FBX/SK_MechanicGirl_AllPartsTogether.fbx");
 
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-			_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 			std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
 			std::vector<Mesh_Material> mesh_mats;
@@ -974,7 +974,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/girl.obj");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
 		std::vector<Mesh_Material> mesh_mats;
@@ -1001,7 +1001,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Mutant Walking.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 		
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		_AnimationSystem.AddAnimbones(hash_animation);
@@ -1042,7 +1042,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
@@ -1107,7 +1107,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Herald.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -1147,7 +1147,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 	}
 #endif // _Praying
 
@@ -1158,7 +1158,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Rapunzel.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN_Skinned>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -1196,7 +1196,7 @@ void AppWindow::OnCreate()
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 	}
@@ -1209,7 +1209,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Doro.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -1249,7 +1249,7 @@ void AppWindow::OnCreate()
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 	}
@@ -1262,7 +1262,7 @@ void AppWindow::OnCreate()
 		size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Zhao.fbx");
 
 		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
-		_EngineSystem.CreateColliders(hash_mesh, E_Collider::AABB);
+		_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
@@ -1299,7 +1299,7 @@ void AppWindow::OnCreate()
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
-		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::AABB });
+		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
 	}
@@ -1431,7 +1431,7 @@ void AppWindow::OnCreate()
 		std::vector<Vertex_PC> iTriangleCount;
 		std::vector<UINT> indices;
 		GeometryGenerate_Gizmo(points, iTriangleCount, indices);
-		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::AABB);
+		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::BOX);
 		{
 			size_t hash_material = _EngineSystem.CreateMaterial<Vertex_PC>(L"Mat_Gizmo", L"VS_PC.hlsl", L"PS_PC.hlsl");
 			_EngineSystem.Gizmo = new TempObj();
@@ -1467,7 +1467,7 @@ void AppWindow::OnCreate()
 		std::vector<Vertex_PTN> iTriangleCount;
 		std::vector<UINT> indices;
 		GeometryGenerate_Plane(points, iTriangleCount, indices);
-		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane_Reflect", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::AABB);
+		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(L"Plane_Reflect", std::move(points), std::move(iTriangleCount), std::move(indices), E_Collider::BOX);
 		{
 			size_t hash_material = _EngineSystem.CreateMaterial<Vertex_PTN>(L"Mat_Reflect", L"VS_PTN.hlsl", L"PS_PTN_Transparent.hlsl");
 			std::vector<TX_HASH> tx_hash;
@@ -1485,7 +1485,7 @@ void AppWindow::OnCreate()
 
 	//BlendCheck
 	{
-		size_t hash_mesh = _EngineSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/Cube.obj", E_Collider::AABB);
+		size_t hash_mesh = _EngineSystem.CreateMesh<Vertex_PTN>(L"../Assets/Meshes/Cube.obj", E_Collider::BOX);
 		size_t hash_material = _EngineSystem.CreateMaterial<Vertex_PTN>(L"../Assets/Meshes/house.mtl", L"VS_PTN.hlsl", L"PS_PTN.hlsl");
 		std::vector<TX_HASH> hash_tx_hash;
 		hash_tx_hash.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/wireFence.dds", DDS_FLAGS_NONE) });

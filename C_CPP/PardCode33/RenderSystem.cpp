@@ -43,10 +43,8 @@ void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
 	if (g_fTime_Log >= 1.0f)
 		std::cout << "Frame : " << "EngineSystem" << " Class" << '\n';
-	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(_CameraSystem.lookup_maincam);
-	const Matrix4x4& cam_matWorld = c_cam_main.matWorld;
 	//RenderPass
-	CollectRenderItem(cam_matWorld[3].ToVector3());
+	CollectRenderItem(_ECSSystem.GetComponent<C_Transform>(_CameraSystem.lookup_maincam).vPosition);
 	_EngineSystem.SortRenderItem();
 }
 
@@ -356,7 +354,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			if (curPass == (uint32_t)E_RenderPass::Debug)
 			{
 				size_t hash_collider = pMesh->GetCLs()[resources.idxCollider];
-				if (resources.collider == E_Collider::AABB)
+				if (resources.collider == E_Collider::BOX)
 				{
 					CB_Debug_Box cb_debug_box;
 					_CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
@@ -389,20 +387,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			const Quaternion& quat = transform.qRotate;
 			const Vector3& pos = transform.vPosition;
 
-			if (pArchetype->HasComponents<T_Render_Billboard>())
-			{
-				/*
-					float dx = c_cam_transform.vPosition.GetX() - position.GetX();
-					float dz = c_cam_transform.vPosition.GetZ() - position.GetZ();
-					double angle = _RADTODEG(atan2f(dx, dz)) + 180.0f;
-				*/
-				//yaw빌보드 구현, +z(화면안쪽) 이므로 물체-카메라로 역방향으로 회전해야 같은yaw로 회전해 빌보드로 보이게된다
-				Quaternion qRot((pos - cam_pos).Normalize());
-				matWorld = GetMat_Scale(scale) * GetMat_RotYaw(qRot.ToRotate().GetY()) * GetMat_Translation(pos);
-				matView = cam_matView;
-				matProj = cam_matProj;
-			}
-			else if (pArchetype->HasComponents<T_Render_UI>())
+			if (pArchetype->HasComponents<T_Render_UI>())
 			{
 				matWorld = GetMat_ConvertGeometryOrtho() * GetMat_World(scale, quat, pos);
 				matView = GetMat_Identity();
@@ -706,9 +691,7 @@ size_t RenderSystem::GetHashMat_Debug(E_Collider eType)
 {
 	switch (eType)
 	{
-
-		case E_Collider::AABB :
-		case E_Collider::OBB:
+		case E_Collider::BOX :
 			return _EngineSystem.m_hash_Mat_Debug_Box;
 
 		case E_Collider::SPHERE:
@@ -780,7 +763,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				size_t hashMesh = pRenderAsset->m_hMeshMats.hash_mesh;
 				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hashMesh);
 
-				E_Collider eCollider = pColliders ? (*pColliders)[col].type : E_Collider::AABB;
+				E_Collider eCollider = pColliders ? (*pColliders)[col].type : E_Collider::BOX;
 
 				//Collect Draw MeshMaterial
 				for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
@@ -839,7 +822,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 					for (UINT colliderIdx = 0; colliderIdx < pMesh->GetCLs().size(); colliderIdx++)
 					{
 						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, colliderIdx);
-						UINT renderCnt = (eCollider == E_Collider::AABB) ? 1 : 60;
+						UINT renderCnt = (eCollider == E_Collider::BOX) ? 1 : 60;
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, renderCnt, 0);
 					}
 				}

@@ -92,7 +92,7 @@ public:
 	size_t CreateAnimaitonFromGeometry(size_t hash_geometry);
 
 	//Collider
-	const std::vector<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::AABB);
+	const std::vector<size_t>& CreateColliders(size_t hash_mesh, E_Collider collider = E_Collider::BOX);
 	size_t CreateComputeVertices(size_t hash_mesh);
 
 	//Asset(Components <-> API) 府家胶 积己

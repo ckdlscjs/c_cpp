@@ -19,7 +19,7 @@ public:
     // Collider::GetType() 구현
     // Box는 OBB와 AABB를 모두 표현하므로, OBB 타입으로 통일합니다.
     // AABB는 OBB의 특별한 경우(회전이 0)로 간주할 수 있습니다.
-    Type GetType() const override { return Type::OBB; }
+    Type GetType() const override { return Type::BOX; }
 
     // 다른 Collider와의 교차 판정 로직
     bool Intersects(const Collider& other) const override;
@@ -48,8 +48,8 @@ private:
 bool Box::Intersects(const Collider& other) const {
     // 런타임에 상대방의 타입을 확인
     switch (other.GetType()) {
-        case Collider::Type::OBB: {
-            // 다른 OBB 충돌체와의 판정
+        case Collider::Type::BOX: {
+            // 다른 BOX 충돌체와의 판정
             const Box& otherBox = static_cast<const Box&>(other);
             return IntersectsBox(otherBox);
         }
@@ -67,7 +67,7 @@ bool Box::Intersects(const Collider& other) const {
 }
 
 
-// OBB-OBB 충돌 판정을 위한 분리 축 정리(SAT) 함수
+// BOX-BOX 충돌 판정을 위한 분리 축 정리(SAT) 함수
 // 이 함수는 두 OBB가 교차하는지 판정합니다.
 static bool CheckIntersectionSAT(
     const Vector3& center1, const std::array<Vector3, 3>& axes1, const Vector3& extents1,
@@ -131,7 +131,7 @@ bool Box::IntersectsBox(const Box& other) const {
     bool otherIsAABB = !other.m_worldMatrix.IsRotated();
 
     if (thisIsAABB && otherIsAABB) {
-        // AABB vs AABB 충돌 판정
+        // BOX vs BOX 충돌 판정
         Vector3 myMin, myMax, otherMin, otherMax;
         this->GetWorldAABB(myMin, myMax);
         other.GetWorldAABB(otherMin, otherMax);
@@ -139,7 +139,7 @@ bool Box::IntersectsBox(const Box& other) const {
                (myMin.y <= otherMax.y && myMax.y >= otherMin.y) &&
                (myMin.z <= otherMax.z && myMax.z >= otherMin.z);
     } else {
-        // OBB vs OBB 충돌 판정 (실제로는 분리 축 정리 SAT를 사용)
+        // BOX vs BOX 충돌 판정 (실제로는 분리 축 정리 SAT를 사용)
         Vector3 myCenter, myExtents;
         std::array<Vector3, 3> myAxes;
         this->GetWorldOBB(myCenter, myAxes, myExtents);
@@ -160,7 +160,7 @@ public:
     inline ~Box() { std::cout << "Release : " << "Collider <" << "Box" << "> Class" << '\n'; }
 	inline Box(const std::vector<Vector3>* iTriangleCount)
 	{
-        SetType(E_Collider::AABB);
+        SetType(E_Collider::BOX);
 		if (iTriangleCount->size() <= 0) return;
 		float minX, minY, minZ, maxX, maxY, maxZ;
 		minX = minY = minZ = FLT_MAX;

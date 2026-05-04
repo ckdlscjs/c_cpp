@@ -80,8 +80,7 @@ enum class E_Collider
 {
 	NONE,
 	SPHERE,
-	AABB,
-	OBB,
+	BOX,
 };
 
 enum class E_Texture

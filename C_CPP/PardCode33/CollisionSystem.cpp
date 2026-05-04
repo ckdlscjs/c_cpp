@@ -372,7 +372,6 @@ void CollisionSystem::Frame(float deltatime)
 						}
 					}
 				}
-				//if (fDist < FLT_MAX) pq_picking.push({ fDist, &colliders[col], &infos[col] });
 				if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col] });
 			}
 			st_col = 0;
@@ -403,8 +402,7 @@ size_t CollisionSystem::CreateCollider(const std::wstring& szName, const std::ve
 			return AddCollider<Sphere>(szName + L"Sphere", iTriangleCount);
 		}	break;
 
-		case E_Collider::OBB:
-		case E_Collider::AABB:
+		case E_Collider::BOX:
 		{
 			return AddCollider<Box>(szName + L"Box", iTriangleCount);
 		}break;
@@ -425,8 +423,7 @@ bool CollisionSystem::IsCollision(const Frustum& frustum, size_t hash, const Mat
 		}break;
 
 		//추후 box로 통일후 type에 따른 분별형태로 변화필요
-		case E_Collider::OBB:
-		case E_Collider::AABB:
+		case E_Collider::BOX:
 		{
 			return IsCollision(frustum, *static_cast<Box*>(m_Colliders[hash]), matWorld);
 		}break;
@@ -487,8 +484,7 @@ bool CollisionSystem::IsCollision(const Vector4& rayOrigin, const Vector4& rayDi
 		}break;
 
 		//로컬공간상으로 돌려서 판별하므로 obb,aabb를 동일하게처리한다
-		case E_Collider::OBB:
-		case E_Collider::AABB:
+		case E_Collider::BOX:
 		{
 			return IsCollision(rayOrigin, rayDir, *static_cast<Box*>(m_Colliders[hash]));
 		}break;
