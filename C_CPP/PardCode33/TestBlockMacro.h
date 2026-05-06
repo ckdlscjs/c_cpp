@@ -1,6 +1,6 @@
 #pragma once
 #define _Floor
-//#define _RandOBJ
+#define _RandOBJ
 #define _Billboard
 #define _NENE
 //#define _MECHAGIRL

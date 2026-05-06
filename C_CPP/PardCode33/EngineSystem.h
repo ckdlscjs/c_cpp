@@ -134,18 +134,6 @@ public:
 	void CopyResource(ID3D11Resource* pSrc, ID3D11Resource* pDst);
 	void MappedBuffer(ID3D11Resource* pResource, D3D11_MAPPED_SUBRESOURCE* mappedResource);
 	void UnMappedBuffer(ID3D11Resource* pResource);
-
-	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
-	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
-	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
-	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 127);
-	uint32_t GetRenderPassKey_DistToCamera(float dist);
-	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
-	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
-	void SortRenderItem();
-	void ClearRenderItem();
-
-
 public:
 	template<typename T>
 	T* GetAPIResource(const std::unordered_map<size_t, T*>& containter, size_t hash) const
@@ -200,16 +188,6 @@ private:
 	std::unordered_map<size_t, RenderTargetView*>		m_pCRTVs;
 	std::unordered_map<size_t, DepthStencilView*>		m_pCDSVs;
 	std::unordered_map<size_t, UnorderedAccessView*>	m_pCUAVs;
-
-public:
-	//RenderPass
-	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
-	std::unordered_map<size_t, uint8_t>					m_hRP_States;
-	std::unordered_map<size_t, uint16_t>				m_hRP_Resources;
-	std::vector<size_t>									m_resRP_Shaders;
-	std::vector<RPStates>								m_resRP_States;
-	std::vector<RPResources>							m_resRP_Resources;
-	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
 
 public:
 	//응용프로그램부변수들, 엔진단위에서 변경후 추후 개별변수로 제어필요

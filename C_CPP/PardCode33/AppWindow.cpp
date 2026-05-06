@@ -172,8 +172,8 @@ void AppWindow::OnCreate()
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Shadow);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			_EngineSystem.m_hash_Mat_ShadowMap = hash_material;
 		}
 
@@ -183,8 +183,8 @@ void AppWindow::OnCreate()
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Picking.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Picking_Triangle);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			_EngineSystem.m_hash_Mat_Picking = hash_material;
 		}
 
@@ -198,8 +198,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_Outline_PTN.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Outline_Draw);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
 			_EngineSystem.m_hash_Mat_Outline_PTN = hash_material;
 
 			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
@@ -207,8 +207,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_Outline_PTN_Skinned.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Outline_Draw);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
 			_EngineSystem.m_hash_Mat_Outline_PTN_Skinned = hash_material;
 
 			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
@@ -216,8 +216,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_Outline_PTNTB.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Outline_Draw);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
 			_EngineSystem.m_hash_Mat_Outline_PTNTB = hash_material;
 
 			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
@@ -225,8 +225,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_Outline_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Outline_Draw.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Outline_Draw);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1));
 			_EngineSystem.m_hash_Mat_Outline_PTNTB_Skinned = hash_material;
 		}
 
@@ -241,8 +241,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetGS(hash_material, L"GS_Debug_Box.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PC.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Debug);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::WIRE_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::WIRE_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			_EngineSystem.m_hash_Mat_Debug_Box = hash_material;
 
 			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"Sphere_" + szName);
@@ -252,8 +252,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetDS(hash_material, L"DS_Debug_Sphere.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PC.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Debug);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::WIRE_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::WIRE_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			_EngineSystem.m_hash_Mat_Debug_Sphere = hash_material;
 		}
 	}
@@ -285,8 +285,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Sky);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CCW, E_DSState::SkyBox, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CCW, E_DSState::SkyBox, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter8.png") });
@@ -352,7 +352,7 @@ void AppWindow::OnCreate()
 					_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTN.hlsl");
 					_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 					_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Cubemap);
-					_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+					_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
 					_EngineSystem.m_hash_Mat_CubeMap_PTN = hash_material;
 
 					hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTN_Skinned_" + szName);
@@ -361,7 +361,7 @@ void AppWindow::OnCreate()
 					_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTN_Skinned.hlsl");
 					_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 					_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Cubemap);
-					_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+					_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
 					_EngineSystem.m_hash_Mat_CubeMap_PTN_Skinned = hash_material;
 
 					hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_" + szName);
@@ -370,7 +370,7 @@ void AppWindow::OnCreate()
 					_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTNTB.hlsl");
 					_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 					_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Cubemap);
-					_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+					_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
 					_EngineSystem.m_hash_Mat_CubeMap_PTNTB = hash_material;
 
 					hash_material = _EngineSystem.CreateMaterial(g_szName_mat + L"PTNTB_Skinned" + szName);
@@ -379,7 +379,7 @@ void AppWindow::OnCreate()
 					_EngineSystem.Material_SetGS(hash_material, L"GS_CubeMap_PTNTB_Skinned.hlsl");
 					_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 					_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Cubemap);
-					_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
+					_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
 					_EngineSystem.m_hash_Mat_CubeMap_PTNTB_Skinned = hash_material;
 				}
 
@@ -411,8 +411,8 @@ void AppWindow::OnCreate()
 					_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 					_EngineSystem.Material_SetPS(hash_material, L"PS_CubeMap_PTN.hlsl");		//큐브맵 텍스쳐를 적용하기위해 별도의 PS를 이용한다
 					_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-					_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-					_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+					_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+					_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 					std::vector<TX_HASH> tx_hashs;
 					tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/metal.jpg") });
@@ -458,8 +458,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter8.png") });
@@ -499,8 +499,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter8.png") });
@@ -542,8 +542,8 @@ void AppWindow::OnCreate()
 			//_EngineSystem.Material_SetGS(hash_material, L"GS_PTN.hlsl");
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter6.webp") });
@@ -578,7 +578,7 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -598,8 +598,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter5.webp") });
@@ -642,7 +642,7 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -670,8 +670,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/butter8.png") });
@@ -708,8 +708,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"../Assets/Textures/brick_d.jpg") });
@@ -766,8 +766,8 @@ void AppWindow::OnCreate()
 				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
 				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-				_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-				_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+				_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+				_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 				mesh_mats.hash_mats.push_back(iter);
 			}
 			
@@ -832,8 +832,8 @@ void AppWindow::OnCreate()
 				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
 				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-				_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-				_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+				_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+				_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 				mesh_mats.hash_mats.push_back(iter);
 			}
 				
@@ -949,8 +949,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1030,8 +1030,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1068,60 +1068,6 @@ void AppWindow::OnCreate()
 #endif // _MutantWalk
 
 #ifdef _Praying
-	////_Praying
-	//{
-	//	const std::wstring szName = L"Praying";
-	//	size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
-
-	//	size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
-	//	_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
-
-	//	size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
-	//	std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
-	//	Mesh_Material mesh_mats;
-	//	mesh_mats.hash_mesh = hash_mesh;
-	//	for (auto& iter : hashs_material)
-	//	{
-	//		_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
-	//		_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
-	//		_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
-	//		_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-	//		_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-	//		_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
-	//		mesh_mats.hash_mats.push_back(iter);
-	//	}
-	//	size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
-
-	//	size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
-	//	size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
-	//	_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
-	//	std::vector<TX_HASH> tx_hashs_compute;
-	//	tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
-	//	tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
-	//	_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
-	//	size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
-
-	//	//ECS Initialize(test, 251111)
-	//	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
-
-	//	size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
-
-	//	_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
-
-	//	_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
-
-	//	uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Cubemap | E_RenderPass::Debug;
-	//	_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
-
-	//	_AnimationSystem.AddAnimbones(lookup);
-	//	_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
-
-	//	_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
-	//	
-	//	_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
-
-	//}
-
 	//_Praying
 	{
 		const std::wstring szName = L"Praying";
@@ -1142,8 +1088,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1197,8 +1143,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1304,8 +1250,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
-			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
-			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1455,8 +1401,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_Distortion.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PT>(hash_material, L"VS_PT.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::UI);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"SRV_RTV0", _EngineSystem.m_hash_RTV_0)});
@@ -1484,8 +1430,8 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetPS(hash_material, L"PS_DepthDebug.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PT>(hash_material, L"VS_PT.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::UI);
-			_EngineSystem.Material_SetHashShaders(hash_material, _EngineSystem.GetRenderPassKey_Shaders(hash_material));
-			_EngineSystem.Material_SetHashStates(hash_material, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
 			//_EngineSystem.m_hash_DSV_ShadowMap

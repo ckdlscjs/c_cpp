@@ -65,11 +65,30 @@ private:
 	/////////////////////////////
 	//Render Pass
 	/////////////////////////////
+public:
+	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
+	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 127);
+	uint32_t GetRenderPassKey_DistToCamera(float dist);
+	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
 private:
 	size_t GetHashMat_Debug(E_Collider eType);
 	size_t GetHashMat_Cubemap(E_VerticesType eType);
 	size_t GetHashMat_Outline(E_VerticesType eType);
+	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
+	void SortRenderItem();
+	void ClearRenderItem();
 	void CollectRenderItem(const Vector3& posCam);
+
+	//RenderPass
+	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
+	std::unordered_map<size_t, uint8_t>					m_hRP_States;
+	std::unordered_map<size_t, uint16_t>				m_hRP_Resources;
+	std::vector<size_t>									m_resRP_Shaders;
+	std::vector<RPStates>								m_resRP_States;
+	std::vector<RPResources>							m_resRP_Resources;
+	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
+
 	//최적화 멤버변수
 	ID3D11InputLayout* m_Inputlayout;
 	ID3D11Buffer* m_VB;
@@ -83,7 +102,6 @@ private:
 	ID3D11BlendState* m_BlendState;
 	ID3D11DepthStencilState* m_DepthStencilState;
 	ID3D11RasterizerState* m_RasterizerState;
-
 };
 //SingletonClasses
 #define _RenderSystem RenderSystem::GetInstance()
