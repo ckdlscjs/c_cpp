@@ -73,7 +73,7 @@ public:
 	size_t CreateMaterial(const std::wstring& szFilePath);
 	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
 	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);
-	void Material_SetShaders(size_t hash_material, const UINT flag);
+	//void Material_SetShaders(size_t hash_material, const UINT flag);
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
 	template<typename T>
 	void Material_SetIL(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
@@ -138,7 +138,7 @@ public:
 	uint32_t GetRenderPassKey_Pass(E_RenderPass pass);
 	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
 	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
-	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 0);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 127);
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
 	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
@@ -205,7 +205,7 @@ public:
 	//RenderPass
 	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
 	std::unordered_map<size_t, uint8_t>					m_hRP_States;
-	std::unordered_map<size_t, uint8_t>					m_hRP_Resources;
+	std::unordered_map<size_t, uint16_t>				m_hRP_Resources;
 	std::vector<size_t>									m_resRP_Shaders;
 	std::vector<RPStates>								m_resRP_States;
 	std::vector<RPResources>							m_resRP_Resources;
@@ -261,6 +261,8 @@ template void EngineSystem::Material_SetIL<Vertex_PC>(size_t hash_material, cons
 template void EngineSystem::Material_SetIL<Vertex_PT>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
 template void EngineSystem::Material_SetIL<Vertex_PTN>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
 template void EngineSystem::Material_SetIL<Vertex_PTNTB>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
+template void EngineSystem::Material_SetIL<Vertex_PTN_Skinned>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
+template void EngineSystem::Material_SetIL<Vertex_PTNTB_Skinned>(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target);
 
 template size_t EngineSystem::CreateMeshFromGeometry<Vertex_PTN>(size_t hash_geometry);
 template size_t EngineSystem::CreateMeshFromGeometry<Vertex_PTN_Skinned>(size_t hash_geometry);

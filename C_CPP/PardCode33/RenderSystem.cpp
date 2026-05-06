@@ -64,6 +64,19 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 
 	/*SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
 	SetRS_Viewport(&_EngineSystem.m_vp_BB);*/
+	//파이프라인포인터
+	m_Inputlayout			= nullptr;
+	m_VB					= nullptr;
+	m_IB					= nullptr;
+	m_VS					= nullptr;
+	m_HS					= nullptr;
+	m_DS					= nullptr;
+	m_GS					= nullptr;
+	m_PS					= nullptr;
+	m_SamplerState			= nullptr;
+	m_BlendState			= nullptr;
+	m_DepthStencilState		= nullptr;
+	m_RasterizerState		= nullptr;
 }
 
 void RenderSystem::Render(float deltatime, float elapsedtime)
@@ -217,8 +230,11 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	// 4. 리소스(Mesh, Material, Collider) ID (16비트)
 	// 5. 거리 계산 (20비트) - float 거리를 받아서 20비트 정수로 변환
 	// 4 + 16 + 8 + 16 + 20 -> 64비트 hash 비트별구분
-	for (const auto& renderItem : _EngineSystem.m_hRP_CommandQueue)
+	
+	//for (const auto& renderItem : _EngineSystem.m_hRP_CommandQueue)
+	for (int i = 0; i < _EngineSystem.m_hRP_CommandQueue.size(); i++)
 	{
+		auto& renderItem = _EngineSystem.m_hRP_CommandQueue[i];
 		_RPKey keyCur			= renderItem.sortKey;
 		Archetype* pArchetype	= renderItem.pArchetype;
 		size_t row				= renderItem.entityRow;
@@ -284,13 +300,13 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				default: break;
 			}
 
-			if (prevPass == uint32_t(E_RenderPass::Shadow))
+			if (prevPass == (uint32_t)E_RenderPass::Shadow)
 			{
 				SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);	//ShadowMap SamplerState
 				SetPS_ShaderResourceView(_EngineSystem.m_hash_DSV_ShadowMap, 6);
 			}
 
-			if (prevPass == uint32_t(E_RenderPass::Cubemap))
+			if (prevPass == (uint32_t)E_RenderPass::Cubemap)
 			{
 				//RTV, SRV에 사용하는 버퍼의 밉맵을 형성한다(앨리어싱처리)
 				_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
@@ -503,14 +519,18 @@ void RenderSystem::SetIA_Topology(D3D_PRIMITIVE_TOPOLOGY topology)
 void RenderSystem::SetIA_InputLayout(size_t hashIL)
 {
 	auto pIL = _EngineSystem.GetIL(hashIL);
-	auto pInputLayout = pIL ? pIL->GetInputLayout() : nullptr;
-	_EngineSystem.GetD3DDeviceContext()->IASetInputLayout(pInputLayout);
+	auto ptr = pIL ? pIL->GetInputLayout() : nullptr;
+	if (m_Inputlayout == ptr) return;
+	m_Inputlayout = ptr;
+	_EngineSystem.GetD3DDeviceContext()->IASetInputLayout(ptr);
 }
 
 void RenderSystem::SetIA_VertexBuffer(size_t hashVB, UINT offset)
 {
 	auto pBuffer = _EngineSystem.GetVB(hashVB);
 	auto ptr = pBuffer ? pBuffer->GetBuffer() : nullptr;
+	if (m_VB == ptr) return;
+	m_VB = ptr;
 	UINT stride = pBuffer ? pBuffer->GetVertexSize() : 0;
 	_EngineSystem.GetD3DDeviceContext()->IASetVertexBuffers(0, 1, &ptr, &stride, &offset);
 }
@@ -519,6 +539,8 @@ void RenderSystem::SetIA_IndexBuffer(size_t hashIB, UINT offset)
 {
 	auto pBuffer = _EngineSystem.GetIB(hashIB);
 	auto ptr = pBuffer ? pBuffer->GetBuffer() : nullptr;
+	if (m_IB == ptr) return;
+	m_IB = ptr;
 	_EngineSystem.GetD3DDeviceContext()->IASetIndexBuffer(ptr, DXGI_FORMAT_R32_UINT, offset); //4바이트, 32비트를의미
 }
 
@@ -526,6 +548,8 @@ void RenderSystem::SetVS_Shader(size_t hashVS)
 {
 	auto pShader = _EngineSystem.GetVS(hashVS);
 	auto ptr = pShader ? pShader->GetShader() : nullptr;
+	if (m_VS == ptr) return;
+	m_VS = ptr;
 	_EngineSystem.GetD3DDeviceContext()->VSSetShader(ptr, nullptr, 0);
 }
 
@@ -545,17 +569,21 @@ void RenderSystem::SetVS_ConstantBuffer(size_t hashCB, UINT startIdx)
 	_EngineSystem.GetD3DDeviceContext()->VSSetConstantBuffers(startIdx, isize, &ptr);
 }
 
-void RenderSystem::SetVS_SamplerState(E_SMState eSampler, UINT startIdx)
-{
-	auto pState = _EngineSystem.GetState_SS()->GetState(eSampler);
-	_ASEERTION_NULCHK(pState, "NotExist");
-	_EngineSystem.GetD3DDeviceContext()->VSSetSamplers(startIdx, 1, &pState);
-}
+//void RenderSystem::SetVS_SamplerState(E_SMState eSampler, UINT startIdx)
+//{
+//	auto pState = _EngineSystem.GetState_SS()->GetState(eSampler);
+//	_ASEERTION_NULCHK(pState, "NotExist");
+//	if (m_SamplerState == pState) return;
+//	m_SamplerState = pState;
+//	_EngineSystem.GetD3DDeviceContext()->VSSetSamplers(startIdx, 1, &pState);
+//}
 
 void RenderSystem::SetHS_Shader(size_t hashHS)
 {
 	auto pShader = _EngineSystem.GetHS(hashHS);
 	auto ptr = pShader ? pShader->GetShader() : nullptr;
+	if (m_HS == ptr) return;
+	m_HS = ptr;
 	_EngineSystem.GetD3DDeviceContext()->HSSetShader(ptr, nullptr, 0);
 }
 
@@ -571,6 +599,8 @@ void RenderSystem::SetDS_Shader(size_t hashDS)
 {
 	auto pShader = _EngineSystem.GetDS(hashDS);
 	auto ptr = pShader ? pShader->GetShader() : nullptr;
+	if (m_DS == ptr) return;
+	m_DS = ptr;
 	_EngineSystem.GetD3DDeviceContext()->DSSetShader(ptr, nullptr, 0);
 }
 
@@ -586,6 +616,8 @@ void RenderSystem::SetGS_Shader(size_t hashGS)
 {
 	auto pShader = _EngineSystem.GetGS(hashGS);
 	auto ptr = pShader ? pShader->GetShader() : nullptr;
+	if (m_GS == ptr) return;
+	m_GS = ptr;
 	_EngineSystem.GetD3DDeviceContext()->GSSetShader(ptr, nullptr, 0);
 }
 
@@ -601,6 +633,8 @@ void RenderSystem::SetPS_SamplerState(E_SMState eSampler, UINT startIdx)
 {
 	auto pState = _EngineSystem.GetState_SS()->GetState(eSampler);
 	_ASEERTION_NULCHK(pState, "NotExist");
+	if (m_SamplerState == pState) return;
+	m_SamplerState = pState;
 	_EngineSystem.GetD3DDeviceContext()->PSSetSamplers(startIdx, 1, &pState);
 }
 
@@ -608,6 +642,8 @@ void RenderSystem::SetPS_Shader(size_t hashPS)
 {
 	auto pShader = _EngineSystem.GetPS(hashPS);
 	auto ptr = pShader ? pShader->GetShader() : nullptr;
+	if (m_PS == ptr) return;
+	m_PS = ptr;
 	_EngineSystem.GetD3DDeviceContext()->PSSetShader(ptr, nullptr, 0);
 }
 
@@ -631,6 +667,8 @@ void RenderSystem::SetRS_RasterizerState(E_RSState eRSState)
 {
 	auto pState = _EngineSystem.GetState_RS()->GetState(eRSState);
 	_ASEERTION_NULCHK(pState, "NotExist");
+	if (m_RasterizerState == pState) return;
+	m_RasterizerState = pState;
 	_EngineSystem.GetD3DDeviceContext()->RSSetState(pState);
 }
 
@@ -657,6 +695,8 @@ void RenderSystem::SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef)
 {
 	auto pState = _EngineSystem.GetState_DS()->GetState(eDSState);
 	_ASEERTION_NULCHK(pState, "NotExist");
+	if (m_DepthStencilState == pState) return;
+	m_DepthStencilState = pState;
 	_EngineSystem.GetD3DDeviceContext()->OMSetDepthStencilState(pState, stencilRef);
 }
 
@@ -664,6 +704,8 @@ void RenderSystem::SetOM_BlendState(E_BSState eBSState, const FLOAT* blendFactor
 {
 	auto pState = _EngineSystem.GetState_BS()->GetState(eBSState);
 	_ASEERTION_NULCHK(pState, "NotExist");
+	if (m_BlendState == pState) return;
+	m_BlendState = pState;
 	_EngineSystem.GetD3DDeviceContext()->OMSetBlendState(pState, blendFactor, sampleMask);
 }
 
@@ -770,16 +812,16 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				{
 					size_t hashMaterial = pRenderAsset->m_hMeshMats.hash_mats[matIdx];
 					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
-					if (!(passMasks & (1 << pMaterial->GetHashPass()))) continue;
 					uint32_t hashPass = pMaterial->GetHashPass();
 					uint32_t hashShader = pMaterial->GetHashShaders();
 					uint32_t hashStates = pMaterial->GetHashStates();
-					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+					uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 129);
 					_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 				}
 
 				//Collect Draw Shadow
-				if (passMasks & E_RenderPass::Shadow)
+				
+				if (passMasks & _ToMask32(E_RenderPass::Shadow))
 				{
 					const auto& shadowMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);
 					uint32_t hashPassShadow = shadowMaterial->GetHashPass();
@@ -790,13 +832,13 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 						uint32_t hashPass = hashPassShadow;
 						uint32_t hashShader = pMaterial->GetHashShaders();
 						uint32_t hashStates = pMaterial->GetHashStates();
-						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 130);
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
 				}
 
 				//Collect Draw Cubemap
-				if (passMasks & E_RenderPass::Cubemap)
+				if (passMasks & _ToMask32(E_RenderPass::Cubemap))
 				{
 					const auto& pMaterial_Cubemap = _ResourceSystem.GetResource<Material>(GetHashMat_Cubemap(pMesh->GetVerticesType()));
 					for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
@@ -806,13 +848,13 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 						uint32_t hashPass = pMaterial_Cubemap->GetHashPass();
 						uint32_t hashShader = pMaterial_Cubemap->GetHashShaders();
 						uint32_t hashStates = pMaterial->GetHashStates();
-						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+						uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 131);
 						_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
 				}
 
 				//Collect Draw Debug
-				if (_InputSystem.IsDebugRender() && (passMasks & E_RenderPass::Debug))
+				if (_InputSystem.IsDebugRender() && (passMasks & _ToMask32(E_RenderPass::Debug)))
 				{
 					size_t hashMaterial = GetHashMat_Debug(eCollider);
 					const auto& pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
@@ -861,7 +903,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial_Picking->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial_Picking->GetHashStates();
-			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 132);
 			_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, 3, collider.idxPicking);
 		}
 
@@ -874,7 +916,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				uint32_t hashPass = pMaterial->GetHashPass();
 				uint32_t hashShader = pMaterial->GetHashShaders();
 				uint32_t hashStates = _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1);
-				uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+				uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 133);
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 			}
 		}
@@ -886,7 +928,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial->GetHashStates();
-			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider);
+			uint32_t hashResources = _EngineSystem.GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 134);
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 				_EngineSystem.EnqueueRenderItem(_EngineSystem.GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 		}

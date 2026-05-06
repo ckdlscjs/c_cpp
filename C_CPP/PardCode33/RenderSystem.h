@@ -35,7 +35,6 @@ private:
 	void SetVS_Shader(size_t hashVS);
 	void SetVS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetVS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
-	void SetVS_SamplerState(E_SMState eSampler, UINT startIdx = 0);
 
 	void SetHS_Shader(size_t hashHS);
 	void SetHS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
@@ -71,7 +70,19 @@ private:
 	size_t GetHashMat_Cubemap(E_VerticesType eType);
 	size_t GetHashMat_Outline(E_VerticesType eType);
 	void CollectRenderItem(const Vector3& posCam);
-
+	//최적화 멤버변수
+	ID3D11InputLayout* m_Inputlayout;
+	ID3D11Buffer* m_VB;
+	ID3D11Buffer* m_IB;
+	ID3D11VertexShader* m_VS;
+	ID3D11HullShader* m_HS;
+	ID3D11DomainShader* m_DS;
+	ID3D11GeometryShader* m_GS;
+	ID3D11PixelShader* m_PS;
+	ID3D11SamplerState* m_SamplerState;
+	ID3D11BlendState* m_BlendState;
+	ID3D11DepthStencilState* m_DepthStencilState;
+	ID3D11RasterizerState* m_RasterizerState;
 
 };
 //SingletonClasses

@@ -396,7 +396,7 @@ std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath
 		}
 
 		//Set Use Shaders
-		Material_SetShaders(matHash, materialFlag);
+		//Material_SetShaders(matHash, materialFlag);
 
 		hashs_material.push_back(matHash);
 	}
@@ -446,37 +446,16 @@ size_t EngineSystem::CreateMeshFromGeometry(size_t hash_geometry)
 	return pMesh->GetHash();
 }
 
-void EngineSystem::Material_SetShaders(size_t hash_material, const UINT flag)
-{
-	_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
-	_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
-	_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
-	if (flag == 1)
-	{
-		_EngineSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
-	}
-	if (flag == 2)
-	{
-		_EngineSystem.Material_SetVS(hash_material, L"VS_PTN_Skinned.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTN_Skinned>(hash_material, L"VS_PTN_Skinned.hlsl");
-	}
-	if (flag == 3)
-	{
-		_EngineSystem.Material_SetVS(hash_material, L"VS_PTNTB_Skinned.hlsl");
-		_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
-		_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(hash_material, L"VS_PTNTB_Skinned.hlsl");
-	}
-	/*
-	* 텍스쳐 분류에따른 쉐이더선택
-	*/
-	if (flag == ((UINT)E_Texture::Diffuse | (UINT)E_Texture::Normal | (UINT)E_Texture::Specular))
-	{
-
-	}
-}
+//void EngineSystem::Material_SetShaders(size_t hash_material, const UINT flag)
+//{
+//	/*
+//	* 텍스쳐 분류에따른 쉐이더선택
+//	*/
+//	if (flag == ((UINT)E_Texture::Diffuse | (UINT)E_Texture::Normal | (UINT)E_Texture::Specular))
+//	{
+//
+//	}
+//}
 
 void EngineSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target)
 {
@@ -1118,12 +1097,12 @@ uint32_t EngineSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMa
 	size_t hash = 0;
 	hash_combine(hash, std::hash<size_t>{}(hashMesh));
 	hash_combine(hash, std::hash<size_t>{}(hashMat));
-	hash_combine(hash, std::hash<size_t>{}(static_cast<size_t>(collider)));
-	hash_combine(hash, std::hash<UINT>{}(idx));
+	hash_combine(hash, std::hash<size_t>{}(static_cast<uint32_t>(collider)));
+	hash_combine(hash, std::hash<size_t>{}(idx));
 	auto iter = m_hRP_Resources.find(hash);
 	if (iter != m_hRP_Resources.end())
 		return iter->second;
-
+		
 	uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
 	m_hRP_Resources[hash] = newID;
 	m_resRP_Resources.push_back({ hashMesh, hashMat, collider, idx });
@@ -1143,16 +1122,16 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 	_RPKey key = 0;
 
 	// 1. 패스 (4비트)
-	key |= (static_cast<uint64_t>(hashPass) & 0xF) << 60;
+	key |= (static_cast<uint64_t>(hashPass) & (UINT)0xF) << 60;
 
 	// 2. 셰이더 (16비트)
-	key |= (static_cast<uint64_t>(hashShaders) & 0xFFFF) << 44;
+	key |= (static_cast<uint64_t>(hashShaders) & (UINT)0xFFFF) << 44;
 
 	// 3. 상태 (8비트)
-	key |= (static_cast<uint64_t>(hashStates) & 0xFF) << 36;
+	key |= (static_cast<uint64_t>(hashStates) & (UINT)0xFF) << 36;
 
 	// 4. 메쉬/머티리얼/컬라이더(16비트)
-	key |= (static_cast<uint64_t>(hashResources) & 0xFFFF) << 20;
+	key |= (static_cast<uint64_t>(hashResources) & (UINT)0xFFFF) << 20;
 
 	// 5. 거리 (20비트)
 	//  패스에 따른 정렬 방향 결정
@@ -1162,7 +1141,7 @@ _RPKey EngineSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShad
 	// 불투명: 앞에서부터 그려야 하므로 거리가 작을수록 키값이 작음 (그대로)
 	if (static_cast<uint32_t>(E_RenderPass::Transparent) == hashPass)
 		hashDist = 0xFFFFF - hashDist;
-	key |= (static_cast<uint64_t>(hashDist) & 0xFFFFF);
+	key |= (static_cast<uint64_t>(hashDist) & (UINT)0xFFFFF);
 
 	return key;
 }

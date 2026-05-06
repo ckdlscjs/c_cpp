@@ -261,18 +261,19 @@ void AppWindow::OnCreate()
 
 	//Initialize RenderAsset
 	{
+		/*
 		//gizmo
 		{
-			/*std::vector<std::vector<Vector3>> points;
+			std::vector<std::vector<Vector3>> points;
 			std::vector<Vertex_PC> iTriangleCount;
 			std::vector<UINT> indices;
 			GeometryGenerate_Gizmo(points, iTriangleCount, indices);
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PC>(L"Gizmo", std::move(points), std::move(iTriangleCount), std::move(indices));
 			{
 
-			}*/
+			}
 		}
-
+		*/
 
 		//SkySphere
 		{
@@ -323,7 +324,7 @@ void AppWindow::OnCreate()
 			behavior[E_Behavior::MOVE_DOWN] = 'E';
 			_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-			uint32_t rpMasks = E_RenderPass::Sky | E_RenderPass::Cubemap;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Sky) | _ToMask32(E_RenderPass::Cubemap);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 		}
 
@@ -432,7 +433,7 @@ void AppWindow::OnCreate()
 
 					_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
-					uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -475,7 +476,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quaternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
-			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug) | _ToMask32(E_RenderPass::Cubemap);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -516,7 +517,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quaternion(0.0f, 0.0f, 0.0f)}, {-50.0f, 50.0f, 0.0f} });
 
-			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug) | _ToMask32(E_RenderPass::Cubemap);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -687,7 +688,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
-			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Cubemap | E_RenderPass::Opaque | E_RenderPass::Debug;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -736,7 +737,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {230.0f, 100.0f, 0.0f} });
 
-			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -760,8 +761,16 @@ void AppWindow::OnCreate()
 			Mesh_Material mesh_mats;
 			mesh_mats.hash_mesh = hash_mesh;
 			for (const auto& iter : hashs_material)
+			{
+				_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
+				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
+				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
+				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
+				_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
+				_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 				mesh_mats.hash_mats.push_back(iter);
-
+			}
+			
 			std::vector<std::wstring> paths =
 			{
 				L"../Assets/Textures/house_barrel.jpg",
@@ -797,7 +806,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quaternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
 
-			uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -819,10 +828,13 @@ void AppWindow::OnCreate()
 			mesh_mats.hash_mesh = hash_mesh;
 			for (const auto& iter : hashs_material)
 			{
-				mesh_mats.hash_mats.push_back(iter);
+				_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
+				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
+				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 				_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
 				_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+				mesh_mats.hash_mats.push_back(iter);
 			}
 				
 		
@@ -862,7 +874,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
-			uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -933,6 +945,9 @@ void AppWindow::OnCreate()
 		mesh_mats.hash_mesh = hash_mesh;
 		for (const auto& iter : hashs_material)
 		{
+			_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -958,7 +973,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -1011,7 +1026,9 @@ void AppWindow::OnCreate()
 		mesh_mats.hash_mesh = hash_mesh;
 		for (auto& iter : hashs_material)
 		{
-			_EngineSystem.Material_SetShaders(iter, 3);
+			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1037,7 +1054,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Cubemap | E_RenderPass::Opaque | E_RenderPass::Debug;
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
@@ -1051,6 +1068,60 @@ void AppWindow::OnCreate()
 #endif // _MutantWalk
 
 #ifdef _Praying
+	////_Praying
+	//{
+	//	const std::wstring szName = L"Praying";
+	//	size_t hash_geometry = _EngineSystem.CreateGeometry(L"../Assets/Meshes/Praying.fbx");
+
+	//	size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTNTB_Skinned>(hash_geometry);
+	//	_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
+
+	//	size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
+	//	std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
+	//	Mesh_Material mesh_mats;
+	//	mesh_mats.hash_mesh = hash_mesh;
+	//	for (auto& iter : hashs_material)
+	//	{
+	//		_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
+	//		_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
+	//		_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+	//		_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
+	//		_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
+	//		_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+	//		mesh_mats.hash_mats.push_back(iter);
+	//	}
+	//	size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+
+	//	size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
+	//	size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
+	//	_EngineSystem.Material_SetCS(hash_material_Compute, L"CS_Collision_Triangle.hlsl");
+	//	std::vector<TX_HASH> tx_hashs_compute;
+	//	tx_hashs_compute.push_back({ E_Texture::Compute_SRV, hash_STB_vertices });
+	//	tx_hashs_compute.push_back({ E_Texture::Compute_UAV, g_hash_stb_collisionResults });
+	//	_EngineSystem.Material_SetTextures(hash_material_Compute, tx_hashs_compute);
+	//	size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
+
+	//	//ECS Initialize(test, 251111)
+	//	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
+
+	//	size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
+
+	//	_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
+
+	//	_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
+
+	//	uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Cubemap | E_RenderPass::Debug;
+	//	_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
+
+	//	_AnimationSystem.AddAnimbones(lookup);
+	//	_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
+
+	//	_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
+	//	
+	//	_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
+
+	//}
+
 	//_Praying
 	{
 		const std::wstring szName = L"Praying";
@@ -1060,12 +1131,19 @@ void AppWindow::OnCreate()
 		_EngineSystem.CreateColliders(hash_mesh, E_Collider::SPHERE);
 
 		size_t hash_animation = _EngineSystem.CreateAnimaitonFromGeometry(hash_geometry);
+		_AnimationSystem.AddAnimbones(hash_animation);
 		std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
+
 		Mesh_Material mesh_mats;
 		mesh_mats.hash_mesh = hash_mesh;
 		for (auto& iter : hashs_material)
 		{
-			_EngineSystem.Material_SetShaders(iter, 3);
+			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
+			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1080,23 +1158,23 @@ void AppWindow::OnCreate()
 		size_t hash_asset_Compute = _EngineSystem.CreateComputeAsset(g_szName_ca + szName, { hash_material_Compute });
 
 		//ECS Initialize(test, 251111)
-		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
-		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Animation, C_Compute, T_Render_Geometry_Skeletal>();
+		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
 		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, -100.0f} });
+		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 		_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
-		_AnimationSystem.AddAnimbones(lookup);
-		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 
 		_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
 
+		_AnimationSystem.AddAnimbones(lookup);
+		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
 	}
 #endif // _Praying
 
@@ -1115,7 +1193,12 @@ void AppWindow::OnCreate()
 		mesh_mats.hash_mesh = hash_mesh;
 		for (auto& iter : hashs_material)
 		{
-			_EngineSystem.Material_SetShaders(iter, 3);
+			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
+			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
+			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
@@ -1139,7 +1222,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quaternion(30.0f, 95.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = static_cast<uint32_t>(E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Outline | E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 		_AnimationSystem.AddAnimbones(lookup);
@@ -1217,11 +1300,13 @@ void AppWindow::OnCreate()
 		mesh_mats.hash_mesh = hash_mesh;
 		for (auto& iter : hashs_material)
 		{
-			_EngineSystem.Material_SetShaders(iter, 0);
-			mesh_mats.hash_mats.push_back(iter);
+			_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _EngineSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _EngineSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
+			mesh_mats.hash_mats.push_back(iter);
 		}
 		size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
 
@@ -1243,7 +1328,7 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
 
-		uint32_t rpMasks = E_RenderPass::Shadow | E_RenderPass::Opaque | E_RenderPass::Debug | E_RenderPass::Cubemap;
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Cubemap) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
 		_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 		_AnimationSystem.AddAnimbones(lookup);
@@ -1388,7 +1473,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {(float)g_iWidth, (float)g_iHeight, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
 
-			uint32_t rpMasks = (1 << static_cast<uint32_t>(E_RenderPass::UI));
+			uint32_t rpMasks = _ToMask32(E_RenderPass::UI);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 		}
 		//DSV
@@ -1419,7 +1504,7 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {300.0f, 300.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
 
-			uint32_t rpMasks = (1 << static_cast<uint32_t>(E_RenderPass::UI));
+			uint32_t rpMasks = _ToMask32(E_RenderPass::UI);
 			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 		}
 	}
