@@ -104,6 +104,7 @@ private:
 	{
 		VS = 0,
 		HS,
+		DS,
 		GS,
 		PS,
 		COUNT
