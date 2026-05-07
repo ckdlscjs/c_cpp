@@ -1,0 +1,81 @@
+#include "AnimationSystem.h"
+#include "ResourceSystem.h"
+#include "ECSSystem.h"
+#include "Animation.h"
+
+AnimationSystem::AnimationSystem()
+{
+}
+
+AnimationSystem::~AnimationSystem()
+{
+}
+
+void AnimationSystem::Init()
+{
+}
+
+void AnimationSystem::Frame(float deltatime)
+{
+	if (g_fTime_Log >= 1.0f)
+		std::cout << "Frame : " << "AnimationSystem" << " Class" << '\n';
+	{
+		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();
+		std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
+		for (auto& archetype : queries)
+		{
+			size_t st_row = 0;
+			size_t st_col = 0;
+			for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
+			{
+				auto& transforms = archetype->GetComponents<C_Transform>(row);
+				auto& renders = archetype->GetComponents<C_Render>(row);
+				auto& animations = archetype->GetComponents<C_Animation>(row);
+				for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
+				{
+					if (!renders[col].bRenderable) continue;
+					
+					Animation* pAnimation = _ResourceSystem.GetResource<Animation>(animations[col].hash_ai);
+					if(pAnimation->GetAnimations().empty()) continue;
+						
+					if (!animations[col].bInitialized)
+					{
+						animations[col].clipIter = pAnimation->GetAnimations().begin();
+						animations[col].elapsedTime = 0.0f;
+						animations[col].bInitialized = true;
+					}
+
+					animations[col].elapsedTime += animations[col].clipIter->second.fTicksPerSecond * deltatime * fPlayRate;
+					//animations[col].elapsedTime = 0.0f;
+					if (animations[col].elapsedTime >= animations[col].clipIter->second.fDuration)
+					{
+						animations[col].elapsedTime = 0.0f;
+						if (animations[col].clipIter != pAnimation->GetAnimations().end())
+							animations[col].clipIter++;
+						if (animations[col].clipIter == pAnimation->GetAnimations().end())
+						{
+							animations[col].clipIter = pAnimation->GetAnimations().begin();
+							animations[col].elapsedTime = 0.0f;
+						}
+					}
+					
+					pAnimation->GetFinalTransform(animations[col].clipIter->first, animations[col].elapsedTime, m_matAnimbones[animations[col].hash_animbones]);
+					//std::memcpy(animations[col].matAnims, curAnim.data(), curAnim.size() * sizeof(Matrix4x4));
+				}
+				st_col = 0;
+			}
+		}
+	}
+}
+
+void AnimationSystem::AddAnimbones(size_t hash)
+{
+	_ASEERTION_NULCHK(m_matAnimbones.find(hash) == m_matAnimbones.end(), "AlreayExist");
+	m_matAnimbones.insert({ hash, std::vector<Matrix4x4>(256) });
+}
+
+const std::vector<Matrix4x4>& AnimationSystem::GetAnimbones(size_t hash)
+{
+	_ASEERTION_NULCHK(m_matAnimbones.find(hash) != m_matAnimbones.end(), "NotExist");
+	return m_matAnimbones[hash];
+}

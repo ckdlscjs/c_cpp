@@ -1,0 +1,973 @@
+﻿#pragma once
+//#define _FNV1A
+#include "std.h"
+#include "CommonMath.h"
+
+//enum classes
+constexpr size_t MAX_COMPONENTS = 256;
+using ArchetypeKey = std::bitset<MAX_COMPONENTS>;
+class ComponentType
+{
+public:
+	template<typename T>
+	static size_t GetMask()
+	{
+		_ASEERTION_NULCHK(m_lCount < MAX_COMPONENTS, "Component limit exceeded");
+		static size_t Mask = m_lCount++;
+		return Mask;
+	}
+private:
+	inline static size_t m_lCount = 0;
+};
+
+enum class E_InputEvent
+{
+	KEY_DOWN,
+	KEY_UP,
+	KEY_PRESSED,
+	MOUSE_MOVE,
+	MOUSE_L_DOWN,
+	MOUSE_L_UP,
+	MOUSE_R_DOWN,
+	MOUSE_R_UP,
+	MOUSE_WHEEL,
+	NOTHING,
+};
+
+enum class E_SMState
+{
+	LINEAR_WRAP,
+	ANISOTROPIC_WRAP,
+	POINT_CLAMP,
+	POINT_CLAMP_COMPARISON,
+	// 새롭게 추가된 샘플러 상태들
+	//LINEAR_CLAMP,
+	//ANISOTROPIC_CLAMP,
+	COUNT,
+};
+
+enum class E_RSState
+{
+	SOLID_CULLBACK_CW,
+	SOLID_CULLBACK_CCW,
+	SOLID_CULLFRONT_CW,
+	SOLID_CULLFRONT_CCW,
+	WIRE_CULLBACK_CW,
+	COUNT,
+};
+
+enum class E_DSState
+{
+	Default,
+	SkyBox,
+	Outline_Write,
+	Outline_Draw,
+	UI,
+	COUNT,
+};
+
+enum class E_BSState
+{
+	Opaque,
+	Transparent,
+	Additive,
+	Outline_Write,
+	Outline_Draw,
+	COUNT,
+};
+
+enum class E_Collider
+{
+	NONE,
+	SPHERE,
+	BOX,
+};
+
+enum class E_Texture
+{
+	Diffuse,
+	Normal,
+	Specular,
+	Roughness,
+	Metalic,
+	AmbientOcclusion,
+	Emissive,
+	Compute_SRV,		//Input
+	Compute_UAV,		//Output
+	None,
+	count,
+};
+
+enum class E_InputLayout
+{
+	PC,
+	PT,
+	PCT,
+	PPCC,
+	PTN,
+	PTNTB,
+	PTN_Skinned,
+	PTNTB_Skinned,
+};
+
+enum class E_RenderPass : uint32_t
+{
+	Shadow				= 0,
+	Cubemap				= 1,
+	Opaque				= 2,
+	Transparent			= 3,
+	Sky					= 4,
+	Outline_Write		= 5,
+	Outline_Draw		= 6,
+	Picking_Triangle	= 7,
+	Debug				= 8,
+	UI					= 9,
+	COUNT,
+};
+
+////비트트 합 연산 (Pass | Pass -> Mask)
+//inline uint32_t operator|(E_RenderPass a, E_RenderPass b)
+//{
+//	return (1 << static_cast<uint32_t>(a)) | (1 << static_cast<uint32_t>(b));
+//}
+//
+////마스크에 비트 추가 (Mask | Pass -> Mask)
+//inline uint32_t operator|(uint32_t mask, E_RenderPass pass)
+//{
+//	return mask | (1 << static_cast<uint32_t>(pass));
+//}
+//
+////마스크 포함 여부 확인 (Mask & Pass -> bool)
+//inline bool operator&(uint32_t mask, E_RenderPass pass)
+//{
+//	return (mask & (1 << static_cast<uint32_t>(pass))) != 0;
+//}
+//
+////패스 확인여부
+//inline bool operator==(E_RenderPass a, uint32_t b)
+//{
+//	return static_cast<uint32_t>(a) == b;
+//}
+
+class Archetype;
+
+struct RenderItem
+{
+	_RPKey sortKey;
+	Archetype* pArchetype;
+	size_t entityRow;
+	size_t entityCol;
+	UINT renderCnt;
+	UINT startIdx;
+	//size_t subsetIdx;
+};
+
+#define _BB 1 << 0
+#define _SRV 1 << 1
+#define _RTV 1 << 2
+#define _DSV 1 << 3
+#define _UAV 1 << 4
+#define _TEX 1 << 5
+#define _CUBE 1 << 6
+#define _Target_ResourceView (_SRV | _RTV)
+#define _Target_DepthView (_SRV | _DSV)
+#define _Target_Compute_Tex (_SRV | _UAV | _TEX)
+#define _Target_Compute_Buffer (_SRV | _UAV)
+#define _Target_Cubemap_ResourceView (_SRV | _RTV | _CUBE)
+#define _Target_Cubemap_DepthView (_SRV | _DSV | _CUBE)
+
+//Resources data struct
+struct TX_HASH
+{
+	E_Texture tex;
+	size_t hash;
+};
+
+struct TX_PATH
+{
+	E_Texture tex;
+	std::string szPath;
+};
+
+struct MTL_TEXTURES
+{
+	std::string szMatName;
+	std::unordered_map<aiTextureType, std::vector<DirectX::ScratchImage>> type_textures_image;
+	std::unordered_map<aiTextureType, std::vector<std::string>> type_textures_path;
+};
+
+//뼈대
+struct Bone
+{
+	UINT idx;
+	Matrix4x4 matOffset;
+};
+
+struct NodeHierarchy
+{
+	int idx_parent;
+	Matrix4x4 matRelative;
+	std::string szName_Parent;
+	std::string szName_Cur;
+};
+
+//가중치데이터
+struct IWInfo
+{
+	UINT boneIdx;
+	float weight;
+};
+
+//키프레임 데이터
+struct KeyFrame_Vector
+{
+	float fTime;
+	Vector3 vValue;
+};
+struct KeyFrame_Quaternion
+{
+	float fTime;
+	Quaternion qValue;
+};
+
+//애니메이션클립(Sort by Bones)
+struct AnimationClip
+{
+	std::string szName;
+	float fDuration;
+	float fTicksPerSecond;
+	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Scale;
+	std::unordered_map<std::string, std::vector<KeyFrame_Quaternion>> boneFrames_Rotate;
+	std::unordered_map<std::string, std::vector<KeyFrame_Vector>> boneFrames_Translation;
+};
+
+inline E_Texture ConvETexture(const aiTextureType& aiTextype)
+{
+	/*
+	* aiTextureType_REFLECTION = 11,
+				aiTextureType_BASE_COLOR = 12,
+				aiTextureType_NORMAL_CAMERA = 13,
+				aiTextureType_EMISSION_COLOR = 14,
+				aiTextureType_METALNESS = 15,
+				aiTextureType_DIFFUSE_ROUGHNESS = 16,
+				aiTextureType_AMBIENT_OCCLUSION = 17,
+	*/
+	switch (aiTextype)
+	{
+		case aiTextureType_DIFFUSE:
+			return E_Texture::Diffuse;
+		case aiTextureType_SPECULAR:
+			return E_Texture::Specular;
+			//case aiTextureType_AMBIENT: return E_Texture::
+			//case aiTextureType_EMISSIVE: return E_Texture::Emissive;
+			//case aiTextureType_HEIGHT: return E_Texture::
+		case aiTextureType_NORMALS:
+			return E_Texture::Normal;
+			//case aiTextureType_SHININESS: return E_Texture::Diffuse;
+			//case aiTextureType_OPACITY: return E_Texture::
+			//case aiTextureType_DISPLACEMENT: return E_Texture::Diffuse;
+			//case aiTextureType_LIGHTMAP: return E_Texture::Diffuse;
+		default:
+			return E_Texture::None;
+	}
+}
+inline const std::wstring GetTexType(E_Texture eTexture)
+{
+	switch (eTexture)
+	{
+		case E_Texture::Diffuse:
+			return L"Diffuse";
+		case E_Texture::Specular:
+			return L"Specular";
+		case E_Texture::Normal:
+			return L"Normal";
+		default:
+			return L"None";
+	}
+}
+
+struct Mesh_Material
+{
+	size_t hash_mesh;
+	std::vector<size_t> hash_mats;
+};
+
+struct InputEvent 
+{
+	E_InputEvent type;
+	int keyCode = 0;
+	int mouseX = 0;
+	int mouseY = 0;
+	int mouseDeltaX = 0;
+	int mouseDeltaY = 0;
+	int wheelDelta = 0;
+};
+
+using EventCallBack = std::function<void(const InputEvent&)>;
+struct PointXY
+{
+	int x = 0;
+	int y = 0;
+	PointXY(int _x = 0, int _y = 0) : x(_x), y(_y) {}
+};
+
+struct RenderCounts
+{
+	UINT count;
+	UINT idx;
+};
+
+struct RPStates
+{
+	E_RSState stateRS;
+	E_BSState stateBS;
+	float blendFactor[4];
+	UINT blendMask;
+	E_DSState stateDS;
+	UINT stencilRef;
+};
+
+struct RPResources
+{
+	size_t hashMesh;
+	size_t hashMat;
+	E_Collider collider;
+	UINT idxCollider;
+};
+
+struct Vertex_PC
+{
+	Vector3 pos0;
+	Vector4 color0;
+};
+
+enum class E_VerticesType
+{
+	Vertex_PC,
+	Vertex_PT,
+	Vertex_PCT,
+	Vertex_PPCC,
+	Vertex_PTN,
+	Vertex_PTNTB,
+	Vertex_PTN_Skinned,
+	Vertex_PTNTB_Skinned,
+};
+
+//align offset 을 D3D11_APPEND_ALIGNED_ELEMENT 로 대체 할 수 있다
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPC[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PT
+{
+	Vector3 pos0;
+	Vector2 tex0;
+};
+
+//align offset 을 D3D11_APPEND_ALIGNED_ELEMENT 로 대체 할 수 있다
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPT[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PCT
+{
+	Vector3 pos0;
+	Vector4 color0;
+	Vector2 tex0;
+};
+
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPCT[] =
+{
+
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+
+struct Vertex_PPCC
+{
+	Vector3 pos0;
+	Vector3 pos1;
+	Vector4 color0;
+	Vector4 color1;
+};
+
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPPCC[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"POSITION",	1, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		1, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PTN
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	bool operator==(const Vertex_PTN& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0);
+	}
+};
+
+struct Vertex_PTN_Hash
+{
+	size_t operator()(const Vertex_PTN& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTN[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PTNTB
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	Vector3 tangent0;
+	Vector3 binormal0;
+
+	bool operator==(const Vertex_PTNTB& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && tangent0 == other.tangent0 && binormal0 == other.binormal0);
+	}
+};
+
+struct Vertex_PTNTB_Hash
+{
+	size_t operator()(const Vertex_PTNTB& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetZ()));
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetX()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetY()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetZ()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetX()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetY()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetZ()));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TANGENT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BINORMAL",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PTN_Skinned
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
+	bool operator==(const Vertex_PTN_Skinned& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0);
+	}
+};
+struct Vertex_PTN_Skinned_Hash
+{
+	size_t operator()(const Vertex_PTN_Skinned& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTN_Skinned[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BONES",		0, DXGI_FORMAT_R32G32B32A32_UINT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"WEIGHTS",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+struct Vertex_PTNTB_Skinned
+{
+	Vector3 pos0;
+	Vector2 tex0;
+	Vector3 normal0;
+	Vector3 tangent0;
+	Vector3 binormal0;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
+	bool operator==(const Vertex_PTNTB_Skinned& other) const
+	{
+		return (pos0 == other.pos0 && tex0 == other.tex0 && normal0 == other.normal0 && tangent0 == other.tangent0 && binormal0 == other.binormal0);
+	}
+};
+struct Vertex_PTNTB_Skinned_Hash
+{
+	size_t operator()(const Vertex_PTNTB_Skinned& v) const
+	{
+		size_t hash = 0;
+#ifndef _FNV1A
+		//using std hash
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.pos0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tex0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.normal0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.tangent0.GetZ()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetX()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetY()));
+		hash_combine(hash, std::hash<float>{}(v.binormal0.GetZ()));
+#endif // !_FNV1A
+
+#ifdef _FNV1A
+		//using fnv-1a
+		hash_combine(hash, HashingFloat(v.pos0.GetX()));
+		hash_combine(hash, HashingFloat(v.pos0.GetY()));
+		hash_combine(hash, HashingFloat(v.pos0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tex0.GetX()));
+		hash_combine(hash, HashingFloat(v.tex0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetX()));
+		hash_combine(hash, HashingFloat(v.normal0.GetY()));
+		hash_combine(hash, HashingFloat(v.normal0.GetZ()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetX()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetY()));
+		hash_combine(hash, HashingFloat(v.tangent0.GetZ()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetX()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetY()));
+		hash_combine(hash, HashingFloat(v.binormal0.GetZ()));
+#endif // _FNV1A
+		return hash;
+	}
+};
+
+static D3D11_INPUT_ELEMENT_DESC InputLayout_VertexPTNTB_Skinned[] =
+{
+	//SEMANTIC NAME, SEMANTIC INDEX, FORMAT, INPUT SLOT, ALIGNED BYTE OFFSET, INPUT SLOT CLASS, INSTANCE DATA STEP RATE, 
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 0,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 16,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"NORMAL",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 32,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"TANGENT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 48,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BINORMAL",	0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 64,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"BONES",		0, DXGI_FORMAT_R32G32B32A32_UINT,		0, 80,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+	{"WEIGHTS",		0, DXGI_FORMAT_R32G32B32A32_FLOAT,		0, 96,	D3D11_INPUT_PER_VERTEX_DATA, 0},
+};
+
+
+
+static std::pair<D3D11_INPUT_ELEMENT_DESC*, UINT> INPUT_ELMENTS[] =
+{
+	{InputLayout_VertexPC,				(UINT)ARRAYSIZE(InputLayout_VertexPC)},
+	{InputLayout_VertexPT,				(UINT)ARRAYSIZE(InputLayout_VertexPT)},
+	{InputLayout_VertexPCT,				(UINT)ARRAYSIZE(InputLayout_VertexPCT)},
+	{InputLayout_VertexPPCC,			(UINT)ARRAYSIZE(InputLayout_VertexPPCC)},
+	{InputLayout_VertexPTN,				(UINT)ARRAYSIZE(InputLayout_VertexPTN)},
+	{InputLayout_VertexPTNTB,			(UINT)ARRAYSIZE(InputLayout_VertexPTNTB)},
+	{InputLayout_VertexPTN_Skinned,		(UINT)ARRAYSIZE(InputLayout_VertexPTN_Skinned)},
+	{InputLayout_VertexPTNTB_Skinned,	(UINT)ARRAYSIZE(InputLayout_VertexPTNTB_Skinned)},
+};
+
+//TMP를 이용한 추론
+template <typename T>
+struct Traits_InputLayout;
+
+template <>
+struct Traits_InputLayout<Vertex_PC> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PC].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PC].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PT> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PT].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PT].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTN> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTNTB> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTN_Skinned> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN_Skinned].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTN_Skinned].second;
+	}
+};
+
+template <>
+struct Traits_InputLayout<Vertex_PTNTB_Skinned> {
+	static constexpr D3D11_INPUT_ELEMENT_DESC* GetLayout() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB_Skinned].first;
+	}
+	static constexpr UINT GetSize() {
+		return INPUT_ELMENTS[(UINT)E_InputLayout::PTNTB_Skinned].second;
+	}
+};
+
+//16바이트 단위로 gpu메모리에서 패딩되므로 단위를 맞춘다, 최대 16바이트 * 4096 이 가능하다(하나의레지스터), 최대14레지스터까지가능(0~13)
+__declspec(align(16))
+struct CB_Time
+{
+	float fTime;
+};
+
+__declspec(align(16))
+struct CB_Campos
+{
+	Vector3 vPosition;
+};
+
+__declspec(align(16))
+struct CB_WVPMatrix
+{
+	Matrix4x4 matWorld;
+	Matrix4x4 matView;
+	Matrix4x4 matProj;
+};
+
+__declspec(align(16))
+struct CB_WVPITMatrix
+{
+	Matrix4x4 matWorld;
+	Matrix4x4 matView;
+	Matrix4x4 matProj;
+	Matrix4x4 matInvTrans;
+};
+
+__declspec(align(16))
+struct CB_LightMatrix
+{
+	Matrix4x4 matLightView;
+	Matrix4x4 matLightProj;
+	Vector4	vPos;
+};
+
+__declspec(align(16))
+struct CB_DirectionalLight
+{
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vDirection;		//w is shiness
+};
+
+__declspec(align(16))
+struct CB_PointLight
+{
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vPosition;		//w is shiness
+	Vector4 fAttenuations;	//a0, a1, a2, range
+};
+
+__declspec(align(16))
+struct CB_SpotLight
+{
+	Vector4 mAmbient;
+	Vector4 mDiffuse;
+	Vector4 mSpecular;
+	Vector4 vDirection;		//w is padd1
+	Vector4 vPosition;		//w is shiness
+	Vector4 fAttenuations;	//a0, a1, a2, range
+	Vector4 fSpots;			//spot, cosOuter, cosInner, padd2
+};
+
+__declspec(align(16))
+struct CB_Fog
+{
+	float fFogNear;
+	float fFogFar;
+	float fFogDensity;
+	float padding;
+	Vector4 vFogColor;
+};
+
+__declspec(align(16))
+struct CB_BoneMatrix
+{
+	Matrix4x4 bones[256];
+};
+
+__declspec(align(16))
+struct CB_Debug_Box
+{
+	Vector3 vMin;
+	Vector3 vMax;
+};
+
+__declspec(align(16))
+struct CB_Debug_Sphere
+{
+	Vector4 vInfo;		//center, radius
+	float fTessFactor;
+};
+
+__declspec(align(16))
+struct CB_CubeMap
+{
+	Matrix4x4 matViews[6];
+};
+
+__declspec(align(16))
+struct STB_CollisionVertices
+{
+	Vector3 vPosition;
+	std::array<UINT, 4> bones = { 0, 0, 0, 0 };
+	std::array<float, 4> weights = { 1.0f, 0.0f, 0.0f, 0.0f };
+};
+
+__declspec(align(16))
+struct STB_CollisionResults
+{
+	UINT iHitIdx;
+	float fDist = FLT_MAX;
+	UINT padding[2];
+};
+
+__declspec(align(16))
+struct CB_RayTriangle
+{
+	//worldRay
+	Vector4 vRayOrigin;	//w is animate
+	Vector4 vRayDir;	//w is padding
+	UINT iTriangleCount;
+};
+
+__declspec(align(16))
+struct CB_Outline_Picking
+{
+	Vector4 color_thickness; //rgb, thickness
+};
+
+
+/*
+		TBN구성에 사용할 tangent(접벡터), binormal(종벡터)를 계산한다
+		MatE = deltaUV * MatTB
+		MatTB = deltaUV^-1 * MatE
+		* 역행렬
+		* AdjMat(A*) = C(A)^T , 여인수행렬의 전치를 의미, 수반행렬
+		* InvMat = AdjMat * 1.0f/detA
+		deltaUV^-1 = 1/(ad-bc) * AdjMat
+
+		deltaUV = du0 dv0 (a, b)
+				  du1 dv1 (c, d)
+
+		adjMat = d -b
+				-c  a
+
+		invMat = denominator * adjMat
+*/
+inline void ComputeTangentBinormal(const std::vector<UINT>& indicies, std::vector<Vertex_PTNTB_Skinned>& iTriangleCount)
+{
+	//메쉬(세 정점)을 기준으로 tangent, binormal의 누적을 계산한다
+	for (UINT idx = 0; idx < indicies.size(); idx += 3)
+	{
+		UINT i0 = indicies[idx];
+		UINT i1 = indicies[idx + 1];
+		UINT i2 = indicies[idx + 2];
+		Vector3 e0 = iTriangleCount[i1].pos0 - iTriangleCount[i0].pos0;
+		Vector3 e1 = iTriangleCount[i2].pos0 - iTriangleCount[i0].pos0;
+		Vector2 uv_e0 = iTriangleCount[i1].tex0 - iTriangleCount[i0].tex0;	//a, b
+		Vector2 uv_e1 = iTriangleCount[i2].tex0 - iTriangleCount[i0].tex0;	//c, d
+		float det = uv_e0.GetX() * uv_e1.GetY() - uv_e0.GetY() * uv_e1.GetX();	//ad - bc
+		if (std::fabs(det) <= _EPSILON) continue;
+		det = 1.0f / det;
+		float tx, ty, tz;
+		tx = (uv_e1.GetY() * e0.GetX() - uv_e0.GetY() * e1.GetX()) * det;
+		ty = (uv_e1.GetY() * e0.GetY() - uv_e0.GetY() * e1.GetY()) * det;
+		tz = (uv_e1.GetY() * e0.GetZ() - uv_e0.GetY() * e1.GetZ()) * det;
+
+		Vector3 tangent(tx, ty, tz);
+		iTriangleCount[i0].tangent0 += tangent;
+		iTriangleCount[i1].tangent0 += tangent;
+		iTriangleCount[i2].tangent0 += tangent;
+
+		//float bx, by, bz;
+		//bx = (-uv_e1.GetX() * e0.GetX() + uv_e0.GetX() * e1.GetX()) * det;
+		//by = (-uv_e1.GetX() * e0.GetY() + uv_e0.GetX() * e1.GetY()) * det;
+		//bz = (-uv_e1.GetX() * e0.GetZ() + uv_e0.GetX() * e1.GetZ()) * det;
+		//Vector3 binormal(bx, by, bz);
+		////binormal = binormal.Normalize();
+		//iTriangleCount[i0].binormal0 += binormal;
+		//iTriangleCount[i1].binormal0 += binormal;
+		//iTriangleCount[i2].binormal0 += binormal;
+	}
+
+	//그람슈미트직교화를이용
+	for (auto& vertex : iTriangleCount)
+	{
+		vertex.normal0 = vertex.normal0.Normalize();
+		vertex.tangent0 = (vertex.tangent0 - (vertex.normal0 * vertex.normal0.DotProduct(vertex.tangent0))).Normalize();
+		vertex.binormal0 = vertex.normal0.CrossProduct(vertex.tangent0);
+	}
+}
+
+
+//전역 변수들
+extern UINT g_iWidth;
+extern UINT g_iHeight;
+extern HWND g_hWnd;
+extern float g_fDist_Near;
+extern float g_fDist_Far;
+#define _VanishingPoint g_fDist_Far + 100.0f
+extern bool g_bIsRun;
+extern float g_fTime_Log;
+static const std::wstring g_initpath_Texture = L"../Assets/Textures/";
+
+//해시, 상수버퍼
+extern size_t g_hash_cb_directionalLight;
+extern size_t g_hash_cb_pointLight;
+extern size_t g_hash_cb_spotLight;
+extern size_t g_hash_cb_wvpitmat;
+extern size_t g_hash_cb_time;
+extern size_t g_hash_cb_campos;
+extern size_t g_hash_cb_lightmat;
+extern size_t g_hash_cb_bonemat;
+extern size_t g_hash_cb_fog;
+extern size_t g_hash_cb_debug_box;
+extern size_t g_hash_cb_debug_sphere;
+extern size_t g_hash_cb_cubemap;
+extern size_t g_hash_cb_raytriangle;
+extern size_t g_hash_stb_collisionResults;
+extern size_t g_hash_sgb_collisionResults;
+extern size_t g_hash_cb_outline_picking;
+
+//해시, 디버그렌더
+extern size_t g_hash_VS_Debug;
+extern size_t g_hash_GS_Debug_Box;
+extern size_t g_hash_PS_Debug_PC;
+extern size_t g_hash_VS_Debug_Sphere;
+extern size_t g_hash_HS_Debug_Sphere;
+extern size_t g_hash_DS_Debug_Sphere;
+extern size_t g_hash_PS_Picking;
