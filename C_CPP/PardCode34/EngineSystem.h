@@ -195,9 +195,9 @@ public:
 	size_t												m_hash_light_point;
 	size_t												m_hash_light_spot;
 
-	size_t												m_hash_RTV_BB;
-	size_t												m_hash_RTV_0;
-	size_t												m_hash_DSV_0;
+	size_t												m_hash_SRView_BB;
+	size_t												m_hash_SRView_Quad;
+	size_t												m_hash_DSView_Quad;
 	D3D11_VIEWPORT										m_vp_BB;
 
 	//큐브맵 렌더링을 위한 변수들
@@ -229,6 +229,13 @@ public:
 	bool												bMouseOnGUI = false;
 	size_t												m_hash_pickingLookup = _HashNotInitialize;
 	size_t												m_hash_Mat_Picking;
+
+	//Gbuffer
+	size_t												m_hash_Gbuffer_Position;
+	size_t												m_hash_Gbuffer_Normal;
+	size_t												m_hash_Gbuffer_Albedo;
+	size_t												m_hash_Gbuffer_Specular;
+	size_t												m_hash_Mat_DefferedLighting;
 };
 
 //SingletonClasses

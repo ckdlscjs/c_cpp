@@ -112,6 +112,7 @@ inline size_t Hasing_wstring(const std::wstring& str)
 	}
 	return hash;
 }
+
 inline size_t Hasing_float(const float& value)
 {
 	// FNV-1a (64비트) 구현 예시

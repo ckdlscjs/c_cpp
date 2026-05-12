@@ -19,6 +19,7 @@ cbuffer CB_WVPIT : register(b0)
     row_major float4x4 matInvTrans;
 };
 
+
 VS_OUTPUT vsmain(VS_INPUT input)
 {
     VS_OUTPUT output = (VS_OUTPUT) 0;

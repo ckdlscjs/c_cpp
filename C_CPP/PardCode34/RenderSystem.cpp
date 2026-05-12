@@ -56,16 +56,20 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 		std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
 	
 	//RTV초기화
-	ClearRenderTargetView(_EngineSystem.m_hash_RTV_0, 0.0f, 0.3f, 0.4f, 1.0f);
-	ClearRenderTargetView(_EngineSystem.m_hash_RTV_BB, 0.0f, 0.0f, 0.0f, 1.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_SRView_Quad, 0.0f, 0.3f, 0.4f, 1.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_SRView_BB, 0.0f, 0.0f, 0.0f, 1.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap, 0.0f, 0.0f, 0.0f, 1.0f);
 
-	ClearDepthStencilView(_EngineSystem.m_hash_DSV_0);
+	ClearDepthStencilView(_EngineSystem.m_hash_DSView_Quad);
 	ClearDepthStencilView(_EngineSystem.m_hash_DSV_ShadowMap);
 	ClearDepthStencilView(_EngineSystem.m_hash_DSV_CubeMap);
+	
+	//Gbuffer 초기화
+	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Position, 0.0f, 0.0f, 0.0f, 0.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Normal, 0.0f, 0.0f, 0.0f, 0.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Albedo, 0.0f, 0.0f, 0.0f, 0.0f);
+	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Specular, 0.0f, 0.0f, 0.0f, 0.0f);
 
-	/*SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
-	SetRS_Viewport(&_EngineSystem.m_vp_BB);*/
 	//파이프라인포인터
 	m_Inputlayout			= nullptr;
 	m_VB					= nullptr;
@@ -105,7 +109,8 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 	SetGS_ConstantBuffer(g_hash_cb_wvpitmat, 0);		//geometry box
 
 	SetVS_ConstantBuffer(g_hash_cb_lightmat, 1);		//shadowmap
-	SetGS_ConstantBuffer(g_hash_cb_lightmat, 1);
+	SetGS_ConstantBuffer(g_hash_cb_lightmat, 1);		
+	SetPS_ConstantBuffer(g_hash_cb_lightmat, 6);
 
 	SetVS_ConstantBuffer(g_hash_cb_bonemat, 2);			//animation
 
@@ -274,17 +279,6 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			// RenderTarget 교체 및 패스 준비
 			switch (curPass)
 			{
-				case (uint32_t)E_RenderPass::Sky:
-				case (uint32_t)E_RenderPass::Opaque:
-				case (uint32_t)E_RenderPass::Outline_Write:
-				case (uint32_t)E_RenderPass::Outline_Draw:
-				case (uint32_t)E_RenderPass::Picking_Triangle:
-				case (uint32_t)E_RenderPass::Debug:
-				case (uint32_t)E_RenderPass::Transparent:
-				{
-					SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_0 }, _EngineSystem.m_hash_DSV_0);
-				}break;
-
 				case (uint32_t)E_RenderPass::Shadow:
 				{
 					SetOM_RenderTargets(std::vector<size_t>(), _EngineSystem.m_hash_DSV_ShadowMap);
@@ -299,11 +293,38 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 					_EngineSystem.UpdateConstantBuffer(g_hash_cb_campos, &cb_campos);
 				}break;
 
+				case (uint32_t)E_RenderPass::Opaque:
+				{
+					SetOM_RenderTargets
+					(
+						{ 
+							_EngineSystem.m_hash_Gbuffer_Position,  
+							_EngineSystem.m_hash_Gbuffer_Normal,
+							_EngineSystem.m_hash_Gbuffer_Albedo,
+							_EngineSystem.m_hash_Gbuffer_Specular,
+						}, 
+						_EngineSystem.m_hash_DSView_Quad
+					);
+				}break;
+
+
+				case (uint32_t)E_RenderPass::DefferedLighting:
+				case (uint32_t)E_RenderPass::Sky:
+				case (uint32_t)E_RenderPass::Outline_Write:
+				case (uint32_t)E_RenderPass::Outline_Draw:
+				case (uint32_t)E_RenderPass::Picking_Triangle:
+				case (uint32_t)E_RenderPass::Debug:
+				case (uint32_t)E_RenderPass::Transparent:
+				{
+					SetOM_RenderTargets({ _EngineSystem.m_hash_SRView_Quad }, _EngineSystem.m_hash_DSView_Quad);
+				}break;
+
+
 				case (uint32_t)E_RenderPass::UI:
 				{
 					//2D객체로 SRV임시체크
-					SetOM_RenderTargets({ }, NULL);
-					SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_BB }, NULL);
+					//SetOM_RenderTargets({ }, NULL);
+					SetOM_RenderTargets({ _EngineSystem.m_hash_SRView_BB }, _HashNotInitialize);
 				}break;
 
 				default: break;
@@ -320,6 +341,14 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 				//RTV, SRV에 사용하는 버퍼의 밉맵을 형성한다(앨리어싱처리)
 				_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
 				SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
+			}
+
+			if (prevPass == (uint32_t)E_RenderPass::Opaque)
+			{
+				SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Position, 10);
+				SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Normal, 11);
+				SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Albedo, 12);
+				SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Specular, 13);
 			}
 		}
 
@@ -358,7 +387,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			//버퍼 세팅
 			uint32_t IDResources = (keyCur >> 20) & 0xFFFF;		//16비트
 			RPResources resources = m_resRP_Resources[IDResources];
-
+			
 			BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(resources.hashMesh);
 			SetIA_VertexBuffer(pMesh->GetVB());
 			SetIA_IndexBuffer(pMesh->GetIB());
@@ -478,11 +507,26 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	g_iHeight = height;
 
 	//refCount를 전부 해제시킨다, SwapChain의 ResizeBuffer시 기존버퍼에대한 모든 RefCount가 초기화되어 Comptr객체에서 해제된다
-	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_RTV_BB)) _EngineSystem.GetRTV(_EngineSystem.m_hash_RTV_BB)->ReleaseView();
-	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_RTV_0)) _EngineSystem.GetRTV(_EngineSystem.m_hash_RTV_0)->ReleaseView();
-	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_RTV_0)) _EngineSystem.GetSRV(_EngineSystem.m_hash_RTV_0)->ReleaseView();
-	if (_EngineSystem.GetDSV(_EngineSystem.m_hash_DSV_0)) _EngineSystem.GetDSV(_EngineSystem.m_hash_DSV_0)->ReleaseView();
-	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_DSV_0)) _EngineSystem.GetSRV(_EngineSystem.m_hash_DSV_0)->ReleaseView();
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_SRView_BB)) _EngineSystem.GetRTV(_EngineSystem.m_hash_SRView_BB)->ReleaseView();
+
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_SRView_Quad)) _EngineSystem.GetRTV(_EngineSystem.m_hash_SRView_Quad)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_SRView_Quad)) _EngineSystem.GetSRV(_EngineSystem.m_hash_SRView_Quad)->ReleaseView();
+
+	if (_EngineSystem.GetDSV(_EngineSystem.m_hash_DSView_Quad)) _EngineSystem.GetDSV(_EngineSystem.m_hash_DSView_Quad)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_DSView_Quad)) _EngineSystem.GetSRV(_EngineSystem.m_hash_DSView_Quad)->ReleaseView();
+
+	//Gbuffer
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Position)) _EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Position)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Position)) _EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Position)->ReleaseView();
+
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Normal)) _EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Normal)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Normal)) _EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Normal)->ReleaseView();
+
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Albedo)) _EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Albedo)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Albedo)) _EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Albedo)->ReleaseView();
+
+	if (_EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Specular)) _EngineSystem.GetRTV(_EngineSystem.m_hash_Gbuffer_Specular)->ReleaseView();
+	if (_EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Specular)) _EngineSystem.GetSRV(_EngineSystem.m_hash_Gbuffer_Specular)->ReleaseView();
 
 	_EngineSystem.GetSwapChain()->ResizeBuffers(1, g_iWidth, g_iHeight, DXGI_FORMAT_UNKNOWN, 0);
 	//백버퍼
@@ -490,13 +534,19 @@ void RenderSystem::OnResize(UINT width, UINT height)
 	ID3D11Texture2D* pBuffer;
 	hResult = _EngineSystem.GetSwapChain()->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pBuffer);
 	_ASEERTION_CREATE(hResult, "BackBuffer");
-	_EngineSystem.m_hash_RTV_BB = _EngineSystem.CreateRenderTargetView(Hasing_wstring(L"RTV_BB"), pBuffer, _BB);
+	_EngineSystem.m_hash_SRView_BB			= _EngineSystem.CreateRenderTargetView(Hasing_wstring(L"SRView_BB"), pBuffer, _BB);
 	pBuffer->Release();
 
 	//RTT
-	_EngineSystem.m_hash_RTV_0 = _EngineSystem.CreateViews(L"RTV_BB_UI", _Target_ResourceView, g_iWidth, g_iHeight);
-	_EngineSystem.m_hash_DSV_0 = _EngineSystem.CreateViews(L"DSV_BB_UI", _Target_DepthView, g_iWidth, g_iHeight);
+	_EngineSystem.m_hash_SRView_Quad		= _EngineSystem.CreateViews(L"SRView_Quad", _Target_ResourceView, g_iWidth, g_iHeight);
+	_EngineSystem.m_hash_DSView_Quad		= _EngineSystem.CreateViews(L"DSView_Quad", _Target_DepthView, g_iWidth, g_iHeight);
 	SetViewportSize(&_EngineSystem.m_vp_BB, g_iWidth, g_iHeight);
+
+	//Gbuffer
+	_EngineSystem.m_hash_Gbuffer_Position	= _EngineSystem.CreateViews(L"Gbuffer_Position", _Target_ResourceView, g_iWidth, g_iHeight);
+	_EngineSystem.m_hash_Gbuffer_Normal		= _EngineSystem.CreateViews(L"Gbuffer_Normal", _Target_ResourceView, g_iWidth, g_iHeight);
+	_EngineSystem.m_hash_Gbuffer_Albedo		= _EngineSystem.CreateViews(L"Gbuffer_Albedo", _Target_ResourceView, g_iWidth, g_iHeight);
+	_EngineSystem.m_hash_Gbuffer_Specular	= _EngineSystem.CreateViews(L"Gbuffer_Specular", _Target_ResourceView, g_iWidth, g_iHeight);
 }
 
 void RenderSystem::SetViewportSize(D3D11_VIEWPORT* pViewport, UINT iWidth, UINT iHeight)
@@ -685,8 +735,8 @@ void RenderSystem::SetOM_RenderTargets(std::vector<size_t> hashRtvs, size_t hash
 		rtvs.push_back(pRTV->GetView());
 	}
 	auto pDSV = _EngineSystem.GetDSV(hashDSV);
-	auto dsv = pDSV ? pDSV->GetView() : nullptr;
-	_EngineSystem.GetD3DDeviceContext()->OMSetRenderTargets(rtvs.size(), rtvs.empty() ? nullptr : rtvs.data(), dsv);
+	auto dsv = pDSV ? pDSV->GetView() : NULL;
+	_EngineSystem.GetD3DDeviceContext()->OMSetRenderTargets(rtvs.size(), rtvs.empty() ? NULL : rtvs.data(), dsv);
 }
 
 void RenderSystem::SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef)
@@ -951,7 +1001,6 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				}
 
 				//Collect Draw Shadow
-				
 				if (passMasks & _ToMask32(E_RenderPass::Shadow))
 				{
 					const auto& shadowMaterial = _ResourceSystem.GetResource<Material>(_EngineSystem.m_hash_Mat_ShadowMap);

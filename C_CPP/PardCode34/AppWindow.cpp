@@ -256,6 +256,21 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::WIRE_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
 			_EngineSystem.m_hash_Mat_Debug_Sphere = hash_material;
 		}
+
+		//Deffered DefferedLighting Material
+		{
+			const std::wstring szName = L"DefferedLighting";
+			size_t hash_material;
+
+			hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
+			_EngineSystem.Material_SetVS(hash_material, L"VS_PT.hlsl");
+			_EngineSystem.Material_SetIL<Vertex_PT>(hash_material, L"VS_PT.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_DefferedLighting.hlsl");
+			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::DefferedLighting);
+			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
+			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
+			_EngineSystem.m_hash_Mat_DefferedLighting = hash_material;
+		}
 	}
 	
 
@@ -455,7 +470,7 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
@@ -496,7 +511,7 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
@@ -540,7 +555,7 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			//_EngineSystem.Material_SetGS(hash_material, L"GS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
 			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -595,7 +610,7 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
@@ -667,7 +682,7 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(hash_material, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
@@ -705,7 +720,7 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetVS(hash_material, L"VS_PTNTB.hlsl");
-			_EngineSystem.Material_SetPS(hash_material, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetPS(hash_material, L"PS_GBuffer_PTNTB.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTNTB>(hash_material, L"VS_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(hash_material, _RenderSystem.GetRenderPassKey_Shaders(hash_material));
@@ -764,7 +779,7 @@ void AppWindow::OnCreate()
 			{
 				_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
-				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
+				_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTN.hlsl");
 				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 				_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 				_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -830,7 +845,7 @@ void AppWindow::OnCreate()
 			{
 				_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
 				_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
-				_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
+				_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTN.hlsl");
 				_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 				_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 				_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -947,7 +962,7 @@ void AppWindow::OnCreate()
 		{
 			_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1028,7 +1043,7 @@ void AppWindow::OnCreate()
 		{
 			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
-			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1086,7 +1101,7 @@ void AppWindow::OnCreate()
 		{
 			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
-			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1141,7 +1156,7 @@ void AppWindow::OnCreate()
 		{
 			_EngineSystem.Material_SetVS(iter, L"VS_PTNTB_Skinned.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTNTB_Skinned>(iter, L"VS_PTNTB_Skinned.hlsl");
-			_EngineSystem.Material_SetPS(iter, L"PS_PTNTB.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTNTB.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1248,7 +1263,7 @@ void AppWindow::OnCreate()
 		{
 			_EngineSystem.Material_SetVS(iter, L"VS_PTN.hlsl");
 			_EngineSystem.Material_SetIL<Vertex_PTN>(iter, L"VS_PTN.hlsl");
-			_EngineSystem.Material_SetPS(iter, L"PS_PTN.hlsl");
+			_EngineSystem.Material_SetPS(iter, L"PS_GBuffer_PTN.hlsl");
 			_EngineSystem.Material_SetHashPass(iter, E_RenderPass::Opaque);
 			_EngineSystem.Material_SetHashShaders(iter, _RenderSystem.GetRenderPassKey_Shaders(iter));
 			_EngineSystem.Material_SetHashStates(iter, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Default, E_BSState::Opaque));
@@ -1385,14 +1400,37 @@ void AppWindow::OnCreate()
 #endif // _DRAGON
 	
 
-	//Initialize RTV, DSV
+	//Initialize ScreenQuad
 	{
 		//Init TargetView geometry
 		std::map<UINT, std::vector<Vertex_PTNTB_Skinned>> verticesByMaterial;
 		std::map<UINT, std::vector<UINT>> indicesByMaterial;
 		std::vector<std::vector<Vector3>> pointsByMeshs;
 		GeometryGenerate_Plane(pointsByMeshs, verticesByMaterial[0], indicesByMaterial[0]);
-		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PT>(L"Plane", verticesByMaterial, indicesByMaterial, pointsByMeshs);
+		size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PT>(L"ScreenQuad", verticesByMaterial, indicesByMaterial, pointsByMeshs);
+
+		//DefferedLighting Pass
+		{
+			const std::wstring szName = L"RTV_UI_Deffered";
+
+			size_t hash_material = _EngineSystem.m_hash_Mat_DefferedLighting;
+
+			Mesh_Material mesh_mats;
+			mesh_mats.hash_mesh = hash_mesh;
+			mesh_mats.hash_mats.push_back(hash_material);
+			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats);
+
+			ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, T_Render_UI>();
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, T_Render_UI>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
+
+			_ECSSystem.AddComponent<C_Transform>(key, { {(float)g_iWidth, (float)g_iHeight, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f} });
+
+			uint32_t rpMasks = _ToMask32(E_RenderPass::DefferedLighting);
+			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
+		}
+
 		//RTV
 		{
 			const std::wstring szName = L"RTT_UI_RTV";
@@ -1405,7 +1443,7 @@ void AppWindow::OnCreate()
 			_EngineSystem.Material_SetHashStates(hash_material, _RenderSystem.GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::UI, E_BSState::Opaque));
 
 			std::vector<TX_HASH> tx_hashs;
-			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"SRV_RTV0", _EngineSystem.m_hash_RTV_0)});
+			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"SRV_RTV0", _EngineSystem.m_hash_SRView_Quad)});
 			_EngineSystem.Material_SetTextures(hash_material, tx_hashs);
 			Mesh_Material mesh_mats;
 			mesh_mats.hash_mesh = hash_mesh;
@@ -1436,7 +1474,7 @@ void AppWindow::OnCreate()
 			std::vector<TX_HASH> tx_hashs;
 			//_EngineSystem.m_hash_DSV_ShadowMap
 			//tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.m_hash_DSV_ShadowMap });
-			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"SRV_DSV0", _EngineSystem.m_hash_DSV_0) });
+			tx_hashs.push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(L"SRV_DSV0", _EngineSystem.m_hash_DSView_Quad) });
 			_EngineSystem.Material_SetTextures(hash_material, tx_hashs);
 			Mesh_Material mesh_mats;
 			mesh_mats.hash_mesh = hash_mesh;
