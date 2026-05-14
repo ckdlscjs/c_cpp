@@ -139,11 +139,13 @@ void CollisionSystem::Frame(float deltatime)
 									if (archetype->HasComponents<C_Compute>())
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
-										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
-										for (UINT j = 0; j < ComputeMats.size(); j++)
+										ComputeAsset* pCA = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
+										const auto& ComputeMats = pCA->m_hComputeMats;
+										const auto& textures = pCA->m_hTXs;
+										for (UINT matIdx = 0; matIdx < ComputeMats.size(); matIdx++)
 										{
 											//계산셰이더 자원
-											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
+											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[matIdx]);
 											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
 
 											CB_WVPITMatrix cb_wvpitmat;
@@ -165,15 +167,14 @@ void CollisionSystem::Frame(float deltatime)
 											_EngineSystem.UpdateConstantBuffer(g_hash_cb_bonemat, (void*)matAnims.data());
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_bonemat, 2);
 
-											const std::vector<size_t>* srvs = pMaterial->GetTextures();
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_SRV].size(); regIdx++)
 											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
+												size_t hash = textures[matIdx][(UINT)E_Texture::Compute_SRV][regIdx];
 												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
 											}
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_UAV].size(); regIdx++)
 											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
+												size_t hash = textures[matIdx][(UINT)E_Texture::Compute_UAV][regIdx];
 												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
 											}
 											UINT cnt = _Dispatch_Vertices(totalVertices);
@@ -181,9 +182,9 @@ void CollisionSystem::Frame(float deltatime)
 
 											//해제
 											_ComputeSystem.SetCS_Shader(NULL);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_SRV].size(); regIdx++)
 												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_UAV].size(); regIdx++)
 												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
 
 											D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -279,11 +280,13 @@ void CollisionSystem::Frame(float deltatime)
 									if (archetype->HasComponents<C_Compute>())
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
-										const auto& ComputeMats = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute)->m_hComputeMats;
-										for (UINT j = 0; j < ComputeMats.size(); j++)
+										ComputeAsset* pCA = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
+										const auto& ComputeMats = pCA->m_hComputeMats;
+										const auto& textures = pCA->m_hTXs;
+										for (UINT matIdx = 0; matIdx < ComputeMats.size(); matIdx++)
 										{
 											//계산셰이더 자원
-											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[j]);
+											Material* pMaterial = _ResourceSystem.GetResource<Material>(ComputeMats[matIdx]);
 											_ComputeSystem.SetCS_Shader(pMaterial->GetCS());
 
 											CB_WVPITMatrix cb_wvpitmat;
@@ -302,15 +305,15 @@ void CollisionSystem::Frame(float deltatime)
 											_EngineSystem.UpdateConstantBuffer(g_hash_cb_raytriangle, &cb_raytriangle);
 											_ComputeSystem.SetCS_ConstantBuffer(g_hash_cb_raytriangle, 1);
 
-											const std::vector<size_t>* srvs = pMaterial->GetTextures();
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+			
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_SRV].size(); regIdx++)
 											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_SRV][regIdx];
+												size_t hash = textures[matIdx][(UINT)E_Texture::Compute_SRV][regIdx];
 												_ComputeSystem.SetCS_ShaderResourceView(hash, regIdx++);
 											}
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_UAV].size(); regIdx++)
 											{
-												size_t hash = srvs[(UINT)E_Texture::Compute_UAV][regIdx];
+												size_t hash = textures[matIdx][(UINT)E_Texture::Compute_UAV][regIdx];
 												_ComputeSystem.SetCS_UnorderedAccessView(hash, regIdx++);
 											}
 											UINT cnt = _Dispatch_Vertices(totalVertices);
@@ -318,9 +321,9 @@ void CollisionSystem::Frame(float deltatime)
 
 											//해제
 											_ComputeSystem.SetCS_Shader(NULL);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_SRV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_SRV].size(); regIdx++)
 												_ComputeSystem.SetCS_ShaderResourceView(NULL, regIdx++);
-											for (int regIdx = 0; regIdx < srvs[(UINT)E_Texture::Compute_UAV].size(); regIdx++)
+											for (int regIdx = 0; regIdx < textures[matIdx][(UINT)E_Texture::Compute_UAV].size(); regIdx++)
 												_ComputeSystem.SetCS_UnorderedAccessView(NULL, regIdx++);
 
 											D3D11_MAPPED_SUBRESOURCE mappedResource;

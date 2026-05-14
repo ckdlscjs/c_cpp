@@ -67,7 +67,7 @@ private:
 public:
 	uint32_t GetRenderPassKey_Shaders(size_t hashMaterial);
 	uint32_t GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref = 0, float* bs_factor = nullptr, UINT bs_mask = 0xFFFFFFFF);
-	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx = 127);
+	uint32_t GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, size_t hashRA, UINT idxResource, E_Collider collider, UINT idxCollider = 127);
 	uint32_t GetRenderPassKey_DistToCamera(float dist);
 	_RPKey GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist);
 private:

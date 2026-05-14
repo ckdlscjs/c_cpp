@@ -71,9 +71,10 @@ public:
 
 	//Material
 	size_t CreateMaterial(const std::wstring& szFilePath);
-	std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
-	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);
+	/*std::vector<size_t> CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial);
+	std::vector<size_t> CreateMaterialsFromGeometry(size_t hash_geometry);*/
 	//void Material_SetShaders(size_t hash_material, const UINT flag);
+	void CreateMatsTexsFromGeometry(size_t hash_geometry, std::vector<size_t>& outMats, std::vector<std::vector<TX_HASH>>& outTXs);
 	void Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
 	template<typename T>
 	void Material_SetIL(size_t hash_material, const std::wstring& vsName, const std::string& entryName = "vsmain", const std::string& target = "vs_5_0");
@@ -82,7 +83,7 @@ public:
 	void Material_SetGS(size_t hash_material, const std::wstring& gsName, const std::string& entryName = "gsmain", const std::string& target = "gs_5_0");
 	void Material_SetPS(size_t hash_material, const std::wstring& psName, const std::string& entryName = "psmain", const std::string& target = "ps_5_0");
 	void Material_SetCS(size_t hash_material, const std::wstring& csName, const std::string& entryName = "csmain", const std::string& target = "cs_5_0");
-	void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
+	//void Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures);
 	void Material_SetTopology(size_t hash_material, D3D_PRIMITIVE_TOPOLOGY topology);
 	void Material_SetHashPass(size_t hash_material, E_RenderPass renderPass);
 	void Material_SetHashShaders(size_t hash_material, uint32_t hash_shaders);
@@ -96,9 +97,10 @@ public:
 	size_t CreateComputeVertices(size_t hash_mesh);
 
 	//Asset(Components <-> API) 府家胶 积己
-	size_t CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs);
-	size_t CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs);
+	//size_t CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs);
 	//size_t CreateColliderAsset(const std::wstring& szName, const std::unordered_set<size_t>& hashs);
+	size_t CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs, const std::vector<std::vector<TX_HASH>>& txs);
+	size_t CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs, const std::vector<std::vector<TX_HASH>>& txs);
 
 	/////////////////////////////
 	//Create APIResources

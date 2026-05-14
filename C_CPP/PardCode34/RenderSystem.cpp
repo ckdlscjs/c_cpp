@@ -28,8 +28,6 @@
 #include "TestBlockMacro.h"
 
 
-
-
 RenderSystem::RenderSystem()
 {
 }
@@ -58,17 +56,20 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 	//RTV초기화
 	ClearRenderTargetView(_EngineSystem.m_hash_SRView_Quad, 0.0f, 0.3f, 0.4f, 1.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_SRView_BB, 0.0f, 0.0f, 0.0f, 1.0f);
-	ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap, 0.0f, 0.0f, 0.0f, 1.0f);
-
 	ClearDepthStencilView(_EngineSystem.m_hash_DSView_Quad);
 	ClearDepthStencilView(_EngineSystem.m_hash_DSV_ShadowMap);
-	ClearDepthStencilView(_EngineSystem.m_hash_DSV_CubeMap);
+	
 	
 	//Gbuffer 초기화
 	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Position, 0.0f, 0.0f, 0.0f, 0.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Normal, 0.0f, 0.0f, 0.0f, 0.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Albedo, 0.0f, 0.0f, 0.0f, 0.0f);
 	ClearRenderTargetView(_EngineSystem.m_hash_Gbuffer_Specular, 0.0f, 0.0f, 0.0f, 0.0f);
+
+#ifdef _EnviornmentMap
+	ClearRenderTargetView(_EngineSystem.m_hash_RTV_CubeMap, 0.0f, 0.0f, 0.0f, 1.0f);
+	ClearDepthStencilView(_EngineSystem.m_hash_DSV_CubeMap);
+#endif // 
 
 	//파이프라인포인터
 	m_Inputlayout			= nullptr;
@@ -393,16 +394,21 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 			SetIA_IndexBuffer(pMesh->GetIB());
 			
 			//텍스쳐
-			Material* pMaterial = _ResourceSystem.GetResource<Material>(resources.hashMat);
+			RenderAsset* pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(resources.hashRA);
 			int cnt = 0;
-			for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
+			if (pRenderAsset->m_hTXs.size())
 			{
-				for (const auto& hashTx : pMaterial->GetTextures()[idxTex])
+				for (int idxTex = 0; idxTex < (UINT)E_Texture::count; idxTex++)
 				{
-					size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTx)->GetSRV();
-					SetPS_ShaderResourceView(hashSRV, cnt++);
+					for (int idx = 0; idx < pRenderAsset->m_hTXs[resources.idxResource][idxTex].size(); idx++)
+					{
+						auto hashTX = pRenderAsset->m_hTXs[resources.idxResource][idxTex][idx];
+						size_t hashSRV = _ResourceSystem.GetResource<Texture>(hashTX)->GetSRV();
+						SetPS_ShaderResourceView(hashSRV, cnt++);
+					}
 				}
 			}
+			
 
 			//상수버퍼
 			if (curPass == (uint32_t)E_RenderPass::Debug)
@@ -889,20 +895,22 @@ uint32_t RenderSystem::GetRenderPassKey_States(E_RSState stateRS, E_DSState stat
 	return newID;
 }
 
-uint32_t RenderSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, E_Collider collider, UINT idx)
+uint32_t RenderSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, size_t hashRA, UINT idxResource, E_Collider collider, UINT idxCollider)
 {
 	size_t hash = 0;
 	hash_combine(hash, std::hash<size_t>{}(hashMesh));
 	hash_combine(hash, std::hash<size_t>{}(hashMat));
+	hash_combine(hash, std::hash<size_t>{}(hashRA));
+	hash_combine(hash, std::hash<UINT>{}(idxResource));
 	hash_combine(hash, std::hash<size_t>{}(static_cast<uint32_t>(collider)));
-	hash_combine(hash, std::hash<size_t>{}(idx));
+	hash_combine(hash, std::hash<UINT>{}(idxCollider));
 	auto iter = m_hRP_Resources.find(hash);
 	if (iter != m_hRP_Resources.end())
 		return iter->second;
 
 	uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
 	m_hRP_Resources[hash] = newID;
-	m_resRP_Resources.push_back({ hashMesh, hashMat, collider, idx });
+	m_resRP_Resources.push_back({ hashMesh, hashMat, hashRA, idxResource, collider, idxCollider });
 	return newID;
 }
 
@@ -982,7 +990,8 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				float distToCam = (transforms[col].vPosition - posCam).Length();
 				uint32_t hashDist = GetRenderPassKey_DistToCamera(distToCam);
 
-				const auto& pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render);
+				size_t hashRA = renders[col].hash_asset_Render;
+				const auto& pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(hashRA);
 				size_t hashMesh = pRenderAsset->m_hMeshMats.hash_mesh;
 				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hashMesh);
 
@@ -996,7 +1005,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 					uint32_t hashPass = pMaterial->GetHashPass();
 					uint32_t hashShader = pMaterial->GetHashShaders();
 					uint32_t hashStates = pMaterial->GetHashStates();
-					uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 129);
+					uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, matIdx, eCollider, 129);
 					EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 				}
 
@@ -1012,7 +1021,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 						uint32_t hashPass = hashPassShadow;
 						uint32_t hashShader = pMaterial->GetHashShaders();
 						uint32_t hashStates = pMaterial->GetHashStates();
-						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 130);
+						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, matIdx, eCollider, 130);
 						EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
 				}
@@ -1028,7 +1037,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 						uint32_t hashPass = pMaterial_Cubemap->GetHashPass();
 						uint32_t hashShader = pMaterial_Cubemap->GetHashShaders();
 						uint32_t hashStates = pMaterial->GetHashStates();
-						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 131);
+						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, matIdx, eCollider, 131);
 						EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 					}
 				}
@@ -1043,7 +1052,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 					uint32_t hashStates = pMaterial->GetHashStates();
 					for (UINT colliderIdx = 0; colliderIdx < pMesh->GetCLs().size(); colliderIdx++)
 					{
-						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, colliderIdx);
+						uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, 0, eCollider, colliderIdx);
 						UINT renderCnt = (eCollider == E_Collider::BOX) ? 1 : 60;
 						EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, renderCnt, 0);
 					}
@@ -1069,7 +1078,8 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 		float distToCam = (transform.vPosition - posCam).Length();
 		uint32_t hashDist = GetRenderPassKey_DistToCamera(distToCam);
 
-		const auto& pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(render.hash_asset_Render);
+		size_t hashRA = render.hash_asset_Render;
+		const auto& pRenderAsset = _ResourceSystem.GetResource<RenderAsset>(hashRA);
 		size_t hashMesh = pRenderAsset->m_hMeshMats.hash_mesh;
 		BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hashMesh);
 
@@ -1083,7 +1093,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial_Picking->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial_Picking->GetHashStates();
-			uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 132);
+			uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, 0, eCollider, 132);
 			EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, 3, collider.idxPicking);
 		}
 
@@ -1096,7 +1106,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				uint32_t hashPass = pMaterial->GetHashPass();
 				uint32_t hashShader = pMaterial->GetHashShaders();
 				uint32_t hashStates = GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1);
-				uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 133);
+				uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, matIdx, eCollider, 133);
 				EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 			}
 		}
@@ -1108,7 +1118,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial->GetHashStates();
-			uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, eCollider, 134);
+			uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, 0, eCollider, 134);
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
 				EnqueueRenderItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
 		}

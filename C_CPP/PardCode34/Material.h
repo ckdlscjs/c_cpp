@@ -81,10 +81,10 @@ public:
 	void SetCS(size_t hash) { m_lCS = hash; }
 	size_t GetCS() const { return m_lCS; }
 	
-	void SetTexture(TX_HASH tx_hash);
-	const std::vector<size_t>* GetTextures() const;
-	void SetTexturePath(TX_PATH tx_path);
-	const std::vector<std::string>* GetTexturesPaths() const;
+	//void SetTexture(TX_HASH tx_hash);
+	//const std::vector<size_t>* GetTextures() const;
+	//void SetTexturePath(TX_PATH tx_path);
+	//const std::vector<std::string>* GetTexturesPaths() const;
 
 private:
 	uint32_t m_hashPass;
@@ -98,29 +98,29 @@ private:
 	size_t m_lPS = 0;
 	size_t m_lIL = 0;
 	size_t m_lCS = 0;
-	std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];
 	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
+	/*std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];*/
 };
 inline Material::Material(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
 }
 
-inline void Material::SetTexture(TX_HASH tx_hash)
-{
-	m_lTXs[(UINT)tx_hash.tex].push_back(tx_hash.hash);
-}
+//inline void Material::SetTexture(TX_HASH tx_hash)
+//{
+//	m_lTXs[(UINT)tx_hash.tex].push_back(tx_hash.hash);
+//}
+//
+//inline const std::vector<size_t>* Material::GetTextures() const
+//{
+//	return m_lTXs;
+//}
 
-inline void Material::SetTexturePath(TX_PATH tx_path)
-{
-	m_szTXPaths[(UINT)tx_path.tex].push_back(tx_path.szPath);
-}
+//inline void Material::SetTexturePath(TX_PATH tx_path)
+//{
+//	m_szTXPaths[(UINT)tx_path.tex].push_back(tx_path.szPath);
+//}
 
-inline const std::vector<size_t>* Material::GetTextures() const
-{
-	return m_lTXs;
-}
-
-inline const std::vector<std::string>* Material::GetTexturesPaths() const
-{
-	return m_szTXPaths;
-}
+//inline const std::vector<std::string>* Material::GetTexturesPaths() const
+//{
+//	return m_szTXPaths;
+//}

@@ -331,17 +331,33 @@ size_t EngineSystem::CreateComputeVertices(size_t hash_mesh)
 	return pMesh->GetSTB();
 }
 
-size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs)
+//size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs)
+//{
+//	RenderAsset* pAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
+//	pAsset->m_hMeshMats = hashs;
+//	return pAsset->GetHash();
+//}
+
+size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs, const std::vector<std::vector<TX_HASH>>& txs)
 {
 	RenderAsset* pAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
 	pAsset->m_hMeshMats = hashs;
+	pAsset->m_hTXs.resize(txs.size(), std::vector<std::vector<size_t>>((UINT)E_Texture::count));	//mat별 리사이징
+	for (UINT matIdx = 0; matIdx < txs.size(); matIdx++)
+		for (const auto& iter : txs[matIdx])
+			pAsset->m_hTXs[matIdx][(UINT)iter.tex].push_back(iter.hash);
+		
 	return pAsset->GetHash();
 }
 
-size_t EngineSystem::CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs)
+size_t EngineSystem::CreateComputeAsset(const std::wstring& szName, const std::vector<size_t>& hashs, const std::vector<std::vector<TX_HASH>>& txs)
 {
 	ComputeAsset* pAsset = _ResourceSystem.CreateResource<ComputeAsset>(szName);
 	pAsset->m_hComputeMats = hashs;
+	pAsset->m_hTXs.resize(txs.size(), std::vector<std::vector<size_t>>((UINT)E_Texture::count));	//mat별 리사이징
+	for (UINT matIdx = 0; matIdx < txs.size(); matIdx++)
+		for (const auto& iter : txs[matIdx])
+			pAsset->m_hTXs[matIdx][(UINT)iter.tex].push_back(iter.hash);
 	return pAsset->GetHash();
 }
 
@@ -351,15 +367,81 @@ size_t EngineSystem::CreateMaterial(const std::wstring& szFilePath)
 	return pMaterial->GetHash();
 }
 
-std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
+
+size_t EngineSystem::CreateGeometry(const std::wstring& szFilePath)
 {
-	std::vector<size_t> hashs_material;
+	Geometry* pGeometry = _ResourceSystem.CreateResource<Geometry>(szFilePath);
+	return pGeometry->GetHash();
+}
+//
+//std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
+//{
+//	std::vector<size_t> hashs_material;
+//	for (auto& matInfo : texturesByMaterial)
+//	{
+//		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
+//		Material* pMaterial = _ResourceSystem.CreateResource<Material>(matName);
+//		size_t matHash = pMaterial->GetHash();
+//		UINT materialFlag = 0;
+//		//Parsing Texture
+//		if (matInfo.second.type_textures_image.size())
+//		{
+//			//생성된스크래치이미지가있을경우
+//			for (auto& type_textures_image : matInfo.second.type_textures_image)
+//			{
+//				E_Texture curType = ConvETexture(type_textures_image.first);
+//				materialFlag |= (UINT)curType;
+//				std::vector<TX_HASH> tx_hashs;
+//				for (auto& scratchImage : type_textures_image.second)
+//				{
+//					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(matName + GetTexType(curType),  std::move(scratchImage)) });
+//				}
+//				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
+//			}
+//		}
+//		else
+//		{
+//			//경로만있을경우
+//			for (const auto& type_textures_path : matInfo.second.type_textures_path)
+//			{
+//				E_Texture curType = ConvETexture(type_textures_path.first);
+//				materialFlag |= (UINT)curType;
+//				std::vector<TX_HASH> tx_hashs;
+//				for (const auto& tex_path : type_textures_path.second)
+//				{
+//					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(_tomw(tex_path)) });
+//				}
+//				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
+//			}
+//		}
+//
+//		//Set Use Shaders
+//		//Material_SetShaders(matHash, materialFlag);
+//
+//		hashs_material.push_back(matHash);
+//	}
+//	return hashs_material;
+//}
+//
+//std::vector<size_t> EngineSystem::CreateMaterialsFromGeometry(size_t hash_geometry)
+//{
+//	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+//	std::wstring szPath = pGeometry->GetPath();
+//	return CreateMaterials(szPath + L"Material", pGeometry->GetTextures());
+//}
+
+void EngineSystem::CreateMatsTexsFromGeometry(size_t hash_geometry, std::vector<size_t>& outMats, std::vector<std::vector<TX_HASH>>& outTXs)
+{
+	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
+	std::wstring szPath = pGeometry->GetPath();
+	auto& texturesByMaterial = pGeometry->GetTextures();
+
 	for (auto& matInfo : texturesByMaterial)
 	{
-		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
+		const std::wstring& matName = szPath + _tomw(matInfo.second.szMatName);
 		Material* pMaterial = _ResourceSystem.CreateResource<Material>(matName);
 		size_t matHash = pMaterial->GetHash();
-		UINT materialFlag = 0;
+		std::vector<TX_HASH> tx_hashs;
 		//Parsing Texture
 		if (matInfo.second.type_textures_image.size())
 		{
@@ -367,13 +449,8 @@ std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath
 			for (auto& type_textures_image : matInfo.second.type_textures_image)
 			{
 				E_Texture curType = ConvETexture(type_textures_image.first);
-				materialFlag |= (UINT)curType;
-				std::vector<TX_HASH> tx_hashs;
 				for (auto& scratchImage : type_textures_image.second)
-				{
 					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(matName + GetTexType(curType),  std::move(scratchImage)) });
-				}
-				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
 			}
 		}
 		else
@@ -382,35 +459,14 @@ std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath
 			for (const auto& type_textures_path : matInfo.second.type_textures_path)
 			{
 				E_Texture curType = ConvETexture(type_textures_path.first);
-				materialFlag |= (UINT)curType;
-				std::vector<TX_HASH> tx_hashs;
 				for (const auto& tex_path : type_textures_path.second)
-				{
 					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(_tomw(tex_path)) });
-				}
-				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
 			}
 		}
 
-		//Set Use Shaders
-		//Material_SetShaders(matHash, materialFlag);
-
-		hashs_material.push_back(matHash);
+		outMats.push_back(matHash);
+		outTXs.push_back(tx_hashs);
 	}
-	return hashs_material;
-}
-
-size_t EngineSystem::CreateGeometry(const std::wstring& szFilePath)
-{
-	Geometry* pGeometry = _ResourceSystem.CreateResource<Geometry>(szFilePath);
-	return pGeometry->GetHash();
-}
-
-std::vector<size_t> EngineSystem::CreateMaterialsFromGeometry(size_t hash_geometry)
-{
-	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
-	std::wstring szPath = pGeometry->GetPath();
-	return CreateMaterials(szPath + L"Material", pGeometry->GetTextures());
 }
 
 size_t EngineSystem::CreateAnimaitonFromGeometry(size_t hash_geometry)
@@ -497,12 +553,12 @@ void EngineSystem::Material_SetCS(size_t hash_material, const std::wstring& csNa
 	pMaterial->SetCS(CreateComputeShader(csName, entryName, target));
 }
 
-void EngineSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
-{
-	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
-	for (const auto& iter : textures)
-		pMaterial->SetTexture(iter);
-}
+//void EngineSystem::Material_SetTextures(size_t hash_material, const std::vector<TX_HASH>& textures)
+//{
+//	Material* pMaterial = _ResourceSystem.GetResource<Material>(hash_material);
+//	for (const auto& iter : textures)
+//		pMaterial->SetTexture(iter);
+//}
 
 void EngineSystem::Material_SetTopology(size_t hash_material, D3D_PRIMITIVE_TOPOLOGY topology)
 {

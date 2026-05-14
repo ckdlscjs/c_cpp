@@ -10,6 +10,7 @@ public:
 	RenderAsset(RenderAsset&&) = delete;
 	RenderAsset& operator=(RenderAsset&&) = delete;
 	Mesh_Material m_hMeshMats;
+	std::vector<std::vector<std::vector<size_t>>> m_hTXs;	//mat, e_tex, hash
 };
 inline RenderAsset::RenderAsset(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {
@@ -26,6 +27,7 @@ public:
 	ComputeAsset(ComputeAsset&&) = delete;
 	ComputeAsset& operator=(ComputeAsset&&) = delete;
 	std::vector<size_t> m_hComputeMats;
+	std::vector<std::vector<std::vector<size_t>>> m_hTXs;	//mat, e_tex, hash
 };
 
 inline ComputeAsset::ComputeAsset(size_t hash, const std::wstring& szName) : BaseResource(hash, szName)

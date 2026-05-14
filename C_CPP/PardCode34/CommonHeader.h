@@ -332,6 +332,8 @@ struct RPResources
 {
 	size_t hashMesh;
 	size_t hashMat;
+	size_t hashRA;
+	UINT idxResource;
 	E_Collider collider;
 	UINT idxCollider;
 };
