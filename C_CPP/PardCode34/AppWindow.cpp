@@ -795,8 +795,9 @@ void AppWindow::OnCreate()
 
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 
-			std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
-
+			std::vector<size_t> hashs_material;
+			std::vector<std::vector<TX_HASH>> txs;
+			_EngineSystem.CreateMatsTexsFromGeometry(hash_geometry, hashs_material, txs);
 			Mesh_Material mesh_mats;
 			mesh_mats.hash_mesh = hash_mesh;
 			for (const auto& iter : hashs_material)
@@ -818,11 +819,10 @@ void AppWindow::OnCreate()
 				L"../Assets/Textures/house_wood.jpg"
 			};
 
-			std::vector<std::vector<TX_HASH>> tx_hashs(mesh_mats.hash_mats.size(), std::vector<TX_HASH>());
-			for (int i = 0; i < hashs_material.size(); i++)
-				tx_hashs[i].push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(paths[i]) });
+			for (int i = 0; i < txs.size(); i++)
+				txs[i].push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(paths[i]) });
 
-			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats, tx_hashs);
+			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats, txs);
 
 			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
 			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);
@@ -861,7 +861,9 @@ void AppWindow::OnCreate()
 			size_t hash_mesh = _EngineSystem.CreateMeshFromGeometry<Vertex_PTN>(hash_geometry);
 			_EngineSystem.CreateColliders(hash_mesh, E_Collider::BOX);
 
-			std::vector<size_t> hashs_material = _EngineSystem.CreateMaterialsFromGeometry(hash_geometry);
+			std::vector<size_t> hashs_material;
+			std::vector<std::vector<TX_HASH>> txs;
+			_EngineSystem.CreateMatsTexsFromGeometry(hash_geometry, hashs_material, txs);
 			Mesh_Material mesh_mats;
 			mesh_mats.hash_mesh = hash_mesh;
 			for (const auto& iter : hashs_material)
@@ -886,11 +888,10 @@ void AppWindow::OnCreate()
 				L"../Assets/Textures/sponza_flagpole_diff.jpg"
 			};
 			
-			std::vector<std::vector<TX_HASH>> tx_hashs(mesh_mats.hash_mats.size(), std::vector<TX_HASH>());
 			for (int i = 0; i < hashs_material.size(); i++)
-				tx_hashs[i].push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(paths[i]) });
+				txs[i].push_back({ E_Texture::Diffuse, _EngineSystem.CreateTexture(paths[i]) });
 
-			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats, tx_hashs);
+			size_t hash_asset_Render = _EngineSystem.CreateRenderAsset(g_szName_ra + szName, mesh_mats, txs);
 
 			size_t hash_STB_vertices = _EngineSystem.CreateComputeVertices(hash_mesh);
 			size_t hash_material_Compute = _EngineSystem.CreateMaterial(g_szName_mat + L"Compute_" + szName);

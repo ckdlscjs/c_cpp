@@ -7,8 +7,8 @@
 //#define _GIRL
 //#define _REFLECT
 #define _EnviornmentMap
-//#define _SPONZA
-//#define _HOUSE
+#define _SPONZA
+#define _HOUSE
 #define _NORMALMAP
 #define _MutantWalk
 #define _Praying
