@@ -17,7 +17,7 @@ void AnimationSystem::Init()
 
 void AnimationSystem::Frame(float deltatime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "Frame : " << "AnimationSystem" << " Class" << '\n';
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Render, C_Animation, T_Render_Geometry_Skeletal>();

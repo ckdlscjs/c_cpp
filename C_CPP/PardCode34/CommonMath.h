@@ -470,7 +470,7 @@ inline Matrix4x4 GetMat_Cofactor(const Matrix4x4& mat4x4)
 	mat[3] = Vector4(m41, m42, m43, m44);
 	return mat;
 }
-
+#define __OPTIMIZED
 /*
 * 역행렬
 * AdjMat(A*) = C(A)^T , 여인수행렬의 전치를 의미, 수반행렬
@@ -497,7 +497,7 @@ inline Matrix4x4 GetMat_Inverse(const Matrix4x4& matOrigin)
 #else
 	XMVECTOR deteminant;
 	Matrix4x4 matInverse = XMMatrixInverse(&deteminant, matOrigin.ToXMMATRIX());
-	if (XMVector4NearEqual(deteminant, XMVectorZero(), DirectX::XMVectorSplatEpsilon()))
+	if (std::abs(XMVectorGetX(deteminant)) < _EPSILON)
 	{
 		//역행렬이 존재하지 아니함(행렬식이 0에 한없이 가까움)
 		std::cerr << "InverseMatrix NotExist!" << '\n';

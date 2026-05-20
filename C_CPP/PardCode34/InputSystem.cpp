@@ -18,7 +18,7 @@ void InputSystem::Init()
 
 void InputSystem::Frame()
 {
-	if(g_fTime_Log >= 1.0f)
+	if(g_bLog)
 		std::cout << "Frame : " << "InputSystem" << " Class" << '\n';
 
 	ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Input>();

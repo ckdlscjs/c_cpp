@@ -7,6 +7,7 @@
 #include "CameraSystem.h"
 #include "CollisionSystem.h"
 #include "AnimationSystem.h"
+#include "TimerSystem.h"
 
 //D3D Wrappers
 #include "Direct3D.h"
@@ -43,17 +44,32 @@ void RenderSystem::Init()
 
 void RenderSystem::Frame(float deltatime, float elapsedtime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "Frame : " << "RenderSystem" << " Class" << '\n';
 	//RenderPass
+	double ms_Collect, ms_Enqueue;
+	_TimerSystem.ScopedBegin();
 	CollectRenderItem(_ECSSystem.GetComponent<C_Transform>(_CameraSystem.lookup_maincam).vPosition);
+	ms_Collect = _TimerSystem.ScopedEnd();
+
 	SortRenderItem();
+
+	_TimerSystem.ScopedBegin();
 	EnqueueRenderItem();
+	ms_Enqueue = _TimerSystem.ScopedEnd();
+	if (g_bLog)
+	{
+		std::cout << '\n';
+		std::cout << "--BottleNeckCheck--" << '\n';
+		std::cout << "CollectRenderItem : " << ms_Collect << '\n';
+		std::cout << "EnqueueRenderItem : " << ms_Enqueue << '\n';
+		std::cout << "*****************************************************" << '\n' << '\n';
+	}
 }
 
 void RenderSystem::PreRender(float deltatime, float elapsedtime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "PreRender : " << "RenderSystem" << " Class" << '\n';
 	
 	//RTVÃÊ±âÈ­
@@ -101,7 +117,7 @@ void RenderSystem::PreRender(float deltatime, float elapsedtime)
 
 void RenderSystem::Render(float deltatime, float elapsedtime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "Render : " << "RenderSystem" << " Class" << '\n';
 
 	SetPS_ConstantBuffer(g_hash_cb_directionalLight, 0);
@@ -491,7 +507,7 @@ void RenderSystem::Render(float deltatime, float elapsedtime)
 
 void RenderSystem::PostRender()
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "PostRender : " << "RenderSystem" << " Class" << '\n';
 	SwapchainPresent(false);
 	ClearRenderItem();
@@ -1021,9 +1037,6 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 		{
 			auto& transforms = archetype->GetComponents<C_Transform>(row);
 			auto& renders = archetype->GetComponents<C_Render>(row);
-			std::vector<C_Collider>* pColliders = nullptr;
-			if(archetype->HasComponents<C_Collider>())
-				pColliders = &archetype->GetComponents<C_Collider>(row);
 			for (size_t col = st_col; col < archetype->GetCount_Chunk(row); col++)
 			{
 				if (!renders[col].bRenderable) continue;
@@ -1037,7 +1050,7 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 				size_t hashMesh = pRenderAsset->m_hMeshMats.hash_mesh;
 				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(hashMesh);
 
-				E_Collider eCollider = pColliders ? (*pColliders)[col].type : E_Collider::BOX;
+				E_Collider eCollider = archetype->HasComponents<C_Collider>() ? archetype->GetComponents<C_Collider>(row)[col].type : E_Collider::BOX;
 
 				//Collect Draw MeshMaterial
 				for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
@@ -1160,9 +1173,11 @@ void RenderSystem::CollectRenderItem(const Vector3& posCam)
 			uint32_t hashPass = pMaterial->GetHashPass();
 			uint32_t hashShader = pMaterial->GetHashShaders();
 			uint32_t hashStates = pMaterial->GetHashStates();
-			uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, 0, eCollider, 134);
 			for (UINT matIdx = 0; matIdx < pRenderAsset->m_hMeshMats.hash_mats.size(); matIdx++)
+			{
+				uint32_t hashResources = GetRenderPassKey_Resources(hashMesh, hashMaterial, hashRA, matIdx, eCollider, 134);
 				CollectItem(GenerateRenderPassHash(hashPass, hashShader, hashStates, hashResources, hashDist), archetype, row, col, pMesh->GetRendIndices()[matIdx].count, pMesh->GetRendIndices()[matIdx].idx);
+			}	
 		}
 	}
 }
@@ -1171,7 +1186,7 @@ void RenderSystem::EnqueueRenderItem()
 {
 	if (m_hRP_CollectItem.empty()) return;
 
-	std::function<STB_BatchMatrix(const RenderItem*)> GetBatchMatrix = [&](const RenderItem* pRenderItem)->STB_BatchMatrix
+	auto GetBatchMatrix = [&](const RenderItem* pRenderItem)->STB_BatchMatrix
 		{
 			STB_BatchMatrix mats;
 
@@ -1204,7 +1219,7 @@ void RenderSystem::EnqueueRenderItem()
 			return mats;
 		};
 
-	std::function<bool(_RPKey sortKeyA, _RPKey sortKeB)> IsEqual = [&](_RPKey sortKeyA, _RPKey sortKeB) -> bool
+	auto IsEqual = [&](_RPKey sortKeyA, _RPKey sortKeB) -> bool
 		{
 			return (sortKeyA & _BATCHMASK) == (sortKeB & _BATCHMASK);
 		};

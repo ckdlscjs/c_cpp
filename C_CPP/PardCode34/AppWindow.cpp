@@ -43,6 +43,7 @@ float g_fDist_Far = 10000.0f;
 HWND g_hWnd;
 bool g_bIsRun = false;
 float g_fTime_Log = 0.0f;
+bool g_bLog;
 AppWindow::~AppWindow()
 {
 	std::cout << "Release : " << "AppWindow" << " Class" << '\n';
@@ -454,7 +455,11 @@ void AppWindow::OnCreate()
 
 					_ECSSystem.AddComponent<C_Transform>(key, { {30.0f, 30.0f, 30.0f}, {0.0f, 0.0f, 0.0f}, CamPos });
 
-					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+
+#ifdef _DebugRender
+					rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif // 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -499,7 +504,12 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {500.0f, 500.0f, 1.0f}, {Quaternion(90.0f, 0.0f, 0.0f)}, {0.0f, 0.0f, 0.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif // 
+
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -545,7 +555,11 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, {Quaternion(0.0f, 0.0f, 0.0f)}, {-50.0f, 50.0f, 0.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif // 
+
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -610,7 +624,10 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+					rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
@@ -674,7 +691,13 @@ void AppWindow::OnCreate()
 					behavior[E_Behavior::MOVE_RIGHT] = VK_RIGHT;
 					_ECSSystem.AddComponent<C_Behavior>(key, { behavior });
 
-					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+					uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+					rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
+#ifdef _EnviornmentMap
+					rpMasks |= _ToMask32(E_RenderPass::Cubemap);
+#endif // 
 					_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
 
 					_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::SPHERE });
@@ -721,7 +744,10 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 1.0f}, {}, {150.0f, 50.0f, -30.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -771,9 +797,12 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {0.0f, 0.0f, 0.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {50.0f, 50.0f, 50.0f}, {}, {-150.0f, 50.0f, -50.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -839,9 +868,12 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
-			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quaternion(0.0f, 0.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
+			_ECSSystem.AddComponent<C_Transform>(key, { {15.0f, 15.0f, 15.0f}, Quaternion(0.0f, 0.0f, 0.0f), {-150.0f, 0.0f, 50.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -909,7 +941,10 @@ void AppWindow::OnCreate()
 
 			_ECSSystem.AddComponent<C_Transform>(key, { {5.0f, 5.0f, 5.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, -150.0f} });
 
-			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1012,7 +1047,10 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {3.0f, 3.0f, 3.0f}, Quaternion(0.0f, 45.0f, 0.0f), {100.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+		rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 		rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1097,7 +1135,10 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+		rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 		rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1159,7 +1200,10 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+		rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 		rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1219,7 +1263,10 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.001f, 0.001f, 0.001f}, Quaternion(30.0f, 95.0f, 0.0f), {0.0f, 0.0f, 0.0f} });
 
-		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+		rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 		rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1330,7 +1377,10 @@ void AppWindow::OnCreate()
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {10.0f, 10.0f, 10.0f}, Quaternion(90.0f, 0.0f, 0.0f), {-50.0f, 10.0f, -40.0f} });
 
-		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque) | _ToMask32(E_RenderPass::Debug);
+		uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+		rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
 #ifdef _EnviornmentMap
 		rpMasks |= _ToMask32(E_RenderPass::Cubemap);
 #endif // 
@@ -1657,39 +1707,69 @@ void AppWindow::OnUpdate()
 	float elpasedTime = _TimerSystem.GetElapsedTime();
 	float FPS = _TimerSystem.GetFps();
 	g_fTime_Log += deltaTime;
-	if (g_fTime_Log >= 1.0f)
+	g_bLog = g_fTime_Log >= 1.0f;
+	if (g_bLog)
 	{
+		std::cout << "*****************************************************" << '\n';
 		std::cout << "OnUpdate" << '\n';
 		std::cout << "ElapsedTime : " << elpasedTime << '\n';
 		std::cout << "FPS : " << FPS << '\n';
 		std::cout << '\n';
 	}
 
+	double ms_Frame_Input, ms_Frame_Behavior, ms_Frame_Animation, ms_Frame_Collision, ms_Frame_Render, ms_Render_Render;
 	//FrameIntent
 	{
+		_TimerSystem.ScopedBegin();
 		_InputSystem.Frame();						//선결조건1(입력)
+		ms_Frame_Input = _TimerSystem.ScopedEnd();
 
 		_CameraSystem.Frame(deltaTime);				//선결조건2(개체들)
-		_BehaviorSystem.Frame(deltaTime);			
+
+		_TimerSystem.ScopedBegin();
+		_BehaviorSystem.Frame(deltaTime);	
+		ms_Frame_Behavior = _TimerSystem.ScopedEnd();
+
+		_TimerSystem.ScopedBegin();
 		_AnimationSystem.Frame(deltaTime);
+		ms_Frame_Animation = _TimerSystem.ScopedEnd();
 
 		_ImguiSystem.Frame(deltaTime);
+
+		_TimerSystem.ScopedBegin();
 		_CollisionSystem.Frame(deltaTime);
+		ms_Frame_Collision = _TimerSystem.ScopedEnd();
+
+		_TimerSystem.ScopedBegin();
 		_RenderSystem.Frame(deltaTime, elpasedTime);
+		ms_Frame_Render = _TimerSystem.ScopedEnd();
 	}
 	
 	//RenderIntent
 	{
 		_RenderSystem.PreRender(deltaTime, elpasedTime);
 
+		_TimerSystem.ScopedBegin();
 		_RenderSystem.Render(deltaTime, elpasedTime);
+		ms_Render_Render = _TimerSystem.ScopedEnd();
 		_ImguiSystem.Render();
 
 		_RenderSystem.PostRender();
 	}
 	
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
+	{
 		g_fTime_Log = 0.0f;
+		std::cout << '\n';
+		std::cout << "--BottleNeckCheck--"		<< '\n';
+		std::cout << "_InputSystem : "		<< "Frame "		<< ms_Frame_Input		<< '\n';
+		std::cout << "_AnimationSystem : "	<< "Frame "		<< ms_Frame_Animation	<< '\n';
+		std::cout << "_CollisionSystem : "	<< "Frame "		<< ms_Frame_Collision	<< '\n';
+		std::cout << "_RenderSystem : "		<< "Frame "		<< ms_Frame_Render		<< '\n';
+		std::cout << "_RenderSystem : "		<< "Render "	<< ms_Render_Render		<< '\n';
+		std::cout << "*****************************************************" << '\n' << '\n';
+	}
+		
 }
 
 void AppWindow::OnDestroy()

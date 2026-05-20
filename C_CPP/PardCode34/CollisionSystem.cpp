@@ -37,7 +37,7 @@ void CollisionSystem::Init()
 
 void CollisionSystem::Frame(float deltatime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "Frame : " << "CollisionSystem" << " Class" << '\n';
 	size_t lookup_maincam = _CameraSystem.lookup_maincam;
 	const auto& c_cam_main = _ECSSystem.GetComponent<C_Camera>(lookup_maincam);
@@ -391,7 +391,7 @@ void CollisionSystem::Frame(float deltatime)
 	if (_InputSystem.IsPressed_LBTN() && pq_picking.empty() && !_EngineSystem.bMouseOnGUI)
 		_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;
 
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "·»´õ¸µ µÈ °´Ã¼ ¼ö : " << renderCnt << '\n';
 }
 

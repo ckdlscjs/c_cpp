@@ -39,6 +39,8 @@
 #include <array>
 #include <fstream>
 #include <bitset>
+#include <chrono>							//ScopedTimer
+
 
 //d3d Header
 #include <d3d11.h>

@@ -1,4 +1,5 @@
 #include "TimerSystem.h"
+
 TimerSystem::TimerSystem()
 {
 }
@@ -50,6 +51,17 @@ float TimerSystem::GetDeltaTime() const
 float TimerSystem::GetElapsedTime() const
 {
 	return m_fElpasedTime;
+}
+
+void TimerSystem::ScopedBegin()
+{
+	m_ScopedStart = std::chrono::high_resolution_clock::now();
+}
+
+double TimerSystem::ScopedEnd()
+{
+	auto end = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration<double, std::milli>(end - m_ScopedStart).count();
 }
 
 

@@ -68,7 +68,7 @@ void ImguiSystem::Init(HWND hWnd, ID3D11Device* pDevice, ID3D11DeviceContext* pD
 
 void ImguiSystem::Frame(float deltatime)
 {
-    if (g_fTime_Log >= 1.0f)
+    if (g_bLog)
         std::cout << "Frame : " << "ImguiSystem" << " Class" << '\n';
     // Our state, 수정필요
     ImGuiIO& io = ImGui::GetIO();
@@ -127,7 +127,7 @@ void ImguiSystem::Frame(float deltatime)
 
 void ImguiSystem::Render()
 {
-    if (g_fTime_Log >= 1.0f)
+    if (g_bLog)
         std::cout << "Render : " << "ImguiSystem" << " Class" << '\n';
     // Rendering
     ImGui::Render();

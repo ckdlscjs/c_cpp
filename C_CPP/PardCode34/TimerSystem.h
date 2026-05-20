@@ -17,7 +17,8 @@ public:
 	UINT GetFps() const;
 	float GetDeltaTime() const;
 	float GetElapsedTime() const;
-	
+	void ScopedBegin();
+	double ScopedEnd();
 private:
 	UINT m_iCount;
 	UINT m_iFps;
@@ -27,5 +28,6 @@ private:
 	ULONGLONG m_CurrentCount;
 	float m_fDeltaTime;
 	float m_fElpasedTime;
+	std::chrono::steady_clock::time_point m_ScopedStart;
 };
 #define _TimerSystem TimerSystem::GetInstance()

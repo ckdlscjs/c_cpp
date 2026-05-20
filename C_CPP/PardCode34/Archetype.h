@@ -296,7 +296,8 @@ template<typename T>
 inline void Archetype::CreateNewChunk()
 {
 	std::type_index type = typeid(T);
-	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
+	_ASEERTION_NULCHK(m_Key.test(ComponentType::GetMask<T>()), "Component Chunk not exist");
+	//_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
 	m_Components[type].push_back(new ChunkData<T>(m_ChunksCapacity));
 }
 
@@ -304,7 +305,8 @@ template<typename T>
 inline void Archetype::AddComponent(T&& component)
 {
 	std::type_index type = typeid(T);
-	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
+	_ASEERTION_NULCHK(m_Key.test(ComponentType::GetMask<T>()), "Component Chunk not exist");
+	//_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
 	ComponentChunk* lastChunk = m_Components[type].back();
 	ChunkData<T>* dataChunk = static_cast<ChunkData<T>*>(lastChunk);
 	dataChunk->m_data.back() = std::forward<T>(component);
@@ -315,7 +317,8 @@ template<typename T>
 inline std::vector<T>& Archetype::GetComponents(size_t idxRow)
 {
 	std::type_index type = typeid(T);
-	_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component nullptr");
+	_ASEERTION_NULCHK(m_Key.test(ComponentType::GetMask<T>()), "Component Chunk not exist");
+	//_ASEERTION_NULCHK(m_Components.find(type) != m_Components.end(), "Component Chunk not exist");
 	_ASEERTION_NULCHK(idxRow < m_Components[type].size(), "Chunk row Out of Bound");
 
 	ChunkData<T>* chunk = static_cast<ChunkData<T>*>(m_Components[type][idxRow]);
@@ -325,8 +328,9 @@ inline std::vector<T>& Archetype::GetComponents(size_t idxRow)
 template<typename T>
 inline bool Archetype::HasComponents()
 {
-	std::type_index type = typeid(T);
-	return m_Components.find(type) != m_Components.end();
+	//std::type_index type = typeid(T);
+	return m_Key.test(ComponentType::GetMask<T>());
+	//return m_Components.find(type) != m_Components.end();
 }
 
 inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t srcCol, size_t destRow, size_t destCol)

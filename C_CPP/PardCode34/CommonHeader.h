@@ -967,6 +967,7 @@ extern float g_fDist_Near;
 extern float g_fDist_Far;
 extern bool g_bIsRun;
 extern float g_fTime_Log;
+extern bool g_bLog;
 static const std::wstring g_initpath_Texture = L"../Assets/Textures/";
 
 #define _VanishingPoint g_fDist_Far + 100.0f

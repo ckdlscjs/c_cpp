@@ -110,7 +110,7 @@ void CameraSystem::Init()
 
 void CameraSystem::Frame(float deltaTime)
 {
-	if (g_fTime_Log >= 1.0f)
+	if (g_bLog)
 		std::cout << "Frame : " << "CameraSystem" << " Class" << '\n';
 	{
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Transform, C_Camera, C_Projection>();
