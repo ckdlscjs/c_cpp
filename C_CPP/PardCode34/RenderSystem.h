@@ -33,15 +33,18 @@ private:
 	void SetIA_IndexBuffer(size_t hashIB, UINT offset = 0);
 
 	void SetVS_Shader(size_t hashVS);
+	void SetVS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetVS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
 
 	void SetHS_Shader(size_t hashHS);
 	void SetHS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
 
 	void SetDS_Shader(size_t hashDS);
+	void SetDS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetDS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
 
 	void SetGS_Shader(size_t hashGS);
+	void SetGS_ShaderResourceView(size_t hashSRV, UINT startIdx = 0);
 	void SetGS_ConstantBuffer(size_t hashCB, UINT startIdx = 0);
 
 	void SetPS_Shader(size_t hashPS);
@@ -56,8 +59,10 @@ private:
 	void SetOM_DepthStenilState(E_DSState eDSState, UINT stencilRef = 0);
 	void SetOM_BlendState(E_BSState eBSState, const FLOAT* blendFactor, UINT sampleMask = 0xFFFFFFFF);
 
-	void Draw_Vertices(UINT vertexCount, UINT startIdx);
-	void Draw_Indicies(UINT indexCount, UINT startIdx, INT vertexOffset);
+	void Draw_Vertices(UINT vertexCount, UINT vertexOffset = 0);
+	void Draw_VerticesInstanced(UINT vertexCount, UINT instanceCount, UINT vertexOffset = 0, UINT instanceOffset = 0);
+	void Draw_Indicies(UINT indexCount, UINT startIdx, UINT vertexOffset = 0);
+	void Draw_IndiciesInstanced(UINT indexCount, UINT startIdx, UINT instanceCount, UINT vertexOffset = 0, UINT instanceOffset = 0);
 
 	void SwapchainPresent(bool vsync);
 
@@ -74,10 +79,11 @@ private:
 	size_t GetHashMat_Debug(E_Collider eType);
 	size_t GetHashMat_Cubemap(E_VerticesType eType);
 	size_t GetHashMat_Outline(E_VerticesType eType);
-	void EnqueueRenderItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
+	void CollectItem(_RPKey sortKey, Archetype* pArchetype, size_t entityRow, size_t entityCol, UINT renderCnt, UINT startIdx);
 	void SortRenderItem();
 	void ClearRenderItem();
 	void CollectRenderItem(const Vector3& posCam);
+	void EnqueueRenderItem();
 
 	//RenderPass
 	std::unordered_map<size_t, uint16_t>				m_hRP_Shaders;
@@ -86,7 +92,10 @@ private:
 	std::vector<size_t>									m_resRP_Shaders;
 	std::vector<RPStates>								m_resRP_States;
 	std::vector<RPResources>							m_resRP_Resources;
-	std::vector<RenderItem>								m_hRP_CommandQueue;		//수집후 sort
+	std::vector<RenderItem>								m_hRP_CollectItem;		//수집후 sort
+	std::vector<STB_BatchMatrix>						m_RPMatrices;
+	std::vector<RenderItem>								m_hRP_CommandQueue;		//체크후 enqueue
+
 
 	//최적화 멤버변수
 	ID3D11InputLayout* m_Inputlayout;
@@ -111,8 +120,8 @@ private:
 	};
 #define _ConvPipeline(VAL) static_cast<UINT>(VAL)
 #define _MAXSamplers	10
-#define _MAXSRVs		10
-#define _MAXCBs			10
+#define _MAXSRVs		11			//10->instanceworldmats 
+#define _MAXCBs			11			//10->instancebatchIdx
 	ID3D11SamplerState* m_SamplerStates[_ConvPipeline(E_Pipelines::COUNT)][_MAXSamplers];	//maximum 16
 	ID3D11ShaderResourceView* m_SRVs[_ConvPipeline(E_Pipelines::COUNT)][_MAXSRVs];			//maximum 128
 	ID3D11Buffer* m_CBs[_ConvPipeline(E_Pipelines::COUNT)][_MAXCBs];						//maximum 14

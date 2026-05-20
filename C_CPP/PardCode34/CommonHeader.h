@@ -158,9 +158,11 @@ struct RenderItem
 	Archetype* pArchetype;
 	size_t entityRow;
 	size_t entityCol;
+
 	UINT renderCnt;
 	UINT startIdx;
-	//size_t subsetIdx;
+	UINT instanceCnt;
+	UINT batchIdx;
 };
 
 #define _BB 1 << 0
@@ -768,6 +770,13 @@ struct CB_WVPITMatrix
 };
 
 __declspec(align(16))
+struct CB_VPMatrix
+{
+	Matrix4x4 matView;
+	Matrix4x4 matProj;
+};
+
+__declspec(align(16))
 struct CB_LightMatrix
 {
 	Matrix4x4 matLightView;
@@ -873,6 +882,19 @@ struct CB_Outline_Picking
 	Vector4 color_thickness; //rgb, thickness
 };
 
+__declspec(align(16))
+struct STB_BatchMatrix
+{
+	Matrix4x4 matWorld;
+	Matrix4x4 matInvTrans;
+};
+
+__declspec(align(16))
+struct CB_BatchIdx
+{
+	UINT batchIdx;
+};
+
 
 /*
 		TBN구성에 사용할 tangent(접벡터), binormal(종벡터)를 계산한다
@@ -943,15 +965,18 @@ extern UINT g_iHeight;
 extern HWND g_hWnd;
 extern float g_fDist_Near;
 extern float g_fDist_Far;
-#define _VanishingPoint g_fDist_Far + 100.0f
 extern bool g_bIsRun;
 extern float g_fTime_Log;
 static const std::wstring g_initpath_Texture = L"../Assets/Textures/";
+
+#define _VanishingPoint g_fDist_Far + 100.0f
+#define _RenderLimit 1e5
 
 //해시, 상수버퍼
 extern size_t g_hash_cb_directionalLight;
 extern size_t g_hash_cb_pointLight;
 extern size_t g_hash_cb_spotLight;
+extern size_t g_hash_cb_vpmat;
 extern size_t g_hash_cb_wvpitmat;
 extern size_t g_hash_cb_time;
 extern size_t g_hash_cb_campos;
@@ -965,6 +990,8 @@ extern size_t g_hash_cb_raytriangle;
 extern size_t g_hash_stb_collisionResults;
 extern size_t g_hash_sgb_collisionResults;
 extern size_t g_hash_cb_outline_picking;
+extern size_t g_hash_stb_worldmats;
+extern size_t g_hash_cb_batchIdx;
 
 //해시, 디버그렌더
 extern size_t g_hash_VS_Debug;

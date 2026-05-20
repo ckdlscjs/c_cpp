@@ -30,6 +30,7 @@
 size_t g_hash_cb_directionalLight;
 size_t g_hash_cb_pointLight;
 size_t g_hash_cb_spotLight;
+size_t g_hash_cb_vpmat;
 size_t g_hash_cb_wvpitmat;
 size_t g_hash_cb_time;
 size_t g_hash_cb_campos;
@@ -43,6 +44,8 @@ size_t g_hash_cb_raytriangle;
 size_t g_hash_stb_collisionResults;
 size_t g_hash_sgb_collisionResults;
 size_t g_hash_cb_outline_picking;
+size_t g_hash_stb_worldmats;
+size_t g_hash_cb_batchIdx;
 
 //해시, 디버그렌더
 size_t g_hash_VS_Debug;
@@ -88,6 +91,7 @@ void EngineSystem::Init()
 	g_hash_cb_pointLight		= _EngineSystem.CreateConstantBuffer(typeid(CB_PointLight), sizeof(CB_PointLight));
 	g_hash_cb_spotLight			= _EngineSystem.CreateConstantBuffer(typeid(CB_SpotLight), sizeof(CB_SpotLight));
 	g_hash_cb_wvpitmat			= _EngineSystem.CreateConstantBuffer(typeid(CB_WVPITMatrix), sizeof(CB_WVPITMatrix));
+	g_hash_cb_vpmat				= _EngineSystem.CreateConstantBuffer(typeid(CB_VPMatrix), sizeof(CB_VPMatrix));
 	g_hash_cb_time				= _EngineSystem.CreateConstantBuffer(typeid(CB_Time), sizeof(CB_Time));
 	g_hash_cb_campos			= _EngineSystem.CreateConstantBuffer(typeid(CB_Campos), sizeof(CB_Campos));
 	g_hash_cb_lightmat			= _EngineSystem.CreateConstantBuffer(typeid(CB_LightMatrix), sizeof(CB_LightMatrix));
@@ -98,7 +102,6 @@ void EngineSystem::Init()
 	g_hash_cb_cubemap			= _EngineSystem.CreateConstantBuffer(typeid(CB_CubeMap), sizeof(CB_CubeMap));
 	g_hash_cb_raytriangle		= _EngineSystem.CreateConstantBuffer(typeid(CB_RayTriangle), sizeof(CB_RayTriangle));
 	g_hash_cb_outline_picking   = _EngineSystem.CreateConstantBuffer(typeid(CB_Outline_Picking), sizeof(CB_Outline_Picking));
-
 	
 	//디버그용 셰이더
 	g_hash_VS_Debug				= _EngineSystem.CreateVertexShader(L"VS_Debug.hlsl", "vsmain", "vs_5_0");
@@ -108,13 +111,16 @@ void EngineSystem::Init()
 	g_hash_DS_Debug_Sphere		= _EngineSystem.CreateDomainShader(L"DS_Debug_Sphere.hlsl", "dsmain", "ds_5_0");
 	g_hash_PS_Debug_PC			= _EngineSystem.CreatePixelShader(L"PS_PC.hlsl", "psmain", "ps_5_0");
 
-	//피킹용 셰이더
+	//피킹용 셰이더  
 	g_hash_PS_Picking			= _EngineSystem.CreatePixelShader(L"PS_Picking.hlsl", "psmain", "ps_5_0");
 
 	//계산셰이더
-	std::vector<STB_CollisionResults> tempData((UINT)1e5);
-	g_hash_stb_collisionResults = _EngineSystem.CreateViews(L"CollisionResults", sizeof(STB_CollisionResults), tempData.size(), tempData.data());
-	g_hash_sgb_collisionResults = _EngineSystem.CreateStagingBuffer(L"CollisionResults", sizeof(STB_CollisionResults), (UINT)1e5);
+	g_hash_stb_collisionResults = _EngineSystem.CreateViews(L"CollisionResults", sizeof(STB_CollisionResults), _RenderLimit, nullptr);
+	g_hash_sgb_collisionResults = _EngineSystem.CreateStagingBuffer(L"CollisionResults", sizeof(STB_CollisionResults), _RenderLimit);
+
+	//월드행렬 묶음(드로우콜최적화 통폐합)
+	g_hash_stb_worldmats		= _EngineSystem.CreateViews(L"WorldMats", sizeof(STB_BatchMatrix), _RenderLimit, nullptr);
+	g_hash_cb_batchIdx			= _EngineSystem.CreateConstantBuffer(typeid(CB_BatchIdx), sizeof(CB_BatchIdx));
 }
 
 EngineSystem::~EngineSystem()
@@ -331,13 +337,6 @@ size_t EngineSystem::CreateComputeVertices(size_t hash_mesh)
 	return pMesh->GetSTB();
 }
 
-//size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs)
-//{
-//	RenderAsset* pAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
-//	pAsset->m_hMeshMats = hashs;
-//	return pAsset->GetHash();
-//}
-
 size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Material& hashs, const std::vector<std::vector<TX_HASH>>& txs)
 {
 	RenderAsset* pAsset = _ResourceSystem.CreateResource<RenderAsset>(szName);
@@ -373,62 +372,6 @@ size_t EngineSystem::CreateGeometry(const std::wstring& szFilePath)
 	Geometry* pGeometry = _ResourceSystem.CreateResource<Geometry>(szFilePath);
 	return pGeometry->GetHash();
 }
-//
-//std::vector<size_t> EngineSystem::CreateMaterials(const std::wstring& szFilePath, std::map<UINT, MTL_TEXTURES>& texturesByMaterial)
-//{
-//	std::vector<size_t> hashs_material;
-//	for (auto& matInfo : texturesByMaterial)
-//	{
-//		const std::wstring& matName = szFilePath + _tomw(matInfo.second.szMatName);
-//		Material* pMaterial = _ResourceSystem.CreateResource<Material>(matName);
-//		size_t matHash = pMaterial->GetHash();
-//		UINT materialFlag = 0;
-//		//Parsing Texture
-//		if (matInfo.second.type_textures_image.size())
-//		{
-//			//생성된스크래치이미지가있을경우
-//			for (auto& type_textures_image : matInfo.second.type_textures_image)
-//			{
-//				E_Texture curType = ConvETexture(type_textures_image.first);
-//				materialFlag |= (UINT)curType;
-//				std::vector<TX_HASH> tx_hashs;
-//				for (auto& scratchImage : type_textures_image.second)
-//				{
-//					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(matName + GetTexType(curType),  std::move(scratchImage)) });
-//				}
-//				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
-//			}
-//		}
-//		else
-//		{
-//			//경로만있을경우
-//			for (const auto& type_textures_path : matInfo.second.type_textures_path)
-//			{
-//				E_Texture curType = ConvETexture(type_textures_path.first);
-//				materialFlag |= (UINT)curType;
-//				std::vector<TX_HASH> tx_hashs;
-//				for (const auto& tex_path : type_textures_path.second)
-//				{
-//					tx_hashs.push_back({ curType, _EngineSystem.CreateTexture(_tomw(tex_path)) });
-//				}
-//				_EngineSystem.Material_SetTextures(matHash, tx_hashs);
-//			}
-//		}
-//
-//		//Set Use Shaders
-//		//Material_SetShaders(matHash, materialFlag);
-//
-//		hashs_material.push_back(matHash);
-//	}
-//	return hashs_material;
-//}
-//
-//std::vector<size_t> EngineSystem::CreateMaterialsFromGeometry(size_t hash_geometry)
-//{
-//	Geometry* pGeometry = _ResourceSystem.GetResource<Geometry>(hash_geometry);
-//	std::wstring szPath = pGeometry->GetPath();
-//	return CreateMaterials(szPath + L"Material", pGeometry->GetTextures());
-//}
 
 void EngineSystem::CreateMatsTexsFromGeometry(size_t hash_geometry, std::vector<size_t>& outMats, std::vector<std::vector<TX_HASH>>& outTXs)
 {
@@ -498,17 +441,6 @@ size_t EngineSystem::CreateMeshFromGeometry(size_t hash_geometry)
 	pMesh->SetIB(CreateIndexBuffer(szPath + szTypename + L"IB", (UINT)pMesh->GetIndicies().size(), (UINT*)pMesh->GetIndicies().data()));
 	return pMesh->GetHash();
 }
-
-//void EngineSystem::Material_SetShaders(size_t hash_material, const UINT flag)
-//{
-//	/*
-//	* 텍스쳐 분류에따른 쉐이더선택
-//	*/
-//	if (flag == ((UINT)E_Texture::Diffuse | (UINT)E_Texture::Normal | (UINT)E_Texture::Specular))
-//	{
-//
-//	}
-//}
 
 void EngineSystem::Material_SetVS(size_t hash_material, const std::wstring& vsName, const std::string& entryName, const std::string& target)
 {
@@ -792,7 +724,7 @@ ID3D11Texture2D* EngineSystem::CreateD3DBuffer(UINT bindFlags, UINT width, UINT 
 		{
 			desc.MipLevels = 0;
 			desc.ArraySize = 6;
-			desc.Format = DXGI_FORMAT_R16G16B16A16_TYPELESS;
+			desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 			desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
 			desc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS | D3D11_RESOURCE_MISC_TEXTURECUBE;
 		}break;
@@ -1053,9 +985,16 @@ void EngineSystem::GenerateMipMaps(size_t hashSRV)
 	m_pCDirect3D->GetDeviceContext()->GenerateMips(m_pCSRVs[hashSRV]->GetView());
 }
 
-void EngineSystem::UpdateConstantBuffer(size_t hashCB, void* pData)
+void EngineSystem::UpdateConstantBuffer(size_t hash, void* pData)
 {
-	auto pBuffer = _EngineSystem.GetCB(hashCB);
+	auto pBuffer = _EngineSystem.GetCB(hash);
+	_ASEERTION_NULCHK(pBuffer, "NotExist");
+	pBuffer->UpdateBufferData(_EngineSystem.GetD3DDeviceContext(), pData);
+}
+
+void EngineSystem::UpdateStructBuffer(size_t hash, void* pData)
+{
+	auto pBuffer = _EngineSystem.GetSTB(hash);
 	_ASEERTION_NULCHK(pBuffer, "NotExist");
 	pBuffer->UpdateBufferData(_EngineSystem.GetD3DDeviceContext(), pData);
 }

@@ -467,6 +467,84 @@
     <FxCompile Include="PS_GBuffer_PTN_CubeMap.hlsl">
       <Filter>Engine\Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="Instanced_DS_Debug_Sphere.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_CubeMap_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_CubeMap_PTN_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_CubeMap_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_CubeMap_PTNTB_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_Debug_Box.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_GS_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_HS_Debug_Sphere.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_CubeMap_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_CubeMap_PTN_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_CubeMap_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_CubeMap_PTNTB_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Debug.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Debug_Sphere.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Outline_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Outline_PTN_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Outline_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_Outline_PTNTB_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PC.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PCT.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PT.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PTN.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PTN_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PTNTB.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_PTNTB_Skinned.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Instanced_VS_ShadowMap.hlsl">
+      <Filter>Engine\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="..\Include\ImGui\LICENSE.txt">

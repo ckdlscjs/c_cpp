@@ -1,9 +1,9 @@
 #include "PS_Lights.hlsli"
 #include "PS_Shadows.hlsli"
-Texture2D GBufferTex_Position : register(t10);
-Texture2D GBufferTex_Normal : register(t11);
-Texture2D GBufferTex_Albedo : register(t12);
-Texture2D GBufferTex_Specular : register(t13);
+Texture2D GBufferTex_Position : register(t11);
+Texture2D GBufferTex_Normal : register(t12);
+Texture2D GBufferTex_Albedo : register(t13);
+Texture2D GBufferTex_Specular : register(t14);
 sampler TextureSampler : register(s0); //세팅하지않아도 기본샘플러가 레지스터0에 세팅된다
 
 struct PS_INPUT

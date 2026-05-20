@@ -11,6 +11,7 @@ public:
 	BaseBuffer(BaseBuffer&&) = delete;
 	BaseBuffer& operator=(BaseBuffer&&) = delete;
 	void UpdateBufferData(ID3D11DeviceContext* pDeviceContext, void* data);
+	//void UpdateBufferData(ID3D11DeviceContext* pDeviceContext, void* data, UINT byteSize);
 	ID3D11Buffer* GetBuffer();
 	UINT GetSize();
 	UINT GetStride();
@@ -49,6 +50,13 @@ inline void BaseBuffer<T>::UpdateBufferData(ID3D11DeviceContext* pDeviceContext,
 	//m_pBuffer에 이미 사용할 크기와 동일한 크기만큼 data의 위치에 크기만큼 구조체등으로 나열되어있으므로 별도지정을 하지않는다
 	pDeviceContext->UpdateSubresource(m_pBuffer, NULL, NULL, data, NULL, NULL);
 }
+
+//template<typename T>
+//inline void BaseBuffer<T>::UpdateBufferData(ID3D11DeviceContext* pDeviceContext, void* data, UINT byteSize)
+//{
+//	//Map, Unmap, 동적사이즈업데이트
+//
+//}
 
 template<typename T>
 inline ID3D11Buffer* BaseBuffer<T>::GetBuffer()

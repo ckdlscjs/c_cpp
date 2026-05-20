@@ -120,7 +120,7 @@ StructBuffer::StructBuffer(ID3D11Device* pDevice, void* data, UINT stride, UINT 
 	buff_desc.Usage = D3D11_USAGE_DEFAULT;
 	buff_desc.ByteWidth = m_iStride * m_iSize;												//사용할 객체의 전체크기
 	buff_desc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;			//UAV, SRV연산용
-	buff_desc.CPUAccessFlags = 0;															//updateSubResource로 사용하되 추후 read시 별도의 staing버퍼를만든다
+	buff_desc.CPUAccessFlags = 0;															//updateSubResource로 사용하되 추후 read시 별도의 staging버퍼를만든다
 	buff_desc.MiscFlags = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
 	buff_desc.StructureByteStride = m_iStride;
 
