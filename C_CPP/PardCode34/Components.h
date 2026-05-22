@@ -7,7 +7,7 @@
 struct C_Input
 {
 public:
-	std::bitset<256> bVKMask;
+	std::bitset<_MAXCOMPONENTS> bVKMask;
 };
 
 struct C_Info

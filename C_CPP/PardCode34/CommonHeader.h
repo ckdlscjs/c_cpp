@@ -4,15 +4,15 @@
 #include "CommonMath.h"
 
 //enum classes
-constexpr size_t MAX_COMPONENTS = 256;
-using ArchetypeKey = std::bitset<MAX_COMPONENTS>;
+#define _MAXCOMPONENTS size_t(256)
+using ArchetypeKey = std::bitset<_MAXCOMPONENTS>;
 class ComponentType
 {
 public:
 	template<typename T>
 	static size_t GetMask()
 	{
-		_ASEERTION_NULCHK(m_lCount < MAX_COMPONENTS, "Component limit exceeded");
+		_ASEERTION_NULCHK(m_lCount < _MAXCOMPONENTS, "Component limit exceeded");
 		static size_t Mask = m_lCount++;
 		return Mask;
 	}
