@@ -205,7 +205,7 @@ public:
 class Archetype
 {
 public:
-	Archetype();
+	Archetype(size_t largestComponentSize);
 	~Archetype();
 	Archetype(const Archetype&) = delete;
 	Archetype& operator=(const Archetype&) = delete;
@@ -243,7 +243,7 @@ private:
 	std::vector<size_t> m_LookupIdxs;
 };
 
-inline Archetype::Archetype()
+inline Archetype::Archetype(size_t largestComponentSize) : m_ChunksCapacity(std::max((size_t)1, CHUNK_BYTE_LIMIT / largestComponentSize))
 {
 }
 
@@ -261,8 +261,9 @@ inline void Archetype::RegisterComponent()
 {
 	size_t type = ComponentType::GetMask<T>();
 	_ASEERTION_NULCHK(!m_Key.test(type), "Already Chunk exist");
-	if (m_ComponentsLookup.empty())
-		m_ChunksCapacity = std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T));
+	//archetype생성자로이관
+	//if (m_ComponentsLookup.empty())
+	//	m_ChunksCapacity = std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T));
 	m_Key.set(type);
 	m_ComponentsLookup.push_back(type);
 	m_Components[type].push_back(new ChunkData<T>(m_ChunksCapacity));

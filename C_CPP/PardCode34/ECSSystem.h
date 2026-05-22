@@ -32,6 +32,8 @@ public:
 	template<typename... Comps>
 	ArchetypeKey GetArchetypeKey();
 	template<typename... Comps>
+	size_t GetMaxComponentSize();
+	template<typename... Comps>
 	size_t CreateEntity();
 	template<typename T>
 	void AddComponent(ArchetypeKey key, T&& component);
@@ -63,12 +65,18 @@ inline ArchetypeKey ECSSystem::GetArchetypeKey()
 }
 
 template<typename ...Comps>
+inline size_t ECSSystem::GetMaxComponentSize()
+{
+	return std::max({ sizeof(Comps)... });
+}
+
+template<typename ...Comps>
 inline ArchetypeKey ECSSystem::CreateArchetype()
 {
 	ArchetypeKey key = GetArchetypeKey<Comps...>();
 	if (m_Archetypes.find(key) != m_Archetypes.end()) 
 		return key;
-	m_Archetypes[key] = new Archetype();
+	m_Archetypes[key] = new Archetype(GetMaxComponentSize<Comps...>());
 	(m_Archetypes[key]->RegisterComponent<Comps>(), ...);
 	return key;
 }
