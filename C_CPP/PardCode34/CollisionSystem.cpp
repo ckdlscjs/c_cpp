@@ -67,9 +67,8 @@ void CollisionSystem::Frame(float deltatime)
 	Matrix4x4 matInvView = GetMat_Inverse(matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
-	//using PickingOrder = std::tuple<float, C_Collider*, C_Info*>;
 	using PickingOrder = std::tuple<float, C_Info*>;
-	std::priority_queue<PickingOrder, std::vector<PickingOrder>, std::greater<PickingOrder>> pq_picking;
+	std::vector<PickingOrder> pickingEntitys;
 
 	UINT renderCnt = 0;
 
@@ -77,8 +76,12 @@ void CollisionSystem::Frame(float deltatime)
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 	for (auto& archetype : queries)
 	{
-		size_t st_row = 0;
-		size_t st_col = 0;
+		//archetype->m_transfer_row = archetype->m_transfer_col = 0;	//컬링되어 렌더링이 필요없는 최적화부분을 위한 초기화
+		size_t st_row = archetype->m_transfer_row;
+		size_t st_col = archetype->m_transfer_col;
+		//std::vector<std::pair<size_t, size_t>> swaps;
+		bool hasAnimaiton = archetype->HasComponents<C_Animation>();
+		bool hasCompute = archetype->HasComponents<C_Compute>();
 		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
 		{
 			auto& infos			= archetype->GetComponents<C_Info>(row);
@@ -98,7 +101,7 @@ void CollisionSystem::Frame(float deltatime)
 				const auto& MeshMats = _ResourceSystem.GetResource<RenderAsset>(renders[col].hash_asset_Render)->m_hMeshMats;
 				BaseMesh* pMesh = _ResourceSystem.GetResource<BaseMesh>(MeshMats.hash_mesh);
 
-				if (archetype->HasComponents<C_Animation>())
+				if (hasAnimaiton)
 				{
 					const auto& matAnims = _AnimationSystem.GetAnimbones(archetype->GetComponents<C_Animation>(row)[col].hash_animbones);
 					for (UINT i = 0; i < MeshMats.hash_mats.size(); i++)
@@ -136,7 +139,7 @@ void CollisionSystem::Frame(float deltatime)
 								if (IsCollision(localRayOrigin, localRayDir, pMesh->GetCLs()[idx]))
 								{
 									//GpuCollision Check(UseCompute Shader)
-									if (archetype->HasComponents<C_Compute>())
+									if (hasCompute)
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
 										ComputeAsset* pCA = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
@@ -277,7 +280,7 @@ void CollisionSystem::Frame(float deltatime)
 								if (IsCollision(localRayOrigin, localRayDir, hash_boundingVolume)) //바운딩볼륨은 로컬에서 판별한다
 								{
 									//GpuCollision Check(UseCompute Shader)
-									if (archetype->HasComponents<C_Compute>())
+									if (hasCompute)
 									{
 										auto& computes = archetype->GetComponents<C_Compute>(row);
 										ComputeAsset* pCA = _ResourceSystem.GetResource<ComputeAsset>(computes[col].hash_asset_Compute);
@@ -375,20 +378,24 @@ void CollisionSystem::Frame(float deltatime)
 						}
 					}
 				}
-				if (fDist < _VanishingPoint) pq_picking.push({ fDist, &infos[col] });
+				/*if (renders[col].bRenderable)
+					swaps.push_back({ row, col });*/
+				if (fDist < _VanishingPoint) pickingEntitys.push_back({ fDist, &infos[col] });
 			}
 			st_col = 0;
 		}
+		//size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
+		//_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
 	}
 
-	if (pq_picking.size())
+	if (pickingEntitys.size())
 	{
-		auto top = pq_picking.top();
-		C_Info* pInfo = std::get<1>(top);
+		std::sort(pickingEntitys.begin(), pickingEntitys.end());
+		C_Info* pInfo = std::get<1>(*pickingEntitys.begin());
 		_EngineSystem.m_hash_pickingLookup = pInfo->lEntityLookup;
 	}
 
-	if (_InputSystem.IsPressed_LBTN() && pq_picking.empty() && !_EngineSystem.bMouseOnGUI)
+	if (_InputSystem.IsPressed_LBTN() && pickingEntitys.empty() && !_EngineSystem.bMouseOnGUI)
 		_EngineSystem.m_hash_pickingLookup = _HashNotInitialize;
 
 	if (g_bLog)

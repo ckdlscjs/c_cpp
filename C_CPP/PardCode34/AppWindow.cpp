@@ -169,7 +169,7 @@ void AppWindow::OnCreate()
 		//ShadowMap Material
 		{
 			const std::wstring szName = L"ShadowMap";
-			_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateViews(szName, _Target_DepthView, g_iWidth, g_iHeight);
+			_EngineSystem.m_hash_DSV_ShadowMap = _EngineSystem.CreateViews(szName, _Target_DepthView , g_iWidth, g_iHeight);
 			size_t hash_material = _EngineSystem.CreateMaterial(g_szName_mat + szName);
 			_EngineSystem.Material_SetPS(hash_material, L"PS_ShadowMap.hlsl");
 			_EngineSystem.Material_SetHashPass(hash_material, E_RenderPass::Shadow);
@@ -1129,9 +1129,37 @@ void AppWindow::OnCreate()
 		//ECS Initialize(test, 251111)
 		ArchetypeKey key = _ECSSystem.GetArchetypeKey<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
+#ifdef  _InstanceMutant
+		for (int i = 0; i < 100; i++) 
+		{
+			size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
+
+			_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
+
+			_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 0.0f, 0.0f), {dis(gen) * 10.0f, dis(gen) * 10.0f, dis(gen) * 10.0f} });
+
+			uint32_t rpMasks = _ToMask32(E_RenderPass::Shadow) | _ToMask32(E_RenderPass::Opaque);
+#ifdef _DebugRender
+			rpMasks |= _ToMask32(E_RenderPass::Debug);
+#endif //
+#ifdef _EnviornmentMap
+			rpMasks |= _ToMask32(E_RenderPass::Cubemap);
+#endif // 
+			_ECSSystem.AddComponent<C_Render>(key, { true, hash_asset_Render, rpMasks });
+
+			_ECSSystem.AddComponent<C_Compute>(key, { hash_asset_Compute });
+
+			_ECSSystem.AddComponent<C_Collider>(key, { E_Collider::BOX });
+
+			_AnimationSystem.AddAnimbones(lookup);
+			_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
+		}
+
+#endif //  _InstanceMutant
+#ifndef _InstanceMutant
 		size_t lookup = _ECSSystem.CreateEntity<C_Info, C_Transform, C_Render, C_Collider, C_Compute, C_Animation, T_Render_Geometry_Skeletal>();
 
-		_ECSSystem.AddComponent<C_Info>(key, {szName, lookup});
+		_ECSSystem.AddComponent<C_Info>(key, { szName, lookup });
 
 		_ECSSystem.AddComponent<C_Transform>(key, { {0.3f, 0.3f, 0.3f}, Quaternion(0.0f, 90.0f, 0.0f), {-150.0f, 0.0f, 0.0f} });
 
@@ -1150,6 +1178,7 @@ void AppWindow::OnCreate()
 
 		_AnimationSystem.AddAnimbones(lookup);
 		_ECSSystem.AddComponent<C_Animation>(key, { hash_animation, lookup });
+#endif // !_InstanceMutant
 	}
 
 #endif // _MutantWalk
@@ -1755,6 +1784,7 @@ void AppWindow::OnUpdate()
 		_ImguiSystem.Render();
 
 		_RenderSystem.PostRender();
+
 	}
 	
 	if (g_bLog)

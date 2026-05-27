@@ -126,30 +126,6 @@ enum class E_RenderPass : uint32_t
 	COUNT,
 };
 
-////비트트 합 연산 (Pass | Pass -> Mask)
-//inline uint32_t operator|(E_RenderPass a, E_RenderPass b)
-//{
-//	return (1 << static_cast<uint32_t>(a)) | (1 << static_cast<uint32_t>(b));
-//}
-//
-////마스크에 비트 추가 (Mask | Pass -> Mask)
-//inline uint32_t operator|(uint32_t mask, E_RenderPass pass)
-//{
-//	return mask | (1 << static_cast<uint32_t>(pass));
-//}
-//
-////마스크 포함 여부 확인 (Mask & Pass -> bool)
-//inline bool operator&(uint32_t mask, E_RenderPass pass)
-//{
-//	return (mask & (1 << static_cast<uint32_t>(pass))) != 0;
-//}
-//
-////패스 확인여부
-//inline bool operator==(E_RenderPass a, uint32_t b)
-//{
-//	return static_cast<uint32_t>(a) == b;
-//}
-
 class Archetype;
 
 struct RenderItem

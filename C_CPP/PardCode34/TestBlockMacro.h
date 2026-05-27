@@ -9,6 +9,7 @@
 #define _SPONZA
 #define _NORMALMAP
 #define _MutantWalk
+//#define _InstanceMutant
 #define _Praying
 #define _Herald		
 #define _Doro

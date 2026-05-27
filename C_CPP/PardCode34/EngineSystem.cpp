@@ -345,7 +345,6 @@ size_t EngineSystem::CreateRenderAsset(const std::wstring& szName, const Mesh_Ma
 	for (UINT matIdx = 0; matIdx < txs.size(); matIdx++)
 		for (const auto& iter : txs[matIdx])
 			pAsset->m_hTXs[matIdx][(UINT)iter.tex].push_back(iter.hash);
-		
 	return pAsset->GetHash();
 }
 

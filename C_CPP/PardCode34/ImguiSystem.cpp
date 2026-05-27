@@ -155,12 +155,11 @@ void ImguiSystem::Editor_Transform()
             m_fEditTF_Rot[0] = m_fEditTF_Rot[1] = m_fEditTF_Rot[2] = 0.0f;
             m_fEditTF_Sca[0] = m_fEditTF_Sca[1] = m_fEditTF_Sca[2] = 1.0f;
         };
-    size_t lookup = _EngineSystem.m_hash_pickingLookup;
     C_Transform* entityTransform = nullptr;
-    if(lookup != _HashNotInitialize)
+    if(_EngineSystem.m_hash_pickingLookup != _HashNotInitialize)
     {
-        auto& info = _ECSSystem.GetComponent<C_Info>(lookup);
-        entityTransform = &_ECSSystem.GetComponent<C_Transform>(lookup);
+        auto& info = _ECSSystem.GetComponent<C_Info>(_EngineSystem.m_hash_pickingLookup);
+        entityTransform = &_ECSSystem.GetComponent<C_Transform>(_EngineSystem.m_hash_pickingLookup);
         Vector3 vPosition = entityTransform->vPosition;
         Vector3 vRotate = entityTransform->qRotate.ToRotate();
         Vector3 vScale = entityTransform->vScale;
@@ -230,11 +229,20 @@ void ImguiSystem::Editor_Transform()
             entityTransform->qRotate = Quaternion(m_fEditTF_Rot[0], m_fEditTF_Rot[1], m_fEditTF_Rot[2]);
             entityTransform->vScale.Set(m_fEditTF_Sca[0], m_fEditTF_Sca[1], m_fEditTF_Sca[2]);
         }
+
+        ImGui::Spacing();
+        if (ImGui::Button("Delete Entity") && _EngineSystem.m_hash_pickingLookup != _HashNotInitialize)
+        {
+            ResetTransform();
+            _ECSSystem.DeleteEntity(_EngineSystem.m_hash_pickingLookup);
+            _EngineSystem.m_hash_pickingLookup = _HashNotInitialize;
+        }
     }
     ImGui::End();
 
     // Setting, Render gizmo
-    if (lookup == _HashNotInitialize) return;
+    if (!entityTransform) return;
+
     // 2. 기즈모를 그릴 좌표 평면 설정 (화면 전체 혹은 특정 창)
     ImGuiIO& io = ImGui::GetIO();
     ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);

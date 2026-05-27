@@ -11,6 +11,7 @@ public:
 	RenderAsset& operator=(RenderAsset&&) = delete;
 	Mesh_Material m_hMeshMats;
 	std::vector<std::vector<std::vector<size_t>>> m_hTXs;	//mat, e_tex, hash
+	size_t m_hash_resources;
 };
 inline RenderAsset::RenderAsset(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)
 {

@@ -256,14 +256,19 @@ inline Archetype::~Archetype()
 	}
 }
 
+
+/*
+* //archetype생성자쪽으로 chunkCapacity계산이관
+* if (m_ComponentsLookup.empty())
+		m_ChunksCapacity = std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T));
+*/
+
 template<typename T>
 inline void Archetype::RegisterComponent()
 {
 	size_t type = ComponentType::GetMask<T>();
 	_ASEERTION_NULCHK(!m_Key.test(type), "Already Chunk exist");
-	//archetype생성자로이관
-	//if (m_ComponentsLookup.empty())
-	//	m_ChunksCapacity = std::max((size_t)1, CHUNK_BYTE_LIMIT / sizeof(T));
+	
 	m_Key.set(type);
 	m_ComponentsLookup.push_back(type);
 	m_Components[type].push_back(new ChunkData<T>(m_ChunksCapacity));
@@ -373,7 +378,6 @@ inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
 		{
 			delete m_Components[key][idxRow];
 			m_Components[key].erase(m_Components[key].begin() + idxRow);
-
 		}
 	}
 	
