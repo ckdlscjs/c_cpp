@@ -4,16 +4,16 @@
 //C_ -> 컴포넌트	(변수O)
 //T_ -> 태그		(변수X)
 
-struct C_Input
-{
-public:
-	std::bitset<_MAXCOMPONENTS> bVKMask;
-};
-
 struct C_Info
 {
 	std::wstring szName;
 	size_t lEntityLookup;
+};
+
+struct C_Input
+{
+public:
+	std::bitset<_MAXCOMPONENTS> bVKMask;
 };
 
 struct C_Transform

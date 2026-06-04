@@ -98,7 +98,7 @@ private:
 	size_t m_lPS = 0;
 	size_t m_lIL = 0;
 	size_t m_lCS = 0;
-	std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
+	//std::vector<size_t> m_lTXs[(UINT)E_Texture::count];
 	/*std::vector<std::string> m_szTXPaths[(UINT)E_Texture::count];*/
 };
 inline Material::Material(size_t hash, const std::wstring& szFilePath) : BaseResource(hash, szFilePath)

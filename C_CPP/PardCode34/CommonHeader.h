@@ -3,7 +3,6 @@
 #include "std.h"
 #include "CommonMath.h"
 
-//enum classes
 #define _MAXCOMPONENTS size_t(256)
 using ArchetypeKey = std::bitset<_MAXCOMPONENTS>;
 class ComponentType
@@ -20,6 +19,7 @@ private:
 	inline static size_t m_lCount = 0;
 };
 
+//enum classes
 enum class E_InputEvent
 {
 	KEY_DOWN,

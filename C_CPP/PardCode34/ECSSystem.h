@@ -4,14 +4,6 @@
 #include "Entity.h"
 #include "Components.h"
 
-/*
-* 251108 수정필요, 일단 렌더러의 남은구현을위해 정렬까지만하고 추후 최적화 를 구현한다
-* 업데이트관련된 사항을 다음과같이 최적화한다
-* 1.업데이트관련(Input등) 을 인덱스기반으로 뒤로스왑해정리한다
-* 2.해당청크들만을 업데이트종류에따라 정리한다
-* 3.함수포인터로 지정된 함수들에 기반해 업데이트를 수행한다
-*/
-
 class Entity;
 class ECSSystem : public BaseSystem<ECSSystem>
 {
@@ -23,16 +15,15 @@ private:
 	ECSSystem(ECSSystem&&) = delete;
 	ECSSystem& operator=(ECSSystem&&) = delete;
 
-	template<typename... Comps>
-	ArchetypeKey CreateArchetype();
 public:
 	~ECSSystem();
 	void Init();
-
 	template<typename... Comps>
 	ArchetypeKey GetArchetypeKey();
 	template<typename... Comps>
 	size_t GetMaxComponentSize();
+	template<typename... Comps>
+	ArchetypeKey CreateArchetype();
 	template<typename... Comps>
 	size_t CreateEntity();
 	template<typename T>

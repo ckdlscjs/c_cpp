@@ -21,9 +21,9 @@ public:
 	std::unordered_map<std::string, AnimationClip>& GetAnimationClip() { return m_AnimationClip; }
 		
 private:
-	void ProcessMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
-	void ProcessNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
-	void ProcessAnim(const aiScene* scene);
+	void ParseMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
+	void ParseNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical);
+	void ParseAnim(const aiScene* scene);
 
 private:
 	//Mesh
@@ -60,12 +60,12 @@ inline Geometry::Geometry(size_t hash, const std::wstring& szFilePath) : BaseRes
 	const aiScene* scene = importer.ReadFile(szFullPath, readFlag);
 	_ASEERTION_NULCHK(scene, "aiScene nullptr");
 	std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>> verticesIdentical;
-	ProcessNode(scene, scene->mRootNode, -1, verticesIdentical);
-	ProcessAnim(scene);
+	ParseNode(scene, scene->mRootNode, -1, verticesIdentical);
+	ParseAnim(scene);
 }
 
 
-inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
+inline void Geometry::ParseMesh(const aiScene* scene, const aiMesh* mesh, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
 {
 	if (mesh->mNumVertices <= 0) return;
 	UINT matIdx = mesh->mMaterialIndex;
@@ -259,7 +259,7 @@ inline void Geometry::ProcessMesh(const aiScene* scene, const aiMesh* mesh, std:
 	}
 }
 
-inline void Geometry::ProcessNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
+inline void Geometry::ParseNode(const aiScene* scene, const aiNode* node, int idx, std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical)
 {
 	NodeHierarchy curNode;
 	int curidx = m_Hierarchy.size();
@@ -270,17 +270,17 @@ inline void Geometry::ProcessNode(const aiScene* scene, const aiNode* node, int 
 	m_Hierarchy.push_back(curNode);
 	for (UINT i = 0; i < node->mNumMeshes; i++)
 	{
-		ProcessMesh(scene, scene->mMeshes[node->mMeshes[i]], verticesIdentical);
+		ParseMesh(scene, scene->mMeshes[node->mMeshes[i]], verticesIdentical);
 	}
 
 	for (UINT i = 0; i < node->mNumChildren; i++)
 	{
-		ProcessNode(scene, node->mChildren[i], curidx, verticesIdentical);
+		ParseNode(scene, node->mChildren[i], curidx, verticesIdentical);
 	}
 }
 
 //AnimationClip(애니메이션별)에 뼈대정보별로 각 갯수(프레임갯수)에맞게끔 S,R,T를 구성한다
-inline void Geometry::ProcessAnim(const aiScene* scene)
+inline void Geometry::ParseAnim(const aiScene* scene)
 {
 	for (UINT i = 0; i < scene->mNumAnimations; i++) 
 	{

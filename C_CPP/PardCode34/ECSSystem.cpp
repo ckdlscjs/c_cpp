@@ -23,7 +23,7 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
 	std::vector<Archetype*> archetypes;
 	for (auto& iter : m_Archetypes)
 	{
-		if ((iter.first & key) == key)
+		if ((iter.first & key) == key && !iter.second->IsEmpty())
 			archetypes.push_back(iter.second);
 	}
 	return archetypes;
@@ -56,8 +56,13 @@ void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& Ro
 			auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
 			size_t srcEntityIdx = FindEntity(src_dest.first);
 			size_t destEntityIdx = FindEntity(src_dest.second);
-			std::swap(m_Entitys[srcEntityIdx], m_Entitys[destEntityIdx]);
-			std::swap(m_Entitys[srcEntityIdx].m_IdxLookup, m_Entitys[destEntityIdx].m_IdxLookup);
+			// srcLookup의 데이터가 dest slot으로 이동
+			m_Entitys[srcEntityIdx].m_IdxRow = destRow;
+			m_Entitys[srcEntityIdx].m_IdxCol = destCol;
+
+			// destLookup의 데이터가 src slot으로 이동
+			m_Entitys[destEntityIdx].m_IdxRow = srcRow;
+			m_Entitys[destEntityIdx].m_IdxCol = srcCol;
 		}
 		idx--;
 	}
@@ -66,30 +71,31 @@ void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& Ro
 	archetype->m_transfer_col = startIdx % capacity;
 }
 
+//사용된 룩업을 폐기시키고 삭제될 엔티티를 마지막 엔티티로 변경후 폐기한다
 void ECSSystem::DeleteEntity(size_t lookupIdx)
 {
 	size_t delEntityIdx = FindEntity(lookupIdx);
 	Entity delEntity = m_Entitys[delEntityIdx];
-	size_t movedLookupIdx = m_Archetypes[delEntity.m_Key]->DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
-	m_LookupTable[lookupIdx] = -1;	//해당 룩업은 폐기
-	//삭제시킨 Lookup이 삭제시킬 Lookup과 같다면 청크의 끝이 삭제된것
-	if (movedLookupIdx == lookupIdx)
-	{
-		//마지막 엔티티를 삭제된 엔티티의 자리로 swap and pop한다
-		m_LookupTable[m_Entitys.back().m_IdxLookup] = delEntityIdx;	//마지막을 가리키는 룩업을 스왑엔티티로지정
-		m_Entitys[delEntityIdx] = std::move(m_Entitys.back());		//스왑자리에 마지막엔티티를 이동
-		m_Entitys.pop_back();
-		return;
-	}
-	//옮겨진 엔티티의 row, col을 삭제된 row,col로 갱신시킨다
-	size_t movEntityIdx = FindEntity(movedLookupIdx);
-	m_Entitys[movEntityIdx].m_IdxRow = delEntity.m_IdxRow;
-	m_Entitys[movEntityIdx].m_IdxCol = delEntity.m_IdxCol;
+	m_LookupTable[lookupIdx] = _HashNotInitialize;	//삭제위치를 가리키는 룩업은 이제 사용하지않는다
 
-	//가장 끝의 엔티티를 삭제된 자리로 옮긴다(swap and pop)
-	size_t lastLookupIdx = m_Entitys.back().m_IdxLookup;
-	m_LookupTable[lastLookupIdx] = delEntityIdx;
-	m_Entitys[delEntityIdx] = std::move(m_Entitys.back());
+	size_t movedLookupIdx = m_Archetypes[delEntity.m_Key]->DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
+
+	//이동된 인덱싱과 삭제할 인덱스 룩업은 서로 같은 key이므므로 row, col을 이동시킨다
+	if (movedLookupIdx != lookupIdx)
+	{
+		size_t movEntityIdx = FindEntity(movedLookupIdx);
+		m_Entitys[movEntityIdx].m_IdxRow = delEntity.m_IdxRow;
+		m_Entitys[movEntityIdx].m_IdxCol = delEntity.m_IdxCol;
+	}
+
+	size_t lastEntityIdx = m_Entitys.size() - 1;
+
+	if (delEntityIdx != lastEntityIdx)
+	{
+		m_Entitys[delEntityIdx] = std::move(m_Entitys[lastEntityIdx]);
+		m_LookupTable[m_Entitys[delEntityIdx].m_IdxLookup] = delEntityIdx;
+	}
+
 	m_Entitys.pop_back();
 }
 
@@ -100,7 +106,13 @@ const Entity* ECSSystem::GetEntity(size_t lookupIdx)
 
 size_t ECSSystem::FindEntity(size_t lookupIdx)
 {
-	_ASEERTION_NULCHK(lookupIdx < m_LookupTable.size(), "idx Out of bounds");
-	_ASEERTION_NULCHK(0 <= m_LookupTable[lookupIdx] && m_LookupTable[lookupIdx] < m_Entitys.size() , "idx Out of bounds");
+	_ASEERTION_NULCHK(lookupIdx < m_LookupTable.size(), "lookupIdx Out of bounds");
+	_ASEERTION_NULCHK(m_LookupTable[lookupIdx] != _HashNotInitialize, "lookupIdx invalid");
+
+	size_t entityIdx = m_LookupTable[lookupIdx];
+
+	_ASEERTION_NULCHK(entityIdx < m_Entitys.size(), "entityIdx Out of bounds");
+	_ASEERTION_NULCHK(m_Entitys[entityIdx].m_IdxLookup == lookupIdx, "LookupTable mismatch");
+
 	return m_LookupTable[lookupIdx];
 }

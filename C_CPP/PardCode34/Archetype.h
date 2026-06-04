@@ -184,8 +184,12 @@ public:
 	{
 		_ASEERTION_NULCHK(GetCount() && chunkIdx < GetCount(), "idx out of bound");
 		std::vector<T>& pChunks = static_cast<ChunkData<T>*>(srcChunk)->m_data;
-		if(chunkIdx < pChunks.size()-1)
-			m_data[chunkIdx] = std::move(pChunks.back());
+		if (this->m_data.data() == pChunks.data() && chunkIdx == pChunks.size() - 1)
+		{
+			pChunks.pop_back();
+			return;
+		}
+		m_data[chunkIdx] = std::move(pChunks.back());
 		pChunks.pop_back();
 	}
 	void AddChunk() override
@@ -232,6 +236,7 @@ public:
 	size_t GetAllChunkCount() const;
 	size_t GetLookupIdx(size_t row, size_t col) const;
 	const ArchetypeKey GetKey() const;
+	bool IsEmpty() const;
 
 	size_t m_transfer_row = 0;
 	size_t m_transfer_col = 0;
@@ -240,7 +245,7 @@ private:
 	size_t m_ChunksCapacity;
 	std::array<std::vector<ComponentChunk*>, _MAXCOMPONENTS> m_Components;
 	std::vector<size_t> m_ComponentsLookup;
-	std::vector<size_t> m_LookupIdxs;
+	std::vector<size_t> m_ChunksLookup;
 };
 
 inline Archetype::Archetype(size_t largestComponentSize) : m_ChunksCapacity(std::max((size_t)1, CHUNK_BYTE_LIMIT / largestComponentSize))
@@ -291,7 +296,7 @@ inline void Archetype::ReserveIndexes(const size_t lookupIdx, size_t& out_idxRow
 {
 	_ASEERTION_NULCHK(!m_ComponentsLookup.empty(), "Component Chunk not exist");
 
-	m_LookupIdxs.push_back(lookupIdx);
+	m_ChunksLookup.push_back(lookupIdx);
 
 	for (const auto& key : m_ComponentsLookup)
 		m_Components[key].back()->AddChunk();
@@ -342,7 +347,7 @@ inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t 
 {
 	auto& chunks = m_Components[*m_ComponentsLookup.begin()];
 	_ASEERTION_NULCHK(srcRow < chunks.size(), "Chunk row Out of Bound");
-	_ASEERTION_NULCHK(!m_LookupIdxs.empty(), "Entity Lookup empty");
+	_ASEERTION_NULCHK(!m_ChunksLookup.empty(), "Entity Lookup empty");
 
 	//swap(실제데이터 교체)
 	for (const auto& key : m_ComponentsLookup)
@@ -351,38 +356,43 @@ inline std::pair<size_t, size_t> Archetype::SwapChunkData(size_t srcRow, size_t 
 	//Lookup을 계산해 반환
 	size_t srcIdx = srcRow * m_ChunksCapacity + srcCol;
 	size_t destIdx = destRow * m_ChunksCapacity + destCol;
-	return { m_LookupIdxs[srcIdx], m_LookupIdxs[destIdx] };
+	size_t retSrc = m_ChunksLookup[srcIdx];
+	size_t retDst = m_ChunksLookup[destIdx];
+	std::swap(m_ChunksLookup[srcIdx], m_ChunksLookup[destIdx]);
+	return { retSrc, retDst };
 }
 
 inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
 {
 	auto& chunks = m_Components[*m_ComponentsLookup.begin()];
 	_ASEERTION_NULCHK(idxRow < chunks.size(), "Chunk row Out of Bound");
-	_ASEERTION_NULCHK(!m_LookupIdxs.empty(), "Entity Lookup empty");
+	_ASEERTION_NULCHK(!m_ChunksLookup.empty(), "Entity Lookup empty");
 
 	//Archetype의 요소들중 끝 값을 앞으로 swap하고 맨뒷값 삭제
 	for (const auto& key : m_ComponentsLookup)
 		m_Components[key][idxRow]->SwapAndPop(idxCol, m_Components[key].back());
 
-	//청크가 가진 삭제위치의 Lookup값을 맨 끝값으로 바꾼다
-	size_t movedIdx = m_LookupIdxs.back();
-	size_t deletedIdx = m_ChunksCapacity * idxRow + idxCol;
-	if (deletedIdx < m_LookupIdxs.size() - 1)
-		m_LookupIdxs[deletedIdx] = movedIdx;
-	m_LookupIdxs.pop_back();
-
-	//끝의 청크가 요소가 없을때 삭제한다
-	if (chunks[idxRow]->GetCount() <= 0)
+	//swap and pop이후 chunks의 마지막 1차원 컨테이너 갯수가 0이라면 삭제한다
+	if (!chunks.empty() && chunks.back()->GetCount() == 0)
 	{
 		for (const auto& key : m_ComponentsLookup)
 		{
-			delete m_Components[key][idxRow];
-			m_Components[key].erase(m_Components[key].begin() + idxRow);
+			delete m_Components[key].back();
+			m_Components[key].pop_back();
 		}
 	}
-	
+
+	//청크가 가진 삭제위치의 Lookup값을 맨 끝값으로 바꾼다
+	size_t lookup_movedIdx = m_ChunksLookup.back();
+	size_t lookup_deletedIdx = m_ChunksCapacity * idxRow + idxCol;
+
+	if (lookup_deletedIdx < m_ChunksLookup.size() - 1)
+		m_ChunksLookup[lookup_deletedIdx] = lookup_movedIdx;
+
+	m_ChunksLookup.pop_back();
+
 	//이동된Lookup값을 리턴
-	return movedIdx;
+	return lookup_movedIdx;
 }
 
 inline size_t Archetype::GetCount_Chunks() const
@@ -411,10 +421,16 @@ inline size_t Archetype::GetAllChunkCount() const
 
 inline size_t Archetype::GetLookupIdx(size_t row, size_t col) const
 {
-	return m_LookupIdxs[row * m_ChunksCapacity + col];
+	return m_ChunksLookup[row * m_ChunksCapacity + col];
 }
 
 inline const ArchetypeKey Archetype::GetKey() const
 {
 	return m_Key;
+}
+
+inline bool Archetype::IsEmpty() const
+{
+	const auto& chunks = m_Components[*m_ComponentsLookup.begin()];
+	return chunks.empty();
 }

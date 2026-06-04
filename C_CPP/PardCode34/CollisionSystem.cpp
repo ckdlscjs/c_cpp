@@ -67,7 +67,7 @@ void CollisionSystem::Frame(float deltatime)
 	Matrix4x4 matInvView = GetMat_Inverse(matView);
 	Vector4 rayOriginWorld = Vector4(0.0f, 0.0f, 0.0f, 1.0f) * matInvView;
 	Vector4 rayDirWorld = (Vector4(vx, vy, 1.0f, 0.0f) * matInvView).Normalize();
-	using PickingOrder = std::tuple<float, C_Info*>;
+	using PickingOrder = std::tuple<float, size_t>;
 	std::vector<PickingOrder> pickingEntitys;
 
 	UINT renderCnt = 0;
@@ -76,10 +76,10 @@ void CollisionSystem::Frame(float deltatime)
 	std::vector<Archetype*> queries = _ECSSystem.QueryArchetypes(key);
 	for (auto& archetype : queries)
 	{
-		//archetype->m_transfer_row = archetype->m_transfer_col = 0;	//컬링되어 렌더링이 필요없는 최적화부분을 위한 초기화
+		archetype->m_transfer_row = archetype->m_transfer_col = 0;
 		size_t st_row = archetype->m_transfer_row;
 		size_t st_col = archetype->m_transfer_col;
-		//std::vector<std::pair<size_t, size_t>> swaps;
+		std::vector<std::pair<size_t, size_t>> swaps;
 		bool hasAnimaiton = archetype->HasComponents<C_Animation>();
 		bool hasCompute = archetype->HasComponents<C_Compute>();
 		for (size_t row = st_row; row < archetype->GetCount_Chunks(); row++)
@@ -378,21 +378,20 @@ void CollisionSystem::Frame(float deltatime)
 						}
 					}
 				}
-				/*if (renders[col].bRenderable)
-					swaps.push_back({ row, col });*/
-				if (fDist < _VanishingPoint) pickingEntitys.push_back({ fDist, &infos[col] });
+				if (renders[col].bRenderable)
+					swaps.push_back({ row, col });
+				if (fDist < _VanishingPoint) pickingEntitys.push_back({ fDist, infos[col].lEntityLookup });
 			}
 			st_col = 0;
 		}
-		//size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
-		//_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
+		size_t startIdx = archetype->GetAllChunkCount() - swaps.size();
+		_ECSSystem.UpdateSwapChunk(swaps, startIdx, archetype);
 	}
 
-	if (pickingEntitys.size())
+	if (!pickingEntitys.empty())
 	{
 		std::sort(pickingEntitys.begin(), pickingEntitys.end());
-		C_Info* pInfo = std::get<1>(*pickingEntitys.begin());
-		_EngineSystem.m_hash_pickingLookup = pInfo->lEntityLookup;
+		_EngineSystem.m_hash_pickingLookup = std::get<1>(pickingEntitys.front());
 	}
 
 	if (_InputSystem.IsPressed_LBTN() && pickingEntitys.empty() && !_EngineSystem.bMouseOnGUI)

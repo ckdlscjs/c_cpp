@@ -77,7 +77,7 @@ public:
 
 class GeometryShader : public BaseShader<ID3D11GeometryShader>
 {
-public:
+public: 
 	GeometryShader(ID3D11Device* pDevice, ID3DBlob* pBlob);
 	GeometryShader(const GeometryShader&) = delete;
 	GeometryShader& operator=(const GeometryShader&) = delete;
