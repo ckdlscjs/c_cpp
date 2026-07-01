@@ -1,6 +1,6 @@
 # 🛠️ DX11 기반 ECS 아키처 캐시 최적화 렌더러 (c_cpp, PardCode34)
 
-본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 극한으로 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
+본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
 
 학습 및 설계의 기반으로 **이득우의 게임수학**, **DirectX 11 물방울책 (Introduction to 3D Game Programming with Direct3D 11 - Frank D. Luna 저)**, **RasterTek DirectX 11 Tutorial**, **PardCode DirectX 11 Tutorial**의 핵심 그래픽스 및 선형대수 인프라를 바닥부터 심도 있게 학습하여 내재화하였으며, 과거 팀 프로젝트인 **맵툴(MapTool)** 및 **롤신소울(LoLShinSouls)** 개발 과정에서 누적된 지형 렌더링, 충돌 제어, 카메라 연출 노하우를 녹여내어 한 단계 진화된 최적화 렌더패스 엔진을 직접 설계 및 구축함.
 
