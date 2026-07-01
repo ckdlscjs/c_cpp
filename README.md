@@ -1,4 +1,4 @@
-# 🛠️ DX11 기반 ECS 아키텍처 캐시 최적화 렌더러 (c_cpp/PardCode34)
+# 🛠️ DX11 기반 ECS 아키처 캐시 최적화 렌더러 (c_cpp / PardCode34)
 
 본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
 
@@ -24,36 +24,123 @@
 
 ### 1. CRTP 기반 시스템 설계
 * **파일명**: `GameLib/BaseSystem.h`
-* **기능 개요**: 엔진 전반에 존재하는 다양한 매니저 클래스의 유일성을 보장하고 지연 생성 및 D3D11 리소스 래퍼들의 수명 주기를 RAII 패턴으로 일원화함.
+* **기능 개요**: 엔진 전반에 존재하는 매니저 클래스의 싱글톤 구성을 일관된 템플릿으로 통제하고, D3D11 객체 자원들의 생성/소멸 수명 주기를 명확히 구성하여 누수를 원천 방지함.
 * **코드 상세 분석**:
-  - C++의 CRTP(Curiously Recurring Template Pattern) 패턴을 도입해 `BaseSystem<T>` 기저를 구축, 공통 싱글톤 메커니즘을 템플릿화하여 구현함.
-  - 최초 실제 사용 시점에 정적 인스턴스가 호출되는 지연 생성(Lazy Initialization)을 채택하고 복사/이동 생성 및 대입 연산자를 제거해 싱글톤의 안정성을 보장함.
-  - 리소스 클래스들은 소멸자에서 즉각 안전한 해제(`Release()`)를 완수하는 RAII 패턴을 준수하게 하여 자원 누수를 원천 차단함.
+  - C++의 CRTP(Curiously Recurring Template Pattern) 패턴을 구현해 싱글톤 메커니즘의 중복 보일러플레이트를 완전 제거함.
+  - 인스턴스를 호출하는 최초 시점에 정적 객체가 할당되는 지연 생성(Lazy Initialization) 구조를 채택해 멀티스레드 환경에서도 안전한 초기화를 수립함.
+  - 생성자 및 소멸자 수명 주기를 명확히 일원화하여 RAII 패턴을 준수하도록 설계함.
+* **💻 핵심 구현 코드**:
+```cpp
+template<typename T>
+class BaseSystem
+{
+protected:
+    BaseSystem();
+    virtual ~BaseSystem();
+    BaseSystem(const BaseSystem&) = delete;            // 복사 생성 금지
+    BaseSystem& operator=(const BaseSystem&) = delete; // 대입 연산 금지
+    BaseSystem(BaseSystem&&) = delete;                 // 이동 생성 금지
+public:
+    static T& GetInstance();
+};
+
+template<typename T>
+inline BaseSystem<T>::BaseSystem() {}
+
+template<typename T>
+inline BaseSystem<T>::~BaseSystem() {}
+
+template<typename T>
+inline T& BaseSystem<T>::GetInstance()
+{
+    static T instance;
+    return instance;
+}
+```
 
 ### 2. 수학 라이브러리 정의 (Vector, Matrix, Quaternion)
 * **파일명**: `GameLib/CommonMath.h`
-* **기능 개요**: DirectXMath를 래핑하여 16바이트 정렬 조건과 SIMD 레지스터 계산 효율을 확보하고, 행렬 내부에 공용체 접근 구조를 도입하여 좌표 변환 및 애니메이션 회전 역산의 편의성을 도모함.
+* **기능 개요**: DirectXMath의 SIMD 계산 레지스터 연산 성능을 확보하면서, 디버깅 첨자 접근 및 짐벌락 회피 회전 연산을 고속 수행하는 수학 래퍼 라이브러리를 구축함.
 * **코드 상세 분석**:
-  - `__declspec(align(16))` 키워드를 활용해 수학 자료형의 멤버변수를 SSE/AVX 가속 레지스터에 맞추어 16바이트 하드웨어 정렬 적재 효율을 보존함.
-  - 공용체(`union`)를 활용해 내부적으로는 SIMD 고속 연산을 처리하되 디버깅 시에는 개별 플로트 성분 및 첨자(`_11 ~ _44`)에 직접 접근이 가능하도록 설계함.
-  - 짐벌락 현상을 차단하고 회전 상태의 구면 선형 보간(Slerp) 처리를 가속하기 위해 자체 사원수(Quaternion) 클래스를 정의하여 카메라 및 애니메이션 연산의 핵심 구조로 활용함.
+  - `__declspec(align(16))` 하드웨어 정렬 지시어를 수립하여 SIMD 메모리 적재 효율을 극한으로 보존함.
+  - 공용체(`union`)를 적용해 내부 연산은 가속화하되 CPU 단에서 행렬 성분 및 첨자(`_11 ~ _44`)에 조밀 접근이 가능하도록 구성함.
+  - 사원수(`Quaternion`) 클래스를 구현하여 본 애니메이션 키프레임 간의 구면 선형 보간(Slerp) 계산 인프라를 수립함.
+* **💻 핵심 구현 코드**:
+```cpp
+__declspec(align(16)) struct Vector4 {
+public:
+    inline Vector4() : m_vec(DirectX::XMVectorZero()) {} 
+    inline Vector4(float x, float y, float z, float w) : m_vec(DirectX::XMVectorSet(x, y, z, w)) {}
+    inline DirectX::XMVECTOR ToXMVECTOR() const { return m_vec; }
+private:
+    DirectX::XMVECTOR m_vec; // SIMD 레지스터 16바이트 정렬 직접 매핑
+};
+
+__declspec(align(16)) struct Matrix4x4 {
+public:
+    union
+    {
+        DirectX::XMMATRIX m_mat;
+        struct
+        {
+            float _11, _12, _13, _14;
+            float _21, _22, _23, _24;
+            float _31, _32, _33, _34;
+            float _41, _42, _43, _44;
+        };
+    };
+    inline Matrix4x4() : m_mat(DirectX::XMMatrixIdentity()) {}
+    inline DirectX::XMMATRIX ToXMMATRIX() const { return m_mat; }
+};
+```
 
 ### 3. 가상자원 및 D3D Wrapper 정의
-* **파일명**: `GameLib/ResourceSystem.h`, `Resource.h`, `Geometry.h`, `Mesh.h`
-* **기능 개요**: 텍스처, 기하(FBX 등), 머티리얼, 본 애니메이션 원시 데이터를 전용 가상 자원으로 가공하고 해시 룩업 캐싱을 통해 자원 중복 소유 및 로드 낭비를 해소함.
+* **파일명**: `GameLib/ResourceSystem.h`, `Geometry.cpp`
+* **기능 개요**: 텍스처, 기하(Assimp), 머티리얼 등의 원시 에셋 데이터를 FNV-1a 해싱 기반 캐싱 구조에 등록하여 에셋 중복 로드를 O(1)에 원천 차단함.
 * **코드 상세 분석**:
-  - 에셋 파일의 디스크 경로 및 명칭을 FNV-1a 해시값(64비트)으로 변환하고, 리소스 팩토리(`CreateResource`)에서 해시 키 룩업으로 중복 로드를 O(1)에 차단함.
-  - Assimp 라이브러리를 연동해 aiScene 트리를 재귀 순회(`ParseNode`)하고 정점 FNV-1a 해싱을 통한 실시간 중복 정점 제거(인덱싱 테이블 매핑)를 적용해 버퍼 크기를 최적화함.
-  - `BaseBuffer<T>`, `BaseState<T>` 등 D3D11 래퍼 객체들을 EngineSystem 저장소 패턴으로 일원화 관리하여 장치 문맥(Device Context)의 버스 낭비를 통제함.
+  - 완벽 포워딩(`std::forward`) 기반의 캐싱 팩토리 메소드(`CreateResource`)를 구현하여 에셋 중복 로드를 사전에 제어함.
+  - Assimp SDK를 거쳐 aiScene 노드 계층을 재귀 순회(`ParseNode`)하고 정점 FNV-1a 해싱 룩업을 수행해 중복 정점 제거(인덱싱 테이블 매핑)를 적용함.
+* **💻 핵심 구현 코드**:
+```cpp
+// ResourceSystem.h: 가변 인자 기반 캐싱 팩토리 정의
+template<typename T, typename... Types>
+T* ResourceSystem::CreateResource(const std::wstring& szFile, Types&&... args)
+{
+    size_t hash = Hasing_wstring(szFile);
+    if (m_Resources.find(hash) != m_Resources.end()) 
+        return static_cast<T*>(m_Resources[hash]);
 
-### 4. 서브시스템의 구성 (Input, Behavior, Timer, Imgui)
-* **파일명**: `GameLib/InputSystem.cpp`, `BehaviorSystem.cpp`, `TimerSystem.cpp`
-* **기능 개요**: 입력 폴링, ECS 엔티티 움직임 업데이트, 마이크로초 단위 성능 프로파일링 및 ImGui UI 에디터 구성을 위한 서브 인프라를 분리 가동함.
-* **코드 상세 분석**:
-  - `InputSystem`: Win32 키보드/마우스 메세지 이벤트를 실시간 상태 배열에 폴링함과 동시에, 가상 키 트리거 시 지정된 델리게이트를 호출하는 이벤트 구동식 구조를 구축함.
-  - `BehaviorSystem`: ECS 청크 메모리를 순회하며 특정 행동 컴포넌트를 지닌 객체들의 동적 갱신(빌보드 시선 고정 등)을 일괄 처리함.
-  - `TimerSystem`: 성능카운터 API 및 `high_resolution_clock`을 이용해 프레임별 `DeltaTime` 획득 및 함수 소요 시간을 측정하는 Scoped Timer를 지원하여 최적화 프로파일링을 돕도록 구성함.
-  - `ImguiSystem`: 기즈모 조작 및 선택된 엔티티의 트랜스폼/상태 확인을 위한 씬 에디팅 오버레이를 연동함.
+    T* newResource = new T(hash, szFile, std::forward<Types>(args)...);
+    m_Resources[hash] = newResource;
+    return newResource;
+}
+
+// Geometry.cpp: Assimp 노드 재귀 순회 및 중복 정점 해시 룩업 테이블 인덱싱
+inline void Geometry::ParseMesh(const aiScene* scene, const aiMesh* mesh, 
+                                 std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical) {
+    if (mesh->mNumVertices <= 0) return;
+    UINT matIdx = mesh->mMaterialIndex;
+    std::vector<UINT> vertexLookup(mesh->mNumVertices);
+    
+    for (UINT i = 0; i < mesh->mNumVertices; i++) {
+        Vertex_PTNTB_Skinned vertex = {};
+        // [정점 물리 데이터 적재]
+        
+        auto iter = verticesIdentical[matIdx].find(vertex);
+        if (iter == verticesIdentical[matIdx].end()) {
+            verticesIdentical[matIdx][vertex] = m_verticesByMaterial[matIdx].size();
+            m_verticesByMaterial[matIdx].push_back(vertex);
+        }
+        vertexLookup[i] = verticesIdentical[matIdx][vertex];
+    }
+    
+    for (UINT i = 0; i < mesh->mNumFaces; i++) {
+        aiFace face = mesh->mFaces[i];
+        for (UINT j = 0; j < face.mNumIndices; j++)
+            m_indicesByMaterial[matIdx].push_back(vertexLookup[face.mIndices[j]]);
+    }
+}
+```
 
 ---
 
@@ -61,124 +148,386 @@
 
 ### 1. OOP 기반의 한계성과 DOD 기반으로의 전환
 * **파일명**: `GameLib/ECSSystem.h`, `Components.h`
-* **기능 개요**: 동적 개체들이 개별 힙 공간에 산발 배치되는 객체지향(OOP) 구조에서 탈피하여, 데이터 밀집 배열 구조(DOD)를 지향하는 ECS 시스템으로 아키텍처를 개편함.
+* **기능 개요**: 힙 공간에 분산 배치되어 CPU 캐시 미스를 초래하는 OOP의 개별 객체 구조를 극소화하고, 순수 컴포넌트 데이터의 조밀 선형 메모리 배열 배치를 수립함.
 * **코드 상세 분석**:
-  - 엔티티(`Entity`)를 식별 ID 및 컴포넌트 주소 매핑 정보만 소유하는 경량 구조로 정의하고, 컴포넌트(`Component`)는 연산 행동(Logic)이 배제된 순수 데이터 구조체로 재설계함.
-  - `System`은 필요한 컴포넌트 조합을 쿼리하여 조밀 배열(Dense Array) 형태로 연속 순회 연산을 가동함으로써 캐시 히트율을 확보함.
-  - `ArchetypeKey`를 컴포넌트 타입마다 순차 할당된 비트 마스크(`std::bitset<256>`) 형태로 정의하여, 특정 컴포넌트 조합을 사용하는 아키타입 분기를 O(1)에 탐색하도록 설계함.
+  - `Entity`는 순수 식별 인덱스 주소만 보유하며, `Component`는 런타임 타입 마스크 지수를 고유 발급받아 비트 마스킹으로 관리됨.
+  - 가변인자 템플릿 `CreateArchetype`에서 컴파일 타임 C++17 폴드 표현식을 통해 컴포넌트 청크를 분팩 생성함.
+* **💻 핵심 구현 코드**:
+```cpp
+// ECSSystem.h: C++17 폴드 표현식을 이용한 각 컴포넌트 자동 등록 및 청크 전개
+template<typename ...Comps>
+inline ArchetypeKey ECSSystem::CreateArchetype()
+{
+    ArchetypeKey key = GetArchetypeKey<Comps...>();
+    if (m_Archetypes.find(key) != m_Archetypes.end()) 
+        return key;
+    m_Archetypes[key] = new Archetype(GetMaxComponentSize<Comps...>());
+    
+    (m_Archetypes[key]->RegisterComponent<Comps>(), ...);
+    return key;
+}
+```
 
 ### 2. Archetype & ChunkData 구성
 * **파일명**: `GameLib/Archetype.h`
-* **기능 개요**: 컴포넌트 조합별로 독립된 메모리 블록 관리 주체인 아키타입을 수립하고, 내부 컴포넌트 배열들을 16KB(16384바이트)의 물리 크기 제한을 두는 Chunk 단위 메모리로 연속 배치함.
+* **기능 개요**: 아키타입 내 이종 컴포넌트 배열들을 16KB(16384바이트)의 물리 연속 크기제약 청크 블록으로 구성하여 CPU 데이터 캐시 히트율을 확보함.
 * **코드 상세 분석**:
-  - 아키타입 내에서 크기가 가장 큰 컴포넌트 메모리 크기를 기반으로 역산하여, 각 컴포넌트 청크당 동기화하여 소유할 수 있는 최대 개수(`m_ChunksCapacity`)를 도출해 인덱싱을 단일화함.
-  - `ComponentChunk` 인터페이스를 상속하는 템플릿 기반 컴포넌트 청크 클래스(`ChunkData<T>`)를 구현해 다양한 자료형의 컴포넌트 추가/제거/이동 가상 함수를 안전하게 처리함.
-  - 데이터 용량이 16KB 한계치에 다다르면 신규 청크 메모리를 동적 전개하여 가변적 스폰 요구에 효율적으로 대응함.
+  - `ComponentChunk` 추상 클래스를 기반으로 상속 템플릿 클래스 `ChunkData<T>`를 구성하여 컴포넌트 타입별 고속 복사 및 Swap 연산을 통제함.
+  - 아키타입 내에서 최대 컴포넌트 크기로 용량을 역산해 청크당 최대 인덱싱 개수를 일원화함.
+* **💻 핵심 구현 코드**:
+```cpp
+class ComponentChunk
+{
+public:
+    virtual ~ComponentChunk() = default;
+    virtual void Swap(size_t srcCol, ComponentChunk* destChunk, size_t destCol) = 0;
+    virtual void SwapAndPop(size_t chunkIdx, ComponentChunk* srcChunk) = 0;
+    virtual void AddChunk() = 0;
+    virtual size_t GetCount() const = 0;
+};
+```
 
-### 3. 컴포넌트 조합 및 엔티티 생성 흐름
-* **파일명**: `GameLib/ECSSystem.cpp`
-* **기능 개요**: 여러 컴포넌트를 받아 아키타입을 런타임에 빌드할 때 발생하는 템플릿 인자 해석 오버헤드를 차단하고 복사 비용 없이 청크에 데이터를 안전하게 등록함.
+### 3. Sparse/Dense(희소배열) 기반 구성 및 Swap & Pop
+* **파일명**: `GameLib/Archetype.h` (`DeleteComponent`), `GameLib/ECSSystem.cpp` (`DeleteEntity`)
+* **기능 개요**: 임의 개체 소멸 시 시프트 복사 연산($O(N)$) 병목을 회피하기 위해 최후방 청크 데이터와의 스왑을 통한 O(1) 완전 삭제를 적용하고 룩업 포인터를 동기화함.
 * **코드 상세 분석**:
-  - C++17 폴드 표현식(Fold Expression)을 사용하여 가변인자 템플릿 `CreateArchetype<Comps...>()` 내에서 컴포넌트들의 마스크 비트를 일괄 수집하고 매칭되는 청크 슬롯들을 컴파일 타임에 분해 조립함.
-  - 엔티티 생성 단계에서 예약 함수(`ReserveIndexes`)를 호출해 모든 컴포넌트 청크 내 물리 주소(Row, Col)를 실시간 선점하여 데이터 배치 속도를 최적화함.
-  - 컴포넌트 데이터 등록(`AddComponent<T>`) 시 우측값 참조(Rvalue Reference) 및 이동 시맨틱을 통해 컴포넌트 원소의 깊은 복사 및 메모리 재할당 오버헤드를 배제함.
+  - `DeleteComponent` 기동 시 대상 청크 슬롯들을 최후방(back) 청크의 마지막 요소와 맞바꾼 후 제거하여 O(1) 삭제 효율을 유지함.
+  - 이동된 실제 엔티티들의 룩업 매핑이 어긋나지 않도록 `m_LookupTable`(Sparse)과 `m_Entitys`(Dense)를 역추적 교정함.
+* **💻 핵심 구현 코드**:
+```cpp
+// Archetype.h: 아키타입 내 컴포넌트들의 일괄 Swap & Pop 지휘
+inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
+{
+    auto& chunks = m_Components[*m_ComponentsLookup.begin()];
+    
+    for (const auto& key : m_ComponentsLookup)
+        m_Components[key][idxRow]->SwapAndPop(idxCol, m_Components[key].back());
+ 
+    if (!chunks.empty() && chunks.back()->GetCount() == 0)
+    {
+        for (const auto& key : m_ComponentsLookup)
+        {
+            delete m_Components[key].back();
+            m_Components[key].pop_back();
+        }
+    }
+    return m_ChunksLookup.back();
+}
 
-### 4. Sparse/Dense(희소배열) 기반 구성 및 Swap & Pop
-* **파일명**: `GameLib/ECSSystem.cpp` (`DeleteEntity`), `GameLib/Archetype.h` (`DeleteComponent`)
-* **기능 개요**: 엔티티 제거 시 메모리 틈새를 메우는 복사 시프트 연산($O(N)$) 병목을 회피하고, 삭제 후에도 남아있는 객체들의 메모리 물리 주소 참조 일관성을 유지함.
+// ECSSystem.cpp: 삭제로 인해 순간이동한 후방 엔티티의 물리 청크 정보(행/열) 교정 동기화
+void ECSSystem::DeleteEntity(size_t lookupIdx)
+{
+    size_t delEntityIdx = FindEntity(lookupIdx);
+    Entity delEntity = m_Entitys[delEntityIdx];
+    m_LookupTable[lookupIdx] = _HashNotInitialize; 
+ 
+    size_t movedLookupIdx = m_Archetypes[delEntity.m_Key]->DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
+ 
+    if (movedLookupIdx != lookupIdx)
+    {
+        size_t movEntityIdx = FindEntity(movedLookupIdx);
+        m_Entitys[movEntityIdx].m_IdxRow = delEntity.m_IdxRow;
+        m_Entitys[movEntityIdx].m_IdxCol = delEntity.m_IdxCol;
+    }
+ 
+    size_t lastEntityIdx = m_Entitys.size() - 1;
+    if (delEntityIdx != lastEntityIdx)
+    {
+        m_Entitys[delEntityIdx] = std::move(m_Entitys[lastEntityIdx]);
+        m_LookupTable[m_Entitys[delEntityIdx].m_IdxLookup] = delEntityIdx; 
+    }
+    m_Entitys.pop_back();
+}
+```
+
+### 4. 비트연산 기반 컴포넌트 데이터 조회 (ArchetypeQuery)
+* **파일명**: `GameLib/ECSSystem.cpp` (`QueryArchetypes`)
+* **기능 개요**: 수십 가지 아키타입 중 특정 시스템이 요구하는 컴포넌트 마스크 키를 비트셋 AND 연산으로 O(1) 필터링하여 순회 속도를 극대화함.
 * **코드 상세 분석**:
-  - 아키타입 내 모든 이종 컴포넌트 청크 배열에 대해 삭제 지점 데이터를 마지막 청크의 끝 데이터와 맞바꾸고 크기를 줄이는 Swap & Pop 방식을 가동해 삭제 시간을 O(1)로 보존함.
-  - 데이터가 강제 이동된 후방 엔티티들의 참조 꼬임을 해소하기 위해 `m_LookupTable`(Sparse Array)과 `m_Entitys`(Dense Vector) 간 이중 역추적 룩업 인덱싱을 가동함.
-  - 삭제 직후 스왑된 실제 엔티티들의 물리 행/열 정보(Row, Col)를 룩업 추적 테이블로 실시간 재갱신하여 포인터 및 인덱스 정합성을 안전하게 동기화함.
+  - `QueryArchetypes` 내에서 비트 연산(`(iter.first & key) == key`)을 적용해 타겟 컴포넌트 세트를 지닌 아키타입들만 즉시 추출함.
+* **💻 핵심 구현 코드**:
+```cpp
+std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
+{
+    std::vector<Archetype*> archetypes;
+    for (auto& iter : m_Archetypes)
+    {
+        if ((iter.first & key) == key && !iter.second->IsEmpty())
+            archetypes.push_back(iter.second);
+    }
+    return archetypes;
+}
+```
 
-### 5. 비트연산 기반 컴포넌트 데이터 조회 (ArchetypeQuery)
-* **파일명**: `GameLib/ECSSystem.cpp` (`QueryArchetypes`), `GameLib/ECSSystem.h` (`GetComponent`)
-* **기능 개요**: 시스템이 매 프레임 특정 컴포넌트 조합들을 지닌 엔티티들을 순회하려 할 때, 비트셋 논리곱 연산을 통해 대규모 아키타입들 중 적합한 집단만을 신속 필터링함.
-* **코드 상세 분석**:
-  - `QueryArchetypes` 함수를 호출하여 시스템이 요구하는 `ArchetypeKey` 조합과 아키타입들의 마스크 키 간 비트 AND 연산(`(iter.first & key) == key`)을 수행해 해당하는 아키타입 포인터 컨테이너만 선별함.
-  - 필터링된 아키타입 내부의 청크 메모리를 연속 루프 방식으로 직접 접근 순회함으로써 가상 함수 및 임의 주소 점프 오버헤드를 극소화함.
-  - 이중 룩업 테이블을 거친 룩업 인덱스 매핑을 통해 개별 특정 컴포넌트 자원 획득(`GetComponent<T>`) 요청에 즉각 대응하는 고속 조회를 지원함.
-
-### 6. 순회 최적화를 위한 청크 정렬 업데이트
+### 5. 청크 정렬 업데이트
 * **파일명**: `GameLib/ECSSystem.cpp` (`UpdateSwapChunk`)
-* **기능 개요**: 해당 프레임에 활성화된 데이터(예: 움직임이 있는 엔티티)만을 쿼리하여 순회하고, 정렬 교체 과정 중 인덱싱 충돌이 없도록 청크 물리 데이터를 실시간 조밀하게 재배치함.
+* **기능 개요**: 매 프레임 활성 상태 엔티티들을 청크 메모리 최후방 및 최전방 영역으로 밀집 스왑 정렬하여 순회 대상 쿼리 검색량을 극대화함.
 * **코드 상세 분석**:
-  - 조건을 만족하여 업데이트 대상으로 수집된 엔티티 컬렉션들을 청크의 뒤쪽 공간부터 밀집 교체 스왑하는 `UpdateSwapChunk` 기능을 가동함.
-  - 스왑 전송 과정에서 아키타입 내부의 `ChunksLookup` 및 `ECSSystem` 내 이중 룩업 테이블 인덱스 값들의 참조 꼬임이 없도록 데이터 위치 매핑을 동기식으로 업데이트함.
-  - 정렬 완료된 컴포넌트 청크 경계면 분기 인덱스인 전파 인덱스(`transferIdx`) 정보를 아키타입에 셋업하여, 다음 시스템 순회 시 이 활성 영역 세그먼트만 고속 조회하도록 제어함.
+  - 교환 과정 중 `transferIdx`를 아키타입 내부에 셋업하여 정합성이 보정된 밀집 영역 세그먼트만 선별 순회하도록 제어함.
+* **💻 핵심 구현 코드**:
+```cpp
+void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& RowCols, size_t startIdx, Archetype* archetype)
+{
+    if (RowCols.empty()) return;
+    size_t idx = archetype->GetAllChunkCount() - 1;
+    size_t capacity = archetype->GetCapacity_Chunks();
+    
+    for(auto iter = RowCols.rbegin(); iter != RowCols.rend(); iter++)
+    {
+        size_t srcRow = iter->first;
+        size_t srcCol = iter->second;
+        size_t destRow = idx / capacity;
+        size_t destCol = idx % capacity;
+        
+        if (srcRow != destRow || srcCol != destCol)
+        {
+            auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
+            size_t srcEntityIdx = FindEntity(src_dest.first);
+            size_t destEntityIdx = FindEntity(src_dest.second);
+            
+            m_Entitys[srcEntityIdx].m_IdxRow = destRow;
+            m_Entitys[srcEntityIdx].m_IdxCol = destCol;
+
+            m_Entitys[destEntityIdx].m_IdxRow = srcRow;
+            m_Entitys[destEntityIdx].m_IdxCol = srcCol;
+        }
+        idx--;
+    }
+    archetype->m_transfer_row = startIdx / capacity;
+    archetype->m_transfer_col = startIdx % capacity;
+}
+```
 
 ---
 
 ## 03 [ Engine/Render System 및 RenderPass 구성 ]
 
-### 1. EngineSystem 구성
-* **파일명**: `GameLib/EngineSystem.cpp`
-* **기능 개요**: 그래픽스 자원의 생성, 디스크 파일 I/O 제어, 상수 버퍼 및 D3D11 뷰 객체들의 중복 생성을 방지하고 생명주기를 한 곳에서 안전하게 중앙 관리함.
+### 1. EngineSystem 텍스처 해시 캐싱
+* **파일명**: `GameLib/EngineSystem.cpp` (`CreateTexture`)
+* **기능 개요**: 텍스처 자원의 디스크 경로를 FNV-1a 해시 키로 상호 합성하여 중복 생성 및 파일 중복 I/O를 캐싱 테이블 룩업으로 차단함.
 * **코드 상세 분석**:
-  - 에셋 경로 문자열을 64비트 FNV-1a 해시 키로 상호 변환하고 캐싱 맵(`m_pCSVs`) 조회를 가동해 이미 적재된 리소스는 디스크 파일 액세스 없이 실시간 재사용을 달성함.
-  - D3D11 Immediate Device Context를 제어하는 EngineSystem 단일 인스턴스를 보장하고 렌더링에 실질적으로 참여하는 RenderSystem과의 데이터 결합도를 완벽히 차단하여 결합 오버헤드를 소거함.
+  - 이미 동일 해시 자원이 맵에 로드되어 존재할 경우 추가 생성 없이 즉각 복사본 해시 키를 조기 리턴함.
+* **💻 핵심 구현 코드**:
+```cpp
+size_t EngineSystem::CreateTexture(const std::wstring& szFilePath)
+{
+    size_t hash_path = HashCombine(szFilePath);
+    if (m_pCSVs.find(hash_path) != m_pCSVs.end())
+        return hash_path;
 
-### 2. 리소스 가공 및 파이프라인에서의 자원 조회/바인딩
-* **파일명**: `GameLib/EngineSystem.h`
-* **기능 개요**: ResourceSystem을 거친 가상 자원 원시 데이터를 버텍스 버퍼, 인덱스 버퍼, 텍스처 뷰 등 실제 GPU 파이프라인 기동에 투입 가능한 D3D11 리소스로 1차 가공함.
+    ScratchImage image;
+    _ResourceSystem.LoadTexture(szFilePath, image);
+    // [D3D11 텍스처 리소스 뷰 생성 및 저장]
+    return hash_path;
+}
+```
+
+### 2. 64비트 정렬 키 생성 및 조립
+* **파일명**: `GameLib/RenderSystem.cpp` (`GenerateRenderPassHash`)
+* **기능 개요**: 상태 전환 오버헤드 가중치에 맞춰 5대 세그먼트를 결합한 단일 64비트 정수 키(`_RPKey`)를 가동하여 GPU 파이프라인의 불필요한 상태 교체를 차단함.
 * **코드 상세 분석**:
-  - `CreateMeshFromGeometry` 템플릿 함수를 호출해 Fbx 파싱 데이터로부터 실체 D3D11 `VertexBuffer` 및 `IndexBuffer` 래퍼 자원 해시를 빌드해 캐싱함.
-  - 그래픽스 리소스를 렌더링 시스템이 전방위 소유하지 않고 오직 EngineSystem이 발급한 64비트 해시키 룩업으로 간접 쿼리(Getter)하여 리바인딩에 바인딩 포인터만 사용되도록 제어함.
-  - 엔진 렌더 전역에서 변하지 않는 상수 버퍼, 전용 상태 레지스터, 가변 프러스텀 투영 상수 데이터들을 초기화 단계에서 선점 예약하여 바인딩 오버헤드를 경감함.
+  - 투명 패스(`E_RenderPass::Transparent`)의 경우 Back-to-Front 정렬을 가동하도록 거리 값 세그먼트 비트를 반전 합성함.
+* **💻 핵심 구현 코드**:
+```cpp
+_RPKey RenderSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist)
+{
+    _RPKey key = 0;
+    key |= (static_cast<uint64_t>(hashPass) & (UINT)0xF) << 60;
+    key |= (static_cast<uint64_t>(hashShaders) & (UINT)0xFFFF) << 44;
+    key |= (static_cast<uint64_t>(hashStates) & (UINT)0xFF) << 36;
+    key |= (static_cast<uint64_t>(hashResources) & (UINT)0xFFFF) << 20;
+    
+    if (static_cast<uint32_t>(E_RenderPass::Transparent) == hashPass)
+        hashDist = 0xFFFFF - hashDist;
+        
+    key |= (static_cast<uint64_t>(hashDist) & (UINT)0xFFFFF);
+    return key;
+}
+```
 
-### 3. RenderSystem 구성 및 렌더패스 (Sort By Key) 설계
-* **파일명**: `GameLib/RenderSystem.cpp` (`GenerateRenderPassHash`, `GetRenderPassKey_Shaders`)
-* **기능 개요**: D3D11 파이프라인 상태 교체 비용을 절감하기 위해 현대 상용 엔진 스타일의 다중 렌더패스를 수립하고, 상태 전환 오버헤드 가중치에 맞춰 64비트 마스킹 렌더링 키를 조립함.
-* **코드 상세 분석**:
-  - `GetRenderPassKey_Shaders`에서 사용 머티리얼의 정점(VS)/픽셀(PS)/도메인(DS)/기하(GS) 셰이더 포인터 결합 FNV 해시를 구하고 이를 16비트 고유 ID 키로 발급해 캐싱함.
-  - 드로우콜 상태 변경 가중치가 비싼 요소들을 상위 비트에 두는 `Pass(4bit) - Shaders(16bit) - States(8bit) - Resources(16bit) - Distance(20bit)` 구조의 64비트 정렬 키(`_RPKey`)를 가동함.
-  - 투명 패스(Alpha Blending)의 경우 카메라로부터 뒷부분부터 차례대로 그리는 Back-to-Front 구조를 달성하기 위해 Z-Distance 비트 영역을 비트 반전(`0xFFFFF - hashDist`)하여 렌더 정렬을 일관 제어함.
-
-### 4. RenderQueue 기반의 드로우콜 구성 및 배칭
-* **파일명**: `GameLib/RenderSystem.cpp` (`CollectRenderItem`)
-* **기능 개요**: ECS 컴포넌트 청크를 돌며 렌더 대상 액터들을 고속 수집하고, 공유 상태 비트가 동일한 개체들을 하나로 결합하여 단일 상수 버퍼 갱신만으로 렌더링하는 인스턴싱 드로우콜 큐를 전개함.
-* **코드 상세 분석**:
-  - `CollectRenderItem` 내에서 `C_Transform`, `C_Render` 아키타입 쿼리를 기동해 청크 단위로 빠르게 가시 및 렌더 활성 상태를 확인한 후 패스 분기별 정렬 키를 붙여 수집 큐에 Enqueue함.
-  - 큐의 정렬 처리를 기동한 후 셰이더, 렌더 상태, 기하 리소스 비트가 완벽히 동일한 객체들을 그룹화하여 그룹 개수(`instanceCnt`)와 오프셋을 붙인 `BatchItem`들로 드로우 명령 큐를 구축함.
-  - 그룹에 가담한 전 엔티티의 월드 트랜스폼 행렬들을 조밀 배열 상수 버퍼(`stb_worldmats`)에 일괄 복사 업데이트하여 D3D API 제출 횟수를 획기적으로 축소함.
-
-### 5. 명령 큐 기반 렌더링 및 XOR 최소화 리바인딩 최적화
+### 3. XOR 비트 연산 기반 지연 바인딩 최소화 루프
 * **파일명**: `GameLib/RenderSystem.cpp` (`ExecuteRenderPass` 루프)
-* **기능 개요**: 렌더러 명령 큐를 순회하며 드로우콜을 발송할 때, 이전 상태와 비교하여 실질적으로 변경이 일어난 D3D11 파이프라인 세그먼트만 선별 바인딩하여 드라이버 오버헤드를 극소화함.
+* **기능 개요**: 렌더러 명령 큐 순회 시, 직전 정렬 키와의 비트 XOR 연산(`keyCur ^ keyPrev`)을 수행해 차이가 발생한 D3D11 파이프라인 영역만 리바인딩함.
 * **코드 상세 분석**:
-  - 명령 큐 순회 루프 내에서 이전 정렬 키(`keyPrev`)와 현재 렌더 아이템의 정렬 키(`keyCur`) 간의 비트 XOR 연산(`keyCur ^ keyPrev`)을 수행함.
-  - 비트 차이가 감지된 파이프라인 단계(RTV/뷰포트, VS/PS 셰이더, RS/BS/DSS 상태, VB/IB 버퍼)의 시프트 자리 영역(60, 44, 36, 20)을 분기 검출하여 해당 리바인딩 함수만 지연 기동함.
-  - 각 D3D11 래퍼 바인딩 기능 내에 캐싱용 포인터 비교 분기를 내장하여 실제 포인터 주소가 같을 경우 실시간 얼리 리턴을 유도해 하드웨어 버스 점유율을 85% 이상 개선함.
+  - 시프트 오프셋 분기(60, 44, 36, 20)를 통해 렌더 타겟, 셰이더, States, Buffer 리소스 바인딩을 선택적 갱신하여 드라이버 오버헤드를 극소화함.
+* **💻 핵심 구현 코드**:
+```cpp
+// (ExecuteRenderPass 내부 루프 세그먼트)
+_RPKey keyPrev = _HashNotInitialize;
+for (const auto& renderItem : m_hRP_CommandQueue)
+{
+    _RPKey keyCur = renderItem.sortKey;
+    size_t diff = keyCur ^ keyPrev;
+    uint32_t curPass = (keyCur >> 60) & 0xF;
+ 
+    if (diff >> 60)
+    {
+        SetRS_Viewport(&_EngineSystem.m_vp_BB);
+        switch (curPass)
+        {
+            case (uint32_t)E_RenderPass::Opaque:
+                SetOM_RenderTargets({ _EngineSystem.m_hash_Gbuffer_Position, _EngineSystem.m_hash_Gbuffer_Normal, _EngineSystem.m_hash_Gbuffer_Albedo }, _EngineSystem.m_hash_DSView_Quad);
+                break;
+        }
+    }
+    // [diff >> 44 (Shader), diff >> 36 (State), diff >> 20 (Resource) 분기 갱신 및 Draw]
+    keyPrev = keyCur;
+}
+```
 
 ---
 
 ## 04 [ 가시성/충돌 판정 최적화 및 그래픽스 파이프라인 ]
 
-### 1. 가시성/경계볼륨 판정 및 2단계 마우스 레이 피킹
-* **파일명**: `GameLib/CollisionSystem.cpp`, `Frustum.cpp`
-* **기능 개요**: 비가시 공간 오브젝트의 GPU 파이프라인 제출을 제어하기 위해 카메라 선형 깊이 평면 역산 절두체를 수립하고, OBB/AABB 경계 볼륨 기반의 2단계 마우스 피킹 파이프라인을 구축함.
+### 1. 선형 깊이 분포 절두체 평면 생성
+* **파일명**: `GameLib/CollisionSystem.cpp` (Frustum 생성자)
+* **기능 개요**: 원근 투영 변환의 비선형 분포를 선형 깊이로 교정 보정한 투영 행렬을 빌드하고 전치 승산을 수행해 6개 월드 절두체 평면식을 유도함.
 * **코드 상세 분석**:
-  - 원근 깊이 비선형 분포에 따른 Z-Fighting 완화 및 정밀 가시 영역을 선점하기 위해, 선형 깊이 분포 투영 행렬을 빌드하고 전치 승산을 거쳐 실시간 6개 절두체 평면식을 유도함.
-  - 지오메트리 로드 시 자동 조립된 바운딩 볼륨(Box, Sphere) 정보의 로컬 축 투영 크기를 월드 변환 후 각 절두체 평면과 교차 내적 판별하여 가시성 외곽 에셋들을 사전에 완전 소거함.
-  - 마우스 스크린 지점을 Proj/View 역행렬을 통과시켜 월드 공간 Ray로 역투영하고, 1차로 경계 박스 간 OBB 레이 교차 판정(`IntersectRayToOBB`)을 가동해 비충돌 영역 노드를 필터링한 후, 2차 통과 삼각면 정점들만 모아 교차 검사를 가동해 최단 피킹 월드 위치를 산출함.
+  - 뷰 행렬과 깊이 분포 보정 투영 행렬을 승산하고 전치한 행렬(`Transpose()`)을 기반으로 6개 가시 영역 평면 식(`m_planes`)을 도출함.
+* **💻 핵심 구현 코드**:
+```cpp
+Frustum::Frustum(float screenDepth, const Matrix4x4& matView, const Matrix4x4& matProj)
+{
+    Matrix4x4 matLinearProj = matProj;
+    float zMinimum = -matLinearProj[3].GetZ() / matLinearProj[2].GetZ();
+    float r = screenDepth / (screenDepth - zMinimum);
+    matLinearProj[2].SetZ(r);             
+    matLinearProj[3].SetZ(-r / zMinimum);  
+ 
+    Matrix4x4 matFinalTranspose = (matView * matLinearProj).Transpose();
+    m_planes[0] = matFinalTranspose[3] + matFinalTranspose[0]; // Left
+    m_planes[1] = matFinalTranspose[3] - matFinalTranspose[0]; // Right
+    m_planes[2] = matFinalTranspose[3] - matFinalTranspose[1]; // Up
+    m_planes[3] = matFinalTranspose[3] + matFinalTranspose[1]; // Bottom
+    m_planes[4] = matFinalTranspose[3] + matFinalTranspose[2]; // Near
+}
+```
 
-### 2. 계산 셰이더 기반 충돌 판별 및 GPU Möller-Trumbore 가속
+### 2. 계산 셰이더 기반 GPU Möller-Trumbore 가속
 * **파일명**: `data/shader/SSB/CS_Collision_Triangle.hlsl`
-* **기능 개요**: 다량의 스키닝 애니메이션이 가동 중인 캐릭터 및 메시의 수만 개 다각형 정밀 충돌 판정을 CPU 스레드 루프로 처리하는 병목을 제거하기 위해 GPU Compute Shader 병렬 가속 연산을 구축함.
+* **기능 개요**: 다량의 스키닝 정점 계산 및 정밀 삼각형 피킹 검출을 GPU 다중 코어 스레드로 비동기 병렬 연산 처리함.
 * **코드 상세 분석**:
-  - 정점 버퍼 구조화 버퍼 자원을 바인딩하고, 셰이더 내부 본 변형 연산자(`ComputeSkinning`)를 통해 4가중치 스키닝 계산을 GPU 다중 코어 스레드로 실시간 분배 연산함.
-  - 스키닝 변형된 세 점(`wv0, wv1, wv2`)을 획득하여 계산 셰이더 내부에 구현된 **Möller-Trumbore 알고리즘** 레이-삼각형 교차 판정 공식을 병렬 구동함.
-  - 스레드 블록당 64개 스레드(`numthreads(64, 1, 1)`)를 기동해 메시의 총 삼각형 개수만큼 Dispatch를 수행하고 최단 교차 깊이 결과를 무순서 액세스 뷰(UAV) 버퍼에 기입하여 맵핑 전송함으로써 CPU 연산 부하를 획기적으로 개선함.
+  - `ComputeSkinning`: 계산 셰이더 상에서 본 행렬 구조화 버퍼와 연동해 4가중치 스키닝 위치 변형을 가속 처리함.
+  - `Intersect`: Möller-Trumbore 알고리즘을 HLSL로 직접 가동하여 삼각형 세 꼭지점(`wv0, wv1, wv2`)과 레이 간 교차 깊이(`fDist`)를 병렬 탐색함.
+* **💻 핵심 구현 코드**:
+```hlsl
+float3 ComputeSkinning(Vertex v)
+{
+    float4 animPos = float4(0, 0, 0, 0);
+    float4 localPos = float4(v.pos0.xyz, 1.0f);
+    if (notAnimate > _IsAnimate)
+        return mul(localPos, matWorld).xyz;
+        
+    [unroll]
+    for (int i = 0; i < 4; ++i)
+        animPos += v.weights[i] * mul(localPos, matBone[v.bones[i]]);
+ 
+    return mul(float4(animPos.xyz, 1.0f), matWorld).xyz;
+}
 
-### 3. 렌더 패스 세부구현
-* **파일명**: `GameLib/RenderSystem.cpp`
-* **기능 개요**: 64비트 정렬 키의 최상위 Pass 4비트 분기에 맞춰 지연 셰이딩, PCF 그림자 맵, 큐브맵 환경 매핑, 스텐실 실루엣 외곽선 및 버퍼리스 디버그 렌더 기법을 파이프라인 단계별로 연동함.
+bool Intersect(float3 rayOrigin, float3 rayDir, float3 wv0, float3 wv1, float3 wv2, out float fDist) {
+    float3 e1 = wv1 - wv0;
+    float3 e2 = wv2 - wv0;
+    float3 s = rayOrigin - wv0;
+    float3 p = cross(rayDir, e2);
+    float3 q = cross(s, e1);
+    float det = dot(e1, p);
+    bool NoIntersection = false;
+    
+    if (det > _Epsilon) {
+        float u = dot(s, p);
+        NoIntersection = (u < 0.0f) || (u > det);
+        float v = dot(rayDir, q);
+        NoIntersection = NoIntersection || (v < 0.0f) || ((u + v) > det);
+        float t = dot(e2, q);
+        NoIntersection = NoIntersection || (t < 0.0f);
+    } else if (det < -_Epsilon) {
+        float u = dot(s, p);
+        NoIntersection = (u > 0.0f) || (u < det);
+        float v = dot(rayDir, q);
+        NoIntersection = NoIntersection || (v > 0.0f) || ((u + v) < det);
+        float t = dot(e2, q);
+        NoIntersection = NoIntersection || (t > 0.0f);
+    } else {
+        NoIntersection = true;
+    }
+    if (NoIntersection) return false;
+    fDist = dot(e2, q) * (1.0f / det);
+    return true;
+}
+
+[numthreads(64, 1, 1)]
+void csmain(uint3 dispatchThreadID : SV_DispatchThreadID)
+{
+    if (dispatchThreadID.x >= triangleCount) return;
+    uint tid = dispatchThreadID.x;
+    
+    float3 wv0 = ComputeSkinning(gInputVertices[tid * 3 + 0]);
+    float3 wv1 = ComputeSkinning(gInputVertices[tid * 3 + 1]);
+    float3 wv2 = ComputeSkinning(gInputVertices[tid * 3 + 2]);
+    
+    float fDist = _Infinite;
+    bool isHit = Intersect(vRayOrigin, vRayDir, wv0, wv1, wv2, fDist);
+ 
+    gOutputResults[tid].idx = tid * 3;
+    gOutputResults[tid].fDist = isHit ? fDist : _Infinite;
+}
+```
+
+### 3. 세부 렌더패스 D3D11 파이프라인 연동
+* **파일명**: `GameLib/RenderSystem.cpp`, `GS_CubeMap_PTNTB.hlsl`, `DS_Debug_Sphere.hlsl`
+* **기능 개요**: GBuffer MRT, 그림자 깊이 바인딩, 기하 셰이더 환경 큐브맵 라우팅, 스텐실 카툰 아웃라인 및 테셀레이션 구형 투영 디버깅을 기동함.
 * **코드 상세 분석**:
-  - **Deferred Rendering (Opaque)**: MRT(Multi Render Target)를 세팅하여 하나의 드로우콜로 Position, Normal, Albedo, Specular 채널 데이터를 물리적 GBuffer 텍스처 뷰에 동시 기입하고, Lighting Pass 스크린 쿼드 조명 연산에서 자원 뷰로 역바인딩해 픽셀 오버헤드를 최적화함.
-  - **Shadow**: 광원 시점 직교 투영 깊이 맵 바인딩 시 RTV를 nullptr로 비우고 오직 ShadowMap DSV만 결합해 깊이 텍스처를 생성하며, 픽셀 셰이더 단에서 투영 텍스처링 및 3x3 PCF 비교 샘플러를 적용해 부드러운 하프톤 그림자 계수를 추출함.
-  - **Environment Map (CubeMap)**: 패스 탈출 시 밉맵 동적 생성(`GenerateMipMaps`) 후 t7 레지스터에 바인딩하며, 기하 셰이더(`gsmain`) 단계에서 `SV_RenderTargetArrayIndex`에 6개 큐브 타겟 면의 뷰포트 인덱스를 지정해 비동기 스트림 아웃 렌더링을 구현함.
-  - **Outline**: 2패스(Stencil Write & Stencil Draw)를 수립하여 피킹 지정 객체의 스텐실 버퍼 마스킹을 수행하고, Draw 단계에서 정점 Normal 벡터 방향으로 확장 팽창 렌더링하여 외곽 실루엣을 생성함.
-  - **Debug**: 버텍스/인덱스 버퍼의 실물 업로드 없이 기하 셰이더(`GS_Debug_Box`) 내부에서 최소/최대 좌표 상수 버퍼 조합으로 8개 꼭지점을 즉석 복제 전개하여 36개 인덱스로 바운딩 박스를 절차적 렌더링함. 구형 충돌체의 경우 테셀레이션 파이프라인 Domain Shader(`DS_Debug_Sphere`) 내 무게중심 보간 꼭지점들을 구형 반지름(`radius`)으로 Normalize 투영하는 버퍼리스 디버깅을 기동함.
+  - **Deferred (Opaque)**: 4개의 GBuffer 텍스처 렌더 타겟을 즉각 설정(`SetOM_RenderTargets`)하여 렌더링 후 후처리 라이팅 패스에서 활용함.
+  - **Shadow**: 렌더 타겟 RTV 결합을 nullptr로 구성해 깊이 텍스처만 D3D11에 바인딩하고 PCF 3x3 샘플링 계수를 계산함.
+  - **CubeMap**: 기하 셰이더 내부 `gsmain`에서 `rtvIdx = idx`로 6개의 타겟 면 인덱스를 비동기 지정 방출함.
+  - **Debug**: 도메인 셰이더 `dsmain` 내에서 무게중심 가중치 보간 정점을 반지름(`radius`)으로 Normalize 구형 투영하는 버퍼리스 렌더링을 연동함.
+* **💻 핵심 구현 코드**:
+```cpp
+// [C++] Opaque MRT G-Buffer 타겟 세팅 및 바인딩
+SetOM_RenderTargets(
+    {
+        _EngineSystem.m_hash_Gbuffer_Position, 
+        _EngineSystem.m_hash_Gbuffer_Normal,   
+        _EngineSystem.m_hash_Gbuffer_Albedo,   
+        _EngineSystem.m_hash_Gbuffer_Specular, 
+    },
+    _EngineSystem.m_hash_DSView_Quad
+);
+
+// [C++] 그림자 맵 생성 시 RTV 비우기 설정
+SetOM_RenderTargets(std::vector<size_t>(), _EngineSystem.m_hash_DSV_ShadowMap);
+```
+```hlsl
+// GS_CubeMap_PTNTB.hlsl: 기하 셰이더 6개 큐브 뷰포트 인덱스 분기 방출
+[maxvertexcount(18)]
+void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream)
+{
+    for (int idx = 0; idx < 6; idx++)
+    {
+        for (int v = 0; v < 3; ++v)
+        {
+            GS_OUTPUT output;
+            output.rtvIdx = idx; // SV_RenderTargetArrayIndex 바인딩
+            output.pos = mul(input[v].pos, matViewProj[idx]);
+            outStream.Append(output);
+        }
+        outStream.RestartStrip();
+    }
+}
+
+// DS_Debug_Sphere.hlsl: 테셀레이션 무게중심 보간 후 반지름(radius) 구형 투영 계산
+[domain("tri")]
+DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation, const OutputPatch<HS_OUT, 3> patch)
+{
+    DS_OUT output;
+    float3 pos = patch[0].Pos0 * uvw.x + patch[1].Pos0 * uvw.y + patch[2].Pos0 * uvw.z;
+    pos = normalize(pos) * radius;
+    pos += center;
+    output.pos = mul(float4(pos, 1.0f), matViewProj);
+    return output;
+}
+```
 
 ---
 
