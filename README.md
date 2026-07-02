@@ -2,7 +2,7 @@
 
 본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
 
-학습 및 설계의 기반으로 **이득우의 게임수학**, **DirectX 11 물방울책 (Introduction to 3D Game Programming with Direct3D 11 - Frank D. Luna 저)**, **RasterTek DirectX 11 Tutorial**, **PardCode DirectX 11 Tutorial**의 핵심 그래픽스 및 선형대수 인프라를 바닥부터 심도 있게 학습하여 내재화하였으며, 과거 팀 프로젝트인 **맵툴(MapTool)** 및 **게임프로젝트(LoLShinSouls)** 개발 과정에서 마주했던 기술적 한계(객체지향 설계의 캐시 미스 오버헤드 및 단편적인 렌더링 파이프라인 제어)에 대한 깊은 아쉬움과 갈증을 기반으로, 엔진 전반의 메모리 연속성 확보 및 64비트 정렬 키 기반 다중 렌더패스 등 고도화된 최적화 렌더패스 엔진을 독자적으로 설계 및 구축하며 기술적 도약을 실천함.
+학습 및 설계의 기반으로 **이득우의 게임수학**, **DirectX 11 물방울책 (Introduction to 3D Game Programming with Direct3D 11 - Frank D. Luna 저)**, **RasterTek DirectX 11 Tutorial**, **PardCode DirectX 11 Tutorial**의 핵심 그래픽스 및 선형대수 인프라를 바닥부터 심도 있게 학습하여 내재화하였으며, 과거 DXAPI 기반의 팀 프로젝트인 **맵툴(MapTool)** 및 **게임프로젝트(LoLShinSouls)** 개발 과정에서 마주했던 기술적 한계(객체지향 설계의 캐시 미스 오버헤드 및 단편적인 렌더링 파이프라인 제어)에 대한 깊은 아쉬움과 갈증을 기반으로, 엔진 전반의 메모리 연속성 확보 및 64비트 정렬 키 기반 다중 렌더패스 등 고도화된 최적화 렌더패스 엔진을 독자적으로 설계 및 구축하며 기술적 도약을 실천함.
 
 ---
 
