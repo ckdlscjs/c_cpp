@@ -1,5 +1,4 @@
-
-# 🛠️ DX11 기반 ECS 아키텍처 캐시 최적화 렌더러 (c_cpp/PardCode34)
+# 🛠️ DX11 기반 ECS 아키처 캐시 최적화 렌더러 - 소스코드 포함 버전 (c_cpp/PardCode34)
 
 본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
 
@@ -534,31 +533,82 @@ void csmain(uint3 dispatchThreadID : SV_DispatchThreadID)
 ```
 
 ### 3. 세부 렌더패스 D3D11 파이프라인 연동
-* **파일명**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp), [C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl), [C_CPP/PardCode34/DS_Debug_Sphere.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/DS_Debug_Sphere.hlsl)
-* **기능 개요**: GBuffer MRT, 그림자 깊이 바인딩, 기하 셰이더 환경 큐브맵 라우팅, 스텐실 카툰 아웃라인 및 테셀레이션 구형 투영 디버깅을 기동함.
-* **코드 상세 분석**:
-  - **Deferred (Opaque)**: 4개의 GBuffer 텍스처 렌더 타겟을 즉각 설정(`SetOM_RenderTargets`)하여 렌더링 후 후처리 라이팅 패스에서 활용함.
-  - **Shadow**: 렌더 타겟 RTV 결합을 nullptr로 구성해 깊이 텍스처만 D3D11에 바인딩하고 PCF 3x3 샘플링 계수를 계산함.
-  - **CubeMap**: 기하 셰이더 내부 `gsmain`에서 `rtvIdx = idx`로 6개의 타겟 면 인덱스를 비동기 지정 방출함.
-  - **Debug**: 도메인 셰이더 `dsmain` 내에서 무게중심 가중치 보간 정점을 반지름(`radius`)으로 Normalize 구형 투영하는 버퍼리스 렌더링을 연동함.
-* **💻 핵심 구현 코드**:
+* **C++ 파일 링크**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
+* **기능 개요**: 64비트 정렬 키의 최상위 Pass 4비트 분류에 따라 파이프라인의 RenderTarget, BlendState, DepthStencilState 상태를 전환하고, 각 패스 목적에 최적화된 5대 그래픽스 렌더링 기법을 연동함.
+
+#### ① Deferred Rendering (Opaque) 패스
+- **기능 개요**: 하나의 드로우콜로 기하 데이터를 G-Buffer(Position, Normal, Albedo, Specular) 4개 텍스처 타겟에 동시 렌더링(MRT)하고, 패스 탈출 시 라이팅 패스용 셰이더 자원 뷰(SRV)로 일괄 전환함.
+- **💻 C++ 렌더타겟 멀티 바인딩 및 SRV 전환**:
 ```cpp
-// [C++] Opaque MRT G-Buffer 타겟 세팅 및 바인딩
+// RenderSystem.cpp: Opaque 4개 G-Buffer 타겟 MRT 바인딩
 SetOM_RenderTargets(
-    {
-        _EngineSystem.m_hash_Gbuffer_Position, 
-        _EngineSystem.m_hash_Gbuffer_Normal,   
-        _EngineSystem.m_hash_Gbuffer_Albedo,   
-        _EngineSystem.m_hash_Gbuffer_Specular, 
-    },
+    { 
+        _EngineSystem.m_hash_Gbuffer_Position,  
+        _EngineSystem.m_hash_Gbuffer_Normal,
+        _EngineSystem.m_hash_Gbuffer_Albedo,
+        _EngineSystem.m_hash_Gbuffer_Specular,
+    }, 
     _EngineSystem.m_hash_DSView_Quad
 );
 
-// [C++] 그림자 맵 생성 시 RTV 비우기 설정
+// [Opaque 패스 완료 후 라이팅 패스용 자원 역바인딩]
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Position, 11);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Normal, 12);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Albedo, 13);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Specular, 14);
+```
+
+#### ② Shadow Mapping (PCF 그림자) 패스
+- **기능 개요**: 광원 시점 깊이 맵 생성 시 RTV를 완전히 nullptr로 설정해 깊이 버퍼만 결합해 성능을 확보하고, 픽셀 셰이더에서 3x3 PCF 비교 샘플러를 적용해 부드러운 그림자를 생성함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/PS_Shadows.hlsli](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Shadows.hlsli)
+- **💻 C++ 널(Null) 렌더타겟 바인딩 & HLSL PCF 셰이딩**:
+```cpp
+// RenderSystem.cpp: 그림자 맵 생성 시 RTV를 비우고 오직 DSV만 결합
 SetOM_RenderTargets(std::vector<size_t>(), _EngineSystem.m_hash_DSV_ShadowMap);
+
+// RenderSystem.cpp: 그림자 패스 완료 후 PCF 샘플러 및 깊이 텍스처 바인딩
+SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_DSV_ShadowMap, 6);
 ```
 ```hlsl
-// GS_CubeMap_PTNTB.hlsl: 기하 셰이더 6개 큐브 뷰포트 인덱스 분기 방출
+// PS_Shadows.hlsli: 3x3 PCF(Percentage Closer Filtering) 그림자 샘플링
+float CalculateShadow(float4 shadowPos)
+{
+    float3 projCoords = shadowPos.xyz / shadowPos.w;
+    if (projCoords.z > 1.0f) return 1.0f;
+    
+    float shadow = 0.0f;
+    float2 texelSize = 1.0f / shadowMapSize; // 텍셀 크기 계산
+    
+    [unroll]
+    for (int y = -1; y <= 1; ++y)
+    {
+        for (int x = -1; x <= 1; ++x)
+        {
+            float2 offset = float2(x, y) * texelSize;
+            // D3D11 PCF 하드웨어 비교 샘플러 호출
+            shadow += gShadowMap.SampleCmpLevelZero(gSamShadow, projCoords.xy + offset, projCoords.z - bias).r;
+        }
+    }
+    return shadow / 9.0f;
+}
+```
+
+#### ③ Environment Mapping (CubeMap) 패스
+- **기능 개요**: 큐브맵 용 뷰포트를 설정하고 RTV/DSV를 결합한 뒤, 기하 셰이더(GS)를 기동하여 단일 기하 스트림을 6개 렌더타겟 면으로 동시 라우팅 방출하고 밉맵을 동적 생성함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl)
+- **💻 C++ 큐브맵 RTV 설정 & HLSL 기하 셰이더 라우팅**:
+```cpp
+// RenderSystem.cpp: 큐브맵 렌더타겟 및 뷰포트 설정
+SetRS_Viewport(&_EngineSystem.m_vp_CubeMap);
+SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_CubeMap }, _EngineSystem.m_hash_DSV_CubeMap);
+
+// RenderSystem.cpp: 패스 완료 후 밉맵 동적 생성 및 t7 바인딩
+_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
+```
+```hlsl
+// GS_CubeMap_PTNTB.hlsl: SV_RenderTargetArrayIndex를 활용한 6개 면 뷰포트 Append
 [maxvertexcount(18)]
 void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream)
 {
@@ -567,22 +617,83 @@ void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStre
         for (int v = 0; v < 3; ++v)
         {
             GS_OUTPUT output;
-            output.rtvIdx = idx; // SV_RenderTargetArrayIndex 바인딩
+            output.rtvIdx = idx; // RTV 인덱스 직접 지정
             output.pos = mul(input[v].pos, matViewProj[idx]);
             outStream.Append(output);
         }
         outStream.RestartStrip();
     }
 }
+```
 
-// DS_Debug_Sphere.hlsl: 테셀레이션 무게중심 보간 후 반지름(radius) 구형 투영 계산
+#### ④ Outline (스텐실 실루엣 외곽선) 패스
+- **기능 개요**: 2패스 기법을 활용하여 1패스(`Outline_Write`)에서 깊이 스텐실 상태를 켜서 마킹을 수행하고, 2패스(`Outline_Draw`)에서 스텐실 값이 같지 않은 외곽 픽셀에 대해 법선(Normal) 방향으로 꼭지점을 팽창 렌더링함.
+- **HLSL 셰이더 파일 링크**: 
+  - [C_CPP/PardCode34/Instanced_VS_Outline_PTN.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Instanced_VS_Outline_PTN.hlsl)
+  - [C_CPP/PardCode34/PS_Outline_Draw.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Outline_Draw.hlsl)
+- **💻 C++ 2패스 상태 통제 & HLSL 정점 외곽선 팽창**:
+```cpp
+// RenderSystem.cpp: 1패스 - 스텐실 마크 쓰기 상태 활성화
+RPStates stateWrite = m_resRP_States[GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1)];
+SetRS_RasterizerState(stateWrite.stateRS);
+SetOM_DepthStenilState(stateWrite.stateDS, stateWrite.stencilRef);
+
+// RenderSystem.cpp: 2패스 - 스텐실 마크 비교 및 외곽선 드로우 상태 활성화
+RPStates stateDraw = m_resRP_States[GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1)];
+SetRS_RasterizerState(stateDraw.stateRS);
+SetOM_DepthStenilState(stateDraw.stateDS, stateDraw.stencilRef);
+```
+```hlsl
+// Instanced_VS_Outline_PTN.hlsl: 정점 법선(Normal) 방향 Extrude 및 월드 투영
+VS_OUT vsmain(VS_IN input)
+{
+    VS_OUT output;
+    float3 extrudedPos = input.pos.xyz + (input.normal * thickness); // 외곽선 두께만큼 팽창
+    float4 localPos = float4(extrudedPos, 1.0f);
+    
+    // 인스턴싱 월드 변환 적용
+    output.pos = mul(localPos, matWorld[input.instanceID]);
+    output.pos = mul(output.pos, matViewProj);
+    return output;
+}
+
+// PS_Outline_Draw.hlsl: 외곽선 단색 출력
+float4 psmain(VS_OUT input) : SV_Target
+{
+    return outlineColor; // 외곽선 지정 컬러 드로우 (스텐실 비교 통과 영역)
+}
+```
+
+#### ⑤ Debug (버퍼리스 디버그 렌더링) 패스
+- **기능 개요**: CPU 단에서 정점/인덱스 버퍼를 매번 생성하여 전송하는 병목을 완전히 소거하기 위해, 셰이더 내에서 최소/최대 좌표 상수버퍼(AABB) 또는 도메인 셰이더(Sphere)를 이용해 기하를 즉석 생성 렌더링함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/DS_Debug_Sphere.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/DS_Debug_Sphere.hlsl)
+- **💻 C++ 디버그 데이터 상수 버퍼 주입 & HLSL 도메인 셰이더 구형 보간**:
+```cpp
+// RenderSystem.cpp: 디버그 모드 감지 시, 콜라이더 타입에 맞는 상수 버퍼 업데이트
+size_t hash_collider = pMesh->GetCLs()[resources.idxCollider];
+if (resources.collider == E_Collider::BOX) {
+    CB_Debug_Box cb_debug_box;
+    _CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
+    _EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
+} else if (resources.collider == E_Collider::SPHERE) {
+    CB_Debug_Sphere cb_debug_sphere;
+    _CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
+    _EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_sphere, &cb_debug_sphere);
+}
+```
+```hlsl
+// DS_Debug_Sphere.hlsl: 테셀레이션 Domain Shader를 이용한 버퍼리스 구체 생성
 [domain("tri")]
 DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation, const OutputPatch<HS_OUT, 3> patch)
 {
     DS_OUT output;
+    // 세 패치 정점의 무게중심 보간 계산
     float3 pos = patch[0].Pos0 * uvw.x + patch[1].Pos0 * uvw.y + patch[2].Pos0 * uvw.z;
+    
+    // 보간된 정점을 정규화하여 반지름(radius) 크기로 투영
     pos = normalize(pos) * radius;
-    pos += center;
+    pos += center; // 구체 중심 이동
+    
     output.pos = mul(float4(pos, 1.0f), matViewProj);
     return output;
 }
