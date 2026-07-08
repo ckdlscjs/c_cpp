@@ -1,3 +1,4 @@
+
 # 🛠️ DX11 기반 ECS 아키텍처 캐시 최적화 렌더러 (c_cpp/PardCode34)
 
 본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
@@ -302,23 +303,81 @@ void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& Ro
 
 ## 03 [ Engine/Render System 및 RenderPass 구성 ]
 
-### 1. EngineSystem 텍스처 해시 캐싱
-* **파일명**: [C_CPP/PardCode34/EngineSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/EngineSystem.cpp) (CreateTexture)
-* **기능 개요**: 텍스처 자원의 디스크 경로를 FNV-1a 해시 키로 상호 합성하여 중복 생성 및 파일 중복 I/O를 캐싱 테이블 룩업으로 차단함.
+### 1. 렌더패스 서브 키 (Shaders, States, Resources) 발급 제어
+* **파일명**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
+* **기능 개요**: D3D11 상태 전환 최소화를 위한 64비트 정렬 키의 핵심 인자인 Shaders(16bit), States(8bit), Resources(16bit) 세그먼트 고유 ID를 해시 테이블 룩업 기반으로 실시간 발급함.
 * **코드 상세 분석**:
-  - 이미 동일 해시 자원이 맵에 로드되어 존재할 경우 추가 생성 없이 즉각 복사본 해시 키를 조기 리턴함.
+  - `GetRenderPassKey_Shaders`: 머티리얼에 결합된 VS, HS, DS, GS, PS 파이프라인 결합 해시를 추출하여 고유 16비트 ID(`uint16_t`)를 발급하고 중복 생성을 원천 차단함.
+  - `GetRenderPassKey_States`: RS, DS, BS 렌더 상태 조건과 BlendFactor, StencilRef 정보를 `hash_combine`으로 합성해 8비트 ID(`uint8_t`)로 조밀 압축함.
+  - `GetRenderPassKey_Resources`: 기하(Mesh), 머티리얼, 상수 자원 맵 상태를 결합해 고유 16비트 ID(`uint16_t`)로 발급해 파이프라인 캐싱에 대입함.
 * **💻 핵심 구현 코드**:
 ```cpp
-size_t EngineSystem::CreateTexture(const std::wstring& szFilePath)
+// RenderSystem.cpp: 셰이더 포인터 결합 해시 기반 16비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_Shaders(size_t hashMaterial)
 {
-    size_t hash_path = HashCombine(szFilePath);
-    if (m_pCSVs.find(hash_path) != m_pCSVs.end())
-        return hash_path;
+    Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+    size_t hash = hashMaterial;
+    if (pMaterial->GetVS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetVS());
+    if (pMaterial->GetHS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetHS());
+    if (pMaterial->GetDS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetDS());
+    if (pMaterial->GetGS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetGS());
+    if (pMaterial->GetPS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetPS());
 
-    ScratchImage image;
-    _ResourceSystem.LoadTexture(szFilePath, image);
-    // [D3D11 텍스처 리소스 뷰 생성 및 저장]
-    return hash_path;
+    auto iter = m_hRP_Shaders.find(hash);
+    if (iter != m_hRP_Shaders.end())
+        return iter->second;
+    uint16_t newID = static_cast<uint16_t>(m_resRP_Shaders.size());
+    m_hRP_Shaders[hash] = newID;
+    m_resRP_Shaders.push_back(hashMaterial);
+    return newID;
+}
+
+// RenderSystem.cpp: 렌더 상태 결합 해시 기반 8비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref, float* bs_factor, UINT bs_mask)
+{
+    size_t hash = 0;
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateRS)));
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateBS)));
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateDS)));
+    float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    if (bs_factor != nullptr)
+    {
+        for (int i = 0; i < 4; i++)
+            blendFactor[i] = bs_factor[i];
+    }
+    for (int i = 0; i < 4; ++i)
+        hash_combine(hash, std::hash<float>{}(blendFactor[i]));
+    hash_combine(hash, std::hash<UINT>{}(bs_mask));
+    hash_combine(hash, std::hash<UINT>{}(ds_stencilref));
+
+    auto iter = m_hRP_States.find(hash);
+    if (iter != m_hRP_States.end())
+        return iter->second;
+
+    uint8_t newID = static_cast<uint8_t>(m_resRP_States.size());
+    m_hRP_States[hash] = newID;
+    m_resRP_States.push_back({ stateRS, stateBS, {blendFactor[0], blendFactor[1], blendFactor[2], blendFactor[3]}, bs_mask, stateDS, ds_stencilref });
+    return newID;
+}
+
+// RenderSystem.cpp: 메시/머티리얼/리소스 결합 해시 기반 16비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, size_t hashRA, UINT idxResource, E_Collider collider, UINT idxCollider)
+{
+    size_t hash = 0;
+    hash_combine(hash, std::hash<size_t>{}(hashMesh));
+    hash_combine(hash, std::hash<size_t>{}(hashMat));
+    hash_combine(hash, std::hash<size_t>{}(hashRA));
+    hash_combine(hash, std::hash<UINT>{}(idxResource));
+    hash_combine(hash, std::hash<size_t>{}(static_cast<uint32_t>(collider)));
+    hash_combine(hash, std::hash<UINT>{}(idxCollider));
+    auto iter = m_hRP_Resources.find(hash);
+    if (iter != m_hRP_Resources.end())
+        return iter->second;
+
+    uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
+    m_hRP_Resources[hash] = newID;
+    m_resRP_Resources.push_back({ hashMesh, hashMat, hashRA, idxResource, collider, idxCollider });
+    return newID;
 }
 ```
 
