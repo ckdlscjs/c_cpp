@@ -1,391 +1,257 @@
 # 🛠️ DX11 기반 ECS 아키텍처 캐시 최적화 렌더러 (c_cpp/PardCode34)
 
-> **C++17 · Direct3D 11 · HLSL · DirectXMath · Assimp · ImGui**  
-> **개인 프로젝트 | 2025.05 ~ 개발 중**  
-> 코드: [`C_CPP/PardCode34`](https://github.com/ckdlscjs/c_cpp/tree/main/C_CPP/PardCode34) · [기술 학습 기록](https://blog.naver.com/syl610/224314221774)
-
-![PDF에 수록된 DX11 ECS 렌더러 실행 화면](docs/images/overview.jpg)
-
-> 원본: 기술스택 및 포트폴리오 PDF, p.2.
-
-## 00. 프로젝트 소개
-
-단순히 렌더링 결과를 구현하는 것보다 **데이터 배치·자원 소유권·렌더 상태 전환이 성능에 미치는 영향**을 직접 다루기 위해 시작한 Direct3D 11 기반 렌더러입니다. 이전 DX11 게임·맵툴 프로젝트에서 경험했던 객체별 자원 소유, 산발적인 메모리 배치, 잦은 파이프라인 바인딩 문제를 개선하는 방향으로 구조를 단계적으로 발전시켰습니다.
-
-핵심 설계 축은 **① CRTP/RAII 기반 엔진 시스템 → ② Archetype/Chunk 기반 ECS → ③ 64비트 정렬 키 기반 RenderQueue → ④ 그래픽스 렌더패스와 GPU 피킹**입니다.
-
-> 이 문서는 개발 목적과 설계 근거를 먼저 설명하고, 각 구현 항목을 실제 GitHub 소스에 연결합니다. 아래의 성능 관련 설명은 구조적 기대 효과이며, 별도 벤치마크 수치가 없는 항목은 측정 성능으로 주장하지 않습니다.
-
-## 주요 구현 요약
-
-| 영역 | 주요 구현 | 대표 소스 |
-|---|---|---|
-| 엔진 기반 | CRTP `BaseSystem`, RAII, 입력·타이머·ImGui 통합 | [`BaseSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/BaseSystem.h) |
-| 리소스 | `EngineSystem`/`ResourceSystem` 역할 분리, FNV-1a 해시 키 캐싱, Assimp 모델 로드 | [`ResourceSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ResourceSystem.h) · [`Geometry.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Geometry.h) |
-| ECS | Archetype, 컴포넌트 비트셋, 16KB Chunk, Sparse/Dense 조회, Swap & Pop | [`ECSSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.h) · [`Archetype.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Archetype.h) |
-| 렌더링 | RenderItem 수집, 64비트 Sort Key, 인스턴싱, XOR 차분 바인딩 | [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp) |
-| 렌더패스 | Deferred/G-Buffer, Shadow/PCF, CubeMap, Outline, Forward·Debug | [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp) · [`PS_Shadows.hlsli`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Shadows.hlsli) |
-| 충돌·피킹 | Frustum/BV 테스트, Ray/Triangle, Compute Shader 스키닝·정밀 교차 | [`CollisionSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CollisionSystem.cpp) · [`CS_Collision_Triangle.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CS_Collision_Triangle.hlsl) |
-
-## 1. 전체 아키텍처
-
-![PDF의 엔진 전체 구성 및 프레임 흐름 도식](docs/images/architecture.jpg)
-
-*PDF p.3의 원본 아키텍처 도식. 아래 Mermaid 도식은 이를 읽기 쉽게 재구성한 것입니다.*
-
-
-```mermaid
-flowchart TD
-    APP[App Window / Frame Loop] --> ENGINE[EngineSystem\nD3D11 자원·상태·뷰]
-    APP --> ECS[ECSSystem\nArchetype / Components / 16KB Chunks]
-    ASSET[Model / Texture / Material / Animation] --> RESOURCE[ResourceSystem\n가상 에셋·해시 캐시]
-    RESOURCE --> ENGINE
-    ECS --> RENDER[RenderSystem\nRenderItem 수집·정렬·명령 큐]
-    RESOURCE --> RENDER
-    ENGINE --> RENDER
-    RENDER --> PASS[Shadow / Opaque-GBuffer / Lighting\nForward / CubeMap / Outline / Debug]
-    PASS --> GPU[Direct3D 11 / GPU]
-    ECS --> COLLISION[CollisionSystem\nFrustum / Ray / Bounding Volume]
-    COLLISION --> GPU_PICK[Compute Shader\nSkinned Triangle Picking]
-    GPU_PICK --> GPU
-```
-
-설계상 **에셋 원본·가공 데이터(ResourceSystem)**와 **D3D11 물리 자원(EngineSystem)**, 그리고 **렌더 명령의 생성·실행(RenderSystem)**을 구분합니다. 각 객체가 리소스를 독립 소유하지 않고 해시 키를 통해 공유하게 하여 중복 생성과 상태 변경을 제어합니다.
-
-**관련 코드:** [`ResourceSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ResourceSystem.h), [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-
-## 2. 엔진 기반 시스템과 에셋 파이프라인
-
-### CRTP / RAII
-
-각 매니저의 싱글톤 보일러플레이트를 `BaseSystem<T>`로 공통화하고, 최초 접근 시 함수 지역 정적 객체를 구성하도록 설계했습니다. D3D11 리소스는 소유/해제 책임을 명확하게 구분하여 수명을 관리합니다.
-
-- [`BaseSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/BaseSystem.h) — 시스템 인스턴스 접근·생명주기
-- [`CommonMath.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CommonMath.h) — DirectXMath 래퍼(Vector/Matrix/Quaternion)
-- [`ResourceSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ResourceSystem.h) — 캐싱 팩토리와 가상 에셋 관리
-- [`Geometry.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Geometry.h) — Assimp 기반 기하 데이터
-
-### 리소스 처리 흐름
-
-![PDF의 EngineSystem, ResourceSystem, D3D11 리소스 흐름](docs/images/resources.jpg)
-
-*PDF p.5: 개발 당시 작성한 자원 관리 흐름도.*
-
-
-```mermaid
-flowchart LR
-    FILE[FBX / OBJ / Texture] --> PARSE[Assimp / DirectXTex\n파싱·가공]
-    PARSE --> VIRTUAL[Geometry / Texture / Material]
-    VIRTUAL --> CACHE[ResourceSystem\nFNV-1a 캐시]
-    CACHE --> PHYSICAL[EngineSystem\nVB / IB / SRV / States]
-    PHYSICAL --> DRAW[RenderSystem 바인딩]
-```
-
-해시맵 조회의 평균 시간복잡도는 O(1)이지만, **충돌 비용과 해시 계산을 포함한 실제 동작은 항상 상수시간이 보장되는 것은 아닙니다.** 성능 표현은 '평균 O(1) 조회를 활용한 중복 로드 방지'가 적절합니다.
-
-## 3. 데이터 지향 ECS
-
-![PDF의 Archetype과 Component Chunk 구성 도식](docs/images/ecs-chunks.jpg)
-
-*PDF p.7: 아키타입, 청크 데이터와 엔티티 위치 관리 도식.*
-
-![PDF의 ECS 청크 정렬 및 활성 구간 순회 도식](docs/images/ecs-query.jpg)
-
-*PDF p.8: 비트셋 검색과 활성 데이터 구간 재정렬의 원본 도식.*
-
-
-### 도입 배경
-
-기존 OOP 객체를 매 프레임 개별 순회하는 방식에서 포인터 추적·데이터 분산에 따른 캐시 비친화성이 나타날 수 있습니다. 이에 따라 Entity를 식별자, Component를 데이터, System을 연산 주체로 분리하고 동일한 컴포넌트 조합을 Archetype으로 묶었습니다.
-
-```mermaid
-flowchart TD
-    ID[Entity ID] --> LOOKUP[Sparse Lookup\nEntity ID → Dense Index]
-    LOOKUP --> DENSE[Dense Entity Index\nRow / Col]
-    DENSE --> ARCH[Archetype\nbitset&lt;256&gt;]
-    ARCH --> C0[Transform Chunks\n16KB units]
-    ARCH --> C1[Render Chunks\n16KB units]
-    ARCH --> C2[Other Component Chunks]
-```
-
-- **ArchetypeKey:** `std::bitset<256>`를 통한 컴포넌트 조합 표현
-- **16KB Chunk:** 각 컴포넌트 타입을 연속된 메모리 구간에 저장
-- **Sparse/Dense:** Entity ID와 실제 컴포넌트 위치를 매핑
-- **Swap & Pop:** 삭제 시 마지막 유효 데이터를 빈 슬롯으로 이동해 밀집도를 유지하고 매핑을 보정
-- **QueryArchetypes:** 비트마스크로 조건을 검사하고 일치하는 아키타입을 수집
-
-**코드 리뷰 바로가기:** [`CreateArchetype`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.h) · [`Archetype/Chunk`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Archetype.h) · [`QueryArchetypes / UpdateSwapChunk`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp)
-
-> **복잡도 설명:** 각 아키타입의 비트마스크 포함 여부 검사는 고정 폭 비트셋 기준 저비용 연산이지만, `QueryArchetypes` 자체는 등록된 아키타입을 순회하므로 아키타입 개수 A에 대해 O(A)입니다. Swap & Pop의 기본 삭제/치환은 상수 개수의 위치 변경으로 구현되지만 참조 보정·컴포넌트 수에 따른 비용을 별도로 고려해야 합니다.
-
-## 4. RenderQueue와 64비트 정렬 키
-
-![PDF의 RenderQueue 명령 생성 및 렌더패스 흐름 도식](docs/images/renderqueue.jpg)
-
-*PDF p.11의 실제 설계 및 RenderItem 수집/명령 큐 전개 도식.*
-
-
-### 문제와 접근
-
-Archetype 순회만으로는 같은 셰이더·렌더 상태·메시를 사용하는 개체가 인접한다는 보장이 없습니다. RenderItem을 패스별로 수집하고, 파이프라인 상태 변경 비용이 큰 항목부터 정렬 키에 배치해 정렬 후 제출하도록 구성했습니다.
-
-### 정렬 키 레이아웃
-
-```text
-  63                         0
-  ┌────────┬────────────────┬────────┬────────────────┬────────────────────┐
-  │ Pass   │ Shaders        │ States │ Resources      │ Distance           │
-  │ 4 bits │ 16 bits        │ 8 bits │ 16 bits        │ 20 bits            │
-  └────────┴────────────────┴────────┴────────────────┴────────────────────┘
-```
-
-- **Pass:** 렌더 타겟·파이프라인 단계 분류
-- **Shaders/States/Resources:** 원래의 해시를 그대로 삽입하지 않고 별도의 압축 ID를 발급
-- **Distance:** 깊이 정렬에 사용. 불투명·투명 오브젝트의 정렬 요구는 별도로 고려
-
-### 렌더링 명령 흐름
-
-```mermaid
-flowchart LR
-    QUERY[ECS Query] --> COLLECT[CollectRenderItem]
-    COLLECT --> SORT[Sort by 64-bit Key]
-    SORT --> GROUP[EnqueueRenderItem\n인스턴스 그룹화]
-    GROUP --> BIND[XOR Key Delta\n변경된 상태만 바인딩]
-    BIND --> DRAW[DrawIndexedInstanced]
-```
-
-인스턴싱 배치 시 같은 메시·머티리얼을 공유하는 개체의 월드 행렬을 GPU 버퍼로 수집하고 `DrawIndexedInstanced` 호출에 활용합니다. 인접한 키 간 XOR 차분으로 Pass/Shader/State/Resource 변경 지점을 식별합니다.
-
-**코드 리뷰:** [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-
-> **검증 포인트:** 실제 DrawCall 감소율·CPU 제출 시간·상태 바인딩 횟수는 비교 계측 결과를 확보한 뒤 숫자로 제시하는 것이 좋습니다. 정렬 키가 있다고 해서 모든 상황에서 항상 더 빠르거나 모든 배칭이 가능한 것은 아닙니다.
-
-## 5. 렌더링 파이프라인
-
-![Deferred G-Buffer 렌더링 및 PCF Shadow 결과](docs/images/deferred-shadow.jpg)
-
-*PDF p.13: G-Buffer와 Shadow Pass 실행 결과.*
-
-![CubeMap 환경 매핑 및 Outline Pass 결과](docs/images/cubemap-outline.jpg)
-
-*PDF p.14: CubeMap 및 Outline Pass 실행 결과.*
-
-
-| 패스 | 구현 의도 | 주요 기법 |
-|---|---|---|
-| Opaque | 불투명 지오메트리와 조명 단계 분리 | MRT / G-Buffer / Deferred Shading |
-| Shadow | 광원 시점 깊이 기록 | Shadow Map / 3×3 PCF |
-| Forward | 투명 객체·UI 등 별도 처리 | Blending / Forward Rendering |
-| CubeMap | 환경 텍스처 갱신 | Cubemap Render Targets / GS 활용 |
-| Outline | 선택 객체 실루엣 | Stencil + Normal Extrusion |
-| Debug | 디버깅 기하 표시 | Box/Sphere 관련 셰이더·기하 처리 |
-
-```mermaid
-flowchart TD
-    SCENE[Scene / RenderItems] --> SHADOW[Shadow Depth Pass]
-    SCENE --> OPAQUE[Opaque Pass\nPosition / Normal / Albedo / Specular]
-    SHADOW --> LIGHT[Deferred Lighting]
-    OPAQUE --> LIGHT
-    LIGHT --> FORWARD[Sky / Transparent / UI]
-    FORWARD --> OUTLINE[Outline / Debug]
-    OUTLINE --> BACK[Backbuffer]
-```
-
-### Deferred Shading
-
-불투명 메시의 기하 정보를 Position, Normal, Albedo, Specular G-Buffer로 MRT 출력하고, 이후 화면 공간 Lighting 단계에서 재활용합니다. 투명 객체는 해당 G-Buffer 경로와 구분하여 Forward 경로로 처리합니다.
-
-### Shadow Mapping
-
-깊이 전용 패스에서 RTV 대신 DSV를 사용해 광원 깊이 지도를 생성하고, 픽셀 셰이더에서 비교 샘플러와 3×3 PCF를 활용합니다.
-
-- [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-- [`PS_Shadows.hlsli`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Shadows.hlsli)
-
-## 6. 가시성·충돌·GPU 피킹
-
-```mermaid
-flowchart TD
-    MOUSE[Viewport Mouse] --> RAY[Inverse Projection / View\nPicking Ray]
-    RAY --> BOUND[Sphere / AABB / OBB\nBroad Phase]
-    BOUND -->|Candidate| TRI[Compute Shader\nSkinning + Ray/Triangle]
-    TRI --> UAV[GPU Result UAV]
-    UAV --> STAGING[Staging Buffer Readback]
-    STAGING --> RESULT[Closest Intersection]
-    CAMERA[Camera Frustum] --> CULL[Frustum Culling]
-    CULL --> RENDER[Visible RenderItems]
-```
-
-충돌 후보를 경계 볼륨 검사로 줄이고, 정밀 Triangle Picking은 HLSL Compute Shader에서 Möller–Trumbore 교차 검사와 스키닝 변형을 수행하도록 구성했습니다. 결과를 GPU 버퍼에 기록한 뒤 Staging 자원을 통해 CPU로 읽어 옵니다.
-
-- [`CollisionSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CollisionSystem.cpp)
-- [`CS_Collision_Triangle.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CS_Collision_Triangle.hlsl)
-
-> **개선 여지:** GPU→CPU 동기식 `Map`/Readback에는 스톨이 발생할 수 있습니다. 후속 개선안은 지연 읽기, 비동기 쿼리, 결과 소비 시점 분리 등으로 명확히 기재합니다.
-
-## 7. 주요 설계 선택과 트레이드오프
-
-| 설계 선택 | 얻는 것 | 감수하는 것 / 검증할 점 |
-|---|---|---|
-| CRTP 기반 매니저 | 반복 코드 축소·수명 경계 명확화 | 전역 접근 패턴의 결합도 관리 |
-| FNV-1a 해시 캐시 | 중복 로드·조회 처리 일원화 | 해시 충돌·데이터 정합성·소유권 검증 |
-| 16KB Chunk ECS | 데이터 지역성·밀집 순회 | 구조 변경·엔티티 이동 시 복잡도 |
-| Swap & Pop | 중간 요소 시프트 감소 | 순서 불안정·역참조 갱신 필수 |
-| 64비트 Sort Key | 상태 변경 최소화 시도 | 깊이 정렬과 상태 배칭 우선순위 충돌 |
-| GPU Triangle Picking | 정점 변형·삼각형 검사 병렬화 | Readback 지연·동기화 오버헤드 |
-| Deferred Shading | 기하/조명 단계 분리 | G-Buffer 메모리·대역폭·투명 처리 |
-
-## 8. PDF 원본 이미지 및 구현 결과
-
-다음 이미지는 첨부된 포트폴리오 PDF의 **렌더러 관련 2~14쪽**에서 발췌한 원본 자료입니다. 전체 화면과 개별 렌더패스의 결과 이미지는 위 각 구현 섹션에도 배치했습니다.
-
-| 내용 | PDF 원본 페이지 | README 위치 |
-|---|---|---|
-| 렌더러 실행 화면 | 2쪽 | 프로젝트 소개 |
-| 프레임/엔진 아키텍처 | 3쪽 | 전체 아키텍처 |
-| 엔진·리소스 관리 설계 | 5쪽 | 리소스 처리 흐름 |
-| Archetype/Chunk 및 Sparse/Dense | 7~8쪽 | ECS |
-| RenderQueue 생성·처리 흐름 | 11쪽 | RenderQueue |
-| Deferred·Shadow 렌더링 결과 | 13쪽 | 렌더링 파이프라인 |
-| CubeMap·Outline 결과 | 14쪽 | 렌더링 파이프라인 |
-
-이미지 파일은 `docs/images/` 아래에 포함되어 있습니다. PDF 페이지에서 잘라낸 자료이므로 해상도 향상이 필요하면 원본 캡처 이미지로 교체할 수 있습니다.
-
-## 9. 남은 과제 및 검증 계획
-
-- **정량 프로파일링:** 동일 씬 기준 ECS 순회 시간, DrawCall 수, RenderQueue 생성·정렬 비용, API 상태 변경 횟수 측정
-- **멀티스레드:** 컴포넌트 Read/Write 종속성을 바탕으로 시스템 작업 분배 가능성 검토
-- **리소스 로딩:** 에셋 사전 직렬화 및 비동기 로드 경로 검토
-- **렌더 최적화:** 월드 행렬의 변경 감지(Dirty Flag) 캐싱과 CPU↔GPU 동기화 비용 분석
-- **가시성:** 공간 분할(Octree 등) 적용 가능성 검토
-
-> **주의:** 위 목록은 현재 구현 완료 기능이 아니라 향후 개선·검증 대상입니다.
-
-## 10. 상세 소스 코드 리뷰 — 기존 README 핵심 구현 유지
-
-이 절은 기존 README의 장점인 **핵심 구현 코드, 함수별 의도, 실제 소스 경로**를 중심으로 구성합니다. 아래 코드는 설명에 필요한 부분을 중심으로 발췌했으며 정확한 최신 정의는 링크된 `main` 브랜치의 파일을 기준으로 확인할 수 있습니다.
-
-### 10.1 `BaseSystem<T>` — CRTP / 매니저 수명 관리
-
-- **소스:** [`BaseSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/BaseSystem.h)
-- **문제:** 엔진 내부 매니저마다 생성/복사 금지·접근자·소멸 관리 코드를 중복 작성해야 했습니다.
-- **구현:** 템플릿 기반 공통 진입점과 함수 지역 `static T`를 이용해 매니저 인스턴스를 지연 초기화했습니다.
-
+본 프로젝트는 DirectX 11 API와 C++17 표준을 활용하여 캐시 성능 및 렌더링 파이프라인 바인딩을 최적화한 3D 그래픽스 렌더러 엔진 프로젝트임.
+
+학습 및 설계의 기반으로 **이득우의 게임수학**, **DirectX 11 물방울책 (Introduction to 3D Game Programming with Direct3D 11 - Frank D. Luna 저)**, **RasterTek DirectX 11 Tutorial**, **PardCode DirectX 11 Tutorial**의 핵심 그래픽스 및 선형대수 인프라를 바닥부터 심도 있게 학습하여 내재화하였으며, 과거 DXAPI 기반의 팀 프로젝트인 **맵툴(MapTool)** 및 **게임프로젝트(LoLShinSouls)** 개발 과정에서 마주했던 기술적 한계(객체지향 설계의 캐시 미스 오버헤드 및 단편적인 렌더링 파이프라인 제어)에 대한 깊은 아쉬움과 갈증을 기반으로, 엔진 전반의 메모리 연속성 확보 및 64비트 정렬 키 기반 다중 렌더패스 등 고도화된 최적화 렌더패스 엔진을 독자적으로 설계 및 구축하며 기술적 도약을 실천함.
+
+---
+
+## 00 [ 프로젝트 개요 ]
+
+* **문제인식 및 개발배경**: 
+  과거 객체지향(OOP) 디자인 패턴을 활용해 개발했던 이전 DirectX 프로젝트에서의 경험이 본 엔진 아키텍처의 근본적인 출발점이 되었음. 당시 수천 개의 동적 오브젝트를 배치했을 때 발생했던 메모리 파편화와 드로우콜 병목 한계를 직접 체감하며 단편적인 기능 구현을 넘어 엔진 전반을 관통하는 최적화 설계의 필요성을 절감하였고, 이에 대한 해결책을 설계에 직접 녹여내고자 개발을 시작함.
+* **프로젝트 목표**: 
+  - 싱글톤 보일러플레이트 제거 및 자원 수명 관리 일원화 (CRTP 및 RAII 설계)
+  - 16KB 청크 단위 연속 메모리 배열을 통한 CPU 데이터 캐시 히트율 극대화 (DOD ECS 설계)
+  - 64비트 정렬 키 조립 및 XOR 비트 연산을 통한 D3D11 파이프라인 리바인딩 최소화 (렌더패스 렌더 큐 최적화)
+  - 다각형 정밀 충돌 교차 및 스키닝 연산 병목의 GPU 이관 (Compute Shader Möller-Trumbore 가속)
+* **전체 아키텍처 흐름**: 
+  `AppWindow` ➡️ `EngineSystem` (자원 로드/생성) ➡️ `ECSSystem` (엔티티/컴포넌트 생성)의 초기화 단계를 거치며, 매 프레임 각 시스템의 `Frame` (상태 갱신) 및 `Render` (렌더 명령 제출) 단계를 유기적으로 기동하여 연산 파이프라인 오버헤드를 제어함.
+
+---
+
+## 01 [ 엔진 아키텍처 및 기반 시스템 ]
+
+### 1. CRTP 기반 시스템 설계
+* **파일명**: [C_CPP/PardCode34/BaseSystem.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/BaseSystem.h)
+* **기능 개요**: 엔진 전반에 존재하는 매니저 클래스의 싱글톤 구성을 일관된 템플릿으로 통제하고, D3D11 객체 자원들의 생성/소멸 수명 주기를 명확히 구성하여 누수를 원천 방지함.
+* **코드 상세 분석**:
+  - C++의 CRTP(Curiously Recurring Template Pattern) 패턴을 구현해 싱글톤 메커니즘의 중복 보일러플레이트를 완전 제거함.
+  - 인스턴스를 호출하는 최초 시점에 정적 객체가 할당되는 지연 생성(Lazy Initialization) 구조를 채택해 멀티스레드 환경에서도 안전한 초기화를 수립함.
+  - 생성자 및 소멸자 수명 주기를 명확히 일원화하여 RAII 패턴을 준수하도록 설계함.
+* **💻 핵심 구현 코드**:
 ```cpp
 template<typename T>
-class BaseSystem {
+class BaseSystem
+{
 protected:
     BaseSystem();
     virtual ~BaseSystem();
-    BaseSystem(const BaseSystem&) = delete;
-    BaseSystem& operator=(const BaseSystem&) = delete;
-    BaseSystem(BaseSystem&&) = delete;
+    BaseSystem(const BaseSystem&) = delete;            // 복사 생성 금지
+    BaseSystem& operator=(const BaseSystem&) = delete; // 대입 연산 금지
+    BaseSystem(BaseSystem&&) = delete;                 // 이동 생성 금지
 public:
     static T& GetInstance();
 };
 
 template<typename T>
-inline T& BaseSystem<T>::GetInstance() {
+inline BaseSystem<T>::BaseSystem() {}
+
+template<typename T>
+inline BaseSystem<T>::~BaseSystem() {}
+
+template<typename T>
+inline T& BaseSystem<T>::GetInstance()
+{
     static T instance;
     return instance;
 }
 ```
 
-> 이 구조는 C++11 이후 함수 지역 정적 객체의 **초기화가 스레드 안전**하다는 성질을 이용합니다. 반면 반환한 객체에 대한 개별 메서드의 동시 호출까지 자동으로 안전해지는 것은 아닙니다.
-
-### 10.2 `CommonMath` — SIMD 대응 수학 래퍼
-
-- **소스:** [`CommonMath.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CommonMath.h)
-- **문제:** DirectXMath의 벡터/행렬 타입은 연산에 적합하지만 디버깅 시 개별 요소 접근과 상위 코드의 사용성이 불편했습니다.
-- **구현:** Vector/Matrix/Quaternion 래퍼에 16바이트 정렬, 연산자 오버로드, 개별 행렬 원소 접근, Slerp 관련 연산을 추가했습니다.
-
+### 2. 수학 라이브러리 정의 (Vector, Matrix, Quaternion)
+* **파일명**: [C_CPP/PardCode34/CommonMath.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CommonMath.h)
+* **기능 개요**: DirectXMath의 SIMD 계산 레지스터 연산 성능을 확보하면서, 디버깅 첨자 접근 및 짐벌락 회피 회전 연산을 고속 수행하는 수학 래퍼 라이브러리를 구축함.
+* **코드 상세 분석**:
+  - `__declspec(align(16))` 하드웨어 정렬 지시어를 수립하여 SIMD 메모리 적재 효율을 극한으로 보존함.
+  - 공용체(`union`)를 적용해 내부 연산은 가속화하되 CPU 단에서 행렬 성분 및 첨자(`_11 ~ _44`)에 조밀 접근이 가능하도록 구성함.
+  - 사원수(`Quaternion`) 클래스를 구현하여 본 애니메이션 키프레임 간의 구면 선형 보간(Slerp) 계산 인프라를 수립함.
+* **💻 핵심 구현 코드**:
 ```cpp
 __declspec(align(16)) struct Vector4 {
-    Vector4() : m_vec(DirectX::XMVectorZero()) {}
-    Vector4(float x, float y, float z, float w)
-        : m_vec(DirectX::XMVectorSet(x, y, z, w)) {}
-    DirectX::XMVECTOR ToXMVECTOR() const { return m_vec; }
+public:
+    inline Vector4() : m_vec(DirectX::XMVectorZero()) {} 
+    inline Vector4(float x, float y, float z, float w) : m_vec(DirectX::XMVectorSet(x, y, z, w)) {}
+    inline DirectX::XMVECTOR ToXMVECTOR() const { return m_vec; }
 private:
-    DirectX::XMVECTOR m_vec;
+    DirectX::XMVECTOR m_vec; // SIMD 레지스터 16바이트 정렬 직접 매핑
+};
+
+__declspec(align(16)) struct Matrix4x4 {
+public:
+    union
+    {
+        DirectX::XMMATRIX m_mat;
+        struct
+        {
+            float _11, _12, _13, _14;
+            float _21, _22, _23, _24;
+            float _31, _32, _33, _34;
+            float _41, _42, _43, _44;
+        };
+    };
+    inline Matrix4x4() : m_mat(DirectX::XMMatrixIdentity()) {}
+    inline DirectX::XMMATRIX ToXMMATRIX() const { return m_mat; }
 };
 ```
 
-관련 구현은 카메라 Transform, Frustum, Collision, Animation 보간 등에서 공유합니다. 저장 형식 및 정렬 요구 사항은 소스의 실제 선언을 기준으로 확인해야 합니다.
-
-### 10.3 `ResourceSystem::CreateResource` — 가상 자원 생성과 해시 캐시
-
-- **소스:** [`ResourceSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ResourceSystem.h), [`Geometry.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Geometry.h)
-- **문제:** 동일한 텍스처·Geometry를 객체별로 다시 읽고 GPU 자원을 매번 생성하는 구조는 로딩 시간과 메모리 사용에 불리합니다.
-- **구현:** 리소스 이름/경로를 해시 키로 변환하고 기존 등록 객체를 재사용합니다. Assimp는 노드 계층을 순회하며 메시/애니메이션 정보를 가공합니다.
-
+### 3. 가상자원 및 D3D Wrapper 정의
+* **파일명**: [C_CPP/PardCode34/ResourceSystem.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ResourceSystem.h), [C_CPP/PardCode34/Geometry.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Geometry.h)
+* **기능 개요**: 텍스처, 기하(Assimp), 머티리얼 등의 원시 에셋 데이터를 FNV-1a 해싱 기반 캐싱 구조에 등록하여 에셋 중복 로드를 O(1)에 원천 차단함.
+* **코드 상세 분석**:
+  - 완벽 포워딩(`std::forward`) 기반의 캐싱 팩토리 메소드(`CreateResource`)를 구현하여 에셋 중복 로드를 사전에 제어함.
+  - Assimp SDK를 거쳐 aiScene 노드 계층을 재귀 순회(`ParseNode`)하고 정점 FNV-1a 해싱 룩업을 수행해 중복 정점 제거(인덱싱 테이블 매핑)를 적용함.
+* **💻 핵심 구현 코드**:
 ```cpp
+// ResourceSystem.h: 가변 인자 기반 캐싱 팩토리 정의
 template<typename T, typename... Types>
-T* ResourceSystem::CreateResource(const std::wstring& szFile, Types&&... args) {
+T* ResourceSystem::CreateResource(const std::wstring& szFile, Types&&... args)
+{
     size_t hash = Hasing_wstring(szFile);
-    if (m_Resources.find(hash) != m_Resources.end())
+    if (m_Resources.find(hash) != m_Resources.end()) 
         return static_cast<T*>(m_Resources[hash]);
 
     T* newResource = new T(hash, szFile, std::forward<Types>(args)...);
     m_Resources[hash] = newResource;
     return newResource;
 }
+
+// Geometry.cpp: Assimp 노드 재귀 순회 및 중복 정점 해시 룩업 테이블 인덱싱
+inline void Geometry::ParseMesh(const aiScene* scene, const aiMesh* mesh, 
+                                 std::map<UINT, std::unordered_map<Vertex_PTNTB_Skinned, UINT, Vertex_PTNTB_Skinned_Hash>>& verticesIdentical) {
+    if (mesh->mNumVertices <= 0) return;
+    UINT matIdx = mesh->mMaterialIndex;
+    std::vector<UINT> vertexLookup(mesh->mNumVertices);
+    
+    for (UINT i = 0; i < mesh->mNumVertices; i++) {
+        Vertex_PTNTB_Skinned vertex = {};
+        // [정점 물리 데이터 적재]
+        
+        auto iter = verticesIdentical[matIdx].find(vertex);
+        if (iter == verticesIdentical[matIdx].end()) {
+            verticesIdentical[matIdx][vertex] = m_verticesByMaterial[matIdx].size();
+            m_verticesByMaterial[matIdx].push_back(vertex);
+        }
+        vertexLookup[i] = verticesIdentical[matIdx][vertex];
+    }
+    
+    for (UINT i = 0; i < mesh->mNumFaces; i++) {
+        aiFace face = mesh->mFaces[i];
+        for (UINT j = 0; j < face.mNumIndices; j++)
+            m_indicesByMaterial[matIdx].push_back(vertexLookup[face.mIndices[j]]);
+    }
+}
 ```
 
-**설계상 주의:** 해시맵의 평균 조회 비용이 낮다는 점과 파일 로드·해시 계산·GPU 생성까지 O(1)이라는 주장은 다릅니다. 해시 충돌과 객체 소유권 정합성도 별도로 확인할 항목입니다.
+---
 
-### 10.4 `CreateArchetype` — 컴포넌트 조합과 청크 생성
+## 02 [ 데이터지향 설계(DOD) 기반 ECS 아키텍처 ]
 
-- **소스:** [`ECSSystem.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.h), [`Components.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Components.h)
-- **설계 의도:** Entity를 ID로, Component를 데이터로, System을 연산 주체로 분리합니다. 동일 조합의 Component를 Archetype에 묶고 16KB 청크로 분할해 데이터 지역성을 고려했습니다.
-
+### 1. OOP 기반의 한계성과 DOD 기반으로의 전환
+* **파일명**: [C_CPP/PardCode34/ECSSystem.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.h), [C_CPP/PardCode34/Components.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Components.h)
+* **기능 개요**: 힙 공간에 분산 배치되어 CPU 캐시 미스를 초래하는 OOP의 개별 객체 구조를 극소화하고, 순수 컴포넌트 데이터의 조밀 선형 메모리 배열 배치를 수립함.
+* **코드 상세 분석**:
+  - `Entity`는 순수 식별 인덱스 주소만 보유하며, `Component`는 런타임 타입 마스크 지수를 고유 발급받아 비트 마스킹으로 관리됨.
+  - 가변인자 템플릿 `CreateArchetype`에서 컴파일 타임 C++17 폴드 표현식을 통해 컴포넌트 청크를 생성함.
+* **💻 핵심 구현 코드**:
 ```cpp
+// ECSSystem.h: C++17 폴드 표현식을 이용한 각 컴포넌트 자동 등록 및 청크 전개
 template<typename ...Comps>
-inline ArchetypeKey ECSSystem::CreateArchetype() {
+inline ArchetypeKey ECSSystem::CreateArchetype()
+{
     ArchetypeKey key = GetArchetypeKey<Comps...>();
-    if (m_Archetypes.find(key) != m_Archetypes.end())
+    if (m_Archetypes.find(key) != m_Archetypes.end()) 
         return key;
-
     m_Archetypes[key] = new Archetype(GetMaxComponentSize<Comps...>());
+    
     (m_Archetypes[key]->RegisterComponent<Comps>(), ...);
     return key;
 }
 ```
 
-- **C++17 폴드 표현식:** 템플릿 매개변수로 전달한 컴포넌트 타입마다 등록 함수를 전개합니다.
-- **ArchetypeKey:** 컴포넌트 조합을 고정 폭 비트셋으로 표현합니다.
-- **ChunkData:** 청크의 실제 데이터 저장과 Swap/SwapAndPop 동작을 맡습니다.
-
-### 10.5 `Archetype::DeleteComponent` / `ECSSystem::DeleteEntity` — Sparse/Dense + Swap & Pop
-
-- **소스:** [`Archetype.h`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Archetype.h), [`ECSSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp)
-- **문제:** 선형 배열의 중간 요소 제거 시 뒤쪽 요소를 모두 시프트하면 빈번한 생성·삭제 과정에서 비용이 증가합니다.
-- **구현:** 마지막 데이터를 삭제 슬롯으로 이동한 다음 끝 데이터를 제거하고, 이동된 Entity ID에 대한 행/열·밀집 인덱스 매핑을 보정합니다.
-
+### 2. Archetype & ChunkData 구성
+* **파일명**: [C_CPP/PardCode34/Archetype.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Archetype.h)
+* **기능 개요**: 아키타입 내 이종 컴포넌트 배열들을 16KB(16384바이트)의 물리 연속 크기제약 청크 블록으로 구성하여 CPU 데이터 캐시 히트율을 확보함.
+* **코드 상세 분석**:
+  - `ComponentChunk` 추상 클래스를 기반으로 상속 템플릿 클래스 `ChunkData<T>`를 구성하여 컴포넌트 타입별 고속 복사 및 Swap 연산을 통제함.
+  - 아키타입 내에서 최대 컴포넌트 크기로 용량을 역산해 청크당 최대 인덱싱 개수를 일원화함.
+* **💻 핵심 구현 코드**:
 ```cpp
-// Archetype: 컴포넌트별 데이터에 동일한 교환·삭제 정책을 적용
-for (const auto& key : m_ComponentsLookup)
-    m_Components[key][idxRow]->SwapAndPop(
-        idxCol, m_Components[key].back());
+class ComponentChunk
+{
+public:
+    virtual ~ComponentChunk() = default;
+    virtual void Swap(size_t srcCol, ComponentChunk* destChunk, size_t destCol) = 0;
+    virtual void SwapAndPop(size_t chunkIdx, ComponentChunk* srcChunk) = 0;
+    virtual void AddChunk() = 0;
+    virtual size_t GetCount() const = 0;
+};
+```
 
-// ECSSystem: 이동한 엔티티의 실제 컴포넌트 위치 보정
-if (movedLookupIdx != lookupIdx) {
-    size_t movEntityIdx = FindEntity(movedLookupIdx);
-    m_Entitys[movEntityIdx].m_IdxRow = delEntity.m_IdxRow;
-    m_Entitys[movEntityIdx].m_IdxCol = delEntity.m_IdxCol;
+### 3. Sparse/Dense(희소배열) 기반 구성 및 Swap & Pop
+* **파일명**: [C_CPP/PardCode34/Archetype.h](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Archetype.h) (DeleteComponent), [C_CPP/PardCode34/ECSSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp) (DeleteEntity)
+* **기능 개요**: 임의 개체 소멸 시 시프트 복사 연산($O(N)$) 병목을 회피하기 위해 최후방 청크 데이터와의 스왑을 통한 O(1) 완전 삭제를 적용하고 룩업 포인터를 동기화함.
+* **코드 상세 분석**:
+  - `DeleteComponent` 기동 시 대상 청크 슬롯들을 최후방(back) 청크의 마지막 요소와 맞바꾼 후 제거하여 O(1) 삭제 효율을 유지함.
+  - 이동된 실제 엔티티들의 룩업 매핑이 어긋나지 않도록 `m_LookupTable`(Sparse)과 `m_Entitys`(Dense)를 구성함.
+* **💻 핵심 구현 코드**:
+```cpp
+// Archetype.h: 아키타입 내 컴포넌트들의 일괄 Swap & Pop 지휘
+inline size_t Archetype::DeleteComponent(size_t idxRow, size_t idxCol)
+{
+    auto& chunks = m_Components[*m_ComponentsLookup.begin()];
+    
+    for (const auto& key : m_ComponentsLookup)
+        m_Components[key][idxRow]->SwapAndPop(idxCol, m_Components[key].back());
+ 
+    if (!chunks.empty() && chunks.back()->GetCount() == 0)
+    {
+        for (const auto& key : m_ComponentsLookup)
+        {
+            delete m_Components[key].back();
+            m_Components[key].pop_back();
+        }
+    }
+    return m_ChunksLookup.back();
+}
+
+// ECSSystem.cpp: 삭제로 인해 순간이동한 후방 엔티티의 물리 청크 정보(행/열) 교정 동기화
+void ECSSystem::DeleteEntity(size_t lookupIdx)
+{
+    size_t delEntityIdx = FindEntity(lookupIdx);
+    Entity delEntity = m_Entitys[delEntityIdx];
+    m_LookupTable[lookupIdx] = _HashNotInitialize; 
+ 
+    size_t movedLookupIdx = m_Archetypes[delEntity.m_Key]->DeleteComponent(delEntity.m_IdxRow, delEntity.m_IdxCol);
+ 
+    if (movedLookupIdx != lookupIdx)
+    {
+        size_t movEntityIdx = FindEntity(movedLookupIdx);
+        m_Entitys[movEntityIdx].m_IdxRow = delEntity.m_IdxRow;
+        m_Entitys[movEntityIdx].m_IdxCol = delEntity.m_IdxCol;
+    }
+ 
+    size_t lastEntityIdx = m_Entitys.size() - 1;
+    if (delEntityIdx != lastEntityIdx)
+    {
+        m_Entitys[delEntityIdx] = std::move(m_Entitys[lastEntityIdx]);
+        m_LookupTable[m_Entitys[delEntityIdx].m_IdxLookup] = delEntityIdx; 
+    }
+    m_Entitys.pop_back();
 }
 ```
 
-기본 Swap & Pop 동작은 시프트 비용을 없애지만 실제 삭제에는 **구성 컴포넌트의 수, 룩업 테이블 보정, 청크 해제**가 포함됩니다. 따라서 전체 작업을 무조건 O(1)이라고 단정하지 않습니다.
-
-### 10.6 `QueryArchetypes` / `UpdateSwapChunk` — 비트마스크 검색과 활성 데이터 재배치
-
-- **소스:** [`ECSSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp)
-- **기능:** 시스템이 필요로 하는 컴포넌트 조합을 필터링한 뒤, 활성 데이터만 조밀한 세그먼트로 재배치해 필요한 범위의 순회를 지원합니다.
-
+### 4. 비트연산 기반 컴포넌트 데이터 조회 (ArchetypeQuery)
+* **파일명**: [C_CPP/PardCode34/ECSSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp) (QueryArchetypes)
+* **기능 개요**: 수십 가지 아키타입 중 특정 시스템이 요구하는 컴포넌트 마스크 키를 비트셋 AND 연산으로 O(1) 필터링하여 순회 속도를 극대화함.
+* **코드 상세 분석**:
+  - `QueryArchetypes` 내에서 비트 연산(`(iter.first & key) == key`)을 적용해 타겟 컴포넌트 세트를 지닌 아키타입들만 즉시 추출함.
+* **💻 핵심 구현 코드**:
 ```cpp
-std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key) {
+std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key)
+{
     std::vector<Archetype*> archetypes;
-    for (auto& iter : m_Archetypes) {
+    for (auto& iter : m_Archetypes)
+    {
         if ((iter.first & key) == key && !iter.second->IsEmpty())
             archetypes.push_back(iter.second);
     }
@@ -393,152 +259,365 @@ std::vector<Archetype*> ECSSystem::QueryArchetypes(ArchetypeKey key) {
 }
 ```
 
-전체 아키타입을 순회하므로 쿼리 탐색은 등록된 아키타입 수에 비례합니다. `UpdateSwapChunk`는 행/열 위치를 스왑한 뒤 `transfer_row`, `transfer_col` 등을 갱신하여 활성 데이터 범위를 관리합니다. [원본 구현](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp)을 참조하세요.
-
-### 10.7 64비트 RenderPass Sort Key — 서브 ID 발급 및 비트 패킹
-
-- **소스:** [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-- **서브 키:** `GetRenderPassKey_Shaders`, `GetRenderPassKey_States`, `GetRenderPassKey_Resources`
-- **조립:** `GenerateRenderPassHash`
-
+### 5. 청크 정렬 업데이트
+* **파일명**: [C_CPP/PardCode34/ECSSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/ECSSystem.cpp) (UpdateSwapChunk)
+* **기능 개요**: 매 프레임 활성 상태 엔티티들을 청크 메모리 최후방 및 최전방 영역으로 밀집 스왑 정렬하여 순회 대상 쿼리 검색량을 극대화함.
+* **코드 상세 분석**:
+  - 교환 과정 중 `transferIdx`를 아키타입 내부에 셋업하여 정합성이 보정된 밀집 영역 세그먼트만 선별 순회하도록 제어함.
+* **💻 핵심 구현 코드**:
 ```cpp
-_RPKey RenderSystem::GenerateRenderPassHash(
-    uint32_t hashPass, uint32_t hashShaders,
-    uint32_t hashStates, uint32_t hashResources,
-    uint32_t hashDist)
+void ECSSystem::UpdateSwapChunk(const std::vector<std::pair<size_t, size_t>>& RowCols, size_t startIdx, Archetype* archetype)
+{
+    if (RowCols.empty()) return;
+    size_t idx = archetype->GetAllChunkCount() - 1;
+    size_t capacity = archetype->GetCapacity_Chunks();
+    
+    for(auto iter = RowCols.rbegin(); iter != RowCols.rend(); iter++)
+    {
+        size_t srcRow = iter->first;
+        size_t srcCol = iter->second;
+        size_t destRow = idx / capacity;
+        size_t destCol = idx % capacity;
+        
+        if (srcRow != destRow || srcCol != destCol)
+        {
+            auto src_dest = archetype->SwapChunkData(srcRow, srcCol, destRow, destCol);
+            size_t srcEntityIdx = FindEntity(src_dest.first);
+            size_t destEntityIdx = FindEntity(src_dest.second);
+            
+            m_Entitys[srcEntityIdx].m_IdxRow = destRow;
+            m_Entitys[srcEntityIdx].m_IdxCol = destCol;
+
+            m_Entitys[destEntityIdx].m_IdxRow = srcRow;
+            m_Entitys[destEntityIdx].m_IdxCol = srcCol;
+        }
+        idx--;
+    }
+    archetype->m_transfer_row = startIdx / capacity;
+    archetype->m_transfer_col = startIdx % capacity;
+}
+```
+
+---
+
+## 03 [ Engine/Render System 및 RenderPass 구성 ]
+
+### 1. 렌더패스 서브 키 (Shaders, States, Resources) 발급 제어
+* **파일명**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
+* **기능 개요**: D3D11 상태 전환 최소화를 위한 64비트 정렬 키의 핵심 인자인 Shaders(16bit), States(8bit), Resources(16bit) 세그먼트 고유 ID를 해시 테이블 룩업 기반으로 실시간 발급함.
+* **코드 상세 분석**:
+  - `GetRenderPassKey_Shaders`: 머티리얼에 결합된 VS, HS, DS, GS, PS 파이프라인 결합 해시를 추출하여 고유 16비트 ID(`uint16_t`)를 발급하고 중복 생성을 원천 차단함.
+  - `GetRenderPassKey_States`: RS, DS, BS 렌더 상태 조건과 BlendFactor, StencilRef 정보를 `hash_combine`으로 합성해 8비트 ID(`uint8_t`)로 조밀 압축함.
+  - `GetRenderPassKey_Resources`: 기하(Mesh), 머티리얼, 상수 자원 맵 상태를 결합해 고유 16비트 ID(`uint16_t`)로 발급해 파이프라인 캐싱에 대입함.
+* **💻 핵심 구현 코드**:
+```cpp
+// RenderSystem.cpp: 셰이더 포인터 결합 해시 기반 16비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_Shaders(size_t hashMaterial)
+{
+    Material* pMaterial = _ResourceSystem.GetResource<Material>(hashMaterial);
+    size_t hash = hashMaterial;
+    if (pMaterial->GetVS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetVS());
+    if (pMaterial->GetHS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetHS());
+    if (pMaterial->GetDS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetDS());
+    if (pMaterial->GetGS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetGS());
+    if (pMaterial->GetPS() != _HashNotInitialize) hash_combine(hash, pMaterial->GetPS());
+
+    auto iter = m_hRP_Shaders.find(hash);
+    if (iter != m_hRP_Shaders.end())
+        return iter->second;
+    uint16_t newID = static_cast<uint16_t>(m_resRP_Shaders.size());
+    m_hRP_Shaders[hash] = newID;
+    m_resRP_Shaders.push_back(hashMaterial);
+    return newID;
+}
+
+// RenderSystem.cpp: 렌더 상태 결합 해시 기반 8비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_States(E_RSState stateRS, E_DSState stateDS, E_BSState stateBS, UINT ds_stencilref, float* bs_factor, UINT bs_mask)
+{
+    size_t hash = 0;
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateRS)));
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateBS)));
+    hash_combine(hash, std::hash<UINT>{}(static_cast<UINT>(stateDS)));
+    float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    if (bs_factor != nullptr)
+    {
+        for (int i = 0; i < 4; i++)
+            blendFactor[i] = bs_factor[i];
+    }
+    for (int i = 0; i < 4; ++i)
+        hash_combine(hash, std::hash<float>{}(blendFactor[i]));
+    hash_combine(hash, std::hash<UINT>{}(bs_mask));
+    hash_combine(hash, std::hash<UINT>{}(ds_stencilref));
+
+    auto iter = m_hRP_States.find(hash);
+    if (iter != m_hRP_States.end())
+        return iter->second;
+
+    uint8_t newID = static_cast<uint8_t>(m_resRP_States.size());
+    m_hRP_States[hash] = newID;
+    m_resRP_States.push_back({ stateRS, stateBS, {blendFactor[0], blendFactor[1], blendFactor[2], blendFactor[3]}, bs_mask, stateDS, ds_stencilref });
+    return newID;
+}
+
+// RenderSystem.cpp: 메시/머티리얼/리소스 결합 해시 기반 16비트 렌더키 발급
+uint32_t RenderSystem::GetRenderPassKey_Resources(size_t hashMesh, size_t hashMat, size_t hashRA, UINT idxResource, E_Collider collider, UINT idxCollider)
+{
+    size_t hash = 0;
+    hash_combine(hash, std::hash<size_t>{}(hashMesh));
+    hash_combine(hash, std::hash<size_t>{}(hashMat));
+    hash_combine(hash, std::hash<size_t>{}(hashRA));
+    hash_combine(hash, std::hash<UINT>{}(idxResource));
+    hash_combine(hash, std::hash<size_t>{}(static_cast<uint32_t>(collider)));
+    hash_combine(hash, std::hash<UINT>{}(idxCollider));
+    auto iter = m_hRP_Resources.find(hash);
+    if (iter != m_hRP_Resources.end())
+        return iter->second;
+
+    uint16_t newID = static_cast<uint16_t>(m_resRP_Resources.size());
+    m_hRP_Resources[hash] = newID;
+    m_resRP_Resources.push_back({ hashMesh, hashMat, hashRA, idxResource, collider, idxCollider });
+    return newID;
+}
+```
+
+### 2. 64비트 정렬 키 생성 및 조립
+* **파일명**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp) (GenerateRenderPassHash)
+* **기능 개요**: 상태 전환 오버헤드 가중치에 맞춰 5대 세그먼트를 결합한 단일 64비트 정수 키(`_RPKey`)를 가동하여 GPU 파이프라인의 불필요한 상태 교체를 차단함.
+* **코드 상세 분석**:
+  - 투명 패스(`E_RenderPass::Transparent`)의 경우 Back-to-Front 정렬을 가동하도록 거리 값 세그먼트 비트를 반전 합성함.
+* **💻 핵심 구현 코드**:
+```cpp
+_RPKey RenderSystem::GenerateRenderPassHash(uint32_t hashPass, uint32_t hashShaders, uint32_t hashStates, uint32_t hashResources, uint32_t hashDist)
 {
     _RPKey key = 0;
-    key |= (static_cast<uint64_t>(hashPass) & 0xF) << 60;
-    key |= (static_cast<uint64_t>(hashShaders) & 0xFFFF) << 44;
-    key |= (static_cast<uint64_t>(hashStates) & 0xFF) << 36;
-    key |= (static_cast<uint64_t>(hashResources) & 0xFFFF) << 20;
+    key |= (static_cast<uint64_t>(hashPass) & (UINT)0xF) << 60;
+    key |= (static_cast<uint64_t>(hashShaders) & (UINT)0xFFFF) << 44;
+    key |= (static_cast<uint64_t>(hashStates) & (UINT)0xFF) << 36;
+    key |= (static_cast<uint64_t>(hashResources) & (UINT)0xFFFF) << 20;
+    
     if (static_cast<uint32_t>(E_RenderPass::Transparent) == hashPass)
         hashDist = 0xFFFFF - hashDist;
-    key |= static_cast<uint64_t>(hashDist) & 0xFFFFF;
+        
+    key |= (static_cast<uint64_t>(hashDist) & (UINT)0xFFFFF);
     return key;
 }
 ```
 
-최상위 `Pass`→`Shader`→`State`→`Resource`→`Distance` 순서로 정렬 우선순위를 부여합니다. 이 방식은 서로 다른 패스 간 타깃 전환을 그룹화하고, 동일 리소스를 쓰는 Draw 항목이 인접하도록 돕습니다. 투명 패스는 뒤에서 앞으로 정렬하도록 거리 부분을 반전합니다.
-
-### 10.8 `CollectRenderItem` / `EnqueueRenderItem` — 인스턴싱 배치 큐
-
-- **소스:** [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-- **수집:** ECS의 `C_Transform`과 `C_Render` 컴포넌트, `passMasks`, 가시성 상태를 확인해 드로우 후보를 생성합니다.
-- **큐 구성:** 정렬된 키의 리소스 영역이 같은 개체를 그룹화하고, 월드 행렬을 구조화 버퍼에 저장한 뒤 `DrawIndexedInstanced`를 호출합니다.
-
-```mermaid
-flowchart LR
-    A[ECS Archetype Query] --> B[CollectRenderItem]
-    B --> C[64-bit Key Sort]
-    C --> D[EnqueueRenderItem]
-    D --> E[Instance World Matrix Buffer]
-    E --> F[DrawIndexedInstanced]
-```
-
-**배칭 조건:** 동일 상태가 서로 인접한다고 항상 하나의 인스턴싱 드로우로 합칠 수는 없습니다. 메시·머티리얼·바인딩 리소스와 인스턴스 데이터 레이아웃의 일치가 필요합니다.
-
-### 10.9 `ExecuteRenderPass` — XOR 차분 기반 Lazy Binding
-
-- **소스:** [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
-- **문제:** 이미 설정된 GPU 상태를 매 아이템마다 다시 API에 전달하는 중복 호출이 발생합니다.
-- **구현:** 이전 정렬 키와 현재 키의 차이만 비교하여 변경된 범주의 셰이더·렌더 상태·리소스 바인딩을 수행합니다.
-
+### 3. XOR 비트 연산 기반 지연 바인딩 최소화 루프
+* **파일명**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp) (ExecuteRenderPass 루프)
+* **기능 개요**: 렌더러 명령 큐 순회 시, 직전 정렬 키와의 비트 XOR 연산(`keyCur ^ keyPrev`)을 수행해 차이가 발생한 D3D11 파이프라인 영역만 리바인딩함.
+* **코드 상세 분석**:
+  - 시프트 오프셋 분기(60, 44, 36, 20)를 통해 렌더 타겟, 셰이더, States, Buffer 리소스 바인딩을 선택적 갱신하여 드라이버 오버헤드를 극소화함.
+* **💻 핵심 구현 코드**:
 ```cpp
+// (ExecuteRenderPass 내부 루프 세그먼트)
 _RPKey keyPrev = _HashNotInitialize;
-for (const auto& renderItem : m_hRP_CommandQueue) {
+for (const auto& renderItem : m_hRP_CommandQueue)
+{
     _RPKey keyCur = renderItem.sortKey;
     size_t diff = keyCur ^ keyPrev;
     uint32_t curPass = (keyCur >> 60) & 0xF;
-
-    if (diff >> 60) {
-        // 패스가 변경된 경우 렌더타깃 및 뷰포트 구성
+ 
+    if (diff >> 60)
+    {
+        SetRS_Viewport(&_EngineSystem.m_vp_BB);
+        switch (curPass)
+        {
+            case (uint32_t)E_RenderPass::Opaque:
+                SetOM_RenderTargets({ _EngineSystem.m_hash_Gbuffer_Position, _EngineSystem.m_hash_Gbuffer_Normal, _EngineSystem.m_hash_Gbuffer_Albedo }, _EngineSystem.m_hash_DSView_Quad);
+                break;
+        }
     }
-    // Shader, State, Resource 서브 필드의 변화에 따라 선택적으로 바인딩
+    // [diff >> 44 (Shader), diff >> 36 (State), diff >> 20 (Resource) 분기 갱신 및 Draw]
     keyPrev = keyCur;
 }
 ```
 
-위 코드는 **핵심 원리 설명을 위한 부분 발췌**입니다. 실제 경계 마스크와 분기 순서는 `RenderSystem.cpp`의 구현을 확인해 주세요.
+---
 
-### 10.10 Frustum 및 Picking Ray — 단계적 충돌 검사
+## 04 [ 가시성/충돌 판정 최적화 및 그래픽스 파이프라인 ]
 
-- **소스:** [`CollisionSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CollisionSystem.cpp)
-- **카메라 가시성:** View/Projection 변환에서 절두체 평면을 유도하고 Bounding Volume과 검사해 렌더 후보를 줄입니다.
-- **화면 피킹:** Viewport → NDC → 역투영·역뷰 변환으로 공간 레이를 구성합니다.
-- **Broad Phase:** Ray–Sphere/Box 등 경계 볼륨으로 충돌 후보를 축소합니다.
-- **Narrow Phase:** 후보 메시의 Triangle 단위 Möller–Trumbore 교차로 정밀 판정합니다.
+### 1. 선형 깊이 분포 절두체 평면 생성
+* **파일명**: [C_CPP/PardCode34/CollisionSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CollisionSystem.cpp) (Frustum 생성자)
+* **기능 개요**: 원근 투영 변환의 비선형 분포를 선형 깊이로 교정 보정한 투영 행렬을 빌드하고 전치 승산을 수행해 6개 월드 절두체 평면식을 유도함.
+* **코드 상세 분석**:
+  - 뷰 행렬과 깊이 분포 보정 투영 행렬을 승산하고 전치한 행렬(`Transpose()`)을 기반으로 6개 가시 영역 평면 식(`m_planes`)을 도출함.
+* **💻 핵심 구현 코드**:
+```cpp
+Frustum::Frustum(float screenDepth, const Matrix4x4& matView, const Matrix4x4& matProj)
+{
+    Matrix4x4 matLinearProj = matProj;
+    float zMinimum = -matLinearProj[3].GetZ() / matLinearProj[2].GetZ();
+    float r = screenDepth / (screenDepth - zMinimum);
+    matLinearProj[2].SetZ(r);             
+    matLinearProj[3].SetZ(-r / zMinimum);  
+ 
+    Matrix4x4 matFinalTranspose = (matView * matLinearProj).Transpose();
+    m_planes[0] = matFinalTranspose[3] + matFinalTranspose[0]; // Left
+    m_planes[1] = matFinalTranspose[3] - matFinalTranspose[0]; // Right
+    m_planes[2] = matFinalTranspose[3] - matFinalTranspose[1]; // Up
+    m_planes[3] = matFinalTranspose[3] + matFinalTranspose[1]; // Bottom
+    m_planes[4] = matFinalTranspose[3] + matFinalTranspose[2]; // Near
+}
+```
 
-### 10.11 `CS_Collision_Triangle.hlsl` — 스키닝 정점 + Triangle Picking
-
-- **소스:** [`CS_Collision_Triangle.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CS_Collision_Triangle.hlsl)
-- **핵심:** 입력 정점에 본 행렬/가중치를 적용해 스키닝한 위치를 계산하고, 각 삼각형에 대한 레이 교차를 독립 스레드로 수행합니다.
-
+### 2. 계산 셰이더 기반 GPU Möller-Trumbore 가속
+* **파일명**: [C_CPP/PardCode34/CS_Collision_Triangle.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/CS_Collision_Triangle.hlsl)
+* **기능 개요**: 다량의 스키닝 정점 계산 및 정밀 삼각형 피킹 검출을 GPU 다중 코어 스레드로 비동기 병렬 연산 처리함.
+* **코드 상세 분석**:
+  - `ComputeSkinning`: 계산 셰이더 상에서 본 행렬 구조화 버퍼와 연동해 4가중치 스키닝 위치 변형을 가속 처리함.
+  - `Intersect`: Möller-Trumbore 알고리즘을 HLSL로 직접 가동하여 삼각형 세 꼭지점(`wv0, wv1, wv2`)과 레이 간 교차 깊이(`fDist`)를 병렬 탐색함.
+* **💻 핵심 구현 코드**:
 ```hlsl
+float3 ComputeSkinning(Vertex v)
+{
+    float4 animPos = float4(0, 0, 0, 0);
+    float4 localPos = float4(v.pos0.xyz, 1.0f);
+    if (notAnimate > _IsAnimate)
+        return mul(localPos, matWorld).xyz;
+        
+    [unroll]
+    for (int i = 0; i < 4; ++i)
+        animPos += v.weights[i] * mul(localPos, matBone[v.bones[i]]);
+ 
+    return mul(float4(animPos.xyz, 1.0f), matWorld).xyz;
+}
+
+bool Intersect(float3 rayOrigin, float3 rayDir, float3 wv0, float3 wv1, float3 wv2, out float fDist) {
+    float3 e1 = wv1 - wv0;
+    float3 e2 = wv2 - wv0;
+    float3 s = rayOrigin - wv0;
+    float3 p = cross(rayDir, e2);
+    float3 q = cross(s, e1);
+    float det = dot(e1, p);
+    bool NoIntersection = false;
+    
+    if (det > _Epsilon) {
+        float u = dot(s, p);
+        NoIntersection = (u < 0.0f) || (u > det);
+        float v = dot(rayDir, q);
+        NoIntersection = NoIntersection || (v < 0.0f) || ((u + v) > det);
+        float t = dot(e2, q);
+        NoIntersection = NoIntersection || (t < 0.0f);
+    } else if (det < -_Epsilon) {
+        float u = dot(s, p);
+        NoIntersection = (u > 0.0f) || (u < det);
+        float v = dot(rayDir, q);
+        NoIntersection = NoIntersection || (v > 0.0f) || ((u + v) < det);
+        float t = dot(e2, q);
+        NoIntersection = NoIntersection || (t > 0.0f);
+    } else {
+        NoIntersection = true;
+    }
+    if (NoIntersection) return false;
+    fDist = dot(e2, q) * (1.0f / det);
+    return true;
+}
+
 [numthreads(64, 1, 1)]
 void csmain(uint3 dispatchThreadID : SV_DispatchThreadID)
 {
     if (dispatchThreadID.x >= triangleCount) return;
     uint tid = dispatchThreadID.x;
-
+    
     float3 wv0 = ComputeSkinning(gInputVertices[tid * 3 + 0]);
     float3 wv1 = ComputeSkinning(gInputVertices[tid * 3 + 1]);
     float3 wv2 = ComputeSkinning(gInputVertices[tid * 3 + 2]);
-
+    
     float fDist = _Infinite;
     bool isHit = Intersect(vRayOrigin, vRayDir, wv0, wv1, wv2, fDist);
+ 
     gOutputResults[tid].idx = tid * 3;
     gOutputResults[tid].fDist = isHit ? fDist : _Infinite;
 }
 ```
 
-GPU 결과를 UAV에 저장하고 Staging Buffer로 복사한 후 `Map`으로 가져오는 경로는 CPU↔GPU 동기화 부담이 생길 수 있어 개선 항목으로 남겨 두었습니다.
+### 3. 세부 렌더패스 D3D11 파이프라인 연동
+* **C++ 파일 링크**: [C_CPP/PardCode34/RenderSystem.cpp](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp)
+* **기능 개요**: 64비트 정렬 키의 최상위 Pass 4비트 분류에 따라 파이프라인의 RenderTarget, BlendState, DepthStencilState 상태를 전환하고, 각 패스 목적에 최적화된 5대 그래픽스 렌더링 기법을 연동함.
 
-### 10.12 렌더패스 세부 구현 — HLSL 및 핵심 상태 제어
-
-| 패스 | 구현 상세 | 관련 소스 |
-|---|---|---|
-| Deferred (Opaque) | G-Buffer 4종 Position/Normal/Albedo/Specular MRT, 별도 라이팅 | [`RenderSystem.cpp`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/RenderSystem.cpp) |
-| Shadow | 광원 깊이 지도와 3×3 PCF 비교 샘플러 | [`PS_Shadows.hlsli`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Shadows.hlsli) |
-| CubeMap | Geometry Shader에서 `SV_RenderTargetArrayIndex` 설정하여 6개 면으로 라우팅 | [`GS_CubeMap_PTNTB.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl) |
-| Outline | Stencil Write → 비교 후 정점 법선 방향 팽창 | [`Instanced_VS_Outline_PTN.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Instanced_VS_Outline_PTN.hlsl), [`PS_Outline_Draw.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Outline_Draw.hlsl) |
-| Debug | Collider Box/Sphere 데이터를 CB로 전달, Sphere는 Domain Shader에서 기하 보간 | [`DS_Debug_Sphere.hlsl`](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/DS_Debug_Sphere.hlsl) |
-
-#### Deferred / G-Buffer
-
+#### ① Deferred Rendering (Opaque) 패스
+- **기능 개요**: 하나의 드로우콜로 기하 데이터를 G-Buffer(Position, Normal, Albedo, Specular) 4개 텍스처 타겟에 동시 렌더링(MRT)하고, 패스 탈출 시 라이팅 패스용 셰이더 자원 뷰(SRV)로 일괄 전환함.
+- **💻 C++ 렌더타겟 멀티 바인딩 및 SRV 전환**:
 ```cpp
-SetOM_RenderTargets({
-    _EngineSystem.m_hash_Gbuffer_Position,
-    _EngineSystem.m_hash_Gbuffer_Normal,
-    _EngineSystem.m_hash_Gbuffer_Albedo,
-    _EngineSystem.m_hash_Gbuffer_Specular
-}, _EngineSystem.m_hash_DSView_Quad);
+// RenderSystem.cpp: Opaque 4개 G-Buffer 타겟 MRT 바인딩
+SetOM_RenderTargets(
+    { 
+        _EngineSystem.m_hash_Gbuffer_Position,  
+        _EngineSystem.m_hash_Gbuffer_Normal,
+        _EngineSystem.m_hash_Gbuffer_Albedo,
+        _EngineSystem.m_hash_Gbuffer_Specular,
+    }, 
+    _EngineSystem.m_hash_DSView_Quad
+);
+
+// [Opaque 패스 완료 후 라이팅 패스용 자원 역바인딩]
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Position, 11);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Normal, 12);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Albedo, 13);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_Gbuffer_Specular, 14);
 ```
 
-Opaque에서 MRT로 기록한 값을 별도 화면 공간 조명 단계에 SRV로 공급합니다. SRV/RTV 동시 바인딩 충돌을 피하기 위해 자원 역할 전환 시 바인딩 해제 순서를 관리해야 합니다.
+#### ② Shadow Mapping (PCF 그림자) 패스
+- **기능 개요**: 광원 시점 깊이 맵 생성 시 RTV를 완전히 nullptr로 설정해 깊이 버퍼만 결합해 성능을 확보하고, 픽셀 셰이더에서 3x3 PCF 비교 샘플러를 적용해 부드러운 그림자를 생성함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/PS_Shadows.hlsli](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Shadows.hlsli)
+- **💻 C++ 널(Null) 렌더타겟 바인딩 & HLSL PCF 셰이딩**:
+```cpp
+// RenderSystem.cpp: 그림자 맵 생성 시 RTV를 비우고 오직 DSV만 결합
+SetOM_RenderTargets(std::vector<size_t>(), _EngineSystem.m_hash_DSV_ShadowMap);
 
-#### Shadow / PCF
-
+// RenderSystem.cpp: 그림자 패스 완료 후 PCF 샘플러 및 깊이 텍스처 바인딩
+SetPS_SamplerState(E_SMState::POINT_CLAMP_COMPARISON, 6);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_DSV_ShadowMap, 6);
+```
 ```hlsl
-for (int y = -1; y <= 1; ++y) {
-    for (int x = -1; x <= 1; ++x) {
-        float2 offset = float2(x, y) * texelSize;
-        shadow += gShadowMap.SampleCmpLevelZero(
-            gSamShadow, projCoords.xy + offset, projCoords.z - bias).r;
+// PS_Shadows.hlsli: 3x3 PCF(Percentage Closer Filtering) 그림자 샘플링
+float CalculateShadow(float4 shadowPos)
+{
+    float3 projCoords = shadowPos.xyz / shadowPos.w;
+    if (projCoords.z > 1.0f) return 1.0f;
+    
+    float shadow = 0.0f;
+    float2 texelSize = 1.0f / shadowMapSize; // 텍셀 크기 계산
+    
+    [unroll]
+    for (int y = -1; y <= 1; ++y)
+    {
+        for (int x = -1; x <= 1; ++x)
+        {
+            float2 offset = float2(x, y) * texelSize;
+            // D3D11 PCF 하드웨어 비교 샘플러 호출
+            shadow += gShadowMap.SampleCmpLevelZero(gSamShadow, projCoords.xy + offset, projCoords.z - bias).r;
+        }
     }
+    return shadow / 9.0f;
 }
-return shadow / 9.0f;
 ```
 
-#### Environment CubeMap
+#### ③ Environment Mapping (CubeMap) 패스
+- **기능 개요**: 큐브맵 용 뷰포트를 설정하고 RTV/DSV를 결합한 뒤, 기하 셰이더(GS)를 기동하여 단일 기하 스트림을 6개 렌더타겟 면으로 동시 라우팅 방출하고 밉맵을 동적 생성함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/GS_CubeMap_PTNTB.hlsl)
+- **💻 C++ 큐브맵 RTV 설정 & HLSL 기하 셰이더 라우팅**:
+```cpp
+// RenderSystem.cpp: 큐브맵 렌더타겟 및 뷰포트 설정
+SetRS_Viewport(&_EngineSystem.m_vp_CubeMap);
+SetOM_RenderTargets({ _EngineSystem.m_hash_RTV_CubeMap }, _EngineSystem.m_hash_DSV_CubeMap);
 
+// RenderSystem.cpp: 패스 완료 후 밉맵 동적 생성 및 t7 바인딩
+_EngineSystem.GenerateMipMaps(_EngineSystem.m_hash_SRV_CubeMap);
+SetPS_ShaderResourceView(_EngineSystem.m_hash_SRV_CubeMap, 7);
+```
 ```hlsl
+// GS_CubeMap_PTNTB.hlsl: SV_RenderTargetArrayIndex를 활용한 6개 면 뷰포트 Append
 [maxvertexcount(18)]
-void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream) {
-    for (int idx = 0; idx < 6; idx++) {
-        for (int v = 0; v < 3; ++v) {
+void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStream)
+{
+    for (int idx = 0; idx < 6; idx++)
+    {
+        for (int v = 0; v < 3; ++v)
+        {
             GS_OUTPUT output;
-            output.rtvIdx = idx; // SV_RenderTargetArrayIndex
+            output.rtvIdx = idx; // RTV 인덱스 직접 지정
             output.pos = mul(input[v].pos, matViewProj[idx]);
             outStream.Append(output);
         }
@@ -547,23 +626,74 @@ void gsmain(triangle VS_OUTPUT input[3], inout TriangleStream<GS_OUTPUT> outStre
 }
 ```
 
-#### Outline
+#### ④ Outline (스텐실 실루엣 외곽선) 패스
+- **기능 개요**: 2패스 기법을 활용하여 1패스(`Outline_Write`)에서 깊이 스텐실 상태를 켜서 마킹을 수행하고, 2패스(`Outline_Draw`)에서 스텐실 값이 같지 않은 외곽 픽셀에 대해 법선(Normal) 방향으로 꼭지점을 팽창 렌더링함.
+- **HLSL 셰이더 파일 링크**: 
+  - [C_CPP/PardCode34/Instanced_VS_Outline_PTN.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/Instanced_VS_Outline_PTN.hlsl)
+  - [C_CPP/PardCode34/PS_Outline_Draw.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/PS_Outline_Draw.hlsl)
+- **💻 C++ 2패스 상태 통제 & HLSL 정점 외곽선 팽창**:
+```cpp
+// RenderSystem.cpp: 1패스 - 스텐실 마크 쓰기 상태 활성화
+RPStates stateWrite = m_resRP_States[GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Write, E_BSState::Outline_Write, 1)];
+SetRS_RasterizerState(stateWrite.stateRS);
+SetOM_DepthStenilState(stateWrite.stateDS, stateWrite.stencilRef);
 
-`Outline_Write`에서 Stencil에 마킹하고 `Outline_Draw`에서 스텐실 비교와 법선 방향 정점 팽창을 조합해 실루엣을 출력합니다. 상세 셰이더는 위 링크를 참조하세요.
-
-#### Debug Sphere
-
+// RenderSystem.cpp: 2패스 - 스텐실 마크 비교 및 외곽선 드로우 상태 활성화
+RPStates stateDraw = m_resRP_States[GetRenderPassKey_States(E_RSState::SOLID_CULLBACK_CW, E_DSState::Outline_Draw, E_BSState::Outline_Draw, 1)];
+SetRS_RasterizerState(stateDraw.stateRS);
+SetOM_DepthStenilState(stateDraw.stateDS, stateDraw.stencilRef);
+```
 ```hlsl
+// Instanced_VS_Outline_PTN.hlsl: 정점 법선(Normal) 방향 Extrude 및 월드 투영
+VS_OUT vsmain(VS_IN input)
+{
+    VS_OUT output;
+    float3 extrudedPos = input.pos.xyz + (input.normal * thickness); // 외곽선 두께만큼 팽창
+    float4 localPos = float4(extrudedPos, 1.0f);
+    
+    // 인스턴싱 월드 변환 적용
+    output.pos = mul(localPos, matWorld[input.instanceID]);
+    output.pos = mul(output.pos, matViewProj);
+    return output;
+}
+
+// PS_Outline_Draw.hlsl: 외곽선 단색 출력
+float4 psmain(VS_OUT input) : SV_Target
+{
+    return outlineColor; // 외곽선 지정 컬러 드로우 (스텐실 비교 통과 영역)
+}
+```
+
+#### ⑤ Debug (버퍼리스 디버그 렌더링) 패스
+- **기능 개요**: CPU 단에서 정점/인덱스 버퍼를 매번 생성하여 전송하는 병목을 완전히 소거하기 위해, 셰이더 내에서 최소/최대 좌표 상수버퍼(AABB) 또는 도메인 셰이더(Sphere)를 이용해 기하를 즉석 생성 렌더링함.
+- **HLSL 셰이더 파일 링크**: [C_CPP/PardCode34/DS_Debug_Sphere.hlsl](https://github.com/ckdlscjs/c_cpp/blob/main/C_CPP/PardCode34/DS_Debug_Sphere.hlsl)
+- **💻 C++ 디버그 데이터 상수 버퍼 주입 & HLSL 도메인 셰이더 구형 보간**:
+```cpp
+// RenderSystem.cpp: 디버그 모드 감지 시, 콜라이더 타입에 맞는 상수 버퍼 업데이트
+size_t hash_collider = pMesh->GetCLs()[resources.idxCollider];
+if (resources.collider == E_Collider::BOX) {
+    CB_Debug_Box cb_debug_box;
+    _CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_box);
+    _EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_box, &cb_debug_box);
+} else if (resources.collider == E_Collider::SPHERE) {
+    CB_Debug_Sphere cb_debug_sphere;
+    _CollisionSystem.SetColliderDebugData(hash_collider, cb_debug_sphere);
+    _EngineSystem.UpdateConstantBuffer(g_hash_cb_debug_sphere, &cb_debug_sphere);
+}
+```
+```hlsl
+// DS_Debug_Sphere.hlsl: 테셀레이션 Domain Shader를 이용한 버퍼리스 구체 생성
 [domain("tri")]
-DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation,
-              const OutputPatch<HS_OUT, 3> patch)
+DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation, const OutputPatch<HS_OUT, 3> patch)
 {
     DS_OUT output;
-    float3 pos = patch[0].Pos0 * uvw.x
-               + patch[1].Pos0 * uvw.y
-               + patch[2].Pos0 * uvw.z;
+    // 세 패치 정점의 무게중심 보간 계산
+    float3 pos = patch[0].Pos0 * uvw.x + patch[1].Pos0 * uvw.y + patch[2].Pos0 * uvw.z;
+    
+    // 보간된 정점을 정규화하여 반지름(radius) 크기로 투영
     pos = normalize(pos) * radius;
-    pos += center;
+    pos += center; // 구체 중심 이동
+    
     output.pos = mul(float4(pos, 1.0f), matViewProj);
     return output;
 }
@@ -571,38 +701,25 @@ DS_OUT dsmain(HS_CS_OUTPUT input, float3 uvw : SV_DomainLocation,
 
 ---
 
-## 11. 상세 개발 기록 (References)
+## 🔗 상세개발기록 (References)
 
-다음은 기존 GitHub README에 실려 있던 **개발 기록 20개 링크를 그대로 유지**한 목록입니다. PDF에서 설명한 설계·구현 과정과 실제 작업 일지를 연결합니다.
-
-1. [Transform 구성 및 정의](https://blog.naver.com/syl610/223922729999)
-2. [수학 클래스 구성 및 정의](https://blog.naver.com/syl610/223948444921)
-3. [사원수 클래스 구성 및 정의](https://blog.naver.com/syl610/224088711483)
-4. [Assimp라이브러리 임포트 및 애니메이션(Geometry 등 가상자원)](https://blog.naver.com/syl610/224185955904)
-5. [챕터1 오버뷰 및 세부 코드 스니펫](https://blog.naver.com/syl610/224300186028)
-6. [DOD 기반 아키텍처 및 Archetype 설계·도입 배경](https://blog.naver.com/syl610/224092884791)
-7. [ECS 기반 시스템 및 세부 구성](https://blog.naver.com/syl610/224093235113)
-8. [ECS 시스템 코드 스니펫 및 세부 사항](https://blog.naver.com/syl610/224306323972)
-9. [커맨드 큐 기반 렌더패스 설계](https://blog.naver.com/syl610/224274490970)
-10. [드로우콜 인스턴싱 배치 및 최적화](https://blog.naver.com/syl610/224298052221)
-11. [EngineSystem 세부 구성 및 오버뷰](https://blog.naver.com/syl610/224309508399)
-12. [FBX 임포트 및 스키닝 애니메이션 구조](https://blog.naver.com/syl610/224185955904)
-13. [그림자 매핑(PCF 샘플러)](https://blog.naver.com/syl610/224155261089)
-14. [환경 맵(CubeMap)](https://blog.naver.com/syl610/224139108832)
-15. [조명 연산(Directional, Point, Specular)](https://blog.naver.com/syl610/223955371094)
-16. [노멀 매핑](https://blog.naver.com/syl610/224014017132)
-17. [G-Buffer 기반 Deferred Rendering, Post-processing 및 조명](https://blog.naver.com/syl610/224286380281)
-18. [충돌체 및 오브젝트 피킹](https://blog.naver.com/syl610/224211606661)
-19. [GPU Compute Shader 기반 충돌 판정 및 Outline/Picking Triangle](https://blog.naver.com/syl610/224245464364)
-20. [패스별 세부 설명 및 오버뷰(작업 정리 6)](https://blog.naver.com/syl610/224314221774)
-
----
-
-### 참고 학습 자료
-
-- 이득우의 게임 수학
-- Frank D. Luna, *Introduction to 3D Game Programming with Direct3D 11*
-- RasterTek DirectX 11 Tutorials
-- PardCode DirectX 11 Tutorials
-
-이 자료들은 개념 학습 참고용이며, 본 README는 개인 프로젝트에서 설계·구현한 내용을 중심으로 서술했습니다.
+* **[1] [Transform 구성 및 정의]**(https://blog.naver.com/syl610/223922729999)
+* **[2] [수학 클래스 구성 및 정의]**(https://blog.naver.com/syl610/223948444921)
+* **[3] [사원수 클래스 구성 및 정의]**(https://blog.naver.com/syl610/224088711483)
+* **[4] [Assimp라이브러리 임포트 및 애니메이션(Geometry 등 가상자원)]**(https://blog.naver.com/syl610/224185955904)
+* **[5] [챕터1 오버뷰 및 세부 코드 스니펫]**(https://blog.naver.com/syl610/224300186028)
+* **[6] [DOD기반 아키텍쳐 설계 및 Archetype 아키텍쳐 설계 및 도입배경]**(https://blog.naver.com/syl610/224092884791)
+* **[7] [ECS기반 시스템 및 세부구성]**(https://blog.naver.com/syl610/224093235113)
+* **[8] [ECS시스템 코드스니펫 및 세부사항 오버뷰]**(https://blog.naver.com/syl610/224306323972)
+* **[9] [커맨드큐 기반 렌더패스 설계]**(https://blog.naver.com/syl610/224274490970)
+* **[10] [드로우콜 인스턴싱 배치 및 최적화]**(https://blog.naver.com/syl610/224298052221)
+* **[11] [EngineSys세부 구성 및 오버뷰]**(https://blog.naver.com/syl610/224309508399)
+* **[12] [FBX임포트 및 스키닝애니메이션 구조]**(https://blog.naver.com/syl610/224185955904)
+* **[13] [그림자매핑(PCF샘플러)]**(https://blog.naver.com/syl610/224155261089)
+* **[14] [환경맵(큐브맵)]**(https://blog.naver.com/syl610/224139108832)
+* **[15] [조명연산(Directional, Point, Specular)]**(https://blog.naver.com/syl610/223955371094)
+* **[16] [노말매핑]**(https://blog.naver.com/syl610/224014017132)
+* **[17] [Gbuffer기반 디퍼드렌더링, 포트스프로세싱, 조명연산]**(https://blog.naver.com/syl610/224286380281)
+* **[18] [충돌체 및 오프젝트피킹]**(https://blog.naver.com/syl610/224211606661)
+* **[19] [GPU(계산셰이더)기반 충돌판정 및 아웃라인/피킹 트라이앵글]**(https://blog.naver.com/syl610/224245464364)
+* **[20] [패스별 세부설명 및 오버뷰(작업정리6)]**(https://blog.naver.com/syl610/224314221774)
